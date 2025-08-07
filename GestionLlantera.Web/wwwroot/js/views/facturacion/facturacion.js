@@ -77,7 +77,7 @@ function cargarPermisosUsuario() {
         }
 
         const permisos = window.facturaConfig.permisos;
-        
+
         // ✅ MAPEO DIRECTO DE PERMISOS (sin complicaciones)
         permisosUsuario = {
             puedeCrearFacturas: permisos.puedeCrearFacturas === true,
@@ -99,7 +99,7 @@ function cargarPermisosUsuario() {
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        
+
         // Permisos por defecto en caso de error
         permisosUsuario = {
             puedeCrearFacturas: false,
@@ -108,7 +108,7 @@ function cargarPermisosUsuario() {
             puedeAnularFacturas: false,
             esAdmin: false
         };
-        
+
         console.log('🔧 Permisos de emergencia aplicados:', permisosUsuario);
         configurarInterfazSegunPermisos();
     }
@@ -218,7 +218,7 @@ if (typeof window !== 'undefined') {
     window.convertirProformaAFactura = convertirProformaAFactura;
     window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
     window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
-    
+
     console.log('📋 Funciones de proformas y detalles exportadas globalmente');
 }
 
@@ -592,9 +592,9 @@ function mostrarResultadosProductos(productos) {
                         .map(img => img.urlimagen || img.Urlimagen || img.urlImagen || img.UrlImagen)
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-                } 
+                }
                 // Verificar imagenesUrls como alternativa (ya vienen con URLs completas)
-                if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+                else if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
                     imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
                 }
@@ -623,8 +623,8 @@ function mostrarResultadosProductos(productos) {
                             imagenUrl = urlImagen; // URL completa desde la API
                         } else {
                             // Fallback para URLs relativas
-                            imagenUrl = urlImagen.startsWith('/') ? 
-                                `https://localhost:7273${urlImagen}` : 
+                            imagenUrl = urlImagen.startsWith('/') ?
+                                `https://localhost:7273${urlImagen}` :
                                 `https://localhost:7273/${urlImagen}`;
                         }
                         console.log('🖼️ URL final construida:', imagenUrl);
@@ -668,18 +668,18 @@ function mostrarResultadosProductos(productos) {
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
                                 <div class="producto-card-imagen-container">
-                                    ${imagenUrl ? 
-                                        `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" 
-                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
-                                              onload="this.style.opacity='1';" 
+                                    ${imagenUrl ?
+            `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen"
+                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                              onload="this.style.opacity='1';"
                                               style="opacity:0; transition: opacity 0.3s ease;">
                                          <div class="producto-card-sin-imagen" style="display:none;">
                                              <i class="bi bi-image"></i>
                                          </div>` :
-                                        `<div class="producto-card-sin-imagen">
+            `<div class="producto-card-sin-imagen">
                                              <i class="bi bi-image"></i>
                                          </div>`
-                                    }
+        }
                                 </div>
                                 <div class="producto-card-body">
                                     <h6 class="producto-card-titulo" title="${nombreEscapado}">
@@ -699,12 +699,12 @@ function mostrarResultadosProductos(productos) {
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <small class="text-primary">Stock: ${cantidadInventario}</small>
-                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
-                                            '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ?
+            '<small class="badge bg-warning">Stock Bajo</small>' : ''}
                                     </div>
                                     <div class="producto-card-acciones">
                                         ${cantidadInventario > 0 ? `
-                                            <button type="button" 
+                                            <button type="button"
                                                     class="btn btn-primary btn-sm btn-seleccionar-producto"
                                                     data-producto="${productoJson}">
                                                 <i class="bi bi-hand-index me-1"></i>Seleccionar
@@ -714,7 +714,7 @@ function mostrarResultadosProductos(productos) {
                                                 <i class="bi bi-x-circle me-1"></i>Sin Stock
                                             </button>
                                         `}
-                                        <button type="button" 
+                                        <button type="button"
                                                 class="btn btn-outline-info btn-sm btn-ver-detalle"
                                                 data-producto="${productoJson}">
                                             <i class="bi bi-eye me-1"></i>Ver Detalle
@@ -796,7 +796,7 @@ function mostrarResultadosClientes(clientes) {
 
     clientes.forEach(cliente => {
         html += `
-            <div class="dropdown-item-cliente p-2 border-bottom cursor-pointer" 
+            <div class="dropdown-item-cliente p-2 border-bottom cursor-pointer"
                  data-cliente='${JSON.stringify(cliente)}'>
                 <div class="d-flex justify-content-between">
                     <div>
@@ -861,7 +861,8 @@ function mostrarModalSeleccionProducto(producto) {
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');        }
+                .filter(url => url && url.trim() !== '');
+        }
 
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
@@ -869,7 +870,9 @@ function mostrarModalSeleccionProducto(producto) {
 
             if (urlImagen && urlImagen.trim() !== '') {
                 // Construir URL correcta para el servidor API (puerto 7273 HTTPS)
-                if (urlImagen.startsWith('/uploads/productos/')) {
+                if (urlImagen.startsWith('https://localhost:7273/')) {
+                    imagenUrl = urlImagen;
+                } else if (urlImagen.startsWith('/uploads/productos/')) {
                     imagenUrl = `https://localhost:7273${urlImagen}`;
                 } else if (urlImagen.startsWith('uploads/productos/')) {
                     imagenUrl = `https://localhost:7273/${urlImagen}`;
@@ -901,8 +904,8 @@ function mostrarModalSeleccionProducto(producto) {
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-4">
-                                <img src="${imagenUrl}" 
-                                     class="img-fluid rounded shadow-sm" 
+                                <img src="${imagenUrl}"
+                                     class="img-fluid rounded shadow-sm"
                                      alt="${producto.nombreProducto}"
                                      onerror="this.onerror=null; this.src='/images/no-image.png';"">
                             </div>
@@ -937,7 +940,7 @@ function mostrarModalSeleccionProducto(producto) {
                                             </tbody>
                                         </table>
                                     </div>
-                                    <small class="text-muted">* El método de pago se seleccionará al finalizar la venta</small>
+                                    <small class="text-muted">* El precio final se ajustará al método de pago seleccionado al finalizar la venta</small>
                                 </div>
 
                                 <!-- Cantidad -->
@@ -947,11 +950,11 @@ function mostrarModalSeleccionProducto(producto) {
                                     </label>
                                     <div class="input-group" style="max-width: 200px;">
                                         <button type="button" class="btn btn-outline-secondary" id="btnMenosCantidad">-</button>
-                                        <input type="number" 
-                                               class="form-control text-center fw-bold" 
-                id="cantidadProducto" 
-                                               value="1" 
-                                               min="1" 
+                                        <input type="number"
+                                               class="form-control text-center fw-bold"
+                id="cantidadProducto"
+                                               value="1"
+                                               min="1"
                                                max="${producto.cantidadEnInventario}"
                                                style="font-size: 16px; min-width: 80px; -moz-appearance: textfield; -webkit-appearance: none;"
                                                onwheel="return false;">
@@ -965,7 +968,7 @@ function mostrarModalSeleccionProducto(producto) {
                                         <span><i class="bi bi-tag me-2"></i><strong>Precio base:</strong></span>
                                         <span class="fs-5 fw-bold text-primary">₡${formatearMoneda(precioBase)}</span>
                                     </div>
-                                    <small class="text-muted">El precio final dependerá del métodode pago seleccionado</small>
+                                    <small class="text-muted">El precio final puede variar según el método de pago seleccionado.</small>
                                 </div>
                             </div>
                         </div>
@@ -1159,8 +1162,8 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
         // Agregar nuevo producto
         // Validación robusta para imagen URL
         let imagenUrl = null;
-        if (producto.imagenesProductos && 
-            Array.isArray(producto.imagenesProductos) && 
+        if (producto.imagenesProductos &&
+            Array.isArray(producto.imagenesProductos) &&
             producto.imagenesProductos.length > 0) {
 
             const primeraImagen = producto.imagenesProductos[0];
@@ -1218,7 +1221,7 @@ function actualizarVistaCarrito() {
                             <small class="badge bg-info">${configMetodo.nombre}</small>
                         </div>
                     </div>
-                    <button type="button" 
+                    <button type="button"
                             class="btn btn-sm btn-outline-danger btn-eliminar-producto"
                             data-index="${index}"
                             title="Eliminar producto">
@@ -1227,18 +1230,18 @@ function actualizarVistaCarrito() {
                 </div>
                 <div class="d-flex justify-content-between align-items-center mt-2">
                     <div class="input-group input-group-sm" style="width: 120px;">
-                        <button type="button" 
+                        <button type="button"
                                 class="btn btn-outline-secondary btn-cantidad-menos"
                                 data-index="${index}">-</button>
-                        <input type="number" 
+                        <input type="number"
                                class="form-control text-center input-cantidad"
                                data-index="${index}"
-                               value="${producto.cantidad}" 
-                               min="1" 
+                               value="${producto.cantidad}"
+                               min="1"
                                max="${producto.stockDisponible}">
-                        <button type="button" 
-                               class="btn btn-outline-secondary btn-cantidad-mas"
-                               data-index="${index}">+</button>
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-cantidad-mas"
+                                data-index="${index}">+</button>
                     </div>
                     <strong class="text-success">₡${formatearMoneda(subtotal)}</strong>
                 </div>
@@ -1306,7 +1309,7 @@ function configurarEventosCantidad() {
 }
 
 function actualizarTotales() {
-    const subtotal = productosEnVenta.reduce((sum, producto) => 
+    const subtotal = productosEnVenta.reduce((sum, producto) =>
         sum + (producto.precioUnitario * producto.cantidad), 0);
 
     const iva = subtotal * 0.13; // 13% IVA
@@ -1337,7 +1340,7 @@ async function limpiarVenta() {
         facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
         $('#clienteBusqueda').val('');
         $('#clienteSeleccionado').addClass('d-none');
-        
+
         // ✅ LIMPIAR CÓDIGOS DE SEGUIMIENTO Y PRODUCTOS PENDIENTES
         if (window.codigosSeguimientoPendientes) {
             delete window.codigosSeguimientoPendientes;
@@ -1348,7 +1351,7 @@ async function limpiarVenta() {
         if (window.facturaConPendientes) {
             delete window.facturaConPendientes;
         }
-        
+
         actualizarVistaCarrito();
         actualizarTotales();
 
@@ -1648,7 +1651,7 @@ function configurarModalSegunPermisos() {
             const alertaInfo = `
                 <div id="infoColaboradorModal" class="alert alert-info mt-3">
                     <i class="bi bi-info-circle me-2"></i>
-                    <strong>Modo Colaborador:</strong> Esta factura será enviada a caja para procesamiento. 
+                    <strong>Modo Colaborador:</strong> Esta factura será enviada a caja para procesamiento.
                     El stock se ajustará cuando el cajero complete el pago.
                 </div>
             `;
@@ -1740,12 +1743,12 @@ function configurarEventosModalFinalizar() {
     $('#efectivoRecibido').on('input.modalFinalizar', function() {
         calcularCambioModal();
     });
-    
+
     // Configurar botones de pago múltiple/simple
     $('#btnPagoMultiple').on('click.modalFinalizar', function() {
         activarPagoMultiple();
     });
-    
+
     $('#btnPagoSimple').on('click.modalFinalizar', function() {
         activarPagoSimple();
     });
@@ -1758,13 +1761,13 @@ function activarPagoMultiple() {
     $('#pagoMultipleContainer').show();
     $('#btnPagoMultiple').addClass('active');
     $('#btnPagoSimple').removeClass('active');
-    
+
     // Inicializar con el total completo si no hay pagos
     if (detallesPagoActuales.length === 0) {
         const total = calcularTotalFactura();
         inicializarPagoMultiple(total);
     }
-    
+
     actualizarVistaPagosMultiples();
 }
 
@@ -1775,7 +1778,7 @@ function activarPagoSimple() {
     $('#pagoSimpleContainer').show();
     $('#btnPagoSimple').addClass('active');
     $('#btnPagoMultiple').removeClass('active');
-    
+
     actualizarResumenVentaModal();
 }
 
@@ -1794,14 +1797,14 @@ function agregarNuevoPago() {
         mostrarToast('Pago completo', 'El total de la factura ya está cubierto', 'warning');
         return;
     }
-    
+
     detallesPagoActuales.push({
         metodoPago: 'efectivo',
         monto: montoRestante,
         referencia: '',
         observaciones: ''
     });
-    
+
     actualizarVistaPagosMultiples();
 }
 
@@ -1810,7 +1813,7 @@ function eliminarPago(index) {
         mostrarToast('Error', 'Debe haber al menos un método de pago', 'warning');
         return;
     }
-    
+
     detallesPagoActuales.splice(index, 1);
     actualizarVistaPagosMultiples();
 }
@@ -1818,7 +1821,7 @@ function eliminarPago(index) {
 function actualizarVistaPagosMultiples() {
     const container = $('#pagoMultiplesList');
     const totalFactura = calcularTotalFactura();
-    
+
     let html = '';
     detallesPagoActuales.forEach((pago, index) => {
         const config = CONFIGURACION_PRECIOS[pago.metodoPago] || CONFIGURACION_PRECIOS.efectivo;
@@ -1829,17 +1832,17 @@ function actualizarVistaPagosMultiples() {
                         <h6 class="card-title mb-0">
                             <i class="${config.icono} me-2"></i>Pago ${index + 1}
                         </h6>
-                        ${detallesPagoActuales.length > 1 ? 
+                        ${detallesPagoActuales.length > 1 ?
                             `<button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarPago(${index})">
                                 <i class="bi bi-trash"></i>
                             </button>` : ''}
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <label class="form-label">Método de Pago</label>
                             <select class="form-select metodo-pago-multiple" data-index="${index}">
-                                ${Object.entries(CONFIGURACION_PRECIOS).map(([key, value]) => 
+                                ${Object.entries(CONFIGURACION_PRECIOS).map(([key, value]) =>
                                     `<option value="${key}" ${pago.metodoPago === key ? 'selected' : ''}>
                                         ${value.nombre}
                                     </option>`
@@ -1850,32 +1853,32 @@ function actualizarVistaPagosMultiples() {
                             <label class="form-label">Monto</label>
                             <div class="input-group">
                                 <span class="input-group-text">₡</span>
-                                <input type="number" 
-                                       class="form-control monto-pago-multiple" 
+                                <input type="number"
+                                       class="form-control monto-pago-multiple"
                                        data-index="${index}"
-                                       value="${pago.monto.toFixed(2)}" 
-                                       min="0.01" 
-                                       max="${totalFactura}" 
+                                       value="${pago.monto.toFixed(2)}"
+                                       min="0.01"
+                                       max="${totalFactura}"
                                        step="0.01">
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row mt-2">
                         <div class="col-md-6">
                             <label class="form-label">Referencia</label>
-                            <input type="text" 
-                                   class="form-control referencia-pago-multiple" 
+                            <input type="text"
+                                   class="form-control referencia-pago-multiple"
                                    data-index="${index}"
-                                   value="${pago.referencia || ''}" 
+                                   value="${pago.referencia || ''}"
                                    placeholder="Ej: Voucher, Transferencia #123">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Observaciones</label>
-                            <input type="text" 
-                                   class="form-control observaciones-pago-multiple" 
+                            <input type="text"
+                                   class="form-control observaciones-pago-multiple"
                                    data-index="${index}"
-                                   value="${pago.observaciones || ''}" 
+                                   value="${pago.observaciones || ''}"
                                    placeholder="Opcional">
                         </div>
                     </div>
@@ -1883,32 +1886,32 @@ function actualizarVistaPagosMultiples() {
             </div>
         `;
     });
-    
+
     container.html(html);
-    
+
     // Configurar eventos para los nuevos elementos
     $('.metodo-pago-multiple').on('change', function() {
         const index = $(this).data('index');
         detallesPagoActuales[index].metodoPago = $(this).val();
         actualizarResumenPagosMultiples();
     });
-    
+
     $('.monto-pago-multiple').on('input', function() {
         const index = $(this).data('index');
         detallesPagoActuales[index].monto = parseFloat($(this).val()) || 0;
         actualizarResumenPagosMultiples();
     });
-    
+
     $('.referencia-pago-multiple').on('input', function() {
         const index = $(this).data('index');
         detallesPagoActuales[index].referencia = $(this).val();
     });
-    
+
     $('.observaciones-pago-multiple').on('input', function() {
         const index = $(this).data('index');
         detallesPagoActuales[index].observaciones = $(this).val();
     });
-    
+
     actualizarResumenPagosMultiples();
 }
 
@@ -1916,11 +1919,11 @@ function actualizarResumenPagosMultiples() {
     const totalFactura = calcularTotalFactura();
     const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
     const montoRestante = totalFactura - totalPagado;
-    
+
     $('#totalFacturaMultiple').text(`₡${formatearMoneda(totalFactura)}`);
     $('#totalPagadoMultiple').text(`₡${formatearMoneda(totalPagado)}`);
     $('#montoRestanteMultiple').text(`₡${formatearMoneda(montoRestante)}`);
-    
+
     // Cambiar color según si está completo o no
     if (montoRestante < 0) {
         $('#montoRestanteMultiple').removeClass('text-success text-warning').addClass('text-danger');
@@ -1932,10 +1935,10 @@ function actualizarResumenPagosMultiples() {
         $('#montoRestanteMultiple').removeClass('text-danger text-success').addClass('text-warning');
         $('#estadoPagoMultiple').html('<span class="badge bg-warning">Pago pendiente</span>');
     }
-    
+
     // Habilitar/deshabilitar botón de agregar pago
     $('#btnAgregarPago').prop('disabled', montoRestante <= 0);
-    
+
     // Habilitar/deshabilitar botón de confirmar
     $('#btnConfirmarVenta').prop('disabled', montoRestante !== 0);
 }
@@ -1943,13 +1946,13 @@ function actualizarResumenPagosMultiples() {
 function calcularTotalFactura() {
     const metodoBase = esPagoMultiple ? 'efectivo' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
     const configMetodo = CONFIGURACION_PRECIOS[metodoBase];
-    
+
     let subtotal = 0;
     productosEnVenta.forEach(producto => {
         const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
         subtotal += precioAjustado * producto.cantidad;
     });
-    
+
     const iva = subtotal * 0.13;
     return subtotal + iva;
 }
@@ -1962,15 +1965,15 @@ function calcularMontoRestante() {
 
 function validarPagosMultiples() {
     if (!esPagoMultiple) return true;
-    
+
     const totalFactura = calcularTotalFactura();
     const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
-    
+
     if (Math.abs(totalFactura - totalPagado) > 0.01) {
         mostrarToast('Error de pago', 'El total de los pagos no coincide con el total de la factura', 'danger');
         return false;
     }
-    
+
     for (let i = 0; i < detallesPagoActuales.length; i++) {
         const pago = detallesPagoActuales[i];
         if (pago.monto <= 0) {
@@ -1978,7 +1981,7 @@ function validarPagosMultiples() {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -2041,7 +2044,7 @@ async function completarFacturaExistente(facturaId) {
 
 
         const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
-        
+
         // ✅ DATOS COMPLETOS Y VALIDADOS PARA EL CONTROLADOR (SOLO FACTURAS PENDIENTES)
         const datosCompletamiento = {
             facturaId: parseInt(facturaId), // Asegurar que sea número
@@ -2080,15 +2083,15 @@ async function completarFacturaExistente(facturaId) {
 
         if (result.success) {
             console.log('✅ Factura completada exitosamente:', result);
-            
+
             // ✅ PRESERVAR INFORMACIÓN COMPLETA DE FACTURA ANTES DE PROCESAR
             console.log('📋 === PRESERVANDO INFORMACIÓN DE FACTURA PARA RECIBO ===');
             if (facturaPendienteActual) {
                 window.facturaParaRecibo = {
                     numeroFactura: facturaPendienteActual.numeroFactura || `FAC-${facturaId}`,
-                    nombreCliente: facturaPendienteActual.nombreCliente || 
+                    nombreCliente: facturaPendienteActual.nombreCliente ||
                                   facturaPendienteActual.NombreCliente ||
-                                  clienteSeleccionado?.nombre || 
+                                  clienteSeleccionado?.nombre ||
                                   clienteSeleccionado?.nombreCliente ||
                                   'Cliente General',
                     usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre ||
@@ -2098,22 +2101,22 @@ async function completarFacturaExistente(facturaId) {
                 };
                 console.log('📋 Información preservada:', window.facturaParaRecibo);
             }
-            
+
             // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
             if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
                 console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===');
                 console.log('📦 Productos pendientes:', window.productosPendientesEntrega);
                 console.log('📦 Factura completada ID:', facturaId);
-                
+
                 await registrarProductosPendientesEntrega(facturaId, window.productosPendientesEntrega);
             }
-            
+
             // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
             const productosParaRecibo = [...productosEnVenta];
-            
+
             // ✅ CERRAR MODAL INMEDIATAMENTE
             modalFinalizarVenta.hide();
-            
+
             // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR CON DATOS COMPLETOS
             console.log('🖨️ Llamando a generarReciboFacturaCompletada con:', {
                 result: result,
@@ -2121,9 +2124,9 @@ async function completarFacturaExistente(facturaId) {
                 metodoPago: metodoPagoSeleccionado,
                 facturaPendiente: facturaPendienteActual
             });
-            
+
             generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
-            
+
             // ✅ LIMPIAR CARRITO COMPLETAMENTE
             productosEnVenta = [];
             clienteSeleccionado = null;
@@ -2133,7 +2136,7 @@ async function completarFacturaExistente(facturaId) {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
-            
+
             // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
             if (window.productosPendientesEntrega) {
                 delete window.productosPendientesEntrega;
@@ -2178,10 +2181,10 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
         console.log('🆕 === CREANDO NUEVO DOCUMENTO ===');
         console.log('🆕 Tipo de documento:', tipoDocumento);
         console.log('🆕 Es conversión de proforma:', !!window.proformaOriginalParaConversion);
-        
+
         // ✅ NOTA: Esta función maneja:
         // - Creación de facturas normales
-        // - Creación de proformas 
+        // - Creación de proformas
         // - Conversión de proformas a facturas (marca automáticamente la proforma como "Facturada")
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
@@ -2346,11 +2349,11 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             if (window.proformaOriginalParaConversion) {
                 console.log('🔄 === MARCANDO PROFORMA COMO FACTURADA ===');
                 console.log('🔄 Proforma original:', window.proformaOriginalParaConversion);
-                
+
                 // ✅ VALIDAR QUE TENEMOS EL ID DE LA PROFORMA
                 const proformaId = window.proformaOriginalParaConversion.proformaId || window.proformaOriginalParaConversion.facturaId;
                 console.log('🔄 ID de proforma a marcar:', proformaId);
-                
+
                 if (!proformaId) {
                     console.error('❌ No se pudo obtener el ID de la proforma para marcar como facturada');
                 } else {
@@ -2362,10 +2365,10 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                             },
                             body: JSON.stringify({})
                         });
-                        
+
                         const responseText = await responseConversion.text();
                         console.log('🔄 Respuesta del servidor:', responseText);
-                        
+
                         if (responseConversion.ok) {
                             const resultadoConversion = JSON.parse(responseText);
                             console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
@@ -2376,7 +2379,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                         console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
                     }
                 }
-                
+
                 // Limpiar referencia
                 delete window.proformaOriginalParaConversion;
             }
@@ -2577,7 +2580,7 @@ async function procesarProforma() {
         $btnProforma.find('.btn-loading-state').removeClass('d-none');
 
         console.log('📋 === PROCESANDO PROFORMA DESDE MODAL ===');
-        
+
         // Validar que hay productos en la venta
         if (productosEnVenta.length === 0) {
             mostrarToast('Venta vacía', 'Agrega productos antes de crear la proforma', 'warning');
@@ -2595,14 +2598,13 @@ async function procesarProforma() {
 
     } catch (error) {
         console.error('❌ Error procesando proforma:', error);
-        
+
         // ✅ MOSTRAR ERROR CON SWEETALERT
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'error',
                 title: 'Error creando proforma',
                 text: 'Hubo un problema inesperado al crear la proforma',
-                confirmButtonText: 'Entendido',
                 confirmButtonColor: '#dc3545'
             });
         } else {
@@ -2626,28 +2628,32 @@ async function abrirProformas() {
         console.log('📋 === ABRIENDO MODAL DE PROFORMAS ===');
 
         const modal = new bootstrap.Modal(document.getElementById('proformasModal'));
-        
+
         // Configurar evento para cuando el modal sea completamente visible
         $('#proformasModal').on('shown.bs.modal', function() {
-            console.log('📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***');
-            console.log('📋 Elementos disponibles en el DOM:');
-            console.log('📋 - Input búsqueda:', $('#busquedaProformas').length);
-            console.log('📋 - Select estado:', $('#estadoProformas').length);
-            console.log('📋 - Tabla body:', $('#proformasTableBody').length);
-            console.log('📋 - Loading:', $('#proformasLoading').length);
-            console.log('📋 - Content:', $('#proformasContent').length);
-            
-            // Inicializar filtros usando el módulo dedicado
+            console.log('📋 Modal de proformas completamente visible');
+
+            // Inicializar filtros de proformas
             if (typeof inicializarFiltrosProformas === 'function') {
-                console.log('✅ Inicializando filtros de proformas...');
                 inicializarFiltrosProformas();
-            } else {
-                console.error('❌ Función inicializarFiltrosProformas no está disponible');
-                // Cargar proformas básicas como fallback
-                cargarProformasBasico();
             }
+
+            // Ejecutar verificación de vencimiento automáticamente
+            if (typeof verificarVencimientoProformas === 'function') {
+                console.log('📅 Ejecutando verificación automática de vencimiento...');
+                verificarVencimientoProformas();
+            }
+
+            // Cargar proformas inicialmente (después de la verificación)
+            setTimeout(() => {
+                if (typeof cargarTodasLasProformas === 'function') {
+                    cargarTodasLasProformas();
+                } else {
+                    console.error('❌ Función cargarTodasLasProformas no está disponible');
+                }
+            }, 1000); // Esperar 1 segundo para que termine la verificación
         });
-        
+
         modal.show();
 
     } catch (error) {
@@ -2711,6 +2717,14 @@ async function cargarProformasBasico(pagina = 1) {
 function mostrarProformas(proformas) {
     console.log('📋 Mostrando proformas:', proformas.length);
 
+    // Guardar proformas originales para filtrado si es la primera carga
+    if (typeof guardarProformasOriginales === 'function' && proformas.length > 0) {
+        if (!window.proformasOriginalesGuardadas) {
+            guardarProformasOriginales(proformas);
+            window.proformasOriginalesGuardadas = true;
+        }
+    }
+
     const tbody = $('#proformasTableBody');
     tbody.empty();
 
@@ -2744,27 +2758,27 @@ function mostrarProformas(proformas) {
                 </td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" 
+                        <button type="button"
                                 class="btn btn-outline-info btn-ver-proforma"
                                 data-proforma-id="${proforma.facturaId}"
                                 title="Ver detalles">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" 
+                        <button type="button"
                                 class="btn btn-outline-success btn-imprimir-proforma"
                                 data-proforma-id="${proforma.facturaId}"
                                 title="Imprimir">
                             <i class="bi bi-printer"></i>
                         </button>
                         ${proforma.estado === 'Vigente' ? `
-                        <button type="button" 
+                        <button type="button"
                                 class="btn btn-outline-primary btn-convertir-proforma"
                                 data-proforma-escapada="${proformaEscapada}"
                                 title="Convertir a factura">
                             <i class="bi bi-arrow-right-circle"></i>
                         </button>
                         ` : proforma.estado === 'Facturada' ? `
-                        <button type="button" 
+                        <button type="button"
                                 class="btn btn-outline-secondary"
                                 disabled
                                 title="Ya fue convertida a factura">
@@ -2832,7 +2846,7 @@ function configurarEventosProformas() {
     $('.btn-convertir-proforma').on('click.proforma', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const proformaEscapada = $(this).data('proforma-escapada');
         if (proformaEscapada) {
             console.log('🔄 Convirtiendo proforma con datos:', proformaEscapada);
@@ -2903,7 +2917,7 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
         e.preventDefault();
         if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
             const pagina = parseInt($(this).data('pagina'));
-            
+
             // Usar función de filtros si está disponible, sino usar función básica
             if (typeof cambiarPaginaProformas === 'function') {
                 cambiarPaginaProformas(pagina);
@@ -2977,7 +2991,7 @@ function mostrarDetalleProformaModal(proforma) {
     console.log('📋 Mostrando modal de detalles:', proforma);
 
     const fecha = new Date(proforma.fechaFactura).toLocaleDateString('es-CR');
-    const fechaVencimiento = proforma.fechaVencimiento ? 
+    const fechaVencimiento = proforma.fechaVencimiento ?
         new Date(proforma.fechaVencimiento).toLocaleDateString('es-CR') : 'N/A';
 
     // Generar HTML de productos
@@ -3063,7 +3077,7 @@ function mostrarDetalleProformaModal(proforma) {
 
                 <div class="alert alert-warning">
                     <strong><i class="bi bi-exclamation-triangle me-2"></i>Importante:</strong>
-                    Esta proforma tiene validez hasta el ${fechaVencimiento}. 
+                    Esta proforma tiene validez hasta el ${fechaVencimiento}.
                     Para proceder con la facturación oficial, utilice la opción "Convertir a Factura".
                 </div>
             </div>
@@ -3169,9 +3183,9 @@ async function imprimirProforma(proformaId) {
 
     } catch (error) {
         console.error('❌ Error imprimiendo proforma:', error);
-        
+
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error de impresión',
@@ -3265,7 +3279,7 @@ async function convertirProformaAFactura(proformaEscapada) {
 
         // Cargar cliente de la proforma
         clienteSeleccionado = {
-            clienteId: proforma.clienteId || null,
+            clienteId: proforma.clienteId || proforma.id || proforma.proformaId,
             nombre: proforma.nombreCliente || 'Cliente General',
             identificacion: proforma.identificacionCliente || '',
             telefono: proforma.telefonoCliente || '',
@@ -3320,7 +3334,7 @@ async function convertirProformaAFactura(proformaEscapada) {
         window.proformaOriginalParaConversion = {
             proformaId: proforma.facturaId || proforma.id || proforma.proformaId,
             facturaId: proforma.facturaId || proforma.id || proforma.proformaId,
-            numeroProforma: proforma.numeroFactura
+            numeroProforma: proforma.numeroProforma
         };
 
         console.log('📋 Referencia de proforma guardada:', window.proformaOriginalParaConversion);
@@ -3378,98 +3392,36 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
 async function verificarVencimientoProformas() {
     try {
         console.log('📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ===');
-        
-        const confirmacion = await Swal.fire({
-            title: '¿Verificar vencimiento?',
-            html: `
-                <div class="text-start">
-                    <p><strong>Esta acción:</strong></p>
-                    <ul>
-                        <li>Revisará todas las proformas vigentes</li>
-                        <li>Marcará como "Expiradas" las que pasaron 30 días</li>
-                        <li>Actualizará automáticamente los estados</li>
-                    </ul>
-                    <p class="text-info"><strong>¿Desea continuar?</strong></p>
-                </div>
-            `,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#17a2b8',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, verificar',
-            cancelButtonText: 'Cancelar'
-        });
 
-        if (!confirmacion.isConfirmed) {
-            return;
-        }
-
-        // Mostrar loading
-        Swal.fire({
-            title: 'Verificando...',
-            text: 'Revisando vencimiento de proformas',
-            icon: 'info',
-            allowOutsideClick: false,
-            showConfirmButton: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        const response = await fetch('/Facturacion/VerificarVencimientoProformas', {
+        // Realizar petición silenciosa
+        const response = await fetch('/Facturacion/verificar-vencimiento-proformas', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
             },
             credentials: 'include'
         });
 
         if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+            throw new Error(`Error HTTP: ${response.status} - ${response.statusText}`);
         }
 
         const resultado = await response.json();
-        console.log('📅 Resultado verificación:', resultado);
+        console.log('📅 Resultado verificación automática:', resultado);
 
         if (resultado.success) {
-            const proformasExpiradas = resultado.proformasExpiradas || 0;
-            
-            Swal.fire({
-                icon: 'success',
-                title: '¡Verificación Completada!',
-                html: `
-                    <div class="text-center">
-                        <p><strong>${proformasExpiradas}</strong> proformas han sido marcadas como expiradas</p>
-                        ${proformasExpiradas > 0 ? 
-                            '<p class="text-muted">Los estados han sido actualizados automáticamente</p>' : 
-                            '<p class="text-success">Todas las proformas están dentro de su período de validez</p>'
-                        }
-                    </div>
-                `,
-                confirmButtonText: 'Entendido',
-                confirmButtonColor: '#28a745',
-                timer: 4000,
-                timerProgressBar: true
-            });
-
-            // Recargar la tabla si hay cambios
-            if (proformasExpiradas > 0) {
-                await cargarProformas();
+            console.log('✅ Verificación automática completada exitosamente');
+            if (resultado.proformasExpiradas > 0) {
+                console.log(`📅 ${resultado.proformasExpiradas} proformas marcadas como expiradas`);
             }
         } else {
-            throw new Error(resultado.message || 'Error en la verificación');
+            console.log('⚠️ Verificación completada sin cambios:', resultado.message);
         }
 
     } catch (error) {
-        console.error('❌ Error verificando vencimiento:', error);
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error en verificación',
-            text: 'No se pudo completar la verificación de vencimiento: ' + error.message,
-            confirmButtonColor: '#dc3545'
-        });
+        console.error('❌ Error en verificación automática:', error);
+        // No mostrar error al usuario ya que es automático
     }
 }
 
@@ -3478,24 +3430,24 @@ async function verificarVencimientoProformas() {
  * Generar e imprimir recibo de venta optimizado para mini impresoras térmicas
  */
 function generarRecibo(factura, productos, totales) {
-    const fecha = new Date().toLocaleDateString('es-CR', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
+    const fecha = new Date().toLocaleDateString('es-CR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
     });
-    const hora = new Date().toLocaleTimeString('es-CR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+    const hora = new Date().toLocaleTimeString('es-CR', {
+        hour: '2-digit',
+        minute: '2-digit'
     });
 
     console.log('🖨️ === GENERANDO RECIBO ===');
-    console.log('🖨️ Factura recibida:', factura);
-    console.log('🖨️ Productos recibidos:', productos);
-    console.log('🖨️ Totales recibidos:', totales);
+    console.log('🖨️ Factura:', factura);
+    console.log('🖨️ Productos:', productos);
+    console.log('🖨️ Totales:', totales);
 
     // ✅ DETERMINAR NÚMERO DE FACTURA CORRECTAMENTE CON LOGS DETALLADOS
     let numeroFactura = 'N/A';
-    
+
     // Prioridad 1: Desde la factura pasada como parámetro
     if (factura && factura.numeroFactura) {
         numeroFactura = factura.numeroFactura;
@@ -3506,12 +3458,7 @@ function generarRecibo(factura, productos, totales) {
         numeroFactura = facturaPendienteActual.numeroFactura;
         console.log('🖨️ Número desde facturaPendienteActual:', numeroFactura);
     }
-    // Prioridad 3: Verificar si los productos tienen facturaId (factura existente)
-    else if (productos && productos.length > 0 && productos[0].facturaId) {
-        numeroFactura = `FAC-${productos[0].facturaId}`;
-        console.log('🖨️ Número generado desde facturaId:', numeroFactura);
-    }
-    // Prioridad 4: Buscar en otras propiedades de factura
+    // Prioridad 3: Buscar en otras propiedades de factura
     else if (factura) {
         console.log('🖨️ Buscando número en otras propiedades de factura:', Object.keys(factura));
         if (factura.data && factura.data.numeroFactura) {
@@ -3539,22 +3486,22 @@ function generarRecibo(factura, productos, totales) {
 
     // ===== SECCIÓN PRODUCTOS PENDIENTES =====
     let seccionProductosPendientes = '';
-    
+
     // Verificar si hay productos pendientes (desde variables globales o datos de factura)
     const tieneProductosPendientes = window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0;
     const tieneCodigosSeguimiento = window.codigosSeguimientoPendientes && window.codigosSeguimientoPendientes.length > 0;
     const facturaConPendientes = window.facturaConPendientes || facturaPendienteActual?.tieneProductosPendientes;
-    
+
     console.log('🎫 === DEBUG PRODUCTOS PENDIENTES EN RECIBO ===');
     console.log('🎫 tieneProductosPendientes:', tieneProductosPendientes);
     console.log('🎫 tieneCodigosSeguimiento:', tieneCodigosSeguimiento);
     console.log('🎫 facturaConPendientes:', facturaConPendientes);
     console.log('🎫 window.codigosSeguimientoPendientes:', window.codigosSeguimientoPendientes);
     console.log('🎫 window.productosPendientesEntrega:', window.productosPendientesEntrega);
-    
+
     if (tieneProductosPendientes || facturaConPendientes || tieneCodigosSeguimiento) {
         console.log('🎫 Agregando sección de productos pendientes al recibo');
-        
+
         seccionProductosPendientes = `
             <div class="separador"></div>
             <div class="seccion-pendientes">
@@ -3565,7 +3512,7 @@ function generarRecibo(factura, productos, totales) {
                     <div>por falta de stock.</div>
                 </div>
                 <div class="separador-pendientes"></div>
-                ${tieneCodigosSeguimiento ? 
+                ${tieneCodigosSeguimiento ?
                     window.codigosSeguimientoPendientes.map(pendiente => {
                         const cantidadPendiente = pendiente.cantidadPendiente || 0;
                         const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 22);
@@ -3579,7 +3526,7 @@ function generarRecibo(factura, productos, totales) {
                             </div>
                         `;
                     }).join('') :
-                    tieneProductosPendientes ? 
+                    tieneProductosPendientes ?
                     window.productosPendientesEntrega.map(pendiente => {
                         const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
                         const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
@@ -3599,15 +3546,15 @@ function generarRecibo(factura, productos, totales) {
                 }
                 <div class="separador-pendientes"></div>
                 <div class="instrucciones-pendientes">
-                    <div>📞 Le notificaremos cuando</div>
+                    <div>Le notificaremos cuando</div>
                     <div>llegue el stock faltante</div>
-                    <div>🎫 CONSERVE ESTE RECIBO</div>
+                    <div>CONSERVE ESTE RECIBO</div>
                     <div>como respaldo de entrega</div>
                 </div>
-                ${tieneCodigosSeguimiento ? 
+                ${tieneCodigosSeguimiento ?
                     `<div class="codigos-seguimiento">
                         <div>📋 Códigos de seguimiento:</div>
-                        ${window.codigosSeguimientoPendientes.map(p => 
+                        ${window.codigosSeguimientoPendientes.map(p =>
                             `<div class="codigo-recuadro">${p.codigoSeguimiento}</div>`
                         ).join('')}
                     </div>` :
@@ -3618,7 +3565,7 @@ function generarRecibo(factura, productos, totales) {
                 }
             </div>
         `;
-        
+
         console.log('🎫 Sección de productos pendientes generada:', seccionProductosPendientes.length, 'caracteres');
     } else {
         console.log('🎫 No se agregará sección de productos pendientes - no hay datos');
@@ -3626,7 +3573,7 @@ function generarRecibo(factura, productos, totales) {
 
     // ===== SECCIÓN MÉTODO DE PAGO =====
     let seccionMetodoPago = '';
-    
+
     // Verificar si es pago múltiple
     if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 1) {
         seccionMetodoPago = `
@@ -3724,7 +3671,7 @@ function generarRecibo(factura, productos, totales) {
                 <div class="titulo-seccion">⚠️ IMPORTANTE - PROFORMA</div>
                 <div class="advertencia-proforma">
                     <div class="info-proforma">
-                        <div><strong>VALIDEZ:</strong> Esta proforma tiene</div>
+                        <div ><strong>VALIDEZ:</strong> Esta proforma tiene</div>
                         <div>validez por 30 días calendario</div>
                         <div>desde su fecha de emisión.</div>
                     </div>
@@ -3792,7 +3739,7 @@ function generarRecibo(factura, productos, totales) {
                     <title>${numeroFactura && numeroFactura.startsWith('PROF') ? 'Proforma' : 'Recibo Térmico'} - ${numeroFactura}</title>
                     <style>
                         /* ===== ESTILOS PARA MINI IMPRESORAS TÉRMICAS ===== */
-                        
+
                         /* Configuración de página para impresión */
                         @page {
                             size: 58mm auto;
@@ -4012,9 +3959,10 @@ function generarRecibo(factura, productos, totales) {
                             margin-top: 2mm;
                         }
 
-                        .codigo-proforma div:first-child {
+                        .codigo-proforma div:first-child, .codigo-proforma div:nth-child(2) {
                             font-size: 6px;
                             margin-bottom: 0.5mm;
+                            text-align: center;
                         }
 
                         .conservar-documento {
@@ -4027,7 +3975,7 @@ function generarRecibo(factura, productos, totales) {
                         .info-pendientes {
                             text-align: center;
                             font-size: 7px;
-                            margin-bottom: 2mm;
+                            margin: 2mm 0;
                         }
 
                         .info-pendientes div {
@@ -4151,18 +4099,18 @@ function generarRecibo(factura, productos, totales) {
 
                     <script>
                         console.log('📄 Documento de recibo cargado');
-                        
+
                         let impresionRealizada = false;
-                        
+
                         function ejecutarImpresion() {
                             if (impresionRealizada) {
                                 console.log('🖨️ Impresión ya ejecutada');
                                 return;
                             }
-                            
+
                             impresionRealizada = true;
                             console.log('🖨️ Ejecutando impresión automática...');
-                            
+
                             // Esperar un momento para asegurar que todo esté renderizado
                             setTimeout(() => {
                                 try {
@@ -4222,7 +4170,7 @@ function generarRecibo(factura, productos, totales) {
         ventanaImpresion.document.open();
         ventanaImpresion.document.write(documentoCompleto);
         ventanaImpresion.document.close();
-        
+
         console.log('✅ Ventana de impresión creada exitosamente');
 
         // Enfocar la ventana para asegurar que sea visible
@@ -4241,153 +4189,11 @@ function generarRecibo(factura, productos, totales) {
 }
 
 /**
- * Generar e imprimir recibo para factura completada (reutilizando lógica existente)
- */
-function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago) {
-    try {
-        console.log('🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===');
-        console.log('🖨️ Resultado factura:', resultadoFactura);
-        console.log('🖨️ Productos:', productos);
-        console.log('🖨️ Método de pago:', metodoPago);
-        console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
-        console.log('🖨️ Factura preservada para recibo:', window.facturaParaRecibo);
-
-        // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA CON MÚLTIPLES FUENTES
-        let numeroFactura = 'N/A';
-        let nombreCliente = 'Cliente General';
-        let usuarioCreadorNombre = 'Sistema';
-        
-        // ✅ PRIORIZAR INFORMACIÓN DE FACTURA PENDIENTE ACTUAL
-        if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
-            numeroFactura = facturaPendienteActual.numeroFactura;
-            nombreCliente = facturaPendienteActual.nombreCliente || facturaPendienteActual.NombreCliente || nombreCliente;
-            usuarioCreadorNombre = facturaPendienteActual.usuarioCreadorNombre || facturaPendienteActual.UsuarioCreadorNombre || usuarioCreadorNombre;
-            console.log('🖨️ Datos desde facturaPendienteActual:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
-        }
-        // Prioridad 2: Desde información preservada
-        else if (window.facturaParaRecibo && window.facturaParaRecibo.numeroFactura) {
-            numeroFactura = window.facturaParaRecibo.numeroFactura;
-            nombreCliente = window.facturaParaRecibo.nombreCliente || nombreCliente;
-            usuarioCreadorNombre = window.facturaParaRecibo.usuarioCreadorNombre || usuarioCreadorNombre;
-            console.log('🖨️ Datos desde información preservada:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
-        }
-        // Prioridad 3: Desde resultadoFactura (respuesta del servidor)
-        else if (resultadoFactura && resultadoFactura.numeroFactura) {
-            numeroFactura = resultadoFactura.numeroFactura;
-            nombreCliente = resultadoFactura.nombreCliente || nombreCliente;
-            usuarioCreadorNombre = resultadoFactura.usuarioCreadorNombre || usuarioCreadorNombre;
-            console.log('🖨️ Datos desde resultadoFactura:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
-        }
-        // Prioridad 4: Desde resultadoFactura.data
-        else if (resultadoFactura && resultadoFactura.data && resultadoFactura.data.numeroFactura) {
-            numeroFactura = resultadoFactura.data.numeroFactura;
-            nombreCliente = resultadoFactura.data.nombreCliente || nombreCliente;
-            usuarioCreadorNombre = resultadoFactura.data.usuarioCreadorNombre || usuarioCreadorNombre;
-            console.log('🖨️ Datos desde resultadoFactura.data:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
-        }
-        // Prioridad 5: Desde los productos si tienen facturaId
-        else if (productos && productos.length > 0 && productos[0].facturaId) {
-            numeroFactura = `FAC-${productos[0].facturaId}`;
-            console.log('🖨️ Número de factura generado desde facturaId:', numeroFactura);
-        }
-
-        // ✅ COMPLETAR INFORMACIÓN FALTANTE CON CLIENTE SELECCIONADO Y USUARIO ACTUAL
-        if (nombreCliente === 'Cliente General' && clienteSeleccionado) {
-            nombreCliente = clienteSeleccionado.nombre || 
-                           clienteSeleccionado.nombreCliente || 
-                           clienteSeleccionado.NombreCliente || 
-                           'Cliente General';
-            console.log('🖨️ Nombre cliente completado desde clienteSeleccionado:', nombreCliente);
-        }
-
-        if (usuarioCreadorNombre === 'Sistema') {
-            const usuarioActual = obtenerUsuarioActual();
-            usuarioCreadorNombre = usuarioActual?.nombre || 
-                                  usuarioActual?.nombreUsuario || 
-                                  usuarioActual?.NombreUsuario || 
-                                  'Sistema';
-            console.log('🖨️ Usuario creador completado desde usuarioActual:', usuarioCreadorNombre);
-        }
-
-        console.log('🖨️ Información final determinada:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
-
-        // Calcular totales basándose en los productos del carrito
-        const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
-        
-        let subtotal = 0;
-        productos.forEach(producto => {
-            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
-            subtotal += precioAjustado * producto.cantidad;
-        });
-
-        const iva = subtotal * 0.13;
-        const total = subtotal + iva;
-
-        // ✅ CREAR OBJETO DE DATOS COMPLETO PARA EL RECIBO
-        const datosRecibo = {
-            numeroFactura: numeroFactura,
-            nombreCliente: nombreCliente,
-            usuarioCreadorNombre: usuarioCreadorNombre
-        };
-
-        const totalesRecibo = {
-            subtotal: subtotal,
-            iva: iva,
-            total: total,
-            metodoPago: metodoPago,
-            cliente: {
-                nombre: nombreCliente,
-                nombreCliente: nombreCliente
-            },
-            usuario: {
-                nombre: usuarioCreadorNombre,
-                nombreUsuario: usuarioCreadorNombre
-            }
-        };
-
-        console.log('🖨️ Datos del recibo preparados:', {
-            datosRecibo,
-            cantidadProductos: productos.length,
-            totalCalculado: total,
-            numeroFactura: numeroFactura,
-            cliente: nombreCliente,
-            usuario: usuarioCreadorNombre
-        });
-
-        // ✅ LLAMAR A LA FUNCIÓN DE GENERACIÓN DE RECIBOS CON DATOS COMPLETOS
-        generarRecibo(datosRecibo, productos, totalesRecibo);
-
-        // ✅ LIMPIAR INFORMACIÓN PRESERVADA DESPUÉS DE USAR
-        if (window.facturaParaRecibo) {
-            console.log('🧹 Limpiando información preservada de factura');
-            delete window.facturaParaRecibo;
-        }
-
-        console.log('✅ Recibo de factura completada generado exitosamente');
-        console.log('✅ Número:', numeroFactura);
-        console.log('✅ Cliente:', nombreCliente);
-        console.log('✅ Cajero:', usuarioCreadorNombre);
-
-    } catch (error) {
-        console.error('❌ Error generando recibo para factura completada:', error);
-        // Mostrar error específico al usuario
-        Swal.fire({
-            icon: 'warning',
-            title: 'Recibo no impreso',
-            text: 'La factura se completó correctamente pero no se pudo imprimir el recibo automáticamente',
-            confirmButtonText: 'Entendido',
-            timer: 4000,
-            timerProgressBar: true
-        });
-    }
-}
-
-/**
  * Función de impresión directa cuando falla la ventana emergente
  */
 function imprimirReciboDirecto(reciboHTML, numeroFactura) {
     console.log('🖨️ === IMPRESIÓN DIRECTA DE RECIBO ===');
-    
+
     try {
         // Crear un div temporal invisible para la impresión
         const printDiv = document.createElement('div');
@@ -4397,10 +4203,10 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
         printDiv.style.top = '-9999px';
         printDiv.style.visibility = 'hidden';
         printDiv.innerHTML = reciboHTML;
-        
+
         // Agregar al DOM temporalmente
         document.body.appendChild(printDiv);
-        
+
         // Crear estilos específicos para impresión
         const printStyles = document.createElement('style');
         printStyles.id = 'recibo-print-styles';
@@ -4428,12 +4234,12 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
                 }
             }
         `;
-        
+
         document.head.appendChild(printStyles);
-        
+
         // Imprimir
         window.print();
-        
+
         // Limpiar después de imprimir
         setTimeout(() => {
             if (printDiv.parentNode) {
@@ -4443,13 +4249,13 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
                 printStyles.parentNode.removeChild(printStyles);
             }
         }, 1000);
-        
+
         console.log('✅ Impresión directa iniciada');
         mostrarToast('Impresión', 'Recibo enviado a impresión', 'success');
-        
+
     } catch (error) {
         console.error('❌ Error en impresión directa:', error);
-        
+
         // Último recurso: mostrar notificación simple
         Swal.fire({
             icon: 'info',
@@ -4462,7 +4268,7 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
     }
 }
 
-// ===== FUNCIONES AUXILIARES =====
+// ===== FUNÇÕES AUXILIARES =====
 function mostrarCargandoBusqueda() {
     contadorLlamadasCargandoBusqueda++;
     console.log('⏳ === mostrarCargandoBusqueda llamada ===');
@@ -4566,9 +4372,9 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
         // Crear toast HTML moderno
         const toastId = 'toast-moderno-' + Date.now();
         const toastHtml = `
-            <div id="${toastId}" class="toast-moderno" role="alert" aria-live="assertive" aria-atomic="true" 
-                 style="background: ${config.gradiente}; 
-                        color: ${config.color}; 
+            <div id="${toastId}" class="toast-moderno" role="alert" aria-live="assertive" aria-atomic="true"
+                 style="background: ${config.gradiente};
+                        color: ${config.color};
                         box-shadow: ${config.shadow};
                         border: none;
                         border-radius: 16px;
@@ -4579,8 +4385,8 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
                         opacity: 0;
                         transform: translateX(100%);
                         transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);">
-                <div class="toast-moderno-content" style="display: flex; 
-                                                          align-items: flex-start; 
+                <div class="toast-moderno-content" style="display: flex;
+                                                          align-items: flex-start;
                                                           padding: 16px 20px;
                                                           gap: 12px;">
                     <div class="toast-moderno-icon" style="display: flex;
@@ -4608,8 +4414,8 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
                             ${mensaje}
                         </div>
                     </div>
-                    <button type="button" 
-                            class="toast-moderno-close" 
+                    <button type="button"
+                            class="toast-moderno-close"
                             onclick="cerrarToastModerno('${toastId}')"
                             style="background: rgba(255, 255, 255, 0.2);
                                    border: none;
@@ -4649,31 +4455,31 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
                     from { transform: scaleX(1); }
                     to { transform: scaleX(0); }
                 }
-                
+
                 .toast-moderno.mostrar {
                     opacity: 1 !important;
                     transform: translateX(0) !important;
                 }
-                
+
                 .toast-moderno.ocultar {
                     opacity: 0 !important;
                     transform: translateX(100%) scale(0.8) !important;
                 }
-                
+
                 .toast-container-moderno {
                     max-height: 100vh;
                     overflow-y: auto;
                     overflow-x: hidden;
                 }
-                
+
                 .toast-container-moderno::-webkit-scrollbar {
                     width: 4px;
                 }
-                
+
                 .toast-container-moderno::-webkit-scrollbar-track {
                     background: transparent;
                 }
-                
+
                 .toast-container-moderno::-webkit-scrollbar-thumb {
                     background: rgba(0, 0, 0, 0.2);
                     border-radius: 2px;
@@ -4787,9 +4593,9 @@ function verDetalleProducto(producto) {
                 return `
                                                         <tr>
                                                             <td>
-                                                                <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : 'cash'} me-2"></i>
+                                                                <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : metodo === 'sinpe' ? 'phone' : 'cash'} me-2"></i>
                                                                 ${config.nombre}
-                                                                ${metodo === 'tarjeta' ? '<span class="text-muted">(+5%)</span>' : ''}
+                                                                ${metodo === 'tarjeta' ? '<span class="text-muted">(+9%)</span>' : ''}
                                                             </td>
                                                             <td class="text-end fw-bold">₡${formatearMoneda(precio)}</td>
                                                         </tr>
@@ -4887,10 +4693,10 @@ function abrirModalNuevoCliente() {
                                     <label for="nombreClienteFacturacion" class="form-label">
                                         <i class="bi bi-person me-1"></i>Nombre *
                                     </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="nombreClienteFacturacion" 
-                                           name="nombre" 
+                                    <input type="text"
+                                           class="form-control"
+                                           id="nombreClienteFacturacion"
+                                           name="nombre"
                                            placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
@@ -4898,14 +4704,15 @@ function abrirModalNuevoCliente() {
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Identificación
+                                        <i class="bi bi-person-badge me-1"></i>Identificación *
                                     </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="contactoClienteFacturacion" 
+                                    <input type="text"
+                                           class="form-control"
+                                           id="contactoClienteFacturacion"
                                            name="contacto"
                                            placeholder="1-2345-6789"
-                                           maxlength="20">
+                                           maxlength="20"
+                                           required>
                                     <div class="invalid-feedback"></div>
                                     <small class="form-text text-muted">Cédula o documento de identidad</small>
                                 </div>
@@ -4913,26 +4720,28 @@ function abrirModalNuevoCliente() {
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="emailClienteFacturacion" class="form-label">
-                                        <i class="bi bi-envelope me-1"></i>Email
+                                        <i class="bi bi-envelope me-1"></i>Email *
                                     </label>
-                                    <input type="email" 
-                                           class="form-control" 
-                                           id="emailClienteFacturacion" 
+                                    <input type="email"
+                                           class="form-control"
+                                           id="emailClienteFacturacion"
                                            name="email"
-                                           placeholder="cliente@ejemplo.com">
+                                           placeholder="cliente@ejemplo.com"
+                                           required>
                                     <div class="invalid-feedback"></div>
                                     <small class="form-text text-muted">Correo electrónico válido</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="telefonoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                                        <i class="bi bi-telephone me-1"></i>Teléfono *
                                     </label>
-                                    <input type="tel" 
-                                           class="form-control" 
-                                           id="telefonoClienteFacturacion" 
+                                    <input type="tel"
+                                           class="form-control"
+                                           id="telefonoClienteFacturacion"
                                            name="telefono"
                                            placeholder="8888-8888"
-                                           maxlength="15">
+                                           maxlength="15"
+                                           required>
                                     <div class="invalid-feedback"></div>
                                     <small class="form-text text-muted">Número de teléfono (8 dígitos)</small>
                                 </div>
@@ -4941,9 +4750,9 @@ function abrirModalNuevoCliente() {
                                 <label for="direccionClienteFacturacion" class="form-label">
                                     <i class="bi bi-geo-alt me-1"></i>Dirección
                                 </label>
-                                <textarea class="form-control" 
-                                          id="direccionClienteFacturacion" 
-                                          name="direccion" 
+                                <textarea class="form-control"
+                                          id="direccionClienteFacturacion"
+                                          name="direccion"
                                           rows="3"
                                           placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
                                           maxlength="500"></textarea>
@@ -5009,19 +4818,28 @@ function validarCampoEnTiempoReal(campo) {
             }
             break;
         case 'contactoClienteFacturacion':
-            if (valor && !/^[\d\-\s]+$/.test(valor)) {
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La identificación es obligatoria';
+            } else if (!/^[\d\-\s]+$/.test(valor)) {
                 esValido = false;
                 mensaje = 'La identificación solo puede contener números y guiones';
             }
             break;
         case 'emailClienteFacturacion':
-            if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El email es obligatorio';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
                 esValido = false;
                 mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
             }
             break;
         case 'telefonoClienteFacturacion':
-            if (valor && !/^[\d\-\s\+\(\)]+$/.test(valor)) {
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El teléfono es obligatorio';
+            } else if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
                 esValido = false;
                 mensaje = 'El teléfono solo puede contener números, espacios y guiones';
             } else if (valor && valor.replace(/[\D]/g, '').length < 8) {
@@ -5060,7 +4878,67 @@ function validarFormularioNuevoCliente() {
         $('#nombreClienteFacturacion').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
         esValido = false;
     }
+    // Validación especial para identificación (obligatoria)
+    const contacto = $('#contactoClienteFacturacion').val().trim();
+    if (!contacto) {
+        $('#contactoClienteFacturacion').addClass('is-invalid');
+        $('#contactoClienteFacturacion').siblings('.invalid-feedback').text('La identificación es obligatoria');
+        esValido = false;
+    }
+    // Validación especial para email (obligatorio y formato)
+    const email = $('#emailClienteFacturacion').val().trim();
+    if (!email) {
+        $('#emailClienteFacturacion').addClass('is-invalid');
+        $('#emailClienteFacturacion').siblings('.invalid-feedback').text('El email es obligatorio');
+        esValido = false;
+    } else if (!validarEmailFacturacion(email)) {
+        $('#emailClienteFacturacion').addClass('is-invalid');
+        $('#emailClienteFacturacion').siblings('.invalid-feedback').text('El formato del email no es válido');
+        esValido = false;
+    }
+    // Validación especial para teléfono (obligatorio)
+    const telefono = $('#telefonoClienteFacturacion').val().trim();
+    if (!telefono) {
+        $('#telefonoClienteFacturacion').addClass('is-invalid');
+        $('#telefonoClienteFacturacion').siblings('.invalid-feedback').text('El teléfono es obligatorio');
+        esValido = false;
+    }
+    // Validación especial para dirección (obligatoria)
+    const direccion = $('#direccionClienteFacturacion').val().trim();
+    if (!direccion) {
+        $('#direccionClienteFacturacion').addClass('is-invalid');
+        $('#direccionClienteFacturacion').siblings('.invalid-feedback').text('La dirección es obligatoria');
+        esValido = false;
+    }
+
     return esValido;
+}
+
+function mostrarErrorCampoFacturacion(selector, mensaje) {
+    $(selector).addClass('is-invalid');
+    $(selector).siblings('.invalid-feedback').text(mensaje);
+}
+
+function validarEmailFacturacion(email) {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
+
+function getCampoSelector(nombreCampo) {
+    const mapaCampos = {
+        'nombre': '#nombreClienteFacturacion',
+        'NombreCliente': '#nombreClienteFacturacion',
+        'contacto': '#contactoClienteFacturacion',
+        'Contacto': '#contactoClienteFacturacion',
+        'email': '#emailClienteFacturacion',
+        'Email': '#emailClienteFacturacion',
+        'telefono': '#telefonoClienteFacturacion',
+        'Telefono': '#telefonoClienteFacturacion',
+        'direccion': '#direccionClienteFacturacion',
+        'Direccion': '#direccionClienteFacturacion'
+    };
+
+    return mapaCampos[nombreCampo] || null;
 }
 
 async function guardarNuevoCliente() {
@@ -5141,119 +5019,6 @@ async function guardarNuevoCliente() {
         btnGuardar.find('.btn-normal-state').removeClass('d-none');
         btnGuardar.find('.btn-loading-state').addClass('d-none');
     }
-}
-
-function validarFormularioNuevoCliente() {
-    let esValido = true;
-
-    // Limpiar validaciones previas
-    $('#modalNuevoClienteFacturacion .form-control').removeClass('is-invalid');
-    $('#modalNuevoClienteFacturacion .invalid-feedback').text('');
-
-    // Validar nombre (requerido)
-    const nombre = $('#nombreClienteFacturacion').val().trim();
-    if (!nombre) {
-        mostrarErrorCampoFacturacion('#nombreClienteFacturacion', 'El nombre del cliente es requerido');
-        esValido = false;
-    }
-
-    // Validar identificación (requerida)
-    const contacto = $('#contactoClienteFacturacion').val().trim();
-    if (!contacto) {
-        mostrarErrorCampoFacturacion('#contactoClienteFacturacion', 'La identificación es requerida');
-        esValido = false;
-    }
-
-    // Validar email (requerido y formato)
-    const email = $('#emailClienteFacturacion').val().trim();
-    if (!email) {
-        mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El email es requerido');
-        esValido = false;
-    } else if (!validarEmailFacturacion(email)) {
-        mostrarErrorCampoFacturacion('#emailClienteFacturacion', 'El formato del email no es válido');
-        esValido = false;
-    }
-
-    // Validar teléfono (requerido)
-    const telefono = $('#telefonoClienteFacturacion').val().trim();
-    if (!telefono) {
-        mostrarErrorCampoFacturacion('#telefonoClienteFacturacion', 'El teléfono es requerido');
-        esValido = false;
-    }
-
-    // Validar dirección (requerida)
-    const direccion = $('#direccionClienteFacturacion').val().trim();
-    if (!direccion) {
-        mostrarErrorCampoFacturacion('#direccionClienteFacturacion', 'La dirección es requerida');
-        esValido = false;
-    }
-
-    return esValido;
-}
-
-function mostrarErrorCampoFacturacion(selector, mensaje) {
-    $(selector).addClass('is-invalid');
-    $(selector).siblings('.invalid-feedback').text(mensaje);
-}
-
-function validarEmailFacturacion(email) {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-}
-
-function getCampoSelector(nombreCampo) {
-    const mapaCampos = {
-        'nombre': '#nombreClienteFacturacion',
-        'NombreCliente': '#nombreClienteFacturacion',
-        'contacto': '#contactoClienteFacturacion',
-        'Contacto': '#contactoClienteFacturacion',
-        'email': '#emailClienteFacturacion',
-        'Email': '#emailClienteFacturacion',
-        'telefono': '#telefonoClienteFacturacion',
-        'Telefono': '#telefonoClienteFacturacion',
-        'direccion': '#direccionClienteFacturacion',
-        'Direccion': '#direccionClienteFacturacion'
-    };
-
-    return mapaCampos[nombreCampo] || null;
-}
-
-// ===== FUNCIONES AUXILIARES ADICIONALES =====
-function nuevaVenta() {
-    limpiarVenta();
-    console.log('🆕 Nueva venta iniciada');
-}
-
-function agregarProducto(producto) {
-    agregarProductoAVenta(producto);
-}
-
-function finalizarVenta() {
-    mostrarModalFinalizarVenta();
-}
-
-function eliminarProductoVenta(index) {
-    if (index >= 0 && index < productosEnVenta.length) {
-        productosEnVenta.splice(index, 1);
-        actualizarVistaCarrito();
-        actualizarTotales();
-        mostrarToast('Producto eliminado', 'Producto removido de la venta', 'info');
-    }
-}
-
-function actualizarCantidadProducto(index, nuevaCantidad) {
-    if (index >= 0 && index < productosEnVenta.length) {
-        const producto = productosEnVenta[index];
-        if (nuevaCantidad >= 1 && nuevaCantidad <= producto.stockDisponible) {
-            producto.cantidad = nuevaCantidad;
-            actualizarVistaCarrito();
-            actualizarTotales();
-        }
-    }
-}
-
-function procesarVenta() {
-    procesarVentaFinal();
 }
 
 // ===== CARGAR PRODUCTOS INICIALES =====
@@ -5365,7 +5130,7 @@ function obtenerUsuarioActual() {
     try {
         console.log('👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===');
         console.log('👤 facturaConfig disponible:', !!window.facturaConfig);
-        
+
         // ✅ PRIMERA OPCIÓN: Desde configuración de facturación (método principal)
         if (window.facturaConfig && window.facturaConfig.usuario) {
             console.log('👤 Usuario encontrado en facturaConfig:', window.facturaConfig.usuario);
@@ -5425,7 +5190,7 @@ function obtenerUsuarioActual() {
 // ===== FUNCIÓN PARA OBTENER TOKEN JWT =====
 function obtenerTokenJWT() {
     // Intentar obtener el token desde localStorage, sessionStorage o cookies
-    let token = localStorage.getItem('jwt_token') || 
+    let token = localStorage.getItem('jwt_token') ||
                 sessionStorage.getItem('jwt_token') ||
                 localStorage.getItem('authToken') ||
                 sessionStorage.getItem('authToken');
@@ -5492,10 +5257,10 @@ function actualizarEstadoBotonFinalizar() {
 function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
     console.log('📋 Datos recibidos:', resultadoFactura);
-    
+
     // ✅ EXTRACCIÓN DIRECTA Y SIMPLIFICADA DEL NÚMERO DE FACTURA
     const numeroFactura = resultadoFactura?.numeroFactura || 'N/A';
-    
+
     console.log('🔢 Número de factura extraído:', numeroFactura);
 
     // Determinar título y mensaje según permisos
@@ -5537,9 +5302,9 @@ function mostrarModalFacturaPendiente(resultadoFactura) {
                             </div>
                             <div class="col-md-6">
                                 <strong>Estado:</strong><br>
-                                <span class="badge bg-warning fs-6">Pendiente de Pago</span>
+                                <span class="badge bg-warning text-dark">Pendiente de Pago</span>
                             </div>
-                        </div></div>
+                        </div>
 
                         <div class="alert alert-info">
                             <h6><i class="bi bi-info-circle me-2"></i>Siguiente paso:</h6>
@@ -5600,7 +5365,7 @@ async function verificarStockFacturaPendiente(facturaId) {
     try {
         console.log('📦 === VERIFICANDO STOCK PARA FACTURA ===');
         console.log('📦 Factura ID:', facturaId);
-        
+
         const response = await fetch('/Facturacion/VerificarStockFactura', {
             method: 'POST',
             headers: {
@@ -5622,7 +5387,7 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Resultado completo:', JSON.stringify(resultado, null, 2));
         console.log('📦 Tipo:', typeof resultado);
         console.log('📦 Propiedades:', Object.keys(resultado || {}));
-        
+
         // ✅ PROCESAMIENTO SIMPLIFICADO Y ROBUSTO
         let tieneProblemas = false;
         let productosConProblemas = [];
@@ -5637,7 +5402,7 @@ async function verificarStockFacturaPendiente(facturaId) {
             }
 
             // 2. Detectar problemas de stock
-            tieneProblemas = resultado.hayProblemasStock === true || 
+            tieneProblemas = resultado.hayProblemasStock === true ||
                            resultado.tieneProblemas === true ||
                            (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas) && resultado.productosConProblemas.length > 0);
 
@@ -5673,25 +5438,25 @@ async function verificarStockFacturaPendiente(facturaId) {
                 message = `Se encontraron ${productosConProblemas.length} productos con problemas de stock`;
             }
         }
-        
+
         console.log('📦 === RESULTADO FINAL ===');
         console.log('📦 Success:', success);
         console.log('📦 Tiene problemas:', tieneProblemas);
         console.log('📦 Productos con problemas:', productosConProblemas.length);
         console.log('📦 Productos normalizados:', productosConProblemas);
-        
+
         return {
             success: success,
             tieneProblemas: tieneProblemas,
             productosConProblemas: productosConProblemas,
             message: message
         };
-        
+
     } catch (error) {
         console.error('❌ Error verificando stock:', error);
-        return { 
-            success: false, 
-            tieneProblemas: false, 
+        return {
+            success: false,
+            tieneProblemas: false,
             productosConProblemas: [],
             message: error.message || 'Error de conexión'
         };
@@ -5705,7 +5470,7 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
     console.log('⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===');
     console.log('⚠️ Productos recibidos:', productosConProblemas);
     console.log('⚠️ Factura:', factura);
-    
+
     // Validar entrada
     if (!Array.isArray(productosConProblemas) || productosConProblemas.length === 0) {
         console.error('❌ Array de productos inválido o vacío');
@@ -5717,10 +5482,10 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
         });
         return;
     }
-    
+
     try {
         console.log('⚠️ Inicializando modal de problemas de stock...');
-        
+
         // Verificar que el modal existe en el DOM
         const modalElement = document.getElementById('problemasStockModal');
         if (!modalElement) {
@@ -5733,82 +5498,73 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
             });
             return;
         }
-        
+
         // ✅ VARIABLE PARA CONTROLAR SI EL MODAL SE CERRÓ POR UNA ACCIÓN VÁLIDA
         let modalCerradoPorAccion = false;
-        
+
         // ✅ LIMPIAR EVENTOS ANTERIORES Y CONFIGURAR NUEVO COMPORTAMIENTO
         $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function() {
             console.log('🔍 === MODAL PROBLEMAS STOCK CERRADO ===');
             console.log('🔍 Modal cerrado por acción válida:', modalCerradoPorAccion);
-            
+
             // Solo limpiar carrito si NO fue cerrado por una acción válida
             if (!modalCerradoPorAccion) {
                 console.log('❌ === MODAL CERRADO SIN ACCIÓN VÁLIDA ===');
                 console.log('❌ Limpiando carrito por cancelación del usuario');
-                
+
                 // Limpiar carrito completamente
                 productosEnVenta = [];
                 clienteSeleccionado = null;
                 facturaPendienteActual = null;
-                
+
                 // Limpiar interfaz
                 $('#clienteBusqueda').val('');
                 $('#clienteSeleccionado').addClass('d-none');
                 actualizarVistaCarrito();
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
-                
+
                 // Mostrar notificación
                 mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
-                
+
                 console.log('✅ Carrito limpiado por cancelación');
             } else {
                 console.log('✅ Modal cerrado por acción válida - carrito mantenido');
             }
-            
+
             // Resetear la variable para futuros usos
             modalCerradoPorAccion = false;
         });
-        
+
         // ✅ FUNCIÓN HELPER PARA MARCAR CIERRE VÁLIDO
         window.marcarCierreValidoProblemasStock = function() {
             modalCerradoPorAccion = true;
         };
-        
+
         // ✅ CONFIGURAR EVENTOS DE LOS BOTONES DEL MODAL
         configurarEventosModalProblemasStock();
-        
+
         // Mostrar modal
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
-        
+
         // Estado inicial: mostrar loading
         $('#problemasStockLoading').show();
         $('#problemasStockContent').hide();
-        
+
         // Procesar y mostrar productos después de un breve delay
         setTimeout(() => {
             mostrarProductosConProblemas(productosConProblemas, factura);
         }, 300);
-        
-    } catch (error) {
-        console.error('❌ Error mostrando modal de problemas:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se pudo mostrar el modal de problemas de stock',
-            confirmButtonColor: '#dc3545'
-        });
+
     }
-}
 
 function mostrarProductosConProblemas(productos, factura) {
     console.log('⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===');
     console.log('⚠️ Cantidad de productos:', productos?.length || 0);
     console.log('⚠️ Productos detallados:', productos);
     console.log('⚠️ Factura:', factura);
-    
+
     try {
         // Validar productos
         if (!Array.isArray(productos) || productos.length === 0) {
@@ -5822,20 +5578,20 @@ function mostrarProductosConProblemas(productos, factura) {
             `).show();
             return;
         }
-        
+
         // Extraer información de la factura
         const numeroFactura = factura?.numeroFactura || facturaPendienteActual?.numeroFactura || 'N/A';
         const nombreCliente = factura?.nombreCliente || clienteSeleccionado?.nombre || 'Cliente General';
-        
+
         console.log('⚠️ Información de la factura extraída:', {
             numeroFactura,
             nombreCliente
         });
-        
+
         // Generar HTML de la tabla
         let html = '';
         let productosValidos = 0;
-        
+
         productos.forEach((producto, index) => {
             try {
                 // Validar estructura del producto
@@ -5844,7 +5600,7 @@ function mostrarProductosConProblemas(productos, factura) {
                 const cantidadRequerida = parseInt(producto.cantidadRequerida || producto.CantidadRequerida || 0);
                 const stockDisponible = parseInt(producto.stockDisponible || producto.StockDisponible || 0);
                 const faltante = Math.max(0, cantidadRequerida - stockDisponible);
-                
+
                 console.log(`⚠️ Procesando producto ${index + 1}:`, {
                     productoId,
                     nombreProducto,
@@ -5852,7 +5608,7 @@ function mostrarProductosConProblemas(productos, factura) {
                     stockDisponible,
                     faltante
                 });
-                
+
                 // Solo mostrar si realmente hay problema
                 if (cantidadRequerida > stockDisponible) {
                     html += `
@@ -5872,8 +5628,8 @@ function mostrarProductosConProblemas(productos, factura) {
                                 <span class="badge bg-danger">${faltante}</span>
                             </td>
                             <td class="text-center">
-                                <button type="button" 
-                                        class="btn btn-sm btn-outline-danger btn-eliminar-problema" 
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger btn-eliminar-problema"
                                         data-producto-id="${productoId}"
                                         title="Eliminar este producto de la factura">
                                     <i class="bi bi-trash"></i>
@@ -5887,9 +5643,9 @@ function mostrarProductosConProblemas(productos, factura) {
                 console.error(`❌ Error procesando producto ${index}:`, error, producto);
             }
         });
-        
+
         console.log('⚠️ Productos válidos con problemas:', productosValidos);
-        
+
         if (productosValidos === 0) {
             $('#problemasStockLoading').hide();
             $('#problemasStockContent').html(`
@@ -5900,14 +5656,14 @@ function mostrarProductosConProblemas(productos, factura) {
             `).show();
             return;
         }
-        
+
         // Actualizar información de la factura
         $('#problemasStockFactura').text(numeroFactura);
         $('#problemasStockCliente').text(nombreCliente);
-        
+
         // Actualizar tabla
         $('#problemasStockTableBody').html(html);
-        
+
         // ✅ CONFIGURAR EVENTOS PARA BOTONES DE ELIMINAR PRODUCTO
         $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function(e) {
             e.preventDefault();
@@ -5916,13 +5672,13 @@ function mostrarProductosConProblemas(productos, factura) {
             console.log('🗑️ Eliminar producto problema ID:', productoId);
             eliminarProductoProblema(productoId);
         });
-        
+
         // Mostrar contenido y ocultar loading
         $('#problemasStockLoading').hide();
         $('#problemasStockContent').show();
-        
+
         console.log('✅ Modal de problemas de stock mostrado correctamente');
-        
+
     } catch (error) {
         console.error('❌ Error en mostrarProductosConProblemas:', error);
         $('#problemasStockLoading').hide();
@@ -5942,7 +5698,7 @@ function eliminarProductoProblema(productoId) {
     console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA ===');
     console.log('🗑️ Producto ID:', productoId);
     console.log('🗑️ Factura pendiente actual:', facturaPendienteActual);
-    
+
     // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE
     if (facturaPendienteActual && facturaPendienteActual.facturaId) {
         // Si es factura pendiente, usar endpoint del servidor
@@ -5955,12 +5711,12 @@ function eliminarProductoProblema(productoId) {
             productosEnVenta.splice(indiceEnCarrito, 1);
             actualizarVistaCarrito();
             actualizarTotales();
-            
+
             // Ocultar fila en la tabla
             $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
                 $(this).remove();
             });
-            
+
             mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
         }
     }
@@ -5974,7 +5730,7 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
         console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===');
         console.log('📦 Factura ID:', facturaId);
         console.log('📦 Productos con problemas recibidos:', productosConProblemas);
-        
+
         if (!productosConProblemas || productosConProblemas.length === 0) {
             console.log('📦 No hay productos pendientes para registrar');
             return { success: true, message: 'No hay productos pendientes' };
@@ -5993,13 +5749,13 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                 const cantidadRequerida = producto.cantidadRequerida || producto.cantidadRequirida || producto.cantidad || 0;
                 const stockDisponible = producto.stockDisponible || producto.stock || 0;
                 const cantidadPendiente = Math.max(0, cantidadRequerida - stockDisponible);
-                
+
                 console.log(`📦 Procesando producto ${producto.productoId}:`, {
                     cantidadRequerida,
                     stockDisponible,
                     cantidadPendiente
                 });
-                
+
                 return {
                     productoId: producto.productoId,
                     nombreProducto: producto.nombreProducto || 'Sin nombre',
@@ -6038,10 +5794,10 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
 
         if (resultado.success) {
             console.log('✅ Productos pendientes registrados exitosamente');
-            
+
             // ✅ CAPTURAR CÓDIGOS DE SEGUIMIENTO CON MÚLTIPLES ESTRATEGIAS
             let codigosCapturados = [];
-            
+
             // Estrategia 1: Desde pendientesCreados directo
             if (resultado.pendientesCreados && Array.isArray(resultado.pendientesCreados)) {
                 console.log('🎫 Capturando desde resultado.pendientesCreados...');
@@ -6081,7 +5837,7 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                     }
                 }
             }
-            
+
             // ✅ GUARDAR CÓDIGOS GLOBALMENTE
             if (codigosCapturados.length > 0) {
                 window.codigosSeguimientoPendientes = codigosCapturados;
@@ -6102,10 +5858,10 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                 }));
                 console.log('🎫 Códigos fallback generados:', window.codigosSeguimientoPendientes);
             }
-            
+
             const cantidadRegistrados = resultado.pendientesCreados?.length || codigosCapturados.length || productosConProblemas.length;
-            mostrarToast('Productos Pendientes', 
-                `Se registraron ${cantidadRegistrados} productos para entrega posterior`, 
+            mostrarToast('Productos Pendientes',
+                `Se registraron ${cantidadRegistrados} productos para entrega posterior`,
                 'info');
             return resultado;
         } else {
@@ -6127,7 +5883,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
         console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA DE STOCK ===');
         console.log('🗑️ Factura ID:', facturaId);
         console.log('🗑️ Producto ID:', productoId);
-        
+
         const confirmacion = await Swal.fire({
             title: '¿Eliminar producto?',
             text: '¿Está seguro de que desea eliminar este producto de la factura?',
@@ -6171,12 +5927,12 @@ async function eliminarProductoConProblema(facturaId, productoId) {
             if (indiceEnCarrito !== -1) {
                 const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
                 productosEnVenta.splice(indiceEnCarrito, 1);
-                
+
                 // Actualizar vista del carrito
                 actualizarVistaCarrito();
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
-                
+
                 // Mostrar confirmación de eliminación con SweetAlert
                 Swal.fire({
                     icon: 'success',
@@ -6188,22 +5944,22 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                     timerProgressBar: true,
                     showConfirmButton: true
                 });
-                
+
                 // Ocultar fila en la tabla de problemas
                 $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
                     $(this).remove();
-                    
+
                     // Verificar si quedan productos con problemas
                     const problemasRestantes = $('.problema-stock-row').length;
                     console.log('🔍 Problemas restantes:', problemasRestantes);
-                    
+
                     if (problemasRestantes === 0) {
                         console.log('✅ No quedan productos con problemas - cerrando modal y abriendo finalización');
-                        
+
                         // ✅ PRESERVAR INFORMACIÓN DE LA FACTURA ANTES DE CONTINUAR
                         if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
                             console.log('📋 Preservando número de factura:', facturaPendienteActual.numeroFactura);
-                            
+
                             // Asegurar que la factura pendiente mantenga su información
                             window.facturaParaRecibo = {
                                 numeroFactura: facturaPendienteActual.numeroFactura,
@@ -6211,15 +5967,15 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                                 usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre
                             };
                         }
-                        
+
                         // Marcar cierre válido para evitar limpiar carrito
                         if (window.marcarCierreValidoProblemasStock) {
                             window.marcarCierreValidoProblemasStock();
                         }
-                        
+
                         // Cerrar modal de problemas
                         $('#problemasStockModal').modal('hide');
-                        
+
                         // Abrir modal de finalización después de un breve delay
                         setTimeout(() => {
                             if (productosEnVenta.length > 0) {
@@ -6230,13 +5986,13 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                         }, 500);
                     }
                 });
-                
+
                 console.log('✅ Producto eliminado exitosamente');
             }
-            
+
             // Actualizar carrito después de eliminar
             actualizarCarritoDespuesDeEliminar([productoId]);
-            
+
         } else {
             throw new Error(resultado.message || 'Error al eliminar el producto');
         }
@@ -6299,11 +6055,11 @@ function actualizarCarritoDespuesDeEliminar(productosEliminados) {
  */
 function configurarEventosModalProblemasStock() {
     console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
-    
+
     // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
     $(document).off('click.problemasStock', '#btnFacturarTodosModos');
     $(document).off('click.problemasStock', '#btnCancelarProblemasStock');
-    
+
     // ✅ CONFIGURAR EVENTO FACTURAR DE TODOS MODOS (delegación de eventos)
     $(document).on('click.problemasStock', '#btnFacturarTodosModos', function(e) {
         e.preventDefault();
@@ -6311,7 +6067,7 @@ function configurarEventosModalProblemasStock() {
         console.log('✅ BOTÓN FACTURAR DE TODOS MODOS CLICKEADO');
         facturarTodosModos();
     });
-    
+
     // ✅ CONFIGURAR EVENTO CANCELAR (delegación de eventos)
     $(document).on('click.problemasStock', '#btnCancelarProblemasStock', function(e) {
         e.preventDefault();
@@ -6319,7 +6075,7 @@ function configurarEventosModalProblemasStock() {
         console.log('❌ BOTÓN CANCELAR CLICKEADO');
         cancelarProblemasStock();
     });
-    
+
     console.log('✅ Eventos del modal de problemas de stock configurados con delegación');
 }
 
@@ -6329,7 +6085,7 @@ function configurarEventosModalProblemasStock() {
 async function facturarTodosModos() {
     console.log('⚠️ === FACTURAR DE TODOS MODOS ===');
     console.log('⚠️ Usuario decidió facturar con productos pendientes de entrega');
-    
+
     try {
         // ✅ CONFIRMAR LA ACCIÓN CON EL USUARIO
         const confirmacion = await Swal.fire({
@@ -6364,23 +6120,23 @@ async function facturarTodosModos() {
             const $fila = $(this);
             const productoId = $fila.data('producto-id');
             const nombreProducto = $fila.find('td:first strong').text().trim();
-            
+
             // ✅ CAPTURAR CANTIDADES CORRECTAMENTE DESDE LAS COLUMNAS DE LA TABLA
             const cantidadSolicitada = parseInt($fila.find('td:eq(1) .badge.bg-info').text().trim()) || 0;
             const stockDisponible = parseInt($fila.find('td:eq(2) .badge.bg-warning, td:eq(2) .badge.bg-danger').text().trim()) || 0;
             const cantidadPendiente = parseInt($fila.find('td:eq(3) .badge.bg-danger').text().trim()) || 0;
-            
+
             console.log(`📦 Procesando producto ${productoId}:`, {
                 nombreProducto,
                 cantidadSolicitada,
                 stockDisponible,
                 cantidadPendiente
             });
-            
+
             if (productoId && cantidadSolicitada > 0) {
                 // Buscar el producto en el carrito para obtener precio
                 const productoEnCarrito = productosEnVenta.find(p => p.productoId == productoId);
-                
+
                 productosConProblemas.push({
                     productoId: parseInt(productoId),
                     nombreProducto: nombreProducto,
@@ -6395,37 +6151,37 @@ async function facturarTodosModos() {
                 });
             }
         });
-        
+
         console.log('🔍 Productos con problemas capturados correctamente:', productosConProblemas);
-        
+
         // ✅ VALIDAR QUE SE CAPTURARON DATOS
         if (productosConProblemas.length === 0) {
             console.warn('⚠️ No se capturaron productos con problemas');
             mostrarToast('Advertencia', 'No se detectaron productos con problemas para procesar', 'warning');
             return;
         }
-        
+
         // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
         if (window.marcarCierreValidoProblemasStock) {
             window.marcarCierreValidoProblemasStock();
         }
-        
+
         // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
         window.productosPendientesEntrega = productosConProblemas;
         window.codigosSeguimientoPendientes = []; // Inicializar array para códigos
-        
+
         console.log('💾 Productos pendientes guardados globalmente:', window.productosPendientesEntrega);
-        
+
         // ✅ CERRAR MODAL DE PROBLEMAS
         $('#problemasStockModal').modal('hide');
-        
+
         // ✅ CONTINUAR CON MODAL DE FINALIZACIÓN DESPUÉS DE UN BREVE DELAY
         setTimeout(() => {
             // Agregar flag para indicar que hay pendientes
             window.facturaConPendientes = true;
             mostrarModalFinalizarVenta();
         }, 500);
-        
+
     } catch (error) {
         console.error('❌ Error en facturarTodosModos:', error);
         mostrarToast('Error', 'No se pudo procesar la facturación con pendientes', 'danger');
@@ -6436,22 +6192,22 @@ async function facturarTodosModos() {
 function cancelarProblemasStock() {
     console.log('❌ === CANCELANDO MODAL PROBLEMAS DE STOCK ===');
     console.log('❌ Usuario canceló modal de problemas de stock');
-    
+
     // Cerrar modal
     $('#problemasStockModal').modal('hide');
-    
+
     // El evento hidden.bs.modal se encargará de limpiar el carrito
 }
 
 function imprimirComprobanteEnvio(numeroFactura) {
-    const fecha = new Date().toLocaleDateString('es-CR', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
+    const fecha = new Date().toLocaleDateString('es-CR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
     });
-    const hora = new Date().toLocaleTimeString('es-CR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+    const hora = new Date().toLocaleTimeString('es-CR', {
+        hour: '2-digit',
+        minute: '2-digit'
     });
 
     const comprobanteHTML = `
@@ -6536,7 +6292,7 @@ function imprimirComprobanteEnvio(numeroFactura) {
 // ===== FUNCIÓN PARA RECARGAR PERMISOS DINÁMICAMENTE =====
 function recargarPermisosUsuario() {
     console.log('🔄 === RECARGANDO PERMISOS DE USUARIO ===');
-    
+
     // Limpiar permisos actuales
     permisosUsuario = {
         puedeCrearFacturas: false,
@@ -6545,11 +6301,11 @@ function recargarPermisosUsuario() {
         puedeAnularFacturas: false,
         esAdmin: false
     };
-    
+
     // Recargar configuración desde el servidor si es necesario
     // O simplemente recargar desde las variables globales existentes
     cargarPermisosUsuario();
-    
+
     console.log('🔄 Permisos recargados y aplicados');
 }
 
@@ -6557,22 +6313,22 @@ function recargarPermisosUsuario() {
 async function actualizarVistaProductosPostAjuste() {
     try {
         console.log('🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===');
-        
+
         // ✅ LIMPIAR COMPLETAMENTE EL ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
         window.lastProductsHash = null;
         ultimaBusqueda = '';
         busquedaEnProceso = false;
         cargaInicialCompletada = false;
-        
+
         // ✅ LIMPIAR TIMEOUT SI EXISTE
         if (timeoutBusquedaActivo) {
             clearTimeout(timeoutBusquedaActivo);
             timeoutBusquedaActivo = null;
         }
-        
+
         // ✅ OBTENER TÉRMINO DE BÚSQUEDA ACTUAL
         const terminoActual = $('#busquedaProducto').val().trim();
-        
+
         // ✅ MOSTRAR INDICADOR DE CARGA MIENTRAS SE ACTUALIZA
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4">
@@ -6582,10 +6338,10 @@ async function actualizarVistaProductosPostAjuste() {
                 <p class="mt-2 text-muted">Actualizando información de productos...</p>
             </div>
         `);
-        
+
         // ✅ ESPERAR UN MOMENTO PARA QUE SE VEAN LOS CAMBIOS EN LA UI
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // ✅ BUSCAR PRODUCTOS NUEVAMENTE
         if (terminoActual.length >= 2) {
             console.log('🔄 Actualizando con término de búsqueda:', terminoActual);
@@ -6594,13 +6350,13 @@ async function actualizarVistaProductosPostAjuste() {
             console.log('🔄 Actualizando productos iniciales');
             await buscarProductos('');
         }
-        
+
         console.log('✅ Vista de productos actualizada exitosamente');
-        
+
     } catch (error) {
         console.error('❌ Error al actualizar vista de productos:', error);
         console.warn('❌ No se pudo actualizar la vista de productos - sin toast');
-        
+
         // ✅ INTENTAR RECARGAR PRODUCTOS INICIALES COMO FALLBACK
         try {
             await cargarProductosIniciales();
@@ -6697,16 +6453,16 @@ async function cargarFacturasPendientesBasico(pagina = 1) {
     }
 }
 
-function mostrarFacturasPendientes(facturas) {
+function mostrarFacturasPendientesEnTabla(facturas) {
     console.log('📋 Mostrando', facturas.length, 'facturas pendientes');
-    
+
     let html = '';
     facturas.forEach(factura => {
         const fecha = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
         const hora = factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
         const total = factura.total || 0;
         const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
-        
+
         // Escapar datos para JavaScript con TODA la información del cliente
         const facturaEscapada = JSON.stringify({
             facturaId: factura.facturaId,
@@ -6721,9 +6477,9 @@ function mostrarFacturasPendientes(facturas) {
             metodoPago: factura.metodoPago,
             detallesFactura: factura.detallesFactura
         }).replace(/"/g, '&quot;');
-        
+
         html += `
-            <tr class="factura-pendiente-row" style="cursor: pointer;" 
+            <tr class="factura-pendiente-row" style="cursor: pointer;"
                 data-factura="${facturaEscapada}"
                 onclick="seleccionarFacturaPendiente(this)"
                 title="Click para seleccionar esta factura">
@@ -6752,20 +6508,20 @@ function mostrarFacturasPendientes(facturas) {
                 </td>
                 <td>
                     <div class="btn-group-vertical btn-group-sm">
-                        <button type="button" 
-                                class="btn btn-success btn-sm mb-1" 
+                        <button type="button"
+                                class="btn btn-success btn-sm mb-1"
                                 onclick="event.stopPropagation(); completarFacturaPendienteDirecto(${factura.facturaId}, '${factura.numeroFactura}', ${total})"
                                 title="Marcar como pagada directamente">
                             <i class="bi bi-check-circle me-1"></i>Completar
                         </button>
-                        <button type="button" 
-                                class="btn btn-outline-primary btn-sm mb-1" 
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm mb-1"
                                 onclick="event.stopPropagation(); procesarFacturaPendiente('${facturaEscapada}')"
                                 title="Procesar con modal de finalización">
                             <i class="bi bi-credit-card me-1"></i>Procesar
                         </button>
-                        <button type="button" 
-                                class="btn btn-outline-info btn-sm" 
+                        <button type="button"
+                                class="btn btn-outline-info btn-sm"
                                 onclick="event.stopPropagation(); verDetalleFacturaPendiente(${factura.facturaId})"
                                 title="Ver detalles">
                             <i class="bi bi-eye me-1"></i>Detalle
@@ -6775,7 +6531,7 @@ function mostrarFacturasPendientes(facturas) {
             </tr>
         `;
     });
-    
+
     $('#facturasPendientesTableBody').html(html);
     $('#facturasPendientesLoading').hide();
     $('#facturasPendientesContent').show();
@@ -6794,10 +6550,10 @@ function mostrarSinFacturasPendientes() {
 function seleccionarFacturaPendiente(row) {
     // Remover selección anterior
     $('.factura-pendiente-row').removeClass('table-primary');
-    
+
     // Agregar selección a la fila actual
     $(row).addClass('table-primary');
-    
+
     console.log('📋 Factura pendiente seleccionada');
 }
 
@@ -6997,7 +6753,7 @@ function cargarFacturaPendienteEnCarrito(factura) {
         Cliente: factura.Cliente
     });
     console.log('📦 Todas las propiedades de factura:', Object.keys(factura));
-    
+
     // ✅ GUARDAR DATOS DE FACTURA PENDIENTE GLOBALMENTE
     facturaPendienteActual = {
         facturaId: factura.facturaId,
@@ -7006,81 +6762,81 @@ function cargarFacturaPendienteEnCarrito(factura) {
         fechaCreacion: factura.fechaCreacion || new Date().toISOString(),
         usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema'
     };
-    
+
     console.log('💾 Factura pendiente guardada globalmente:', facturaPendienteActual);
-    
+
     // Limpiar carrito actual
     productosEnVenta = [];
-    
+
     // Cargar datos del cliente con mapeo completo y exhaustivo
     clienteSeleccionado = {
         id: factura.clienteId || factura.ClienteId || 1,
         clienteId: factura.clienteId || factura.ClienteId || 1,
-        
+
         // Mapeo para nombre
-        nombre: factura.nombreCliente || 
-               factura.NombreCliente || 
-               factura.Cliente?.Nombre || 
+        nombre: factura.nombreCliente ||
+               factura.NombreCliente ||
+               factura.Cliente?.Nombre ||
                'Cliente General',
-        nombreCliente: factura.nombreCliente || 
-                      factura.NombreCliente || 
-                      factura.Cliente?.Nombre || 
+        nombreCliente: factura.nombreCliente ||
+                      factura.NombreCliente ||
+                      factura.Cliente?.Nombre ||
                       'Cliente General',
-        
+
         // Mapeo para email
-        email: factura.emailCliente || 
-              factura.EmailCliente || 
-              factura.Cliente?.Email || 
-              factura.email || 
+        email: factura.emailCliente ||
+              factura.EmailCliente ||
+              factura.Cliente?.Email ||
+              factura.email ||
               '',
-        emailCliente: factura.emailCliente || 
-                     factura.EmailCliente || 
-                     factura.Cliente?.Email || 
+        emailCliente: factura.emailCliente ||
+                     factura.EmailCliente ||
+                     factura.Cliente?.Email ||
                      '',
-        
+
         // Mapeo para teléfono
-        telefono: factura.telefonoCliente || 
-                 factura.TelefonoCliente || 
-                 factura.Cliente?.Telefono || 
-                 factura.telefono || 
+        telefono: factura.telefonoCliente ||
+                 factura.TelefonoCliente ||
+                 factura.Cliente?.Telefono ||
+                 factura.telefono ||
                  '',
-        telefonoCliente: factura.telefonoCliente || 
-                        factura.TelefonoCliente || 
-                        factura.Cliente?.Telefono || 
+        telefonoCliente: factura.telefonoCliente ||
+                        factura.TelefonoCliente ||
+                        factura.Cliente?.Telefono ||
                         '',
-        
+
         // Mapeo para identificación
-        identificacion: factura.identificacionCliente || 
-                       factura.IdentificacionCliente || 
-                       factura.Cliente?.Contacto || 
-                       factura.cedula || 
-                       factura.contacto || 
+        identificacion: factura.identificacionCliente ||
+                       factura.IdentificacionCliente ||
+                       factura.Cliente?.Contacto ||
+                       factura.cedula ||
+                       factura.contacto ||
                        '',
-        identificacionCliente: factura.identificacionCliente || 
-                              factura.IdentificacionCliente || 
-                              factura.Cliente?.Contacto || 
+        identificacionCliente: factura.identificacionCliente ||
+                              factura.IdentificacionCliente ||
+                              factura.Cliente?.Contacto ||
                               '',
-        
+
         // Mapeo para dirección
-        direccion: factura.direccionCliente || 
-                  factura.DireccionCliente || 
-                  factura.Cliente?.Direccion || 
-                  factura.direccion || 
+        direccion: factura.direccionCliente ||
+                  factura.DireccionCliente ||
+                  factura.Cliente?.Direccion ||
+                  factura.direccion ||
                   '',
-        direccionCliente: factura.direccionCliente || 
-                         factura.DireccionCliente || 
-                         factura.Cliente?.Direccion || 
+        direccionCliente: factura.direccionCliente ||
+                         factura.DireccionCliente ||
+                         factura.Cliente?.Direccion ||
                          ''
     };
-    
+
     console.log('👤 Cliente seleccionado creado:', clienteSeleccionado);
-    
+
     // Mostrar cliente seleccionado
     $('#clienteBusqueda').val(factura.nombreCliente);
     $('#nombreClienteSeleccionado').text(factura.nombreCliente);
     $('#emailClienteSeleccionado').text(factura.emailCliente || 'Sin email');
     $('#clienteSeleccionado').removeClass('d-none');
-    
+
     // Cargar productos de la factura
     if (factura.detallesFactura && factura.detallesFactura.length > 0) {
         factura.detallesFactura.forEach(detalle => {
@@ -7089,25 +6845,25 @@ function cargarFacturaPendienteEnCarrito(factura) {
                 nombreProducto: detalle.nombreProducto,
                 precioUnitario: detalle.precioUnitario,
                 cantidad: detalle.cantidad,
-                stockDisponible: 999, // Asumir stock suficiente para facturas pendientes
+                stockDisponible: detalle.stockDisponible || 999,
                 metodoPago: factura.metodoPago || 'efectivo',
                 imagenUrl: null,
                 facturaId: factura.facturaId // Marcar como factura existente
             });
         });
     }
-    
+
     // Actualizar vista del carrito
     actualizarVistaCarrito();
     actualizarTotales();
     actualizarEstadoBotonFinalizar();
-    
+
     console.log('✅ Factura cargada en carrito:', {
         cliente: clienteSeleccionado,
         productos: productosEnVenta.length,
         facturaPendiente: facturaPendienteActual
     });
-    
+
     // Mostrar notificación
     Swal.fire({
         icon: 'info',
@@ -7126,7 +6882,7 @@ function cargarFacturaPendienteEnCarrito(factura) {
 async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total) {
     console.log('💰 === COMPLETANDO FACTURA PENDIENTE DIRECTAMENTE ===');
     console.log('💰 ID:', facturaId, 'Número:', numeroFactura, 'Total:', total);
-    
+
     const confirmacion = await Swal.fire({
         title: '¿Completar Factura?',
         text: `¿Confirma que desea marcar como pagada la factura ${numeroFactura} por ₡${formatearMoneda(total)}?`,
@@ -7137,11 +6893,11 @@ async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total)
         confirmButtonText: 'Sí, Completar',
         cancelButtonText: 'Cancelar'
     });
-    
+
     if (!confirmacion.isConfirmed) {
         return;
     }
-    
+
     try {
         const response = await fetch('/Facturacion/CompletarFacturaPendiente', {
             method: 'POST',
@@ -7161,7 +6917,7 @@ async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total)
         }
 
         const resultado = await response.json();
-        
+
         if (resultado.success) {
             Swal.fire({
                 icon: 'success',
@@ -7169,17 +6925,17 @@ async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total)
                 text: `La factura ${numeroFactura} ha sido marcada como pagada exitosamente`,
                 confirmButtonColor: '#28a745'
             });
-            
+
             // Recargar lista de facturas pendientes
             abrirFacturasPendientes();
-            
+
             // Actualizar vista de productos si es necesario
             await actualizarVistaProductosPostAjuste();
-            
+
         } else {
             throw new Error(resultado.message || 'Error al completar la factura');
         }
-        
+
     } catch (error) {
         console.error('❌ Error completando factura:', error);
         Swal.fire({
@@ -7253,10 +7009,10 @@ async function cargarImagenesDetallesProducto(producto) {
 
         if (imagenesArray.length === 1) {
             // Una sola imagen
-            const urlImagen = construirUrlImagen(imagenesArray[0]);
+            const urlImagen = construirUrlImagen( imagenesArray[0]);
             contenedor.html(`
-                <img src="${urlImagen}" 
-                     class="imagen-producto-detalle" 
+                <img src="${urlImagen}"
+                     class="imagen-producto-detalle"
                      alt="${producto.nombreProducto}"
                      style="cursor: pointer;"
                      onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
@@ -7275,8 +7031,8 @@ async function cargarImagenesDetallesProducto(producto) {
                 const activa = index === 0 ? 'active' : '';
                 htmlCarrusel += `
                     <div class="carousel-item ${activa}">
-                        <img src="${urlImagen}" 
-                             class="imagen-producto-detalle" 
+                        <img src="${urlImagen}"
+                             class="imagen-producto-detalle"
                              alt="${producto.nombreProducto}"
                              style="cursor: pointer;"
                              onclick="abrirZoomImagenMejorado(this.src, '${producto.nombreProducto}')"
@@ -7312,79 +7068,6 @@ async function cargarImagenesDetallesProducto(producto) {
             </div>
         `);
     }
-}
-
-/**
- * ✅ FUNCIÓN MEJORADA: Abrir zoom de imagen con mejor estilo
- */
-function abrirZoomImagenMejorado(urlImagen, nombreProducto) {
-    console.log('🔍 Abriendo zoom mejorado:', urlImagen);
-
-    // Ocultar modal de detalles temporalmente
-    const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
-    if (modalDetalles.length) {
-        modalDetalles.css('opacity', '0');
-    }
-
-    // Crear modal mejorado
-    const modalHTML = `
-        <div class="modal fade" id="modalZoomMejorado" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
-            <div class="modal-dialog modal-fullscreen">
-                <div class="modal-content bg-dark">
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title text-white d-flex align-items-center">
-                            <i class="bi bi-arrows-fullscreen me-2 text-info"></i>
-                            <span>${nombreProducto || 'Imagen Ampliada'}</span>
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body d-flex justify-content-center align-items-center p-4">
-                        <div class="zoom-image-container">
-                            <img src="${urlImagen}" 
-                                 alt="${nombreProducto}" 
-                                 class="zoom-image-mejorada"
-                                 onload="this.style.opacity='1'"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                            <div class="error-load-zoom" style="display: none;">
-                                <i class="bi bi-exclamation-triangle text-warning"></i>
-                                <p class="text-white mt-2">Error al cargar la imagen</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 justify-content-center">
-                        <div class="zoom-controls">
-                            <button type="button" class="btn btn-outline-light me-2" onclick="descargarImagen('${urlImagen}', '${nombreProducto}')">
-                                <i class="bi bi-download me-1"></i>Descargar
-                            </button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-1"></i>Cerrar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    // Remover modal anterior
-    $('#modalZoomMejorado').remove();
-
-    // Agregar nuevo modal
-    $('body').append(modalHTML);
-
-    // Configurar eventos
-    $('#modalZoomMejorado').on('hidden.bs.modal', function () {
-        // Restaurar visibilidad del modal de detalles
-        const modalDetalles = $('#modalDetalleProducto, #modalSeleccionProducto');
-        if (modalDetalles.length) {
-            modalDetalles.css('opacity', '1');
-        }
-        // Remover del DOM
-        $(this).remove();
-    });
-
-    // Mostrar modal
-    $('#modalZoomMejorado').modal('show');
 }
 
 /**

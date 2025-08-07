@@ -507,56 +507,83 @@
                     </ul>
                 </div>
 
-                <!-- Filtros de Búsqueda -->
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <h6 class="mb-0">
-                            <i class="bi bi-funnel me-2"></i>Filtros de Búsqueda
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <!-- Búsqueda General -->
-                            <div class="col-md-8">
-                                <label for="busquedaProformas" class="form-label">
-                                    <i class="bi bi-search me-1"></i>Búsqueda General:
+                <!-- Filtros de Búsqueda Proformas -->
+                <div class="filtros-proforma-container">
+                    <!-- Vista Desktop - Filtros horizontales -->
+                    <div class="d-none d-md-block">
+                        <div class="filtros-principales-proforma-desktop">
+                            <!-- Campo de búsqueda -->
+                            <div class="filtro-busqueda-proforma">
+                                <label class="form-label">
+                                    <i class="bi bi-search me-1"></i>Buscar
                                 </label>
-                                <div class="input-group">
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="busquedaProformas" 
-                                           placeholder="Buscar por número, cliente, fecha..."
-                                           autocomplete="off">
-                                    <span class="input-group-text">
-                                        <i class="bi bi-search"></i>
-                                    </span>
-                                </div>
-                                <small class="text-muted">
-                                    Busca en número de proforma, nombre del cliente, fecha de creación
-                                </small>
+                                <input type="text" 
+                                       id="busquedaProformasDesktop" 
+                                       class="form-control" 
+                                       placeholder="Número, cliente...">
                             </div>
 
-                            <!-- Estado -->
-                            <div class="col-md-4">
-                                <label for="estadoProformas" class="form-label">
-                                    <i class="bi bi-filter me-1"></i>Estado:
+                            <!-- Campo de estado -->
+                            <div class="filtro-estado-proforma">
+                                <label class="form-label">
+                                    <i class="bi bi-funnel me-1"></i>Estado
                                 </label>
-                                <select class="form-select" id="estadoProformas">
-                                    <option value="todos">Todos los estados</option>
+                                <select id="estadoProformasDesktop" class="form-select">
+                                    <option value="todos">Todos</option>
                                     <option value="Vigente">Vigente</option>
                                     <option value="Facturada">Facturada</option>
                                     <option value="Expirada">Expirada</option>
                                 </select>
                             </div>
-                        </div>
 
-                        <!-- Botón Limpiar -->
-                        <div class="row mt-3">
-                            <div class="col-12 text-end">
-                                <button type="button" class="btn btn-outline-secondary" id="btnLimpiarFiltrosProformas">
-                                    <i class="bi bi-arrow-counterclockwise me-1"></i>Limpiar
+                            <!-- Botón limpiar -->
+                            <div class="filtros-acciones-proforma">
+                                <button type="button" id="btnLimpiarFiltrosProformasDesktop" class="btn">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    <span class="d-none d-lg-inline">Limpiar Filtros</span>
+                                    <span class="d-inline d-lg-none">Limpiar</span>
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Vista Móvil/Tablet - Filtros verticales -->
+                    <div class="d-block d-md-none">
+                        <!-- Título de filtros móvil -->
+                        <div class="filtros-titulo-mobile">
+                            Filtros de Búsqueda Proformas
+                        </div>
+
+                        <!-- Campo de búsqueda -->
+                        <div class="filtro-busqueda-proforma">
+                            <label class="form-label">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </label>
+                            <input type="text" 
+                                   id="busquedaProformasMobile" 
+                                   class="form-control" 
+                                   placeholder="Número, cliente...">
+                        </div>
+
+                        <!-- Campo de estado -->
+                        <div class="filtro-estado-proforma">
+                            <label class="form-label">
+                                <i class="bi bi-funnel me-1"></i>Estado
+                            </label>
+                            <select id="estadoProformasMobile" class="form-select">
+                                <option value="todos">Todos</option>
+                                <option value="Vigente">Vigente</option>
+                                <option value="Facturada">Facturada</option>
+                                <option value="Expirada">Expirada</option>
+                            </select>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="filtros-acciones-proforma">
+                            <button type="button" id="btnLimpiarFiltrosProformasMobile" class="btn">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Limpiar Filtros
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -569,15 +596,6 @@
                 <div id="proformasContent" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Proformas</h5>
-                        <div class="btn-group btn-group-sm">
-                            <button type="button" class="btn btn-outline-warning" onclick="verificarVencimientoProformas()" 
-                                    title="Verificar proformas vencidas">
-                                <i class="bi bi-calendar-x me-1"></i>Verificar Vencimiento
-                            </button>
-                            <button type="button" class="btn btn-outline-primary" onclick="cargarProformas()">
-                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
-                            </button>
-                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
