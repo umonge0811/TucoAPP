@@ -723,6 +723,120 @@
     line-height: normal !important;
 }
 
+/* ===== ESTILOS PARA MODAL DE DETALLES DE PRODUCTO - MÓVIL ===== */
+@media (max-width: 768px) {
+    .modal-detalle-producto .modal-dialog {
+        margin: 0;
+        width: 100vw;
+        max-width: none;
+        height: 100vh;
+        max-height: none;
+    }
+
+    .modal-detalle-producto .modal-content {
+        height: 100vh;
+        border-radius: 0;
+        border: none;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-detalle-producto .modal-body {
+        padding: 0.75rem;
+        overflow-y: auto;
+        flex: 1;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #modalDetalleProducto .imagen-producto-detalle {
+        width: 100%;
+        height: 200px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+
+    #modalDetalleProducto .sin-imagenes {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 200px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        color: #6c757d;
+    }
+
+    #modalDetalleProducto .sin-imagenes i {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    #contenedorImagenesDetalles {
+        min-height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #contenedorImagenesDetalles .carousel-item {
+        text-align: center;
+        padding: 5px;
+    }
+
+    #contenedorImagenesDetalles .carousel-control-prev,
+    #contenedorImagenesDetalles .carousel-control-next {
+        width: 35px;
+        height: 35px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: rgba(0, 0, 0, 0.6);
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        opacity: 0.8;
+    }
+
+    #contenedorImagenesDetalles .carousel-control-prev {
+        left: 5px;
+    }
+
+    #contenedorImagenesDetalles .carousel-control-next {
+        right: 5px;
+    }
+
+    #contenedorImagenesDetalles .carousel-control-prev-icon,
+    #contenedorImagenesDetalles .carousel-control-next-icon {
+        background-size: 16px 16px;
+        filter: brightness(0) invert(1);
+    }
+
+    #contenedorImagenesDetalles .carousel-indicators {
+        bottom: 2px;
+    }
+
+    #contenedorImagenesDetalles .carousel-indicators [data-bs-target] {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        margin: 0 2px;
+    }
+
+    #contenedorImagenesDetalles .sin-imagenes {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+        color: #6c757d;
+    }
+
+    #contenedorImagenesDetalles .sin-imagenes i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
 /* Móviles muy pequeños */
 @media (max-width: 576px) {
     #facturasPendientesModal .modal-body {
