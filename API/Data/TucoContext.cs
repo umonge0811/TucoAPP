@@ -162,6 +162,12 @@ public partial class TucoContext : DbContext
             entity.Property(e => e.FechaCreacion)
                 .HasDefaultValueSql("(getdate())");
 
+            // ✅ NUEVO: Configuración para EsVisible con valor por defecto TRUE
+            entity.Property(e => e.EsVisible)
+                .IsRequired()
+                .HasDefaultValue(true)
+                .HasComment("Indica si la notificación es visible para el usuario (soft delete)");
+
             // Relación con Usuario - CAMBIAR A Restrict para evitar cascadas múltiples
             entity.HasOne(d => d.Usuario)
                 .WithMany()

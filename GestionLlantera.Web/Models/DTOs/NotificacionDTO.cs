@@ -1,4 +1,4 @@
-﻿namespace GestionLlantera.Web.Models.DTOs
+namespace GestionLlantera.Web.Models.DTOs
 {
     public class NotificacionDTO
     {
@@ -13,6 +13,7 @@
         public string? UrlAccion { get; set; }
         public string? EntidadTipo { get; set; }
         public int? EntidadId { get; set; }
+        public bool EsVisible { get; set; } = true;
 
         // Propiedades calculadas para la vista
         public string TiempoTranscurrido => CalcularTiempoTranscurrido();

@@ -1,4 +1,4 @@
-﻿using Tuco.Clases.DTOs;
+using Tuco.Clases.DTOs;
 
 namespace API.ServicesAPI.Interfaces
 {
@@ -33,6 +33,11 @@ namespace API.ServicesAPI.Interfaces
         /// Obtiene el conteo de notificaciones no leídas
         /// </summary>
         Task<int> ObtenerConteoNoLeidasAsync(int usuarioId);
+
+        /// <summary>
+        /// Oculta una notificación específica (soft delete)
+        /// </summary>
+        Task<bool> OcultarNotificacionAsync(int notificacionId, int usuarioId);
 
         /// <summary>
         /// Elimina notificaciones antiguas (opcional, para limpieza)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -41,6 +41,8 @@ namespace Tuco.Clases.Models
         public string? EntidadTipo { get; set; } // "InventarioProgramado", "Producto", etc.
         public int? EntidadId { get; set; }
         public string? UrlAccion { get; set; } // URL para redireccionar al hacer click
+
+        public bool EsVisible { get; set; } = true; // Campo para soft delete
 
         // Relación con Usuario
         public virtual Usuario Usuario { get; set; }
