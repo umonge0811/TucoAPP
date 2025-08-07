@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace GestionLlantera.Web.Controllers
 {
     [Authorize]
-    [Route("web/api/[controller]")]
     public class NotificacionesController : Controller
     {
         private readonly INotificacionService _notificacionService;
@@ -29,7 +28,6 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Endpoint for JavaScript to get user notifications.
         /// </summary>
-        [HttpGet("mis-notificaciones")]
         public async Task<IActionResult> ObtenerMisNotificaciones()
         {
             try
@@ -49,7 +47,6 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Endpoint for JavaScript to get the count of unread notifications.
         /// </summary>
-        [HttpGet("conteo-no-leidas")]
         public async Task<IActionResult> ObtenerConteoNoLeidas()
         {
             try
