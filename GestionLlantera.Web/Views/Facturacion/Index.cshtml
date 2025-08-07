@@ -291,62 +291,52 @@
             </div>
 
             <div class="modal-body">
-                <!-- Filtros de Búsqueda -->
-                <div class="row g-3 mb-4">
-                    <!-- Búsqueda - Toma todo el ancho en móvil -->
-                    <div class="col-12 col-md-6 col-lg-3">
-                        <label for="busquedaFacturasPendientes" class="form-label">
-                            <i class="bi bi-search me-1"></i>Buscar
-                        </label>
-                        <input type="text"
-                               class="form-control"
-                               id="busquedaFacturasPendientes"
-                               placeholder="Número, cliente...">
-                    </div>
-                    
-                    <!-- Estado -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label for="estadoFacturasPendientes" class="form-label">
-                            <i class="bi bi-funnel me-1"></i>Estado
-                        </label>
-                        <select class="form-select" id="estadoFacturasPendientes">
-                            <option value="todos">Todos</option>
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="Pagada">Pagada</option>
-                            <option value="Anulada">Anulada</option>
-                        </select>
-                    </div>
-                    
-                    <!-- Fecha Desde -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label for="fechaDesdeFacturas" class="form-label">
-                            <i class="bi bi-calendar me-1"></i>Desde
-                        </label>
-                        <input type="date" class="form-control" id="fechaDesdeFacturas">
-                    </div>
-                    
-                    <!-- Fecha Hasta -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label for="fechaHastaFacturas" class="form-label">
-                            <i class="bi bi-calendar me-1"></i>Hasta
-                        </label>
-                        <input type="date" class="form-control" id="fechaHastaFacturas">
-                    </div>
-                    
-                    <!-- Botón Limpiar -->
-                    <div class="col-6 col-md-3 col-lg-3">
-                        <label class="form-label d-none d-lg-block">&nbsp;</label>
-                        <div class="d-grid d-lg-flex justify-content-lg-start">
-                            <button type="button"
-                                    class="btn btn-outline-secondary"
-                                    id="btnLimpiarFiltrosFacturas"
-                                    title="Limpiar filtros">
-                                <i class="bi bi-x-circle me-1"></i>
-                                <span class="d-none d-sm-inline">Limpiar</span>
-                            </button>
+                <!-- Filtros de búsqueda -->
+                        <div class="filtros-factura-container">
+                            <!-- Campo de búsqueda -->
+                            <div class="filtro-busqueda-factura">
+                                <label class="form-label">
+                                    <i class="bi bi-search me-1"></i>Buscar
+                                </label>
+                                <input type="text" 
+                                       id="busquedaFacturasPendientes" 
+                                       class="form-control" 
+                                       placeholder="Número, cliente...">
+                            </div>
+
+                            <!-- Campo de estado -->
+                            <div class="filtro-estado-factura">
+                                <label class="form-label">
+                                    <i class="bi bi-funnel me-1"></i>Estado
+                                </label>
+                                <select id="estadoFacturasPendientes" class="form-select">
+                                    <option value="todos">Todos</option>
+                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="Pagada">Pagada</option>
+                                    <option value="Anulada">Anulada</option>
+                                </select>
+                            </div>
+
+                            <!-- Filtros de fecha -->
+                            <div class="filtros-fechas-factura">
+                                <div class="filtro-fecha-factura">
+                                    <label class="form-label">Desde</label>
+                                    <input type="date" id="fechaDesdeFacturas" class="form-control">
+                                </div>
+                                <div class="filtro-fecha-factura">
+                                    <label class="form-label">Hasta</label>
+                                    <input type="date" id="fechaHastaFacturas" class="form-control">
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="filtros-acciones-factura">
+                                <button type="button" id="btnLimpiarFiltrosFacturas" class="btn">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Limpiar Filtros
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
                 <!-- Loading -->
                 <div id="facturasPendientesLoading" class="text-center py-5">
