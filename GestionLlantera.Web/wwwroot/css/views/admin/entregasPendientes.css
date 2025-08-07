@@ -34,20 +34,31 @@
 }
 
 /* =========================================
-   TABLA DE PENDIENTES
+   TABLA DE PENDIENTES - CONTENEDOR PRINCIPAL
    ========================================= */
+
+.card-body {
+    padding: 1.5rem;
+    width: 100%;
+    margin: 0 auto;
+}
 
 .table-responsive {
     border-radius: 8px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: visible;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    margin: 0;
+    margin: 0 auto;
     width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table {
     margin-bottom: 0;
     width: 100%;
+    min-width: 1200px;
+    table-layout: fixed;
 }
 
 .table th {
@@ -57,12 +68,17 @@
     border: none;
     padding: 1rem 0.75rem;
     white-space: nowrap;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .table td {
     padding: 0.875rem 0.75rem;
     vertical-align: middle;
     border-color: #e9ecef;
+    text-align: center;
 }
 
 .table tbody tr:hover {
@@ -290,23 +306,14 @@ code {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-/* Estilos para entregas pendientes */
+/* =========================================
+   ESTILOS ESPECÍFICOS PARA ENTREGAS
+   ========================================= */
+
 .entregas-container {
-    padding: 20px;
     width: 100%;
     max-width: 100%;
-}
-
-.table-entregas {
-    margin-bottom: 0;
-    width: 100%;
-    table-layout: fixed;
-}
-
-.table-entregas th {
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    font-weight: 600;
+    margin: 0 auto;
 }
 
 .btn-group-sm .btn {
@@ -316,6 +323,7 @@ code {
 
 .badge {
     font-size: 0.75em;
+    padding: 0.375rem 0.75rem;
 }
 
 .loading-spinner {
@@ -552,24 +560,41 @@ code {
         display: block !important;
     }
 
-    /* Asegurar centrado correcto en desktop */
-    .table-responsive {
-        margin: 0;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .entregas-container {
-        width: 100%;
+    /* Contenedor principal centrado */
+    .container-fluid {
         max-width: 100%;
         padding-left: 15px;
         padding-right: 15px;
     }
 
-    /* Asegurar que la sección de lista ocupe todo el ancho */
+    /* Card centrada */
+    .card {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Cuerpo de la card */
     .card-body {
         padding: 1.5rem;
         width: 100%;
+        overflow: visible;
+    }
+
+    /* Tabla responsive centrada */
+    .table-responsive {
+        margin: 0 auto;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        border-radius: 0.375rem;
+    }
+
+    /* Tabla principal */
+    .table {
+        margin: 0 auto;
+        width: 100%;
+        min-width: 1200px;
     }
 }
 
@@ -680,99 +705,88 @@ code {
     }
 }
 
-/* ========================================
-   ESTILOS PARA LA TABLA DE ENTREGAS PENDIENTES (ACTUALIZADO)
-   ======================================== */
-.tabla-entregas-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 0.375rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+/* =========================================
+   COLUMNAS ESPECÍFICAS DE LA TABLA
+   ========================================= */
+
+/* Código de seguimiento */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 140px;
+    min-width: 140px;
+    text-align: center;
 }
 
-.tabla-entregas-responsive table {
-    min-width: 1200px;
-    margin-bottom: 0;
-    font-size: 0.875rem;
+/* Factura */
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 120px;
+    min-width: 120px;
+    text-align: center;
 }
 
-.tabla-entregas-responsive th {
-    background-color: #212529;
-    color: white;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    padding: 1rem 0.75rem;
-    border: none;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.tabla-entregas-responsive td {
-    vertical-align: middle;
-    padding: 0.875rem 0.75rem;
-    border-color: #dee2e6;
-    white-space: nowrap;
-}
-
-/* Columnas específicas */
-.tabla-entregas-responsive th:nth-child(1),
-.tabla-entregas-responsive td:nth-child(1) {
-    min-width: 140px; /* Código */
-}
-
-.tabla-entregas-responsive th:nth-child(2),
-.tabla-entregas-responsive td:nth-child(2) {
-    min-width: 120px; /* Factura */
-}
-
-.tabla-entregas-responsive th:nth-child(3),
-.tabla-entregas-responsive td:nth-child(3) {
-    min-width: 180px; /* Cliente */
+/* Cliente */
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 180px;
+    min-width: 180px;
+    text-align: left;
     white-space: normal;
-    max-width: 200px;
+    word-wrap: break-word;
 }
 
-.tabla-entregas-responsive th:nth-child(4),
-.tabla-entregas-responsive td:nth-child(4) {
-    min-width: 200px; /* Producto */
+/* Producto */
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 200px;
+    min-width: 200px;
+    text-align: left;
     white-space: normal;
-    max-width: 250px;
+    word-wrap: break-word;
 }
 
-.tabla-entregas-responsive th:nth-child(5),
-.tabla-entregas-responsive td:nth-child(5) {
-    min-width: 100px; /* Cantidad */
+/* Cantidad Pendiente */
+.table th:nth-child(5),
+.table td:nth-child(5) {
+    width: 120px;
+    min-width: 120px;
     text-align: center;
 }
 
-.tabla-entregas-responsive th:nth-child(6),
-.tabla-entregas-responsive td:nth-child(6) {
-    min-width: 100px; /* Stock */
+/* Stock Actual */
+.table th:nth-child(6),
+.table td:nth-child(6) {
+    width: 120px;
+    min-width: 120px;
     text-align: center;
 }
 
-.tabla-entregas-responsive th:nth-child(7),
-.tabla-entregas-responsive td:nth-child(7) {
-    min-width: 90px; /* Estado */
+/* Estado */
+.table th:nth-child(7),
+.table td:nth-child(7) {
+    width: 100px;
+    min-width: 100px;
     text-align: center;
 }
 
-.tabla-entregas-responsive th:nth-child(8),
-.tabla-entregas-responsive td:nth-child(8) {
-    min-width: 100px; /* Fecha */
-}
-
-.tabla-entregas-responsive th:nth-child(9),
-.tabla-entregas-responsive td:nth-child(9) {
-    min-width: 120px; /* Acciones */
+/* Fecha */
+.table th:nth-child(8),
+.table td:nth-child(8) {
+    width: 120px;
+    min-width: 120px;
     text-align: center;
 }
 
-/* Estilos para códigos de seguimiento */
-.tabla-entregas-responsive code {
+/* Acciones */
+.table th:nth-child(9),
+.table td:nth-child(9) {
+    width: 140px;
+    min-width: 140px;
+    text-align: center;
+}
+
+/* Estilos para elementos específicos */
+code {
     background-color: #f8f9fa;
     padding: 0.25rem 0.5rem;
     border-radius: 0.25rem;
@@ -782,41 +796,37 @@ code {
     border: 1px solid #e9ecef;
 }
 
-/* Estilos para nombres de cliente */
-.tabla-entregas-responsive .cliente-nombre {
+.cliente-nombre {
     font-weight: 500;
     color: #495057;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: block;
     line-height: 1.4;
 }
 
-.tabla-entregas-responsive .factura-numero {
+.factura-numero {
     font-weight: 600;
     color: #0d6efd;
 }
 
 /* Filas con problemas de stock */
-.tabla-entregas-responsive .table-danger {
+.table-danger {
     background-color: rgba(220, 53, 69, 0.1);
 }
 
-.tabla-entregas-responsive .table-danger td {
+.table-danger td {
     border-color: rgba(220, 53, 69, 0.2);
 }
 
 /* Botones de acción */
-.tabla-entregas-responsive .btn-group .btn {
+.btn-group .btn {
     border-radius: 0.25rem;
     margin: 0 2px;
 }
 
-.tabla-entregas-responsive .btn-group .btn:first-child {
+.btn-group .btn:first-child {
     margin-left: 0;
 }
 
-.tabla-entregas-responsive .btn-group .btn:last-child {
+.btn-group .btn:last-child {
     margin-right: 0;
 }
 

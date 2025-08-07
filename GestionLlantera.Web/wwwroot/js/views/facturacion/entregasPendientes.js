@@ -227,10 +227,10 @@ function mostrarPendientes(pendientes) {
     
     // Mostrar/ocultar contenedores según el dispositivo
     if (esMobile) {
-        $('#tablaEntregasPendientes').hide();
+        $('#tablaEntregasPendientes').parent('.table-responsive').hide();
         $('#entregasCardsMobile').show();
     } else {
-        $('#tablaEntregasPendientes').show();
+        $('#tablaEntregasPendientes').parent('.table-responsive').show();
         $('#entregasCardsMobile').hide();
     }
 
