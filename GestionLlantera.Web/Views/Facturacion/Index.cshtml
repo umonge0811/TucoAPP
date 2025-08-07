@@ -358,33 +358,33 @@
 
                 <!-- Contenido -->
                 <div id="facturasPendientesContent" style="display: none;">
-                    <!-- Vista de tabla para desktop -->
-                    <div class="table-responsive d-none d-lg-block">
+                    <!-- Tabla de Facturas Pendientes -->
+                    <div class="table-responsive">
                         <table class="table table-hover table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Número</th>
-                                    <th>Cliente</th>
-                                    <th>Información</th>
-                                    <th>Total</th>
-                                    <th>Estado</th>
-                                    <th class="text-center">Acciones</th>
+                                    <th style="min-width: 140px;">
+                                        <span class="d-none d-md-inline">Número</span>
+                                        <span class="d-inline d-md-none">N°</span>
+                                    </th>
+                                    <th style="min-width: 180px;">Cliente</th>
+                                    <th style="min-width: 160px;" class="d-none d-lg-table-cell">
+                                        Información
+                                    </th>
+                                    <th style="min-width: 120px;">Total</th>
+                                    <th style="min-width: 100px;" class="d-none d-md-table-cell">
+                                        Estado
+                                    </th>
+                                    <th style="min-width: 120px;" class="text-center">
+                                        <span class="d-none d-sm-inline">Acciones</span>
+                                        <i class="bi bi-gear d-inline d-sm-none"></i>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody id="facturasPendientesTableBody">
                                 <!-- Se llena dinámicamente -->
                             </tbody>
                         </table>
-                    </div>
-
-                    <!-- Vista de cards para tablet -->
-                    <div class="d-none d-md-block d-lg-none" id="facturasPendientesTabletView">
-                        <!-- Se llena dinámicamente con cards optimizadas para tablet -->
-                    </div>
-
-                    <!-- Vista de cards para móvil -->
-                    <div class="d-block d-md-none" id="facturasPendientesMobileView">
-                        <!-- Se llena dinámicamente con cards optimizadas para móvil -->
                     </div>
                 </div>
 
