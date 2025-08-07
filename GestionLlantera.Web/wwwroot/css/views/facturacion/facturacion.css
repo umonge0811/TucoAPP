@@ -161,20 +161,29 @@ input[type=number] {
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-    border: none;
-    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+    background: #6c757d;
+    border: 1px solid #6c757d;
+    color: white;
+    box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
 }
 
 .btn-success:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    background: #5a6268;
+    border-color: #545b62;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
-    border: none;
-    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+    background: #495057;
+    border: 1px solid #495057;
+    color: white;
+    box-shadow: 0 2px 8px rgba(73, 80, 87, 0.3);
+}
+
+.btn-primary:hover {
+    background: #3d4449;
+    border-color: #343a40;
 }
 
 .btn-outline-info {
@@ -245,11 +254,17 @@ input[type=number] {
     text-align: center;
     white-space: nowrap;
     min-height: 45px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #495057;
 }
 
 .botones-navegacion-facturacion .btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
 }
 
 .botones-navegacion-facturacion .btn i {
@@ -261,29 +276,23 @@ input[type=number] {
     font-weight: 600;
 }
 
-/* Colores específicos para cada botón */
-.botones-navegacion-facturacion .btn-outline-warning:hover {
-    background-color: #ffc107;
-    border-color: #ffc107;
-    color: #000;
+/* Estilos neutros para todos los botones */
+.botones-navegacion-facturacion .btn-outline-warning,
+.botones-navegacion-facturacion .btn-outline-success,
+.botones-navegacion-facturacion .btn-outline-info,
+.botones-navegacion-facturacion .btn-outline-secondary {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #495057;
 }
 
-.botones-navegacion-facturacion .btn-outline-success:hover {
-    background-color: #198754;
-    border-color: #198754;
-    color: #fff;
-}
-
-.botones-navegacion-facturacion .btn-outline-info:hover {
-    background-color: #0dcaf0;
-    border-color: #0dcaf0;
-    color: #000;
-}
-
+.botones-navegacion-facturacion .btn-outline-warning:hover,
+.botones-navegacion-facturacion .btn-outline-success:hover,
+.botones-navegacion-facturacion .btn-outline-info:hover,
 .botones-navegacion-facturacion .btn-outline-secondary:hover {
-    background-color: #6c757d;
-    border-color: #6c757d;
-    color: #fff;
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
 }
 
 /* ===== ANIMACIONES ===== */
