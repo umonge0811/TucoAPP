@@ -1,4 +1,4 @@
-﻿// NotificacionDTO.cs
+// NotificacionDTO.cs
 namespace Tuco.Clases.DTOs
 {
     public class NotificacionDTO
@@ -14,6 +14,7 @@ namespace Tuco.Clases.DTOs
         public string? UrlAccion { get; set; }
         public string? EntidadTipo { get; set; }
         public int? EntidadId { get; set; }
+        public bool EsVisible { get; set; } = true;
     }
 }
 
