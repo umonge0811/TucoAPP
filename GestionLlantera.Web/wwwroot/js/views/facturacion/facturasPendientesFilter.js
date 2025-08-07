@@ -48,7 +48,7 @@ function configurarEventosFacturasPendientes() {
 
         // Sincronizar el valor en ambos campos
         $('#busquedaFacturasPendientes, #busquedaFacturasPendientesMobile').val(termino);
-        
+
         filtrosBusquedaFacturas.texto = termino;
         aplicarFiltrosLocalmenteFacturas();
     });
@@ -60,7 +60,7 @@ function configurarEventosFacturasPendientes() {
 
         // Sincronizar el valor en ambos campos
         $('#estadoFacturasPendientes, #estadoFacturasPendientesMobile').val(estado);
-        
+
         filtrosBusquedaFacturas.estado = estado;
         aplicarFiltrosLocalmenteFacturas();
     });
@@ -73,7 +73,7 @@ function configurarEventosFacturasPendientes() {
 
         // Sincronizar el valor en ambos campos
         $('#fechaDesdeFacturas, #fechaDesdeFacturasMobile').val(fecha);
-        
+
         aplicarFiltrosLocalmenteFacturas();
     });
 
@@ -85,7 +85,7 @@ function configurarEventosFacturasPendientes() {
 
         // Sincronizar el valor en ambos campos
         $('#fechaHastaFacturas, #fechaHastaFacturasMobile').val(fecha);
-        
+
         aplicarFiltrosLocalmenteFacturas();
     });
 
@@ -606,7 +606,7 @@ function configurarEventosBotonesFacturas() {
 function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
     const inicio = ((paginaActualFacturas - 1) * facturasPorPagina) + 1;
     const fin = Math.min(paginaActualFacturas * facturasPorPagina, conteoActual);
-    
+
     $('#facturasPendientesInfo').text(`Mostrando ${inicio}-${fin} de ${conteoActual} facturas`);
 }
 
@@ -615,11 +615,11 @@ function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
  */
 function crearFilaFacturaPendiente(factura) {
     const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
-    const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+    const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', {
+        hour: '2-digit',
+        minute: '2-digit'
     });
-    
+
     let estadoBadge = '';
 
     // Asignar badge según el estado
