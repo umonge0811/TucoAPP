@@ -598,12 +598,17 @@ function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
  */
 function crearFilaFacturaPendiente(factura) {
     const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
+    const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    
     let estadoBadge = '';
 
     // Asignar badge según el estado
     switch (factura.estado) {
         case 'Pendiente':
-            estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
+            estadoBadge = '<span class="badge bg-warning text-dark">Pendiente</span>';
             break;
         case 'Pagada':
             estadoBadge = '<span class="badge bg-success">Pagada</span>';
@@ -621,23 +626,53 @@ function crearFilaFacturaPendiente(factura) {
     const fila = `
         <tr data-factura-id="${factura.facturaId || factura.id}">
             <td>
-                <strong>${factura.numeroFactura || 'N/A'}</strong><br>
-                <small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
+                <div class="fw-bold text-primary">${factura.numeroFactura || 'N/A'}</div>
+                <small class="text-muted d-block">${factura.tipoDocumento || 'Factura'}</small>
+                <!-- Estado en móvil (oculto en desktop) -->
+                <div class="d-inline d-md-none mt-1">
+                    ${estadoBadge}
+                </div>
             </td>
             <td>
-                <strong>${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</strong><br>
-                <small class="text-muted">${factura.emailCliente || factura.email || ''}</small>
+                <div class="fw-bold">${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</div>
+                ${factura.emailCliente || factura.email ? `<small class="text-muted d-block">${factura.emailCliente || factura.email}</small>` : ''}
+                <!-- Información adicional en móvil -->
+                <div class="d-block d-lg-none">
+                    <small class="text-muted">${fecha} ${hora}</small><br>
+                    <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+                </div>
+            </td>
+            <!-- Información (solo desktop) -->
+            <td class="d-none d-lg-table-cell">
+                <div class="fw-bold">${fecha}</div>
+                <small class="text-muted d-block">${hora}</small>
+                <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
             </td>
             <td>
-                <strong>${fecha}</strong><br>
-                <small class="text-muted">Por: ${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+                <div class="fw-bold text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</div>
+                <small class="text-muted d-none d-md-block">${factura.metodoPago || 'Efectivo'}</small>
             </td>
-            <td>
-                <strong class="text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
+            <!-- Estado (solo desktop) -->
+            <td class="d-none d-md-table-cell">
+                ${estadoBadge}
             </td>
-            <td>${estadoBadge}</td>
             <td class="text-center">
-                <div class="btn-group btn-group-sm">
+                <div class="btn-group-vertical btn-group-sm d-inline-block d-sm-none">
+                    <!-- Botones verticales en móvil -->
+                    <button type="button" class="btn btn-outline-info btn-sm" title="Ver" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-printer"></i>
+                    </button>
+                    ${factura.estado === 'Pendiente' ? `
+                    <button type="button" class="btn btn-outline-success btn-sm" title="Procesar" data-factura-escapada="${facturaEscapada}">
+                        <i class="bi bi-check-circle"></i>
+                    </button>
+                    ` : ''}
+                </div>
+                <div class="btn-group btn-group-sm d-none d-sm-inline-block">
+                    <!-- Botones horizontales en tablet/desktop -->
                     <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
                         <i class="bi bi-eye"></i>
                     </button>
