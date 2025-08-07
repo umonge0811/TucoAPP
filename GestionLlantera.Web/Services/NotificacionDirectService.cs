@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
 using System.Security.Claims;
@@ -50,7 +49,7 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
@@ -90,12 +89,12 @@ namespace GestionLlantera.Web.Services
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
                 var response = await _httpClient.GetAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
                     var conteo = JsonSerializer.Deserialize<int>(jsonContent);
-                    
+
                     _logger.LogInformation($"Conteo de notificaciones no leídas: {conteo}");
                     return conteo;
                 }
@@ -181,8 +180,9 @@ namespace GestionLlantera.Web.Services
         }
 
         /// <summary>
-        /// Obtiene el token JWT de la sesión
+        /// Método auxiliar para obtener el token JWT del usuario autenticado
         /// </summary>
+        /// <returns>El token JWT o null si no se encuentra</returns>
         private string? ObtenerTokenJWT()
         {
             try
@@ -190,23 +190,32 @@ namespace GestionLlantera.Web.Services
                 var context = _httpContextAccessor.HttpContext;
                 if (context == null) return null;
 
-                // Intentar obtener el token de la sesión
-                var token = context.Session.GetString("JWTToken");
-                
-                if (!string.IsNullOrEmpty(token))
+                // Intentar diferentes métodos para obtener el token, igual que otros controladores
+                var token = context.User.FindFirst("jwt_token")?.Value;
+
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogInformation("Token JWT obtenido de la sesión");
-                    return token;
+                    token = context.User.FindFirst("JwtToken")?.Value;
                 }
 
-                _logger.LogWarning("No se encontró token JWT en la sesión");
-                return null;
+                if (string.IsNullOrEmpty(token))
+                {
+                    token = context.User.FindFirst("access_token")?.Value;
+                }
+
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                        context.User.Identity?.Name ?? "Anónimo");
+                    _logger.LogDebug("📋 Claims disponibles: {Claims}", 
+                        string.Join(", ", context.User.Claims.Select(c => $"{c.Type}={c.Value}")));
+                }
+                else
+                {
+                    _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
+                        context.User.Identity?.Name ?? "Anónimo");
+                }
+
+                return token;
             }
             catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener token JWT");
-                return null;
-            }
-        }
-    }
-}
