@@ -125,24 +125,28 @@ function renderizarNotificaciones() {
     notificacionesCache.slice(0, 20).forEach(notificacion => {
         const tipoClass = obtenerClaseTipo(notificacion.tipo);
         const icono = notificacion.icono || obtenerIconoPorDefecto(notificacion.tipo);
+        const isUnread = !notificacion.leida;
 
         html += `
-            <div class="notification-item ${!notificacion.leida ? 'unread' : ''}"
-                 data-notification-id="${notificacion.notificacionId}"
-                 onclick="manejarClickNotificacion(${notificacion.notificacionId}, '${notificacion.urlAccion || ''}')"
-                 style="cursor: pointer;">
-
-                <div class="notification-icon ${tipoClass}">
-                    <i class="${icono}"></i>
+            <div class="notification-item ${isUnread ? 'unread' : ''}" style="position: relative;">
+                <div class="notification-icon bg-${obtenerColorTipo(notificacion.tipo)}">
+                    <i class="bi ${icono}"></i>
                 </div>
-
-                <div class="notification-content">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="notification-title">${notificacion.titulo}</div>
-                        ${!notificacion.leida ? '<span class="unread-indicator bg-primary rounded-circle" style="width: 8px; height: 8px;"></span>' : ''}
-                    </div>
-                    <p class="notification-text">${notificacion.mensaje}</p>
+                <div class="notification-content" 
+                     onclick="manejarClickNotificacion(${notificacion.notificacionId}, '${notificacion.urlAccion || ''}')"
+                     style="cursor: pointer; flex: 1;">
+                    <div class="notification-title">${notificacion.titulo}</div>
+                    <div class="notification-text">${notificacion.mensaje}</div>
                     <div class="notification-time">${notificacion.tiempoTranscurrido}</div>
+                </div>
+                <div class="notification-actions" style="display: flex; align-items: flex-start; padding-top: 0.5rem;">
+                    <button type="button" 
+                            class="btn btn-link text-muted p-0" 
+                            onclick="event.stopPropagation(); ocultarNotificacion(${notificacion.notificacionId})"
+                            title="Ocultar notificación"
+                            style="font-size: 0.875rem;">
+                        <i class="bi bi-trash3"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -210,6 +214,17 @@ function obtenerIconoPorDefecto(tipo) {
     }
 }
 
+// Función para obtener color de tipo (necesaria para la nueva estructura)
+function obtenerColorTipo(tipo) {
+    switch (tipo) {
+        case 'success': return 'success';
+        case 'warning': return 'warning';
+        case 'danger': return 'danger';
+        case 'info': return 'info';
+        default: return 'primary';
+    }
+}
+
 // Función para obtener token CSRF
 function getCSRFToken() {
     return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -246,6 +261,39 @@ async function marcarNotificacionComoLeida(notificacionId) {
         console.error('Error al marcar notificación como leída:', error);
     }
 }
+
+// Función para ocultar notificación individual
+async function ocultarNotificacion(notificacionId) {
+    try {
+        const response = await fetch('/Notificaciones/OcultarNotificacion', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': getCSRFToken()
+            },
+            body: JSON.stringify({ notificacionId: notificacionId })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                // Eliminar de la caché local
+                notificacionesCache = notificacionesCache.filter(n => n.notificacionId !== notificacionId);
+
+                // Actualizar conteo si estaba no leída
+                const notificacionOriginal = Array.from(arguments[0]).find(n => n.notificacionId === notificacionId);
+                if (notificacionOriginal && !notificacionOriginal.leida) {
+                    conteoNoLeidas = Math.max(0, conteoNoLeidas - 1);
+                    actualizarBadges();
+                }
+                renderizarNotificaciones();
+            }
+        }
+    } catch (error) {
+        console.error('Error al ocultar notificación:', error);
+    }
+}
+
 
 // Función para marcar todas como leídas
 async function marcarTodasComoLeidas() {
