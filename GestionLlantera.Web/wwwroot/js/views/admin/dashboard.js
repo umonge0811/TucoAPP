@@ -841,11 +841,10 @@ function getCurrentUserId() {
  * 📝 FUNCIÓN: Cargar notas rápidas del usuario actual
  */
 async function cargarNotasRapidas() {
-    const currentUserId = getCurrentUserId();
     try {
         console.log('📝 Cargando notas rápidas...');
 
-        const response = await fetch(`/api/NotasRapidas/usuario/${currentUserId}`, {
+        const response = await fetch('/NotasRapidas/ObtenerMisNotas', {
             method: 'GET',
             credentials: 'include',
             headers: {
