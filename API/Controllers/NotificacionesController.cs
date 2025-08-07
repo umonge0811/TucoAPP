@@ -258,12 +258,12 @@ namespace API.Controllers
         /// <summary>
         /// Oculta una notificación (soft delete)
         /// </summary>
-        [HttpPut("{id}/ocultar")] // Se mantiene la ruta original, pero se modificará la implementación
-        public async Task<IActionResult> OcultarNotificacion([FromBody] dynamic request) // Se espera el body con el notificacionId
+        [HttpPost("ocultar")]
+        public async Task<IActionResult> OcultarNotificacion([FromBody] OcultarNotificacionRequest request)
         {
             try
             {
-                if (request?.notificacionId == null)
+                if (request?.NotificacionId == null || request.NotificacionId <= 0)
                 {
                     return BadRequest(new { success = false, message = "ID de notificación requerido" });
                 }
@@ -275,7 +275,7 @@ namespace API.Controllers
                 }
 
                 var notificacion = await _context.Notificaciones
-                    .FirstOrDefaultAsync(n => n.NotificacionId == request.notificacionId.Value && n.UsuarioId == userId.Value && n.EsVisible);
+                    .FirstOrDefaultAsync(n => n.NotificacionId == request.NotificacionId && n.UsuarioId == userId.Value && n.EsVisible);
 
                 if (notificacion == null)
                 {
@@ -285,14 +285,14 @@ namespace API.Controllers
                 notificacion.EsVisible = false;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Notificación {NotificacionId} ocultada para usuario {UserId}", request.notificacionId.Value, userId.Value);
+                _logger.LogInformation("Notificación {NotificacionId} ocultada para usuario {UserId}", request.NotificacionId, userId.Value);
 
-                return Ok(new { message = "Notificación ocultada exitosamente" });
+                return Ok(new { success = true, message = "Notificación ocultada exitosamente" });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al ocultar notificación: {Id}", request?.notificacionId);
-                return StatusCode(500, new { message = "Error al ocultar notificación" });
+                _logger.LogError(ex, "Error al ocultar notificación: {Id}", request?.NotificacionId);
+                return StatusCode(500, new { success = false, message = "Error al ocultar notificación" });
             }
         }
 
@@ -372,5 +372,13 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al crear notificación" });
             }
         }
+    }
+
+    /// <summary>
+    /// DTO para el request de ocultar notificación
+    /// </summary>
+    public class OcultarNotificacionRequest
+    {
+        public int NotificacionId { get; set; }
     }
 }
