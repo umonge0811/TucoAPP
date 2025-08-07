@@ -1472,11 +1472,14 @@
     /* ===== MODAL PROFORMAS - TABLA CON SCROLL HORIZONTAL ===== */
     /* IMPLEMENTACIÓN EXACTA COMO FACTURAS PENDIENTES */
     #proformasModal .table-responsive {
-        border: none;
-        margin: 0 -0.75rem;
-        padding: 0;
+        border: none !important;
+        border-radius: 0 !important;
+        margin: 0 -0.75rem !important;
+        padding: 0 !important;
+        overflow: visible !important;
         overflow-x: auto !important;
-        -webkit-overflow-scrolling: touch;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch !important;
     }
 
     #proformasModal .table {

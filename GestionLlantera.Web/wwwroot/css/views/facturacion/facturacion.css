@@ -75,13 +75,13 @@
     padding: 1.5rem;
 }
 
-/* ===== TABLA DE PRODUCTOS ===== */
-.table-responsive {
+/* ===== TABLA DE PRODUCTOS - SOLO PARA FACTURACIÓN PRINCIPAL ===== */
+.dashboard-card .table-responsive:not(#proformasModal .table-responsive):not(#facturasPendientesModal .table-responsive) {
     border-radius: 8px;
     overflow: hidden;
 }
 
-.table {
+.dashboard-card .table {
     margin: 0;
 }
 
