@@ -5,15 +5,15 @@
         gap: 0.75rem;
     }
 
-    .botones-navegacion-facturacion .btn {
-        padding: 0.6rem 0.8rem;
-        font-size: 0.85rem;
-        min-height: 40px;
-    }
+        .botones-navegacion-facturacion .btn {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.85rem;
+            min-height: 40px;
+        }
 
-    .botones-navegacion-facturacion .btn-text {
-        font-size: 0.8rem;
-    }
+        .botones-navegacion-facturacion .btn-text {
+            font-size: 0.8rem;
+        }
 }
 
 @media (max-width: 576px) {
@@ -22,22 +22,22 @@
         gap: 0.5rem;
     }
 
-    .botones-navegacion-facturacion .btn {
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
-        min-height: 48px;
-        justify-content: flex-start;
-    }
+        .botones-navegacion-facturacion .btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            min-height: 48px;
+            justify-content: flex-start;
+        }
 
-    .botones-navegacion-facturacion .btn i {
-        font-size: 1rem;
-        margin-right: 0.75rem;
-    }
+            .botones-navegacion-facturacion .btn i {
+                font-size: 1rem;
+                margin-right: 0.75rem;
+            }
 
-    .botones-navegacion-facturacion .btn-text {
-        flex: 1;
-        text-align: left;
-    }
+        .botones-navegacion-facturacion .btn-text {
+            flex: 1;
+            text-align: left;
+        }
 }
 
 /* ===== MODAL FACTURAS PENDIENTES - RESPONSIVO ===== */
@@ -116,13 +116,13 @@
         min-width: 200px;
     }
 
-    #facturasPendientesModal .filtro-busqueda-factura .form-label {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 0.25rem;
-        display: block;
-    }
+        #facturasPendientesModal .filtro-busqueda-factura .form-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
 
     #facturasPendientesModal #busquedaFacturasPendientes {
         width: 100% !important;
@@ -141,13 +141,13 @@
         min-width: 120px;
     }
 
-    #facturasPendientesModal .filtro-estado-factura .form-label {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #495057;
-        margin-bottom: 0.25rem;
-        display: block;
-    }
+        #facturasPendientesModal .filtro-estado-factura .form-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
 
     #facturasPendientesModal #estadoFacturasPendientes {
         width: 100% !important;
@@ -172,13 +172,13 @@
         min-width: 130px;
     }
 
-    #facturasPendientesModal .filtro-fecha-factura .form-label {
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #6c757d;
-        margin-bottom: 0.25rem;
-        display: block;
-    }
+        #facturasPendientesModal .filtro-fecha-factura .form-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
 
     #facturasPendientesModal #fechaDesdeFacturas,
     #facturasPendientesModal #fechaHastaFacturas {
@@ -216,16 +216,16 @@
         min-width: 110px !important;
     }
 
-    #facturasPendientesModal #btnLimpiarFiltrosFacturas:hover {
-        background-color: #5c636a !important;
-        border-color: #565e64 !important;
-        color: white !important;
-        transform: translateY(-1px) !important;
-    }
+        #facturasPendientesModal #btnLimpiarFiltrosFacturas:hover {
+            background-color: #5c636a !important;
+            border-color: #565e64 !important;
+            color: white !important;
+            transform: translateY(-1px) !important;
+        }
 
-    #facturasPendientesModal #btnLimpiarFiltrosFacturas i {
-        font-size: 0.75rem;
-    }
+        #facturasPendientesModal #btnLimpiarFiltrosFacturas i {
+            font-size: 0.75rem;
+        }
 
     /* Focus states para desktop */
     #facturasPendientesModal #busquedaFacturasPendientes:focus,
@@ -252,16 +252,16 @@
         overflow: hidden;
     }
 
-    #facturasPendientesModal .filtros-factura-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #007bff, #28a745, #ffc107);
-        border-radius: 1rem 1rem 0 0;
-    }
+        #facturasPendientesModal .filtros-factura-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #007bff, #28a745, #ffc107);
+            border-radius: 1rem 1rem 0 0;
+        }
 
     /* Título de filtros para móvil */
     #facturasPendientesModal .filtros-titulo-mobile {
@@ -276,10 +276,10 @@
         gap: 0.5rem;
     }
 
-    #facturasPendientesModal .filtros-titulo-mobile::before {
-        content: '🔍';
-        font-size: 1.2rem;
-    }
+        #facturasPendientesModal .filtros-titulo-mobile::before {
+            content: '🔍';
+            font-size: 1.2rem;
+        }
 
     /* Campo de búsqueda principal - estilo mejorado */
     #facturasPendientesModal .filtro-busqueda-factura {
@@ -287,33 +287,33 @@
         position: relative;
     }
 
-    #facturasPendientesModal .filtro-busqueda-factura::before {
-        content: '\f002';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 0.9rem;
-        z-index: 5;
-        pointer-events: none;
-    }
+        #facturasPendientesModal .filtro-busqueda-factura::before {
+            content: '\f002';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 0.9rem;
+            z-index: 5;
+            pointer-events: none;
+        }
 
-    #facturasPendientesModal .filtro-busqueda-factura .form-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.4rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
+        #facturasPendientesModal .filtro-busqueda-factura .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
 
-    #facturasPendientesModal .filtro-busqueda-factura .form-label::before {
-        content: '📝';
-        font-size: 0.9rem;
-    }
+            #facturasPendientesModal .filtro-busqueda-factura .form-label::before {
+                content: '📝';
+                font-size: 0.9rem;
+            }
 
     #facturasPendientesModal #busquedaFacturasPendientesMobile {
         width: 100% !important;
@@ -327,12 +327,12 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
     }
 
-    #facturasPendientesModal #busquedaFacturasPendientesMobile:focus {
-        border-color: #007bff !important;
-        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15), 0 4px 8px rgba(0,0,0,0.1) !important;
-        outline: 0 !important;
-        transform: translateY(-1px) !important;
-    }
+        #facturasPendientesModal #busquedaFacturasPendientesMobile:focus {
+            border-color: #007bff !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15), 0 4px 8px rgba(0,0,0,0.1) !important;
+            outline: 0 !important;
+            transform: translateY(-1px) !important;
+        }
 
     /* Campo de estado - estilo mejorado */
     #facturasPendientesModal .filtro-estado-factura {
@@ -340,33 +340,33 @@
         position: relative;
     }
 
-    #facturasPendientesModal .filtro-estado-factura::before {
-        content: '\f463';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 0.9rem;
-        z-index: 5;
-        pointer-events: none;
-    }
+        #facturasPendientesModal .filtro-estado-factura::before {
+            content: '\f463';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 0.9rem;
+            z-index: 5;
+            pointer-events: none;
+        }
 
-    #facturasPendientesModal .filtro-estado-factura .form-label {
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.4rem;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-    }
+        #facturasPendientesModal .filtro-estado-factura .form-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
 
-    #facturasPendientesModal .filtro-estado-factura .form-label::before {
-        content: '🏷️';
-        font-size: 0.9rem;
-    }
+            #facturasPendientesModal .filtro-estado-factura .form-label::before {
+                content: '🏷️';
+                font-size: 0.9rem;
+            }
 
     #facturasPendientesModal #estadoFacturasPendientesMobile {
         width: 100% !important;
@@ -381,12 +381,12 @@
         cursor: pointer !important;
     }
 
-    #facturasPendientesModal #estadoFacturasPendientesMobile:focus {
-        border-color: #28a745 !important;
-        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15), 0 4px 8px rgba(0,0,0,0.1) !important;
-        outline: 0 !important;
-        transform: translateY(-1px) !important;
-    }
+        #facturasPendientesModal #estadoFacturasPendientesMobile:focus {
+            border-color: #28a745 !important;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15), 0 4px 8px rgba(0,0,0,0.1) !important;
+            outline: 0 !important;
+            transform: translateY(-1px) !important;
+        }
 
     /* Contenedor de filtros de fechas - tarjeta especial */
     #facturasPendientesModal .filtros-fechas-factura {
@@ -401,32 +401,32 @@
         position: relative;
     }
 
-    #facturasPendientesModal .filtros-fechas-factura::before {
-        content: '📅 Período de Fechas';
-        position: absolute;
-        top: -10px;
-        left: 15px;
-        background: #ffc107;
-        color: #000;
-        padding: 0.2rem 0.6rem;
-        border-radius: 0.5rem;
-        font-size: 0.75rem;
-        font-weight: 600;
-    }
+        #facturasPendientesModal .filtros-fechas-factura::before {
+            content: '📅 Período de Fechas';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #ffc107;
+            color: #000;
+            padding: 0.2rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
 
     /* Campos de fecha individuales */
     #facturasPendientesModal .filtro-fecha-factura {
         position: relative;
     }
 
-    #facturasPendientesModal .filtro-fecha-factura .form-label {
-        font-size: 0.8rem;
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.3rem;
-        display: block;
-        text-align: center;
-    }
+        #facturasPendientesModal .filtro-fecha-factura .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.3rem;
+            display: block;
+            text-align: center;
+        }
 
     #facturasPendientesModal #fechaDesdeFacturasMobile,
     #facturasPendientesModal #fechaHastaFacturasMobile {
@@ -442,13 +442,13 @@
         font-weight: 500 !important;
     }
 
-    #facturasPendientesModal #fechaDesdeFacturasMobile:focus,
-    #facturasPendientesModal #fechaHastaFacturasMobile:focus {
-        border-color: #ffc107 !important;
-        box-shadow: 0 0 0 0.15rem rgba(255, 193, 7, 0.2), 0 2px 6px rgba(0,0,0,0.08) !important;
-        outline: 0 !important;
-        transform: scale(1.02) !important;
-    }
+        #facturasPendientesModal #fechaDesdeFacturasMobile:focus,
+        #facturasPendientesModal #fechaHastaFacturasMobile:focus {
+            border-color: #ffc107 !important;
+            box-shadow: 0 0 0 0.15rem rgba(255, 193, 7, 0.2), 0 2px 6px rgba(0,0,0,0.08) !important;
+            outline: 0 !important;
+            transform: scale(1.02) !important;
+        }
 
     /* Botones de acción - rediseño especial */
     #facturasPendientesModal .filtros-acciones-factura {
@@ -480,27 +480,32 @@
         overflow: hidden !important;
     }
 
-    #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile:hover {
-        background: linear-gradient(135deg, #495057 0%, #343a40 100%) !important;
-        border-color: #495057 !important;
-        color: white !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 12px rgba(108, 117, 125, 0.4) !important;
-    }
+        #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile:hover {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%) !important;
+            border-color: #495057 !important;
+            color: white !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 12px rgba(108, 117, 125, 0.4) !important;
+        }
 
-    #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile:active {
-        transform: translateY(0px) !important;
-        box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3) !important;
-    }
+        #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile:active {
+            transform: translateY(0px) !important;
+            box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3) !important;
+        }
 
-    #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile i {
-        font-size: 0.9rem;
-        animation: spin 2s linear infinite;
-    }
+        #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile i {
+            font-size: 0.9rem;
+            animation: spin 2s linear infinite;
+        }
 
     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
     }
 
     #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile:hover i {
@@ -548,56 +553,56 @@
         white-space: nowrap;
     }
 
-    #facturasPendientesModal .table th,
-    #facturasPendientesModal .table td {
-        padding: 0.6rem 0.4rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #dee2e6;
-        text-align: center;
-    }
+        #facturasPendientesModal .table th,
+        #facturasPendientesModal .table td {
+            padding: 0.6rem 0.4rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+            text-align: center;
+        }
 
-    /* Ajustar anchos específicos de columnas */
-    #facturasPendientesModal .table th:nth-child(1),
-    #facturasPendientesModal .table td:nth-child(1) {
-        min-width: 120px; /* Número de factura */
-        text-align: left;
-    }
+            /* Ajustar anchos específicos de columnas */
+            #facturasPendientesModal .table th:nth-child(1),
+            #facturasPendientesModal .table td:nth-child(1) {
+                min-width: 120px; /* Número de factura */
+                text-align: left;
+            }
 
-    #facturasPendientesModal .table th:nth-child(2),
-    #facturasPendientesModal .table td:nth-child(2) {
-        min-width: 150px; /* Cliente */
-        text-align: left;
-    }
+            #facturasPendientesModal .table th:nth-child(2),
+            #facturasPendientesModal .table td:nth-child(2) {
+                min-width: 150px; /* Cliente */
+                text-align: left;
+            }
 
-    #facturasPendientesModal .table th:nth-child(3),
-    #facturasPendientesModal .table td:nth-child(3) {
-        min-width: 120px; /* Fecha/Usuario */
-    }
+            #facturasPendientesModal .table th:nth-child(3),
+            #facturasPendientesModal .table td:nth-child(3) {
+                min-width: 120px; /* Fecha/Usuario */
+            }
 
-    #facturasPendientesModal .table th:nth-child(4),
-    #facturasPendientesModal .table td:nth-child(4) {
-        min-width: 100px; /* Total */
-    }
+            #facturasPendientesModal .table th:nth-child(4),
+            #facturasPendientesModal .table td:nth-child(4) {
+                min-width: 100px; /* Total */
+            }
 
-    #facturasPendientesModal .table th:nth-child(5),
-    #facturasPendientesModal .table td:nth-child(5) {
-        min-width: 80px; /* Estado */
-    }
+            #facturasPendientesModal .table th:nth-child(5),
+            #facturasPendientesModal .table td:nth-child(5) {
+                min-width: 80px; /* Estado */
+            }
 
-    #facturasPendientesModal .table th:nth-child(6),
-    #facturasPendientesModal .table td:nth-child(6) {
-        min-width: 100px; /* Acciones */
-    }
+            #facturasPendientesModal .table th:nth-child(6),
+            #facturasPendientesModal .table td:nth-child(6) {
+                min-width: 100px; /* Acciones */
+            }
 
-    #facturasPendientesModal .table th {
-        font-size: 0.7rem;
-        font-weight: 600;
-        background-color: #f8f9fa !important;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        border-bottom: 2px solid #dee2e6;
-    }
+        #facturasPendientesModal .table th {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background-color: #f8f9fa !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
 
     /* Botones en tabla móvil */
     #facturasPendientesModal .btn-group-vertical {
@@ -614,23 +619,23 @@
         justify-content: center;
     }
 
-    #facturasPendientesModal .btn-group .btn,
-    #facturasPendientesModal .btn-group-vertical .btn {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.65rem;
-        border-radius: 0.25rem;
-        white-space: nowrap;
-        min-width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        #facturasPendientesModal .btn-group .btn,
+        #facturasPendientesModal .btn-group-vertical .btn {
+            padding: 0.25rem 0.4rem;
+            font-size: 0.65rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+            min-width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    #facturasPendientesModal .btn-group .btn i,
-    #facturasPendientesModal .btn-group-vertical .btn i {
-        font-size: 0.75rem;
-    }
+            #facturasPendientesModal .btn-group .btn i,
+            #facturasPendientesModal .btn-group-vertical .btn i {
+                font-size: 0.75rem;
+            }
 
     #facturasPendientesModal .badge {
         font-size: 0.65rem;
@@ -689,10 +694,10 @@
         margin-bottom: 0;
     }
 
-    #facturasPendientesModal .pagination .page-link {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
-    }
+        #facturasPendientesModal .pagination .page-link {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
 
     #facturasPendientesModal .form-select {
         width: auto;
@@ -705,23 +710,23 @@
     z-index: 1055; /* Asegurar que esté por encima de otros elementos */
 }
 
-#facturasPendientesModal .modal-content {
-    position: relative;
-    z-index: 1;
-}
+    #facturasPendientesModal .modal-content {
+        position: relative;
+        z-index: 1;
+    }
 
-/* Asegurar que los estilos solo se apliquen dentro del modal específico */
-#facturasPendientesModal .filtros-factura-container * {
-    box-sizing: border-box;
-}
+    /* Asegurar que los estilos solo se apliquen dentro del modal específico */
+    #facturasPendientesModal .filtros-factura-container * {
+        box-sizing: border-box;
+    }
 
-/* Evitar que otros CSS interfieran con nuestros elementos */
-#facturasPendientesModal .filtros-factura-container input[type="text"],
-#facturasPendientesModal .filtros-factura-container input[type="date"],
-#facturasPendientesModal .filtros-factura-container select {
-    font-family: inherit !important;
-    line-height: normal !important;
-}
+    /* Evitar que otros CSS interfieran con nuestros elementos */
+    #facturasPendientesModal .filtros-factura-container input[type="text"],
+    #facturasPendientesModal .filtros-factura-container input[type="date"],
+    #facturasPendientesModal .filtros-factura-container select {
+        font-family: inherit !important;
+        line-height: normal !important;
+    }
 
 /* ===== ESTILOS PARA MODAL DE DETALLES DE PRODUCTO - MÓVIL ===== */
 @media (max-width: 768px) {
@@ -767,10 +772,10 @@
         color: #6c757d;
     }
 
-    #modalDetalleProducto .sin-imagenes i {
-        font-size: 2.5rem;
-        margin-bottom: 0.5rem;
-    }
+        #modalDetalleProducto .sin-imagenes i {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
 
     #contenedorImagenesDetalles {
         min-height: 200px;
@@ -779,62 +784,62 @@
         justify-content: center;
     }
 
-    #contenedorImagenesDetalles .carousel-item {
-        text-align: center;
-        padding: 5px;
-    }
+        #contenedorImagenesDetalles .carousel-item {
+            text-align: center;
+            padding: 5px;
+        }
 
-    #contenedorImagenesDetalles .carousel-control-prev,
-    #contenedorImagenesDetalles .carousel-control-next {
-        width: 35px;
-        height: 35px;
-        top: 50%;
-        transform: translateY(-50%);
-        background-color: rgba(0, 0, 0, 0.6);
-        border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-        opacity: 0.8;
-    }
+        #contenedorImagenesDetalles .carousel-control-prev,
+        #contenedorImagenesDetalles .carousel-control-next {
+            width: 35px;
+            height: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0.8;
+        }
 
-    #contenedorImagenesDetalles .carousel-control-prev {
-        left: 5px;
-    }
+        #contenedorImagenesDetalles .carousel-control-prev {
+            left: 5px;
+        }
 
-    #contenedorImagenesDetalles .carousel-control-next {
-        right: 5px;
-    }
+        #contenedorImagenesDetalles .carousel-control-next {
+            right: 5px;
+        }
 
-    #contenedorImagenesDetalles .carousel-control-prev-icon,
-    #contenedorImagenesDetalles .carousel-control-next-icon {
-        background-size: 16px 16px;
-        filter: brightness(0) invert(1);
-    }
+        #contenedorImagenesDetalles .carousel-control-prev-icon,
+        #contenedorImagenesDetalles .carousel-control-next-icon {
+            background-size: 16px 16px;
+            filter: brightness(0) invert(1);
+        }
 
-    #contenedorImagenesDetalles .carousel-indicators {
-        bottom: 2px;
-    }
+        #contenedorImagenesDetalles .carousel-indicators {
+            bottom: 2px;
+        }
 
-    #contenedorImagenesDetalles .carousel-indicators [data-bs-target] {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        margin: 0 2px;
-    }
+            #contenedorImagenesDetalles .carousel-indicators [data-bs-target] {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                margin: 0 2px;
+            }
 
-    #contenedorImagenesDetalles .sin-imagenes {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 200px;
-        color: #6c757d;
-    }
+        #contenedorImagenesDetalles .sin-imagenes {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            color: #6c757d;
+        }
 
-    #contenedorImagenesDetalles .sin-imagenes i {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
-    }
+            #contenedorImagenesDetalles .sin-imagenes i {
+                font-size: 2rem;
+                margin-bottom: 0.5rem;
+            }
 }
 
 /* Móviles muy pequeños */
@@ -882,41 +887,41 @@
         min-width: 650px; /* Ancho mínimo para Proformas */
     }
 
-    #proformasModal .table th,
-    #proformasModal .table td {
-        padding: 0.4rem 0.3rem;
-    }
+        #proformasModal .table th,
+        #proformasModal .table td {
+            padding: 0.4rem 0.3rem;
+        }
 
-    /* Ajustar anchos para pantallas muy pequeñas - Proformas */
-    #proformasModal .table th:nth-child(1),
-    #proformasModal .table td:nth-child(1) {
-        min-width: 110px; /* Número de proforma */
-    }
+            /* Ajustar anchos para pantallas muy pequeñas - Proformas */
+            #proformasModal .table th:nth-child(1),
+            #proformasModal .table td:nth-child(1) {
+                min-width: 110px; /* Número de proforma */
+            }
 
-    #proformasModal .table th:nth-child(2),
-    #proformasModal .table td:nth-child(2) {
-        min-width: 140px; /* Cliente */
-    }
+            #proformasModal .table th:nth-child(2),
+            #proformasModal .table td:nth-child(2) {
+                min-width: 140px; /* Cliente */
+            }
 
-    #proformasModal .table th:nth-child(3),
-    #proformasModal .table td:nth-child(3) {
-        min-width: 110px; /* Fecha/Usuario */
-    }
+            #proformasModal .table th:nth-child(3),
+            #proformasModal .table td:nth-child(3) {
+                min-width: 110px; /* Fecha/Usuario */
+            }
 
-    #proformasModal .table th:nth-child(4),
-    #proformasModal .table td:nth-child(4) {
-        min-width: 90px; /* Total */
-    }
+            #proformasModal .table th:nth-child(4),
+            #proformasModal .table td:nth-child(4) {
+                min-width: 90px; /* Total */
+            }
 
-    #proformasModal .table th:nth-child(5),
-    #proformasModal .table td:nth-child(5) {
-        min-width: 70px; /* Estado */
-    }
+            #proformasModal .table th:nth-child(5),
+            #proformasModal .table td:nth-child(5) {
+                min-width: 70px; /* Estado */
+            }
 
-    #proformasModal .table th:nth-child(6),
-    #proformasModal .table td:nth-child(6) {
-        min-width: 110px; /* Acciones */
-    }
+            #proformasModal .table th:nth-child(6),
+            #proformasModal .table td:nth-child(6) {
+                min-width: 110px; /* Acciones */
+            }
 
     #proformasModal .btn-group .btn {
         font-size: 0.6rem;
@@ -925,9 +930,9 @@
         height: 26px;
     }
 
-    #proformasModal .btn-group .btn i {
-        font-size: 0.7rem;
-    }
+        #proformasModal .btn-group .btn i {
+            font-size: 0.7rem;
+        }
 
     #proformasModal .badge {
         font-size: 0.6rem;
@@ -947,36 +952,36 @@
         padding: 0.4rem 0.3rem;
     }
 
-    /* Ajustar anchos para pantallas muy pequeñas */
-    #facturasPendientesModal .table th:nth-child(1),
-    #facturasPendientesModal .table td:nth-child(1) {
-        min-width: 110px; /* Número de factura */
-    }
+        /* Ajustar anchos para pantallas muy pequeñas */
+        #facturasPendientesModal .table th:nth-child(1),
+        #facturasPendientesModal .table td:nth-child(1) {
+            min-width: 110px; /* Número de factura */
+        }
 
-    #facturasPendientesModal .table th:nth-child(2),
-    #facturasPendientesModal .table td:nth-child(2) {
-        min-width: 140px; /* Cliente */
-    }
+        #facturasPendientesModal .table th:nth-child(2),
+        #facturasPendientesModal .table td:nth-child(2) {
+            min-width: 140px; /* Cliente */
+        }
 
-    #facturasPendientesModal .table th:nth-child(3),
-    #facturasPendientesModal .table td:nth-child(3) {
-        min-width: 110px; /* Fecha/Usuario */
-    }
+        #facturasPendientesModal .table th:nth-child(3),
+        #facturasPendientesModal .table td:nth-child(3) {
+            min-width: 110px; /* Fecha/Usuario */
+        }
 
-    #facturasPendientesModal .table th:nth-child(4),
-    #facturasPendientesModal .table td:nth-child(4) {
-        min-width: 90px; /* Total */
-    }
+        #facturasPendientesModal .table th:nth-child(4),
+        #facturasPendientesModal .table td:nth-child(4) {
+            min-width: 90px; /* Total */
+        }
 
-    #facturasPendientesModal .table th:nth-child(5),
-    #facturasPendientesModal .table td:nth-child(5) {
-        min-width: 70px; /* Estado */
-    }
+        #facturasPendientesModal .table th:nth-child(5),
+        #facturasPendientesModal .table td:nth-child(5) {
+            min-width: 70px; /* Estado */
+        }
 
-    #facturasPendientesModal .table th:nth-child(6),
-    #facturasPendientesModal .table td:nth-child(6) {
-        min-width: 90px; /* Acciones */
-    }
+        #facturasPendientesModal .table th:nth-child(6),
+        #facturasPendientesModal .table td:nth-child(6) {
+            min-width: 90px; /* Acciones */
+        }
 
     #facturasPendientesModal .btn-group .btn,
     #facturasPendientesModal .btn-group-vertical .btn {
@@ -986,10 +991,10 @@
         height: 26px;
     }
 
-    #facturasPendientesModal .btn-group .btn i,
-    #facturasPendientesModal .btn-group-vertical .btn i {
-        font-size: 0.7rem;
-    }
+        #facturasPendientesModal .btn-group .btn i,
+        #facturasPendientesModal .btn-group-vertical .btn i {
+            font-size: 0.7rem;
+        }
 
     #facturasPendientesModal .badge {
         font-size: 0.6rem;
@@ -1141,16 +1146,16 @@
         overflow: hidden;
     }
 
-    #proformasModal .filtros-proforma-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
-        border-radius: 1rem 1rem 0 0;
-    }
+        #proformasModal .filtros-proforma-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
+            border-radius: 1rem 1rem 0 0;
+        }
 
     #proformasModal .filtros-titulo-mobile {
         text-align: center;
@@ -1164,28 +1169,28 @@
         gap: 0.5rem;
     }
 
-    #proformasModal .filtros-titulo-mobile::before {
-        content: '🔍';
-        font-size: 1.2rem;
-    }
+        #proformasModal .filtros-titulo-mobile::before {
+            content: '🔍';
+            font-size: 1.2rem;
+        }
 
     #proformasModal .filtro-busqueda-proforma {
         margin-bottom: 1rem;
         position: relative;
     }
 
-    #proformasModal .filtro-busqueda-proforma::before {
-        content: '\f002';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 0.9rem;
-        z-index: 5;
-        pointer-events: none;
-    }
+        #proformasModal .filtro-busqueda-proforma::before {
+            content: '\f002';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 0.9rem;
+            z-index: 5;
+            pointer-events: none;
+        }
 
     #proformasModal #busquedaProformasMobile {
         width: 100% !important;
@@ -1204,18 +1209,18 @@
         position: relative;
     }
 
-    #proformasModal .filtro-estado-proforma::before {
-        content: '\f463';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 0.9rem;
-        z-index: 5;
-        pointer-events: none;
-    }
+        #proformasModal .filtro-estado-proforma::before {
+            content: '\f463';
+            font-family: 'bootstrap-icons';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+            font-size: 0.9rem;
+            z-index: 5;
+            pointer-events: none;
+        }
 
     #proformasModal #estadoProformasMobile {
         width: 100% !important;
@@ -1320,10 +1325,10 @@
         padding: 4px;
     }
 
-    .producto-card-imagen:hover {
-        transform: scale(1.01);
-        padding: 2px;
-    }
+        .producto-card-imagen:hover {
+            transform: scale(1.01);
+            padding: 2px;
+        }
 
     .producto-card-sin-imagen {
         font-size: 2.5rem;
@@ -1357,15 +1362,15 @@
         text-align: center;
     }
 
-    .page-header .d-flex {
-        flex-direction: column;
-        gap: 1rem;
-    }
+        .page-header .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
 
-    .page-header h2 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
+        .page-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
 
     .dashboard-card {
         margin-bottom: 1rem;
@@ -1399,11 +1404,11 @@
     }
 }
 
-    /* Resumen de totales en móvil */
-    .resumen-totales {
-        margin-top: 1rem;
-        padding: 1rem;
-    }
+/* Resumen de totales en móvil */
+.resumen-totales {
+    margin-top: 1rem;
+    padding: 1rem;
+}
 
     .resumen-totales .d-flex {
         font-size: 1rem;
@@ -1413,34 +1418,35 @@
         font-size: 1.2rem;
     }
 
-    /* Botones en móvil */
-    .btn-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
+/* Botones en móvil */
+.btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
 
-    .d-grid {
-        gap: 0.75rem !important;
-    }
+.d-grid {
+    gap: 0.75rem !important;
+}
 
-    /* Formularios en móvil */
-    .form-group {
-        margin-bottom: 1rem;
-    }
+/* Formularios en móvil */
+.form-group {
+    margin-bottom: 1rem;
+}
 
-    .form-control, .form-select {
-        font-size: 16px; /* Evita zoom en iOS */
-    }
+.form-control, .form-select {
+    font-size: 16px; /* Evita zoom en iOS */
+}
 
-    /* Empty state en móvil */
-    .empty-state {
-        padding: 2rem 1rem !important;
-    }
+/* Empty state en móvil */
+.empty-state {
+    padding: 2rem 1rem !important;
+}
 
     .empty-state i {
         font-size: 2rem !important;
     }
+
 }
 
 @media (max-width: 576px) {
@@ -1489,56 +1495,56 @@
         white-space: nowrap;
     }
 
-    #proformasModal .table th,
-    #proformasModal .table td {
-        padding: 0.6rem 0.4rem;
-        vertical-align: middle;
-        border-bottom: 1px solid #dee2e6;
-        text-align: center;
-    }
+        #proformasModal .table th,
+        #proformasModal .table td {
+            padding: 0.6rem 0.4rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+            text-align: center;
+        }
 
-    /* Ajustar anchos específicos de columnas para Proformas */
-    #proformasModal .table th:nth-child(1),
-    #proformasModal .table td:nth-child(1) {
-        min-width: 120px; /* Número de proforma */
-        text-align: left;
-    }
+            /* Ajustar anchos específicos de columnas para Proformas */
+            #proformasModal .table th:nth-child(1),
+            #proformasModal .table td:nth-child(1) {
+                min-width: 120px; /* Número de proforma */
+                text-align: left;
+            }
 
-    #proformasModal .table th:nth-child(2),
-    #proformasModal .table td:nth-child(2) {
-        min-width: 150px; /* Cliente */
-        text-align: left;
-    }
+            #proformasModal .table th:nth-child(2),
+            #proformasModal .table td:nth-child(2) {
+                min-width: 150px; /* Cliente */
+                text-align: left;
+            }
 
-    #proformasModal .table th:nth-child(3),
-    #proformasModal .table td:nth-child(3) {
-        min-width: 120px; /* Fecha/Usuario */
-    }
+            #proformasModal .table th:nth-child(3),
+            #proformasModal .table td:nth-child(3) {
+                min-width: 120px; /* Fecha/Usuario */
+            }
 
-    #proformasModal .table th:nth-child(4),
-    #proformasModal .table td:nth-child(4) {
-        min-width: 100px; /* Total */
-    }
+            #proformasModal .table th:nth-child(4),
+            #proformasModal .table td:nth-child(4) {
+                min-width: 100px; /* Total */
+            }
 
-    #proformasModal .table th:nth-child(5),
-    #proformasModal .table td:nth-child(5) {
-        min-width: 80px; /* Estado */
-    }
+            #proformasModal .table th:nth-child(5),
+            #proformasModal .table td:nth-child(5) {
+                min-width: 80px; /* Estado */
+            }
 
-    #proformasModal .table th:nth-child(6),
-    #proformasModal .table td:nth-child(6) {
-        min-width: 100px; /* Acciones */
-    }
+            #proformasModal .table th:nth-child(6),
+            #proformasModal .table td:nth-child(6) {
+                min-width: 100px; /* Acciones */
+            }
 
-    #proformasModal .table th {
-        font-size: 0.7rem;
-        font-weight: 600;
-        background-color: #f8f9fa !important;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        border-bottom: 2px solid #dee2e6;
-    }
+        #proformasModal .table th {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background-color: #f8f9fa !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-bottom: 2px solid #dee2e6;
+        }
 
     /* Botones en tabla móvil para Proformas */
     #proformasModal .btn-group {
@@ -1548,21 +1554,21 @@
         justify-content: center;
     }
 
-    #proformasModal .btn-group .btn {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.65rem;
-        border-radius: 0.25rem;
-        white-space: nowrap;
-        min-width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        #proformasModal .btn-group .btn {
+            padding: 0.25rem 0.4rem;
+            font-size: 0.65rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+            min-width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-    #proformasModal .btn-group .btn i {
-        font-size: 0.75rem;
-    }
+            #proformasModal .btn-group .btn i {
+                font-size: 0.75rem;
+            }
 
     #proformasModal .badge {
         font-size: 0.65rem;
@@ -1605,10 +1611,10 @@
         padding: 6px;
     }
 
-    .producto-card-imagen:hover {
-        transform: scale(1.02);
-        padding: 3px;
-    }
+        .producto-card-imagen:hover {
+            transform: scale(1.02);
+            padding: 3px;
+        }
 
     .producto-card-body {
         padding: 1rem;
@@ -1633,10 +1639,10 @@
         gap: 0.5rem;
     }
 
-    .producto-card-acciones .btn {
-        font-size: 0.8rem;
-        padding: 0.5rem;
-    }
+        .producto-card-acciones .btn {
+            font-size: 0.8rem;
+            padding: 0.5rem;
+        }
 }
 
 /* ===== TABLET ESPECÍFICO ===== */
@@ -1659,10 +1665,10 @@
         padding: 4px;
     }
 
-    .producto-card-imagen:hover {
-        transform: scale(1.01);
-        padding: 2px;
-    }
+        .producto-card-imagen:hover {
+            transform: scale(1.01);
+            padding: 2px;
+        }
 
     .producto-card-sin-imagen {
         font-size: 2.5rem;
