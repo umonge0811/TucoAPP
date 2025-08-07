@@ -1,4 +1,4 @@
-﻿using API.Data;
+using API.Data;
 using API.ServicesAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Tuco.Clases.DTOs;
@@ -93,14 +93,14 @@ namespace API.ServicesAPI
         }
 
         /// <summary>
-        /// Obtiene las notificaciones de un usuario
+        /// Obtiene las notificaciones visibles de un usuario
         /// </summary>
         public async Task<IEnumerable<NotificacionDTO>> ObtenerNotificacionesUsuarioAsync(int usuarioId, int cantidad = 50)
         {
             try
             {
                 var notificaciones = await _context.Notificaciones
-                    .Where(n => n.UsuarioId == usuarioId)
+                    .Where(n => n.UsuarioId == usuarioId && n.EsVisible)  // ✅ Filtrar solo visibles
                     .OrderByDescending(n => n.FechaCreacion)
                     .Take(cantidad)
                     .Select(n => new NotificacionDTO
@@ -115,11 +115,12 @@ namespace API.ServicesAPI
                         FechaLectura = n.FechaLectura,
                         UrlAccion = n.UrlAccion,
                         EntidadTipo = n.EntidadTipo,
-                        EntidadId = n.EntidadId
+                        EntidadId = n.EntidadId,
+                        EsVisible = n.EsVisible
                     })
                     .ToListAsync();
 
-                _logger.LogInformation("Se obtuvieron {Count} notificaciones para usuario {UserId}", notificaciones.Count(), usuarioId);
+                _logger.LogInformation("Se obtuvieron {Count} notificaciones visibles para usuario {UserId}", notificaciones.Count(), usuarioId);
                 return notificaciones;
             }
             catch (Exception ex)
@@ -161,19 +162,19 @@ namespace API.ServicesAPI
         }
 
         /// <summary>
-        /// Marca todas las notificaciones de un usuario como leídas
+        /// Marca todas las notificaciones visibles de un usuario como leídas
         /// </summary>
         public async Task<bool> MarcarTodasComoLeidasAsync(int usuarioId)
         {
             try
             {
                 var notificacionesNoLeidas = await _context.Notificaciones
-                    .Where(n => n.UsuarioId == usuarioId && !n.Leida)
+                    .Where(n => n.UsuarioId == usuarioId && !n.Leida && n.EsVisible)  // ✅ Solo visibles
                     .ToListAsync();
 
                 if (!notificacionesNoLeidas.Any())
                 {
-                    _logger.LogInformation("No hay notificaciones no leídas para usuario {UserId}", usuarioId);
+                    _logger.LogInformation("No hay notificaciones no leídas y visibles para usuario {UserId}", usuarioId);
                     return true;
                 }
 
@@ -196,22 +197,51 @@ namespace API.ServicesAPI
         }
 
         /// <summary>
-        /// Obtiene el conteo de notificaciones no leídas
+        /// Obtiene el conteo de notificaciones no leídas y visibles
         /// </summary>
         public async Task<int> ObtenerConteoNoLeidasAsync(int usuarioId)
         {
             try
             {
                 var conteo = await _context.Notificaciones
-                    .CountAsync(n => n.UsuarioId == usuarioId && !n.Leida);
+                    .CountAsync(n => n.UsuarioId == usuarioId && !n.Leida && n.EsVisible);  // ✅ Solo visibles
 
-                _logger.LogInformation("Usuario {UserId} tiene {Count} notificaciones no leídas", usuarioId, conteo);
+                _logger.LogInformation("Usuario {UserId} tiene {Count} notificaciones no leídas y visibles", usuarioId, conteo);
                 return conteo;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener conteo de notificaciones no leídas para usuario {UserId}", usuarioId);
                 return 0;
+            }
+        }
+
+        /// <summary>
+        /// Oculta una notificación específica (soft delete)
+        /// </summary>
+        public async Task<bool> OcultarNotificacionAsync(int notificacionId, int usuarioId)
+        {
+            try
+            {
+                var notificacion = await _context.Notificaciones
+                    .FirstOrDefaultAsync(n => n.NotificacionId == notificacionId && n.UsuarioId == usuarioId);
+
+                if (notificacion == null)
+                {
+                    _logger.LogWarning("Notificación {NotificacionId} no encontrada para usuario {UserId}", notificacionId, usuarioId);
+                    return false;
+                }
+
+                notificacion.EsVisible = false;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Notificación {NotificacionId} ocultada para usuario {UserId}", notificacionId, usuarioId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar notificación {NotificacionId} para usuario {UserId}", notificacionId, usuarioId);
+                return false;
             }
         }
 
