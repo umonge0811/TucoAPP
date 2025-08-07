@@ -836,91 +836,17 @@
         align-items: center;
         justify-content: center;
         border-radius: 0.375rem;
-        transition: all 0.2s ease;
     }
 
     #proformasModal .proformas-btn-group .btn i {
         font-size: 0.8rem;
     }
 
-    #proformasModal .proformas-btn-group .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* Badges mejorados para desktop */
     #proformasModal .proformas-badge {
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+        padding: 0.375rem 0.75rem;
         white-space: nowrap;
         border-radius: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border: 2px solid transparent;
-        transition: all 0.3s ease;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 75px;
-    }
-
-    /* Badge Vigente mejorado */
-    #proformasModal .proformas-badge.bg-success {
-        background: linear-gradient(135deg, #198754 0%, #20c997 100%) !important;
-        color: #fff !important;
-        border-color: #198754;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    #proformasModal .proformas-badge.bg-success:hover {
-        background: linear-gradient(135deg, #157347 0%, #1ba085 100%) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(25, 135, 84, 0.3);
-    }
-
-    /* Badge Facturada mejorado */
-    #proformasModal .proformas-badge.bg-primary {
-        background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%) !important;
-        color: #fff !important;
-        border-color: #0d6efd;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    #proformasModal .proformas-badge.bg-primary:hover {
-        background: linear-gradient(135deg, #0b5ed7 0%, #520dc2 100%) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(13, 110, 253, 0.3);
-    }
-
-    /* Badge Expirada mejorado */
-    #proformasModal .proformas-badge.bg-danger {
-        background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%) !important;
-        color: #fff !important;
-        border-color: #dc3545;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }
-
-    #proformasModal .proformas-badge.bg-danger:hover {
-        background: linear-gradient(135deg, #bb2d3b 0%, #e55a12 100%) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
-    }
-
-    /* Badge Warning mejorado */
-    #proformasModal .proformas-badge.bg-warning {
-        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%) !important;
-        color: #000 !important;
-        border-color: #ffc107;
-        text-shadow: 0 1px 2px rgba(255,255,255,0.3);
-        font-weight: 700;
-    }
-
-    #proformasModal .proformas-badge.bg-warning:hover {
-        background: linear-gradient(135deg, #ffca2c 0%, #ff8a39 100%) !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(255, 193, 7, 0.4);
     }
 
     /* Información de paginación */
@@ -1012,104 +938,73 @@
         padding: 0.5rem 0.75rem;
     }
 
-    /* ===== TABLA CON SCROLL HORIZONTAL MEJORADO PARA PROFORMAS ===== */
     #proformasModal .proformas-table-responsive {
+        margin: 0 -0.5rem;
         border: none;
-        margin: 0 -0.75rem;
         padding: 0;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        border-radius: 0.5rem;
-        position: relative;
     }
 
     #proformasModal .proformas-table {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
+        min-width: 650px; /* Ancho mínimo para Proformas */
         margin-bottom: 0;
-        min-width: 750px; /* Ancho mínimo aumentado para forzar scroll horizontal */
         white-space: nowrap;
-        background-color: #fff;
-        border-collapse: separate;
-        border-spacing: 0;
     }
-    
+
     #proformasModal .proformas-table th,
     #proformasModal .proformas-table td {
-        padding: 0.6rem 0.4rem;
+        padding: 0.4rem 0.3rem;
         vertical-align: middle;
         border-bottom: 1px solid #dee2e6;
         text-align: center;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
     }
 
-    /* Ajustar anchos específicos de columnas para Proformas */
+    /* Ajustar anchos para pantallas muy pequeñas - Proformas */
     #proformasModal .proformas-table th:nth-child(1),
     #proformasModal .proformas-table td:nth-child(1) {
-        min-width: 130px; /* Número de proforma */
+        min-width: 110px; /* Número de proforma */
         text-align: left;
-        position: sticky;
-        left: 0;
-        background-color: #f8f9fa;
-        z-index: 10;
-        border-right: 2px solid #dee2e6;
     }
 
     #proformasModal .proformas-table th:nth-child(2),
     #proformasModal .proformas-table td:nth-child(2) {
-        min-width: 160px; /* Cliente */
+        min-width: 140px; /* Cliente */
         text-align: left;
     }
 
     #proformasModal .proformas-table th:nth-child(3),
     #proformasModal .proformas-table td:nth-child(3) {
-        min-width: 130px; /* Fecha/Usuario */
+        min-width: 110px; /* Fecha/Usuario */
     }
 
     #proformasModal .proformas-table th:nth-child(4),
     #proformasModal .proformas-table td:nth-child(4) {
-        min-width: 110px; /* Total */
+        min-width: 90px; /* Total */
     }
 
     #proformasModal .proformas-table th:nth-child(5),
     #proformasModal .proformas-table td:nth-child(5) {
-        min-width: 90px; /* Estado */
+        min-width: 70px; /* Estado */
     }
 
     #proformasModal .proformas-table th:nth-child(6),
     #proformasModal .proformas-table td:nth-child(6) {
-        min-width: 130px; /* Acciones */
-        position: sticky;
-        right: 0;
-        background-color: #f8f9fa;
-        z-index: 10;
-        border-left: 2px solid #dee2e6;
+        min-width: 110px; /* Acciones */
     }
-    
+
     #proformasModal .proformas-table th {
         font-size: 0.7rem;
         font-weight: 600;
         background-color: #f8f9fa !important;
         position: sticky;
         top: 0;
-        z-index: 15;
+        z-index: 10;
         border-bottom: 2px solid #dee2e6;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
     }
 
-    /* Primera columna sticky (Número) */
-    #proformasModal .proformas-table th:nth-child(1) {
-        z-index: 20; /* Mayor z-index para columnas sticky */
-    }
-
-    /* Última columna sticky (Acciones) */
-    #proformasModal .proformas-table th:nth-child(6) {
-        z-index: 20; /* Mayor z-index para columnas sticky */
-    }
-    
-    /* Botones en tabla móvil para Proformas - HORIZONTALES */
+    /* Botones de acciones para proformas - HORIZONTALES */
     #proformasModal .proformas-btn-group {
         display: flex;
         flex-direction: row;
@@ -1117,81 +1012,35 @@
         justify-content: center;
         flex-wrap: wrap;
     }
-    
+
     #proformasModal .proformas-btn-group .btn {
-        padding: 0.25rem 0.4rem;
-        font-size: 0.65rem;
-        border-radius: 0.25rem;
-        white-space: nowrap;
-        min-width: 28px;
-        height: 28px;
+        font-size: 0.6rem;
+        padding: 0.2rem 0.3rem;
+        min-width: 26px;
+        height: 26px;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 1px;
+        border-radius: 0.25rem;
     }
 
     #proformasModal .proformas-btn-group .btn i {
-        font-size: 0.75rem;
-    }
-    
-    #proformasModal .proformas-badge {
-        font-size: 0.65rem;
-        padding: 0.25rem 0.5rem;
-        white-space: nowrap;
-        border-radius: 0.375rem;
+        font-size: 0.7rem;
     }
 
-    /* Información compacta en celdas para Proformas */
-    #proformasModal .proformas-table .small {
-        font-size: 0.65rem;
-        line-height: 1.1;
-        display: block;
-        margin-top: 2px;
-        color: #6c757d;
+    #proformasModal .proformas-badge {
+        font-size: 0.6rem;
+        padding: 0.2rem 0.4rem;
+        white-space: nowrap;
     }
 
     #proformasModal .proformas-table .fw-bold {
-        font-size: 0.75rem;
-        line-height: 1.2;
-        font-weight: 600;
-    }
-
-    /* Colores de texto para mejor legibilidad en Proformas */
-    #proformasModal .proformas-table .text-success {
-        font-weight: 600;
-        color: #198754 !important;
-    }
-
-    #proformasModal .proformas-table .text-primary {
-        font-weight: 600;
-        color: #0d6efd !important;
-    }
-
-    #proformasModal .proformas-table .text-muted {
-        color: #6c757d !important;
-    }
-
-    /* Indicador de scroll horizontal */
-    #proformasModal .proformas-table-responsive::after {
-        content: '← Desliza para ver más →';
-        position: sticky;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: linear-gradient(90deg, rgba(40,167,69,0.1), rgba(40,167,69,0.2), rgba(40,167,69,0.1));
-        color: #198754;
-        text-align: center;
-        padding: 0.5rem;
         font-size: 0.7rem;
-        font-weight: 500;
-        border-top: 1px solid #dee2e6;
-        z-index: 5;
     }
 
-    /* Ocultar indicador cuando no hay scroll */
-    #proformasModal .proformas-table-responsive:not([data-scrollable])::after {
-        display: none;
+    #proformasModal .proformas-table .small {
+        font-size: 0.6rem;
     }
 
     #facturasPendientesModal .table th,
@@ -1474,7 +1323,186 @@
         font-size: 1.1rem;
     }
 
+    /* ===== MODAL PROFORMAS - TABLA CON SCROLL HORIZONTAL ===== */
+    #proformasModal .proformas-table-responsive {
+        border: none;
+        margin: 0 -0.75rem;
+        padding: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0.5rem;
+    }
+
+    #proformasModal .proformas-table {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+        min-width: 700px; /* Ancho mínimo para forzar scroll horizontal */
+        white-space: nowrap;
+        background-color: #fff;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
     
+    #proformasModal .proformas-table th,
+    #proformasModal .proformas-table td {
+        padding: 0.6rem 0.4rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #dee2e6;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Ajustar anchos específicos de columnas para Proformas */
+    #proformasModal .proformas-table th:nth-child(1),
+    #proformasModal .proformas-table td:nth-child(1) {
+        min-width: 120px; /* Número de proforma */
+        text-align: left;
+        position: sticky;
+        left: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+        border-right: 2px solid #dee2e6;
+    }
+
+    #proformasModal .proformas-table th:nth-child(2),
+    #proformasModal .proformas-table td:nth-child(2) {
+        min-width: 150px; /* Cliente */
+        text-align: left;
+    }
+
+    #proformasModal .proformas-table th:nth-child(3),
+    #proformasModal .proformas-table td:nth-child(3) {
+        min-width: 120px; /* Fecha/Usuario */
+    }
+
+    #proformasModal .proformas-table th:nth-child(4),
+    #proformasModal .proformas-table td:nth-child(4) {
+        min-width: 100px; /* Total */
+    }
+
+    #proformasModal .proformas-table th:nth-child(5),
+    #proformasModal .proformas-table td:nth-child(5) {
+        min-width: 80px; /* Estado */
+    }
+
+    #proformasModal .proformas-table th:nth-child(6),
+    #proformasModal .proformas-table td:nth-child(6) {
+        min-width: 120px; /* Acciones */
+        position: sticky;
+        right: 0;
+        background-color: #f8f9fa;
+        z-index: 10;
+        border-left: 2px solid #dee2e6;
+    }
+    
+    #proformasModal .proformas-table th {
+        font-size: 0.7rem;
+        font-weight: 600;
+        background-color: #f8f9fa !important;
+        position: sticky;
+        top: 0;
+        z-index: 15;
+        border-bottom: 2px solid #dee2e6;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Primera columna sticky (Número) */
+    #proformasModal .proformas-table th:nth-child(1) {
+        z-index: 20; /* Mayor z-index para columnas sticky */
+    }
+
+    /* Última columna sticky (Acciones) */
+    #proformasModal .proformas-table th:nth-child(6) {
+        z-index: 20; /* Mayor z-index para columnas sticky */
+    }
+    
+    /* Botones en tabla móvil para Proformas - HORIZONTALES */
+    #proformasModal .proformas-btn-group {
+        display: flex;
+        flex-direction: row;
+        gap: 2px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    #proformasModal .proformas-btn-group .btn {
+        padding: 0.25rem 0.4rem;
+        font-size: 0.65rem;
+        border-radius: 0.25rem;
+        white-space: nowrap;
+        min-width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 1px;
+    }
+
+    #proformasModal .proformas-btn-group .btn i {
+        font-size: 0.75rem;
+    }
+    
+    #proformasModal .proformas-badge {
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
+        white-space: nowrap;
+        border-radius: 0.375rem;
+    }
+
+    /* Información compacta en celdas para Proformas */
+    #proformasModal .proformas-table .small {
+        font-size: 0.65rem;
+        line-height: 1.1;
+        display: block;
+        margin-top: 2px;
+        color: #6c757d;
+    }
+
+    #proformasModal .proformas-table .fw-bold {
+        font-size: 0.75rem;
+        line-height: 1.2;
+        font-weight: 600;
+    }
+
+    /* Colores de texto para mejor legibilidad en Proformas */
+    #proformasModal .proformas-table .text-success {
+        font-weight: 600;
+        color: #198754 !important;
+    }
+
+    #proformasModal .proformas-table .text-primary {
+        font-weight: 600;
+        color: #0d6efd !important;
+    }
+
+    #proformasModal .proformas-table .text-muted {
+        color: #6c757d !important;
+    }
+
+    /* Indicador de scroll horizontal */
+    #proformasModal .proformas-table-responsive::after {
+        content: '← Desliza para ver más →';
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, rgba(0,123,255,0.1), rgba(0,123,255,0.2), rgba(0,123,255,0.1));
+        color: #0d6efd;
+        text-align: center;
+        padding: 0.5rem;
+        font-size: 0.7rem;
+        font-weight: 500;
+        border-top: 1px solid #dee2e6;
+        z-index: 5;
+    }
+
+    /* Ocultar indicador cuando no hay scroll */
+    #proformasModal .proformas-table-responsive:not([data-scrollable])::after {
+        display: none;
+    }
 
     /* ===== CARDS DE PRODUCTOS RESPONSIVOS ===== */
     .producto-card-imagen-container {
