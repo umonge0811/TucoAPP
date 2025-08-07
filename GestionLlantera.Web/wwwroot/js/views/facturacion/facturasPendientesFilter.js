@@ -288,9 +288,25 @@ function mostrarFacturasPendientesPaginadas() {
  * Mostrar facturas pendientes en la tabla
  */
 function mostrarFacturasPendientesEnTabla(facturas) {
-    console.log('📋 === MOSTRANDO FACTURAS PENDIENTES EN TABLA ===');
+    console.log('📋 === MOSTRANDO FACTURAS PENDIENTES ===');
     console.log('📋 Facturas a mostrar:', facturas.length);
 
+    // Mostrar en tabla (desktop)
+    mostrarFacturasEnTablaDesktop(facturas);
+    
+    // Mostrar en cards (tablet)
+    mostrarFacturasEnCardsTablet(facturas);
+    
+    // Mostrar en cards (móvil)
+    mostrarFacturasEnCardsMobile(facturas);
+
+    console.log('✅ Facturas pendientes mostradas en todos los formatos');
+}
+
+/**
+ * Mostrar facturas en tabla para desktop
+ */
+function mostrarFacturasEnTablaDesktop(facturas) {
     const tbody = $('#facturasPendientesTableBody');
     if (tbody.length === 0) {
         console.error('❌ No se encontró el tbody de facturas pendientes');
@@ -301,9 +317,12 @@ function mostrarFacturasPendientesEnTabla(facturas) {
 
     facturas.forEach(factura => {
         const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
+        const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
         let estadoBadge = '';
-
-        // Asignar badge según el estado
         switch (factura.estado) {
             case 'Pendiente':
                 estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
@@ -318,7 +337,222 @@ function mostrarFacturasPendientesEnTabla(facturas) {
                 estadoBadge = `<span class="badge bg-secondary">${factura.estado || 'Sin Estado'}</span>`;
         }
 
-        // ✅ ESCAPAR DATOS DE LA FACTURA PENDIENTE (igual que proformas)
+        // Escapar datos de la factura para JSON
+        const facturaEscapada = JSON.stringify(factura).replace(/'/g, '&apos;');
+
+        const fila = `
+            <tr>
+                <td>
+                    <strong>${factura.numeroFactura || 'N/A'}</strong>
+                </td>
+                <td>
+                    <strong>${factura.nombreCliente || factura.clienteNombre || 'Cliente no especificado'}</strong>
+                    ${factura.identificacionCliente ? `<br><small class="text-muted">ID: ${factura.identificacionCliente}</small>` : ''}
+                </td>
+                <td>
+                    <strong>${fecha}</strong><br>
+                    <small class="text-muted">${hora}</small><br>
+                    <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+                </td>
+                <td>
+                    <div class="fw-bold text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</div>
+                    <small class="text-muted">${factura.metodoPago || 'Efectivo'}</small>
+                </td>
+                <td>${estadoBadge}</td>
+                <td class="text-center">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-info" title="Ver" data-factura-id="${factura.facturaId || factura.id}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                        ${factura.estado === 'Pendiente' ? `
+                        <button type="button" class="btn btn-outline-success" title="Procesar" data-factura-escapada="${facturaEscapada}">
+                            <i class="bi bi-check-circle"></i>
+                        </button>` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+
+        tbody.append(fila);
+    });
+}
+
+/**
+ * Mostrar facturas en cards para tablet
+ */
+function mostrarFacturasEnCardsTablet(facturas) {
+    const container = $('#facturasPendientesTabletView');
+    if (container.length === 0) return;
+
+    container.empty();
+
+    facturas.forEach(factura => {
+        const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
+        const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        let estadoClass = '';
+        let estadoText = '';
+        let estadoBadgeClass = '';
+
+        switch (factura.estado) {
+            case 'Pendiente':
+                estadoClass = 'estado-pendiente';
+                estadoText = 'Pendiente';
+                estadoBadgeClass = 'bg-warning';
+                break;
+            case 'Pagada':
+                estadoClass = 'estado-pagada';
+                estadoText = 'Pagada';
+                estadoBadgeClass = 'bg-success';
+                break;
+            case 'Anulada':
+                estadoClass = 'estado-anulada';
+                estadoText = 'Anulada';
+                estadoBadgeClass = 'bg-danger';
+                break;
+            default:
+                estadoClass = '';
+                estadoText = factura.estado || 'Sin Estado';
+                estadoBadgeClass = 'bg-secondary';
+        }
+
+        const facturaEscapada = JSON.stringify(factura).replace(/'/g, '&apos;');
+
+        const card = `
+            <div class="factura-pendiente-card ${estadoClass}">
+                <div class="factura-pendiente-card-header">
+                    <div class="factura-numero">${factura.numeroFactura || 'N/A'}</div>
+                    <span class="badge factura-estado-badge ${estadoBadgeClass}">${estadoText}</span>
+                </div>
+                <div class="factura-pendiente-card-body">
+                    <div class="factura-cliente-info">
+                        <div class="factura-cliente-nombre">${factura.nombreCliente || factura.clienteNombre || 'Cliente no especificado'}</div>
+                        ${factura.identificacionCliente ? `<div class="factura-cliente-id">ID: ${factura.identificacionCliente}</div>` : ''}
+                    </div>
+                    <div class="factura-detalles">
+                        <div class="factura-detalle-item">
+                            <div class="factura-detalle-label">Fecha</div>
+                            <div class="factura-detalle-value factura-fecha">${fecha}<br><small>${hora}</small></div>
+                        </div>
+                        <div class="factura-detalle-item">
+                            <div class="factura-detalle-label">Total</div>
+                            <div class="factura-detalle-value factura-total">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</div>
+                        </div>
+                        <div class="factura-detalle-item">
+                            <div class="factura-detalle-label">Usuario</div>
+                            <div class="factura-detalle-value factura-usuario">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</div>
+                        </div>
+                    </div>
+                    <div class="factura-acciones">
+                        <button type="button" class="btn btn-outline-info factura-accion-btn" title="Ver" data-factura-id="${factura.facturaId || factura.id}">
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary factura-accion-btn" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                            <i class="bi bi-printer"></i> Imprimir
+                        </button>
+                        ${factura.estado === 'Pendiente' ? `
+                        <button type="button" class="btn btn-outline-success factura-accion-btn" title="Procesar" data-factura-escapada="${facturaEscapada}">
+                            <i class="bi bi-check-circle"></i> Procesar
+                        </button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.append(card);
+    });
+}
+
+/**
+ * Mostrar facturas en cards para móvil
+ */
+function mostrarFacturasEnCardsMobile(facturas) {
+    const container = $('#facturasPendientesMobileView');
+    if (container.length === 0) return;
+
+    container.empty();
+
+    facturas.forEach(factura => {
+        const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
+        const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+
+        let estadoClass = '';
+        let estadoText = '';
+        let estadoBadgeClass = '';
+
+        switch (factura.estado) {
+            case 'Pendiente':
+                estadoClass = 'estado-pendiente';
+                estadoText = 'Pendiente';
+                estadoBadgeClass = 'bg-warning';
+                break;
+            case 'Pagada':
+                estadoClass = 'estado-pagada';
+                estadoText = 'Pagada';
+                estadoBadgeClass = 'bg-success';
+                break;
+            case 'Anulada':
+                estadoClass = 'estado-anulada';
+                estadoText = 'Anulada';
+                estadoBadgeClass = 'bg-danger';
+                break;
+            default:
+                estadoClass = '';
+                estadoText = factura.estado || 'Sin Estado';
+                estadoBadgeClass = 'bg-secondary';
+        }
+
+        const facturaEscapada = JSON.stringify(factura).replace(/'/g, '&apos;');
+
+        const card = `
+            <div class="factura-pendiente-card ${estadoClass}">
+                <div class="factura-pendiente-card-header">
+                    <div class="factura-numero">${factura.numeroFactura || 'N/A'}</div>
+                    <span class="badge factura-estado-badge ${estadoBadgeClass}">${estadoText}</span>
+                </div>
+                <div class="factura-pendiente-card-body">
+                    <div class="factura-cliente-info">
+                        <div class="factura-cliente-nombre">${factura.nombreCliente || factura.clienteNombre || 'Cliente no especificado'}</div>
+                        ${factura.identificacionCliente ? `<div class="factura-cliente-id">ID: ${factura.identificacionCliente}</div>` : ''}
+                    </div>
+                    <div class="factura-detalles">
+                        <div class="factura-detalle-item">
+                            <div class="factura-detalle-label">Fecha</div>
+                            <div class="factura-detalle-value factura-fecha">${fecha}<br><small>${hora}</small></div>
+                        </div>
+                        <div class="factura-detalle-item">
+                            <div class="factura-detalle-label">Total</div>
+                            <div class="factura-detalle-value factura-total">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</div>
+                        </div>
+                    </div>
+                    <div class="factura-acciones">
+                        <button type="button" class="btn btn-outline-info factura-accion-btn" title="Ver" data-factura-id="${factura.facturaId || factura.id}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary factura-accion-btn" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                            <i class="bi bi-printer"></i>
+                        </button>
+                        ${factura.estado === 'Pendiente' ? `
+                        <button type="button" class="btn btn-outline-success factura-accion-btn" title="Procesar" data-factura-escapada="${facturaEscapada}">
+                            <i class="bi bi-check-circle"></i>
+                        </button>` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.append(card);
+    });
+}URA PENDIENTE (igual que proformas)
         const facturaEscapada = JSON.stringify(factura).replace(/"/g, '&quot;');
 
         const fila = `
