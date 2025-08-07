@@ -1,3 +1,4 @@
+
 // ===== MÓDULO DE FILTROS PARA PROFORMAS (FRONTEND ONLY) =====
 
 let todasLasProformas = []; // Array para almacenar todas las proformas
@@ -12,6 +13,14 @@ let filtrosBusqueda = {
 /**
  * Inicializar filtros de proformas
  */
+// Variables globales para filtros de Proformas
+let filtrosBusquedaProformas = {
+    texto: '',
+    estado: 'todos'
+};
+
+let proformasOriginales = [];
+
 function inicializarFiltrosProformas() {
     console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS (FRONTEND) ===');
 
@@ -24,15 +33,15 @@ function inicializarFiltrosProformas() {
     // Esperar un poco para asegurar que el DOM del modal esté completamente cargado
     setTimeout(() => {
         console.log('🔍 Configurando eventos de filtrado...');
-
+        
         // Configurar eventos para desktop
         const $inputBusquedaDesktop = $('#busquedaProformasDesktop');
         if ($inputBusquedaDesktop.length) {
             $inputBusquedaDesktop.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
                 const termino = $(this).val().trim();
                 console.log('🔍 Término de búsqueda desktop:', termino);
-
-                filtrosBusqueda.texto = termino;
+                
+                filtrosBusquedaProformas.texto = termino;
                 // Sincronizar con móvil
                 $('#busquedaProformasMobile').val(termino);
                 aplicarFiltrosLocalmenteProformas();
@@ -46,8 +55,8 @@ function inicializarFiltrosProformas() {
             $inputBusquedaMobile.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
                 const termino = $(this).val().trim();
                 console.log('🔍 Término de búsqueda móvil:', termino);
-
-                filtrosBusqueda.texto = termino;
+                
+                filtrosBusquedaProformas.texto = termino;
                 // Sincronizar con desktop
                 $('#busquedaProformasDesktop').val(termino);
                 aplicarFiltrosLocalmenteProformas();
@@ -61,8 +70,8 @@ function inicializarFiltrosProformas() {
             $selectEstadoDesktop.off('change.proformasFilter').on('change.proformasFilter', function() {
                 const estado = $(this).val();
                 console.log('🔍 Estado seleccionado desktop:', estado);
-
-                filtrosBusqueda.estado = estado;
+                
+                filtrosBusquedaProformas.estado = estado;
                 // Sincronizar con móvil
                 $('#estadoProformasMobile').val(estado);
                 aplicarFiltrosLocalmenteProformas();
@@ -76,8 +85,8 @@ function inicializarFiltrosProformas() {
             $selectEstadoMobile.off('change.proformasFilter').on('change.proformasFilter', function() {
                 const estado = $(this).val();
                 console.log('🔍 Estado seleccionado móvil:', estado);
-
-                filtrosBusqueda.estado = estado;
+                
+                filtrosBusquedaProformas.estado = estado;
                 // Sincronizar con desktop
                 $('#estadoProformasDesktop').val(estado);
                 aplicarFiltrosLocalmenteProformas();
@@ -92,8 +101,132 @@ function inicializarFiltrosProformas() {
         });
 
         console.log('✅ Filtros de proformas inicializados correctamente');
-
+        
     }, 500);
+}
+
+function aplicarFiltrosLocalmenteProformas() {
+    console.log('🔍 === APLICANDO FILTROS LOCALMENTE PROFORMAS ===');
+    console.log('🔍 Filtros actuales:', filtrosBusquedaProformas);
+    
+    if (!proformasOriginales || proformasOriginales.length === 0) {
+        console.log('⚠️ No hay proformas originales para filtrar');
+        return;
+    }
+
+    let proformasFiltradas = [...proformasOriginales];
+
+    // Filtrar por texto
+    if (filtrosBusquedaProformas.texto && filtrosBusquedaProformas.texto.length >= 2) {
+        const termino = filtrosBusquedaProformas.texto.toLowerCase();
+        proformasFiltradas = proformasFiltradas.filter(proforma => {
+            return (
+                (proforma.numeroFactura && proforma.numeroFactura.toLowerCase().includes(termino)) ||
+                (proforma.nombreCliente && proforma.nombreCliente.toLowerCase().includes(termino)) ||
+                (proforma.identificacionCliente && proforma.identificacionCliente.toLowerCase().includes(termino))
+            );
+        });
+    }
+
+    // Filtrar por estado
+    if (filtrosBusquedaProformas.estado && filtrosBusquedaProformas.estado !== 'todos') {
+        proformasFiltradas = proformasFiltradas.filter(proforma => 
+            proforma.estado === filtrosBusquedaProformas.estado
+        );
+    }
+
+    console.log(`🔍 Proformas filtradas: ${proformasFiltradas.length} de ${proformasOriginales.length}`);
+    
+    // Mostrar resultados filtrados
+    mostrarProformas(proformasFiltradas);
+}
+
+function limpiarFiltrosProformas() {
+    console.log('🧹 === LIMPIANDO FILTROS PROFORMAS ===');
+    
+    // Resetear objeto de filtros
+    filtrosBusquedaProformas = {
+        texto: '',
+        estado: 'todos'
+    };
+
+    // Limpiar campos en ambas vistas
+    $('#busquedaProformasDesktop, #busquedaProformasMobile').val('');
+    $('#estadoProformasDesktop, #estadoProformasMobile').val('todos');
+
+    // Mostrar todas las proformas
+    if (proformasOriginales && proformasOriginales.length > 0) {
+        mostrarProformas(proformasOriginales);
+    }
+
+    console.log('✅ Filtros de proformas limpiados');
+}
+
+// Función para guardar proformas originales cuando se cargan
+function guardarProformasOriginales(proformas) {
+    proformasOriginales = [...proformas];
+    console.log('📋 Proformas originales guardadas:', proformasOriginales.length);
+}
+
+// Exportar funciones necesarias
+if (typeof window !== 'undefined') {
+    window.inicializarFiltrosProformas = inicializarFiltrosProformas;
+    window.aplicarFiltrosLocalmenteProformas = aplicarFiltrosLocalmenteProformas;
+    window.limpiarFiltrosProformas = limpiarFiltrosProformas;
+    window.guardarProformasOriginales = guardarProformasOriginales;
+    
+    console.log('🌐 Funciones de filtros de proformas exportadas globalmente');
+} de búsqueda');
+        }
+
+        // Configurar evento de cambio de estado
+        const $selectEstado = $('#estadoProformas');
+        if ($selectEstado.length) {
+            $selectEstado.off('change.proformasFilter').on('change.proformasFilter', function() {
+                const estado = $(this).val();
+                console.log('🔍 Estado seleccionado:', estado);
+                
+                filtrosBusqueda.estado = estado;
+                aplicarFiltrosLocalmenteProformas();
+            });
+            console.log('✅ Evento de estado configurado');
+        } else {
+            console.error('❌ No se encontró el select de estado');
+        }
+
+        // Configurar botón limpiar
+        const $btnLimpiar = $('#btnLimpiarFiltrosProformas');
+        if ($btnLimpiar.length) {
+            $btnLimpiar.off('click.proformasFilter').on('click.proformasFilter', function(e) {
+                e.preventDefault();
+                console.log('🔍 Limpiando filtros...');
+                limpiarFiltrosProformas();
+            });
+            console.log('✅ Botón limpiar configurado');
+        } else {
+            console.error('❌ No se encontró el botón limpiar');
+        }
+
+        // Configurar cambio de proformas por página
+        const $selectProformasPorPagina = $('#proformasPorPagina');
+        if ($selectProformasPorPagina.length) {
+            $selectProformasPorPagina.off('change.proformasFilter').on('change.proformasFilter', function() {
+                proformasPorPagina = parseInt($(this).val());
+                paginaActual = 1;
+                console.log('📄 Cambiando proformas por página a:', proformasPorPagina);
+                mostrarProformasPaginadas();
+            });
+            console.log('✅ Evento de proformas por página configurado');
+        } else {
+            console.error('❌ No se encontró el select de proformas por página');
+        }
+
+        // Cargar todas las proformas inicialmente
+        cargarTodasLasProformas();
+
+        console.log('✅ Filtros de proformas inicializados correctamente');
+        
+    }, 100);
 }
 
 /**
@@ -139,7 +272,7 @@ async function cargarTodasLasProformas() {
             if (proformas && proformas.length > 0) {
                 console.log('✅ Proformas cargadas:', proformas.length);
                 todasLasProformas = proformas;
-
+                
                 // Aplicar filtros iniciales (mostrar todas)
                 aplicarFiltrosLocalmenteProformas();
             } else {
@@ -398,7 +531,7 @@ function mostrarPaginacionProformas(paginaActualParam, totalPaginas) {
 function actualizarContadorResultadosProformas(conteoActual, conteoTotal) {
     const inicio = ((paginaActual - 1) * proformasPorPagina) + 1;
     const fin = Math.min(paginaActual * proformasPorPagina, conteoTotal);
-
+    
     $('#proformasInfo').text(`Mostrando ${inicio}-${fin} de ${conteoTotal} proformas`);
 }
 
@@ -474,7 +607,7 @@ function configurarEventosBotonesProformas() {
     $('.btn-outline-info[data-proforma-id]').on('click.proformaVer', function() {
         const proformaId = $(this).data('proforma-id');
         console.log('👁️ Ver detalles de proforma:', proformaId);
-
+        
         if (typeof verDetalleProforma === 'function') {
             verDetalleProforma(proformaId);
         } else {
@@ -489,7 +622,7 @@ function configurarEventosBotonesProformas() {
     $('.btn-outline-secondary[data-proforma-id]').on('click.proformaImprimir', function() {
         const proformaId = $(this).data('proforma-id');
         console.log('🖨️ Imprimir proforma:', proformaId);
-
+        
         if (typeof imprimirProforma === 'function') {
             imprimirProforma(proformaId);
         } else {
@@ -504,7 +637,7 @@ function configurarEventosBotonesProformas() {
     $('.btn-outline-success[data-proforma-data]').on('click.proformaConvertir', function() {
         const proformaData = $(this).data('proforma-data');
         console.log('🔄 Convertir proforma:', proformaData);
-
+        
         if (typeof convertirProformaAFactura === 'function') {
             convertirProformaAFactura(proformaData);
         } else {
@@ -527,7 +660,7 @@ if (typeof window !== 'undefined') {
     window.mostrarProformasEnTabla = mostrarProformasEnTabla;
     window.recargarProformas = recargarProformas;
     window.configurarEventosBotonesProformas = configurarEventosBotonesProformas;
-
+    
     console.log('📋 Módulo de filtros de proformas (Frontend) cargado correctamente');
 } else {
     console.error('❌ Window no está disponible para exportar funciones');
