@@ -9,9 +9,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Configuración de la base de datos para acceso directo
-builder.Services.AddDbContext<TucoContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Configuración de base de datos removida - ahora se comunica con API
 
 // Agregar servicios al contenedor
 builder.Services.AddControllersWithViews();
