@@ -304,10 +304,19 @@ function cambiarPaginaEntregas(nuevaPagina) {
 
 function crearFilaPendiente(pendiente) {
     const estadoClass = pendiente.estado === 'Entregado' ? 'success' : 'warning';
-    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES');
+    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
 
     // Usar directamente el código de seguimiento de la base de datos
     const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
+
+    // ✅ MEJORAR OBTENCIÓN DE DATOS DEL CLIENTE
+    const nombreCliente = pendiente.nombreCliente || pendiente.clienteNombre || 'Cliente no especificado';
+    const numeroFactura = pendiente.numeroFactura || `FAC-${pendiente.facturaId}`;
+    const nombreProducto = pendiente.nombreProducto || pendiente.producto || 'Producto no especificado';
 
     // ✅ VALIDAR STOCK DISPONIBLE
     const stockActual = pendiente.stockActual || 0;
@@ -325,23 +334,25 @@ function crearFilaPendiente(pendiente) {
 
     fila.innerHTML = `
         <td><code>${codigoSeguimiento}</code></td>
-        <td>${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</td>
-        <td>${pendiente.nombreCliente || 'Cliente desconocido'}</td>
+        <td><span class="factura-numero">${numeroFactura}</span></td>
         <td>
-            <strong>${pendiente.nombreProducto || 'Producto desconocido'}</strong>
+            <span class="cliente-nombre" title="${nombreCliente}">${nombreCliente}</span>
         </td>
         <td>
+            <strong title="${nombreProducto}">${nombreProducto}</strong>
+        </td>
+        <td class="text-center">
             <span class="badge bg-info">${cantidadPendiente}</span>
         </td>
-        <td>
+        <td class="text-center">
             <span class="badge ${stockClass}">${stockActual}</span>
-            ${!stockSuficiente ? '<br><small class="text-danger">Stock insuficiente</small>' : ''}
+            ${!stockSuficiente ? '<br><small class="text-danger fw-bold">Stock insuficiente</small>' : ''}
         </td>
-        <td>
+        <td class="text-center">
             <span class="badge bg-${estadoClass}">${pendiente.estado}</span>
         </td>
         <td>${fechaCreacion}</td>
-        <td>
+        <td class="text-center">
             <div class="btn-group btn-group-sm" role="group">
                 <button type="button" class="btn btn-outline-info btn-sm"
                         onclick="verDetalles(${pendiente.id})"
@@ -354,7 +365,12 @@ function crearFilaPendiente(pendiente) {
                             title="Marcar como entregado">
                         <i class="bi bi-check-circle"></i>
                     </button>
-                ` : ''}
+                ` : `
+                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled
+                            title="${!stockSuficiente ? 'Stock insuficiente' : 'Ya entregado'}">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                `}
             </div>
         </td>
     `;
@@ -364,8 +380,17 @@ function crearFilaPendiente(pendiente) {
 
 function crearTarjetaPendienteMobile(pendiente) {
     const estadoClass = pendiente.estado === 'Entregado' ? 'success' : 'warning';
-    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES');
+    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
     const codigoSeguimiento = pendiente.codigoSeguimiento || 'Sin código';
+
+    // ✅ MEJORAR OBTENCIÓN DE DATOS DEL CLIENTE Y PRODUCTO
+    const nombreCliente = pendiente.nombreCliente || pendiente.clienteNombre || 'Cliente no especificado';
+    const numeroFactura = pendiente.numeroFactura || `FAC-${pendiente.facturaId}`;
+    const nombreProducto = pendiente.nombreProducto || pendiente.producto || 'Producto no especificado';
 
     // ✅ VALIDAR STOCK DISPONIBLE
     const stockActual = pendiente.stockActual || 0;
@@ -380,10 +405,10 @@ function crearTarjetaPendienteMobile(pendiente) {
 
     tarjeta.innerHTML = `
         <div class="entrega-card-header">
-            <div>
-                <h6 class="entrega-titulo-mobile">${pendiente.nombreProducto || 'Producto desconocido'}</h6>
+            <div style="flex: 1; min-width: 0;">
+                <h6 class="entrega-titulo-mobile" title="${nombreProducto}">${nombreProducto}</h6>
                 <div class="entrega-codigo-mobile">
-                    <i class="bi bi-upc me-1"></i>
+                    <i class="bi bi-upc"></i>
                     <code>${codigoSeguimiento}</code>
                 </div>
             </div>
@@ -395,23 +420,27 @@ function crearTarjetaPendienteMobile(pendiente) {
         <div class="entrega-card-body">
             <div class="entrega-info-row">
                 <span class="entrega-info-label">
-                    <i class="bi bi-file-earmark-text me-1"></i>
+                    <i class="bi bi-file-earmark-text"></i>
                     Factura:
                 </span>
-                <span class="entrega-info-value factura-numero">${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</span>
+                <span class="entrega-info-value">
+                    <span class="factura-numero">${numeroFactura}</span>
+                </span>
             </div>
 
             <div class="entrega-info-row">
                 <span class="entrega-info-label">
-                    <i class="bi bi-person me-1"></i>
+                    <i class="bi bi-person"></i>
                     Cliente:
                 </span>
-                <span class="entrega-info-value cliente-nombre">${pendiente.nombreCliente || 'Cliente desconocido'}</span>
+                <span class="entrega-info-value">
+                    <span class="cliente-nombre" title="${nombreCliente}">${nombreCliente}</span>
+                </span>
             </div>
 
             <div class="entrega-info-row">
                 <span class="entrega-info-label">
-                    <i class="bi bi-box-seam me-1"></i>
+                    <i class="bi bi-box-seam"></i>
                     Cantidad:
                 </span>
                 <span class="entrega-info-value">
@@ -421,18 +450,18 @@ function crearTarjetaPendienteMobile(pendiente) {
 
             <div class="entrega-info-row">
                 <span class="entrega-info-label">
-                    <i class="bi bi-inbox me-1"></i>
+                    <i class="bi bi-inbox"></i>
                     Stock:
                 </span>
                 <span class="entrega-info-value">
                     <span class="badge entrega-badge-stock ${stockClass}">${stockActual}</span>
-                    ${!stockSuficiente ? '<br><small class="text-danger">Stock insuficiente</small>' : ''}
+                    ${!stockSuficiente ? '<br><small class="text-danger fw-bold">Stock insuficiente</small>' : ''}
                 </span>
             </div>
 
             <div class="entrega-info-row">
                 <span class="entrega-info-label">
-                    <i class="bi bi-calendar me-1"></i>
+                    <i class="bi bi-calendar"></i>
                     Fecha:
                 </span>
                 <span class="entrega-info-value">${fechaCreacion}</span>
@@ -443,19 +472,20 @@ function crearTarjetaPendienteMobile(pendiente) {
             <div class="botones-accion-mobile-entregas">
                 <button type="button" class="btn btn-outline-info"
                         onclick="verDetalles(${pendiente.id})"
-                        title="Ver detalles">
+                        title="Ver detalles completos">
                     <i class="bi bi-eye"></i>
                     Ver Detalles
                 </button>
                 ${pendiente.estado !== 'Entregado' && stockSuficiente ? `
-                    <button type="button" class="btn btn-outline-success"
+                    <button type="button" class="btn btn-success"
                             onclick="abrirModalEntrega(${pendiente.id})"
                             title="Marcar como entregado">
                         <i class="bi bi-check-circle"></i>
                         Entregar
                     </button>
                 ` : `
-                    <button type="button" class="btn btn-secondary" disabled>
+                    <button type="button" class="btn btn-secondary" disabled
+                            title="${!stockSuficiente ? 'Stock insuficiente para entregar' : 'Producto ya entregado'}">
                         <i class="bi bi-x-circle"></i>
                         ${!stockSuficiente ? 'Sin Stock' : 'Entregado'}
                     </button>
@@ -610,27 +640,54 @@ function verDetalles(pendienteId) {
 }
 
 function generarContenidoDetalles(pendiente) {
-    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleString('es-ES');
+    const fechaCreacion = new Date(pendiente.fechaCreacion).toLocaleString('es-ES', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
     const fechaEntrega = pendiente.fechaEntrega ?
-        new Date(pendiente.fechaEntrega).toLocaleString('es-ES') : 'No entregado';
+        new Date(pendiente.fechaEntrega).toLocaleString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : 'No entregado';
+
+    // ✅ MEJORAR OBTENCIÓN DE DATOS
+    const nombreCliente = pendiente.nombreCliente || pendiente.clienteNombre || 'Cliente no especificado';
+    const numeroFactura = pendiente.numeroFactura || `FAC-${pendiente.facturaId}`;
+    const nombreProducto = pendiente.nombreProducto || pendiente.producto || 'Producto no especificado';
 
     return `
         <div class="row">
             <div class="col-md-6">
-                <h6>Información General</h6>
-                <table class="table table-sm">
+                <h6 class="text-primary">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Información General
+                </h6>
+                <table class="table table-sm table-striped">
                     <tr>
-                        <td><strong>Código:</strong></td>
-                        <td><code>${pendiente.codigoSeguimiento || 'Sin código'}</code></td>
+                        <td><strong>Código de Seguimiento:</strong></td>
+                        <td><code class="fs-6">${pendiente.codigoSeguimiento || 'Sin código'}</code></td>
                     </tr>
                     <tr>
-                        <td><strong>Factura:</strong></td>
-                        <td>${pendiente.numeroFactura || 'FAC-' + pendiente.facturaId}</td>
+                        <td><strong>Número de Factura:</strong></td>
+                        <td><span class="factura-numero">${numeroFactura}</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Cliente:</strong></td>
+                        <td>
+                            <span class="cliente-nombre fw-bold">${nombreCliente}</span>
+                        </td>
                     </tr>
                     <tr>
                         <td><strong>Estado:</strong></td>
                         <td>
-                            <span class="badge bg-${pendiente.estado === 'Entregado' ? 'success' : 'warning'}">
+                            <span class="badge bg-${pendiente.estado === 'Entregado' ? 'success' : 'warning'} fs-6">
+                                <i class="bi bi-${pendiente.estado === 'Entregado' ? 'check-circle' : 'clock'} me-1"></i>
                                 ${pendiente.estado}
                             </span>
                         </td>
@@ -638,48 +695,74 @@ function generarContenidoDetalles(pendiente) {
                 </table>
             </div>
             <div class="col-md-6">
-                <h6>Producto</h6>
-                <table class="table table-sm">
+                <h6 class="text-success">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Información del Producto
+                </h6>
+                <table class="table table-sm table-striped">
                     <tr>
-                        <td><strong>Nombre:</strong></td>
-                        <td>${pendiente.nombreProducto || 'Sin nombre'}</td>
+                        <td><strong>Producto:</strong></td>
+                        <td>
+                            <span class="fw-semibold" title="${nombreProducto}">${nombreProducto}</span>
+                        </td>
                     </tr>
                     <tr>
-                        <td><strong>Solicitado:</strong></td>
-                        <td><span class="badge bg-info">${pendiente.cantidadSolicitada || 0}</span></td>
+                        <td><strong>Cantidad Solicitada:</strong></td>
+                        <td><span class="badge bg-info fs-6">${pendiente.cantidadSolicitada || pendiente.cantidadPendiente || 0}</span></td>
                     </tr>
                     <tr>
-                        <td><strong>Pendiente:</strong></td>
-                        <td><span class="badge bg-warning">${pendiente.cantidadPendiente || 0}</span></td>
+                        <td><strong>Cantidad Pendiente:</strong></td>
+                        <td><span class="badge bg-warning fs-6">${pendiente.cantidadPendiente || 0}</span></td>
                     </tr>
                     <tr>
-                        <td><strong>Stock Actual:</strong></td>
-                        <td><span class="badge ${(pendiente.stockActual || 0) >= (pendiente.cantidadPendiente || 0) ? 'bg-success' : 'bg-danger'}">${pendiente.stockActual || 0}</span></td>
+                        <td><strong>Stock Disponible:</strong></td>
+                        <td>
+                            <span class="badge ${(pendiente.stockActual || 0) >= (pendiente.cantidadPendiente || 0) ? 'bg-success' : 'bg-danger'} fs-6">
+                                <i class="bi bi-${(pendiente.stockActual || 0) >= (pendiente.cantidadPendiente || 0) ? 'check' : 'exclamation-triangle'} me-1"></i>
+                                ${pendiente.stockActual || 0} unidades
+                            </span>
+                            ${(pendiente.stockActual || 0) < (pendiente.cantidadPendiente || 0) ? 
+                                '<br><small class="text-danger fw-bold">⚠️ Stock insuficiente para completar entrega</small>' : ''}
+                        </td>
                     </tr>
                 </table>
             </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-4">
             <div class="col-12">
-                <h6>Fechas</h6>
-                <table class="table table-sm">
+                <h6 class="text-info">
+                    <i class="bi bi-calendar-event me-2"></i>
+                    Fechas Importantes
+                </h6>
+                <table class="table table-sm table-striped">
                     <tr>
-                        <td><strong>Fecha Creación:</strong></td>
-                        <td>${fechaCreacion}</td>
+                        <td style="width: 30%;"><strong>Fecha de Creación:</strong></td>
+                        <td>
+                            <i class="bi bi-calendar-plus text-primary me-2"></i>
+                            ${fechaCreacion}
+                        </td>
                     </tr>
                     <tr>
-                        <td><strong>Fecha Entrega:</strong></td>
-                        <td>${fechaEntrega}</td>
+                        <td><strong>Fecha de Entrega:</strong></td>
+                        <td>
+                            <i class="bi bi-${pendiente.fechaEntrega ? 'calendar-check text-success' : 'calendar-x text-muted'} me-2"></i>
+                            ${fechaEntrega}
+                        </td>
                     </tr>
                 </table>
             </div>
         </div>
         ${pendiente.observaciones ? `
-        <div class="row mt-3">
+        <div class="row mt-4">
             <div class="col-12">
-                <h6>Observaciones</h6>
-                <div class="border p-2 bg-light rounded">
-                    ${pendiente.observaciones}
+                <h6 class="text-secondary">
+                    <i class="bi bi-chat-square-text me-2"></i>
+                    Observaciones
+                </h6>
+                <div class="border border-secondary-subtle p-3 bg-light rounded-3">
+                    <i class="bi bi-quote text-muted"></i>
+                    <em class="text-dark">${pendiente.observaciones}</em>
+                    <i class="bi bi-quote text-muted"></i>
                 </div>
             </div>
         </div>
