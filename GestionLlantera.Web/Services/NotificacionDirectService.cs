@@ -45,7 +45,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync(_apiConfig.GetApiUrl("Notificaciones/mis-notificaciones"));
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Notificaciones/mis-notificaciones");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -81,7 +85,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync(_apiConfig.GetApiUrl("Notificaciones/conteo-no-leidas"));
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Notificaciones/conteo-no-leidas");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.GetAsync(url);
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -114,9 +122,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.PutAsync(
-                    _apiConfig.GetApiUrl($"Notificaciones/{notificacionId}/marcar-leida"), 
-                    null);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl($"Notificaciones/{notificacionId}/marcar-leida");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, null);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -146,9 +156,11 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.PutAsync(
-                    _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas"), 
-                    null);
+                // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, null);
 
                 if (response.IsSuccessStatusCode)
                 {
