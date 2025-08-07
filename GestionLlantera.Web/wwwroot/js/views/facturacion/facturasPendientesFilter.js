@@ -285,23 +285,12 @@ function mostrarFacturasPendientesPaginadas() {
 }
 
 /**
- * Mostrar facturas pendientes en tabla y cards móviles
+ * Mostrar facturas pendientes en la tabla
  */
 function mostrarFacturasPendientesEnTabla(facturas) {
-    console.log('📋 === MOSTRANDO FACTURAS PENDIENTES ===');
+    console.log('📋 === MOSTRANDO FACTURAS PENDIENTES EN TABLA ===');
     console.log('📋 Facturas a mostrar:', facturas.length);
 
-    // Actualizar tabla tradicional
-    actualizarTablaFacturas(facturas);
-    
-    // Actualizar cards móviles
-    actualizarCardsMobilFacturas(facturas);
-}
-
-/**
- * Actualizar tabla tradicional de facturas
- */
-function actualizarTablaFacturas(facturas) {
     const tbody = $('#facturasPendientesTableBody');
     if (tbody.length === 0) {
         console.error('❌ No se encontró el tbody de facturas pendientes');
@@ -370,124 +359,6 @@ function actualizarTablaFacturas(facturas) {
 
         tbody.append(fila);
     });
-}
-
-/**
- * Actualizar cards móviles de facturas
- */
-function actualizarCardsMobilFacturas(facturas) {
-    // Crear contenedor si no existe
-    let mobileContainer = $('#facturasPendientesModal .facturas-mobile-container');
-    if (mobileContainer.length === 0) {
-        $('#facturasPendientesModal .table-responsive').after('<div class="facturas-mobile-container"></div>');
-        mobileContainer = $('#facturasPendientesModal .facturas-mobile-container');
-    }
-
-    mobileContainer.empty();
-
-    facturas.forEach(factura => {
-        const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
-        const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-        
-        const total = factura.total || 0;
-        const cantidadItems = factura.cantidadItems || factura.detalles?.length || 0;
-        
-        let estadoClass = 'pendiente';
-        let estadoBadge = '';
-        
-        switch (factura.estado) {
-            case 'Pendiente':
-                estadoClass = 'pendiente';
-                estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
-                break;
-            case 'Pagada':
-                estadoClass = 'pagada';
-                estadoBadge = '<span class="badge bg-success">Pagada</span>';
-                break;
-            case 'Anulada':
-                estadoClass = 'anulada';
-                estadoBadge = '<span class="badge bg-danger">Anulada</span>';
-                break;
-            default:
-                estadoBadge = `<span class="badge bg-secondary">${factura.estado || 'Sin Estado'}</span>`;
-        }
-
-        const card = `
-            <div class="factura-card-mobile ${estadoClass}" data-factura-id="${factura.facturaId}">
-                <div class="factura-header-mobile">
-                    <div class="factura-numero-mobile">
-                        ${factura.numeroFactura || 'N/A'}
-                        <div style="font-size: 0.75rem; color: #6c757d; font-weight: normal;">
-                            ID: ${factura.facturaId}
-                        </div>
-                    </div>
-                    <div class="factura-estado-mobile">
-                        ${estadoBadge}
-                    </div>
-                </div>
-
-                <div class="factura-cliente-mobile">
-                    <div class="factura-label-mobile">Cliente</div>
-                    <div class="factura-valor-mobile">
-                        ${factura.nombreCliente || 'Cliente General'}
-                        ${factura.emailCliente ? `<div style="font-size: 0.8em; color: #6c757d;">${factura.emailCliente}</div>` : ''}
-                    </div>
-                </div>
-
-                <div class="factura-info-mobile">
-                    <div class="factura-campo-mobile">
-                        <div class="factura-label-mobile">Fecha</div>
-                        <div class="factura-valor-mobile">
-                            ${fecha}
-                            <div style="font-size: 0.85em; color: #6c757d;">${hora}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="factura-campo-mobile">
-                        <div class="factura-label-mobile">Método Pago</div>
-                        <div class="factura-valor-mobile">${factura.metodoPago || 'Efectivo'}</div>
-                    </div>
-
-                    <div class="factura-total-mobile">
-                        <div class="factura-label-mobile">Total</div>
-                        <div class="factura-valor-mobile">₡${formatearMoneda(total)}</div>
-                        <div style="font-size: 0.8em; color: #6c757d; margin-top: 0.25rem;">
-                            ${cantidadItems} item(s)
-                        </div>
-                    </div>
-                    
-                    <div class="factura-campo-mobile">
-                        <div class="factura-label-mobile">Creado por</div>
-                        <div class="factura-valor-mobile">${factura.usuarioCreadorNombre || 'Sistema'}</div>
-                    </div>
-                </div>
-
-                <div class="factura-acciones-mobile">
-                    <button type="button" class="btn btn-outline-primary btn-sm" 
-                            onclick="verDetalleFactura(${factura.facturaId})" 
-                            title="Ver detalles">
-                        <i class="fas fa-eye"></i> Ver
-                    </button>
-                    <button type="button" class="btn btn-success btn-sm" 
-                            onclick="procesarFacturaPendiente(${factura.facturaId})" 
-                            title="Procesar factura">
-                        <i class="fas fa-check"></i> Procesar
-                    </button>
-                    <button type="button" class="btn btn-info btn-sm" 
-                            onclick="imprimirFactura(${factura.facturaId})" 
-                            title="Imprimir">
-                        <i class="fas fa-print"></i> Imprimir
-                    </button>
-                </div>
-            </div>
-        `;
-
-        mobileContainer.append(card);
-    });
-}
 
     // Configurar eventos para los botones
     configurarEventosBotonesFacturas();
