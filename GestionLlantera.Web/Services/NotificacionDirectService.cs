@@ -24,6 +24,9 @@ namespace GestionLlantera.Web.Services
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
             _apiConfig = apiConfig;
+
+            // Log de diagnóstico para verificar la configuración
+            _logger.LogInformation("🔧 NotificacionDirectService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
         }
 
         public async Task<List<NotificacionDTO>> ObtenerMisNotificacionesAsync()
@@ -42,7 +45,7 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/Notificaciones/mis-notificaciones");
+                var response = await _httpClient.GetAsync(_apiConfig.GetApiUrl("Notificaciones/mis-notificaciones"));
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -78,7 +81,7 @@ namespace GestionLlantera.Web.Services
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/Notificaciones/conteo-no-leidas");
+                var response = await _httpClient.GetAsync(_apiConfig.GetApiUrl("Notificaciones/conteo-no-leidas"));
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -112,7 +115,7 @@ namespace GestionLlantera.Web.Services
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var response = await _httpClient.PutAsync(
-                    $"{_apiConfig.BaseUrl}/api/Notificaciones/{notificacionId}/marcar-leida", 
+                    _apiConfig.GetApiUrl($"Notificaciones/{notificacionId}/marcar-leida"), 
                     null);
 
                 if (response.IsSuccessStatusCode)
@@ -144,7 +147,7 @@ namespace GestionLlantera.Web.Services
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 var response = await _httpClient.PutAsync(
-                    $"{_apiConfig.BaseUrl}/api/Notificaciones/marcar-todas-leidas", 
+                    _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas"), 
                     null);
 
                 if (response.IsSuccessStatusCode)
