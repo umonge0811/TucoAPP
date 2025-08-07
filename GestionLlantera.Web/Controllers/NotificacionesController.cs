@@ -116,12 +116,61 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error al actualizar notificaciones" });
             }
         }
+
+        /// <summary>
+        /// Oculta una notificación específica (soft delete)
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> OcultarNotificacion([FromBody] OcultarNotificacionRequest request)
+        {
+            try
+            {
+                if (request?.NotificacionId == null)
+                {
+                    return Json(new { success = false, message = "ID de notificación requerido" });
+                }
+
+                var result = await _notificacionService.OcultarNotificacionAsync(request.NotificacionId.Value);
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar notificación");
+                return Json(new { success = false, message = "Error al ocultar notificación" });
+            }
+        }
+
+        /// <summary>
+        /// Oculta todas las notificaciones del usuario
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> OcultarTodasNotificaciones()
+        {
+            try
+            {
+                var result = await _notificacionService.OcultarTodasNotificacionesAsync();
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar todas las notificaciones");
+                return Json(new { success = false, message = "Error al ocultar notificaciones" });
+            }
+        }
     }
 
     /// <summary>
     /// Helper class to model the request body for marking a notification as read.
     /// </summary>
     public class MarcarNotificacionRequest
+    {
+        public int? NotificacionId { get; set; }
+    }
+
+    /// <summary>
+    /// Helper class to model the request body for hiding a notification.
+    /// </summary>
+    public class OcultarNotificacionRequest
     {
         public int? NotificacionId { get; set; }
     }
