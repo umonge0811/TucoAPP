@@ -179,6 +179,82 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<dynamic> OcultarNotificacionAsync(int notificacionId)
+        {
+            try
+            {
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("No se pudo obtener el token JWT para ocultar notificación");
+                    return new { success = false, message = "Token no válido" };
+                }
+
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var url = _apiConfig.GetApiUrl("Notificaciones/ocultar");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var requestBody = new { notificacionId };
+                var json = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(url, content);
+                _logger.LogInformation($"Respuesta API al ocultar notificación: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<object>(responseContent);
+                    return result ?? new { success = true };
+                }
+
+                return new { success = false, message = "Error al ocultar notificación" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar notificación {NotificacionId}", notificacionId);
+                return new { success = false, message = "Error al ocultar notificación" };
+            }
+        }
+
+        public async Task<dynamic> OcultarTodasNotificacionesAsync()
+        {
+            try
+            {
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("No se pudo obtener el token JWT para ocultar todas las notificaciones");
+                    return new { success = false, message = "Token no válido" };
+                }
+
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var url = _apiConfig.GetApiUrl("Notificaciones/ocultar-todas");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
+                _logger.LogInformation($"Respuesta API al ocultar todas las notificaciones: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<object>(responseContent);
+                    return result ?? new { success = true };
+                }
+
+                return new { success = false, message = "Error al ocultar notificaciones" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al ocultar todas las notificaciones");
+                return new { success = false, message = "Error al ocultar notificaciones" };
+            }
+        }
+
         /// <summary>
         /// Método auxiliar para obtener el token JWT del usuario autenticado
         /// </summary>
