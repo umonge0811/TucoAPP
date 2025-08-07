@@ -31,9 +31,8 @@ builder.Services.AddScoped<IAjustesInventarioService, AjustesInventarioService>(
 builder.Services.AddScoped<IReportesService, ReportesService>();
 builder.Services.AddScoped<IFacturacionService, FacturacionService>();
 builder.Services.AddScoped<IProveedoresService, ProveedoresService>();
+builder.Services.AddScoped<INotificacionService, NotificacionService>();
 
-// ✅ SOLO EL SERVICIO DIRECTO (sin HTTP)
-builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
 
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
@@ -105,8 +104,6 @@ builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
 builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
 
-// ✅ SERVICIO DE NOTIFICACIONES (ACCESO DIRECTO A BD)
-builder.Services.AddScoped<INotificacionService, NotificacionDirectService>();
 
 var app = builder.Build();
 
