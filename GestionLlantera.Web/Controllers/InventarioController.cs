@@ -4,15 +4,11 @@ using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
-using iTextSharp.tool.xml;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
-using OfficeOpenXml; // Para manejar archivos Excel
-using OfficeOpenXml.FormulaParsing.LexicalAnalysis;
-using OfficeOpenXml.Style;
 using System.IO;
 using System.Security.Claims;
 using Tuco.Clases.DTOs.Inventario;
@@ -21,6 +17,8 @@ using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
 using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace GestionLlantera.Web.Controllers
 {

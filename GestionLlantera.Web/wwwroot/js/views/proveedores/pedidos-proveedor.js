@@ -351,22 +351,33 @@ function llenarSelectProveedores() {
 }
 
 /**
- * Mostrar pedidos en la tabla
+ * Mostrar pedidos en la tabla y tarjetas móviles
  */
 function mostrarPedidos() {
-    console.log('📋 Iniciando mostrarPedidos...');
-    console.log('📊 pedidosFiltrados:', pedidosFiltrados);
-
-    const tbody = $('#cuerpoTablaPedidos');
-
-    if (!pedidosFiltrados || pedidosFiltrados.length === 0) {
-        console.log('📋 No hay pedidos para mostrar');
+    if (pedidosFiltrados.length === 0) {
         mostrarSinDatosPedidos(true);
         return;
     }
 
-    console.log(`📋 Renderizando ${pedidosFiltrados.length} pedidos en la tabla`);
     mostrarSinDatosPedidos(false);
+
+    // Mostrar tabla de escritorio
+    mostrarTablaPedidos();
+    
+    // Mostrar tarjetas móviles
+    mostrarTarjetasMovilesPedidos();
+}
+
+/**
+ * Mostrar pedidos en la tabla de escritorio
+ */
+function mostrarTablaPedidos() {
+    console.log('📋 Iniciando mostrarTablaPedidos...');
+    console.log('📊 pedidosFiltrados:', pedidosFiltrados);
+
+    const tbody = $('#cuerpoTablaPedidos');
+
+    console.log(`📋 Renderizando ${pedidosFiltrados.length} pedidos en la tabla`);
 
     const html = pedidosFiltrados.map((pedido, index) => {
         console.log(`📦 Procesando pedido ${index + 1}:`, pedido);
@@ -429,6 +440,103 @@ function mostrarPedidos() {
 
     tbody.html(html);
     console.log(`✅ ${pedidosFiltrados.length} pedidos renderizados en la tabla`);
+}
+
+/**
+ * Mostrar pedidos en tarjetas móviles
+ */
+function mostrarTarjetasMovilesPedidos() {
+    console.log('📱 Iniciando mostrarTarjetasMovilesPedidos...');
+    
+    const contenedor = $('#tarjetasPedidosMovil');
+
+    const html = pedidosFiltrados.map(pedido => {
+        const pedidoId = pedido.pedidoId || 'N/A';
+        const proveedorNombre = pedido.proveedorNombre || 'Sin nombre';
+        const fechaPedido = pedido.fechaPedido;
+        const estado = pedido.estado || 'Pendiente';
+        const montoTotal = pedido.totalPrecio || 0;
+        const usuarioNombre = pedido.usuarioNombre || 'Sin usuario';
+
+        // Formatear fecha
+        let fechaFormateada = 'Fecha inválida';
+        if (fechaPedido) {
+            try {
+                const fecha = new Date(fechaPedido);
+                if (!isNaN(fecha.getTime())) {
+                    fechaFormateada = fecha.toLocaleDateString('es-ES', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit'
+                    });
+                }
+            } catch (error) {
+                console.warn('⚠️ Error formateando fecha:', error);
+            }
+        }
+
+        const estadoBadge = obtenerBadgeEstado(estado);
+
+        return `
+            <div class="pedido-card-mobile">
+                <div class="pedido-card-header">
+                    <div>
+                        <h5 class="pedido-titulo-mobile">${proveedorNombre}</h5>
+                        <div class="pedido-id-mobile">ID: ${pedidoId}</div>
+                    </div>
+                    <div class="pedido-estado-mobile">
+                        ${estadoBadge}
+                    </div>
+                </div>
+
+                <div class="pedido-info-row">
+                    <span class="pedido-info-label">
+                        <i class="bi bi-calendar-event"></i>
+                        Fecha
+                    </span>
+                    <span class="pedido-info-value">${fechaFormateada}</span>
+                </div>
+
+                <div class="pedido-info-row">
+                    <span class="pedido-info-label">
+                        <i class="bi bi-currency-dollar"></i>
+                        Monto Total
+                    </span>
+                    <span class="pedido-info-value">
+                        <strong>$${parseFloat(montoTotal).toFixed(2)}</strong>
+                    </span>
+                </div>
+
+                <div class="pedido-info-row">
+                    <span class="pedido-info-label">
+                        <i class="bi bi-person"></i>
+                        Usuario
+                    </span>
+                    <span class="pedido-info-value">${usuarioNombre}</span>
+                </div>
+
+                <div class="pedido-acciones-mobile">
+                    <div class="botones-accion-mobile-pedidos">
+                        <button type="button" class="btn btn-outline-info btn-sm" onclick="verDetallePedido(${pedidoId})" title="Ver Detalle">
+                            <i class="bi bi-eye"></i>
+                            <span>Ver</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="generarReportePedido(${pedidoId}, 'Pedido ${pedidoId}')" title="Descargar PDF">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                            <span>PDF</span>
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm" onclick="cambiarEstadoPedido(${pedidoId}, '${estado}')" title="Cambiar Estado">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Estado</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    contenedor.html(html);
+    console.log(`✅ ${pedidosFiltrados.length} tarjetas móviles de pedidos renderizadas`);
 }
 
 /**

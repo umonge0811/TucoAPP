@@ -85,7 +85,7 @@
             </div>
 
             <!-- Tabla de pendientes -->
-            <div class="card">
+            <div class="card entregas-container">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-list-ul me-2"></i>
@@ -115,25 +115,31 @@
                         <p class="mt-2">Cargando entregas pendientes...</p>
                     </div>
 
-                    <div class="table-responsive">
-                        <table id="tablaPendientes" class="table table-striped table-hover">
+                    <!-- Tabla para desktop -->
+                    <div class="table-responsive tabla-entregas-responsive">
+                        <table id="tablaEntregasPendientes" class="table table-striped table-hover">
                             <thead class="table-dark">
                                 <tr>
-                                    <th>Código</th>
-                                    <th>Factura</th>
-                                    <th>Producto</th>
-                                    <th>Cantidad Solicitada</th>
-                                    <th>Cantidad Pendiente</th>
-                                    <th>Stock Actual</th>
-                                    <th>Fecha Creación</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
+                                    <th scope="col">Código</th>
+                                    <th scope="col">Factura</th>
+                                    <th scope="col">Cliente</th>
+                                    <th scope="col">Producto</th>
+                                    <th scope="col">Cant. Pendiente</th>
+                                    <th scope="col">Stock Actual</th>
+                                    <th scope="col">Estado</th>
+                                    <th scope="col">Fecha</th>
+                                    <th scope="col">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="bodyPendientes">
+                            <tbody id="bodyEntregasPendientes">
                                 <!-- Se llenará dinámicamente -->
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Tarjetas para móvil -->
+                    <div id="entregasCardsMobile" class="entregas-cards-mobile">
+                        <!-- Se llenará dinámicamente con tarjetas para móvil -->
                     </div>
 
                     <!-- Paginación -->
@@ -204,22 +210,24 @@
 
 <!-- Modal para ver detalles -->
 <div class="modal fade" id="modalDetallesPendiente" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-info-circle me-2"></i>
-                    Detalles del Pendiente
+                    <span class="d-none d-md-inline">Detalles del Pendiente</span>
+                    <span class="d-md-none">Detalles</span>
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body p-3">
                 <div id="detallesPendienteContent">
                     <!-- Se llenará dinámicamente -->
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-secondary btn-modal-mobile" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>
                     Cerrar
                 </button>
             </div>

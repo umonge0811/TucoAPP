@@ -1,67 +1,69 @@
-using API.Data;
+
 using GestionLlantera.Web.Models.DTOs;
 using GestionLlantera.Web.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
+using System.Text.Json;
+using System.Text;
 
 namespace GestionLlantera.Web.Services
 {
     public class NotificacionDirectService : INotificacionService
     {
-        private readonly TucoContext _context;
+        private readonly HttpClient _httpClient;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<NotificacionDirectService> _logger;
+        private readonly ApiConfigurationService _apiConfig;
 
         public NotificacionDirectService(
-            TucoContext context,
+            IHttpClientFactory httpClientFactory,
             IHttpContextAccessor httpContextAccessor,
-            ILogger<NotificacionDirectService> logger)
+            ILogger<NotificacionDirectService> logger,
+            ApiConfigurationService apiConfig)
         {
-            _context = context;
+            _httpClient = httpClientFactory.CreateClient();
             _httpContextAccessor = httpContextAccessor;
             _logger = logger;
+            _apiConfig = apiConfig;
         }
 
         public async Task<List<NotificacionDTO>> ObtenerMisNotificacionesAsync()
         {
             try
             {
-                var userId = ObtenerUsuarioIdActual();
-                if (userId == null)
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("No se pudo obtener el ID del usuario actual");
+                    _logger.LogWarning("No se pudo obtener el token JWT");
                     return new List<NotificacionDTO>();
                 }
 
-                _logger.LogInformation($"Obteniendo notificaciones para usuario ID: {userId}");
+                _logger.LogInformation("Obteniendo notificaciones desde API");
 
-                // ✅ ACCESO DIRECTO A LA BASE DE DATOS
-                var notificaciones = await _context.Notificaciones
-                    .Where(n => n.UsuarioId == userId.Value)
-                    .OrderByDescending(n => n.FechaCreacion)
-                    .Take(50)
-                    .Select(n => new NotificacionDTO
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/Notificaciones/mis-notificaciones");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var notificaciones = JsonSerializer.Deserialize<List<NotificacionDTO>>(jsonContent, new JsonSerializerOptions
                     {
-                        NotificacionId = n.NotificacionId,
-                        Titulo = n.Titulo,
-                        Mensaje = n.Mensaje,
-                        Tipo = n.Tipo,
-                        Icono = n.Icono,
-                        Leida = n.Leida,
-                        FechaCreacion = n.FechaCreacion,
-                        FechaLectura = n.FechaLectura,
-                        UrlAccion = n.UrlAccion,
-                        EntidadTipo = n.EntidadTipo,
-                        EntidadId = n.EntidadId
-                    })
-                    .ToListAsync();
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<NotificacionDTO>();
 
-                _logger.LogInformation($"Se encontraron {notificaciones.Count} notificaciones");
-                return notificaciones;
+                    _logger.LogInformation($"Se obtuvieron {notificaciones.Count} notificaciones");
+                    return notificaciones;
+                }
+                else
+                {
+                    _logger.LogError($"Error al obtener notificaciones: {response.StatusCode}");
+                    return new List<NotificacionDTO>();
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener notificaciones directamente de la BD");
+                _logger.LogError(ex, "Error al obtener notificaciones desde API");
                 return new List<NotificacionDTO>();
             }
         }
@@ -70,15 +72,27 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var userId = ObtenerUsuarioIdActual();
-                if (userId == null) return 0;
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token)) return 0;
 
-                // ✅ ACCESO DIRECTO A LA BASE DE DATOS
-                var conteo = await _context.Notificaciones
-                    .CountAsync(n => n.UsuarioId == userId.Value && !n.Leida);
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                _logger.LogInformation($"Usuario {userId} tiene {conteo} notificaciones no leídas");
-                return conteo;
+                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/Notificaciones/conteo-no-leidas");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    var conteo = JsonSerializer.Deserialize<int>(jsonContent);
+                    
+                    _logger.LogInformation($"Conteo de notificaciones no leídas: {conteo}");
+                    return conteo;
+                }
+                else
+                {
+                    _logger.LogError($"Error al obtener conteo: {response.StatusCode}");
+                    return 0;
+                }
             }
             catch (Exception ex)
             {
@@ -91,25 +105,26 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var userId = ObtenerUsuarioIdActual();
-                if (userId == null) return false;
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token)) return false;
 
-                // ✅ ACCESO DIRECTO A LA BASE DE DATOS
-                var notificacion = await _context.Notificaciones
-                    .FirstOrDefaultAsync(n => n.NotificacionId == notificacionId && n.UsuarioId == userId.Value);
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                if (notificacion == null)
+                var response = await _httpClient.PutAsync(
+                    $"{_apiConfig.BaseUrl}/api/Notificaciones/{notificacionId}/marcar-leida", 
+                    null);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning($"Notificación {notificacionId} no encontrada para usuario {userId}");
+                    _logger.LogInformation($"Notificación {notificacionId} marcada como leída");
+                    return true;
+                }
+                else
+                {
+                    _logger.LogError($"Error al marcar notificación como leída: {response.StatusCode}");
                     return false;
                 }
-
-                notificacion.Leida = true;
-                notificacion.FechaLectura = DateTime.Now;
-
-                await _context.SaveChangesAsync();
-                _logger.LogInformation($"Notificación {notificacionId} marcada como leída");
-                return true;
             }
             catch (Exception ex)
             {
@@ -122,23 +137,26 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                var userId = ObtenerUsuarioIdActual();
-                if (userId == null) return false;
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token)) return false;
 
-                // ✅ ACCESO DIRECTO A LA BASE DE DATOS
-                var notificacionesNoLeidas = await _context.Notificaciones
-                    .Where(n => n.UsuarioId == userId.Value && !n.Leida)
-                    .ToListAsync();
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                foreach (var notificacion in notificacionesNoLeidas)
+                var response = await _httpClient.PutAsync(
+                    $"{_apiConfig.BaseUrl}/api/Notificaciones/marcar-todas-leidas", 
+                    null);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    notificacion.Leida = true;
-                    notificacion.FechaLectura = DateTime.Now;
+                    _logger.LogInformation("Todas las notificaciones marcadas como leídas");
+                    return true;
                 }
-
-                await _context.SaveChangesAsync();
-                _logger.LogInformation($"Marcadas {notificacionesNoLeidas.Count} notificaciones como leídas para usuario {userId}");
-                return true;
+                else
+                {
+                    _logger.LogError($"Error al marcar todas las notificaciones como leídas: {response.StatusCode}");
+                    return false;
+                }
             }
             catch (Exception ex)
             {
@@ -148,56 +166,30 @@ namespace GestionLlantera.Web.Services
         }
 
         /// <summary>
-        /// Obtiene el ID del usuario actual de los claims
+        /// Obtiene el token JWT de la sesión
         /// </summary>
-        private int? ObtenerUsuarioIdActual()
+        private string? ObtenerTokenJWT()
         {
             try
             {
-                var user = _httpContextAccessor.HttpContext?.User;
-                if (user == null || !user.Identity.IsAuthenticated)
+                var context = _httpContextAccessor.HttpContext;
+                if (context == null) return null;
+
+                // Intentar obtener el token de la sesión
+                var token = context.Session.GetString("JWTToken");
+                
+                if (!string.IsNullOrEmpty(token))
                 {
-                    _logger.LogWarning("Usuario no autenticado");
-                    return null;
+                    _logger.LogInformation("Token JWT obtenido de la sesión");
+                    return token;
                 }
 
-                // Debug: Mostrar todos los claims disponibles
-                _logger.LogInformation("=== CLAIMS DISPONIBLES ===");
-                foreach (var claim in user.Claims)
-                {
-                    _logger.LogInformation($"Claim - Tipo: {claim.Type}, Valor: {claim.Value}");
-                }
-                _logger.LogInformation("=== FIN CLAIMS ===");
-
-                // ✅ BUSCAR EL ID DEL USUARIO EN LOS CLAIMS
-                var userIdClaim = user.FindFirst("userId")?.Value ??
-                                 user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-                if (!string.IsNullOrEmpty(userIdClaim) && int.TryParse(userIdClaim, out int userId))
-                {
-                    _logger.LogInformation($"ID de usuario obtenido de claims: {userId}");
-                    return userId;
-                }
-
-                // Como último recurso, buscar por email
-                var emailClaim = user.FindFirst(ClaimTypes.Email)?.Value;
-                if (!string.IsNullOrEmpty(emailClaim))
-                {
-                    _logger.LogInformation($"Buscando usuario por email: {emailClaim}");
-                    var usuario = _context.Usuarios.FirstOrDefault(u => u.Email == emailClaim);
-                    if (usuario != null)
-                    {
-                        _logger.LogInformation($"Usuario encontrado por email, ID: {usuario.UsuarioId}");
-                        return usuario.UsuarioId;
-                    }
-                }
-
-                _logger.LogWarning("No se pudo obtener el ID del usuario de los claims");
+                _logger.LogWarning("No se encontró token JWT en la sesión");
                 return null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener ID del usuario actual");
+                _logger.LogError(ex, "Error al obtener token JWT");
                 return null;
             }
         }

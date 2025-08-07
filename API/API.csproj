@@ -32,6 +32,10 @@
     <Folder Include="wwwroot\uploads\productos\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\tuco.Clases\Tuco.Clases.csproj" />
+  </ItemGroup>
+
 	
 	<!--
 	<ItemGroup>
@@ -40,8 +44,5 @@
 		</Content>
 	</ItemGroup>
 -->
-  <ItemGroup>
-    <ProjectReference Include="..\tuco.Clases\Tuco.Clases.csproj" />
-  </ItemGroup>
 
 </Project>

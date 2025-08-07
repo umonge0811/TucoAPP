@@ -597,20 +597,18 @@ async function manejarNuevaNota(e) {
 
         let url, method;
         if (esEdicion) {
-            url = `/api/NotasRapidas/${notaId}`;
+            url = `/NotasRapidas/Actualizar?id=${notaId}`;
             method = 'PUT';
         } else {
-            url = '/api/NotasRapidas';
+            url = '/NotasRapidas/Crear';
             method = 'POST';
         }
 
-        // Obtener el token JWT de las cookies o localStorage si es necesario
         const headers = {
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         };
 
-        // Si es una actualización, podemos usar credentials include ya que el controlador usa ObtenerTokenJWT()
         const response = await fetch(url, {
             method: method,
             credentials: 'include',
@@ -841,11 +839,10 @@ function getCurrentUserId() {
  * 📝 FUNCIÓN: Cargar notas rápidas del usuario actual
  */
 async function cargarNotasRapidas() {
-    const currentUserId = getCurrentUserId();
     try {
         console.log('📝 Cargando notas rápidas...');
 
-        const response = await fetch(`/api/NotasRapidas/usuario/${currentUserId}`, {
+        const response = await fetch('/NotasRapidas/ObtenerMisNotas', {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -995,7 +992,7 @@ async function eliminarNota(notaId, titulo) {
         }
 
         // Proceder con la eliminación
-        const response = await fetch(`/api/NotasRapidas/${notaId}?usuarioId=${currentUserId}`, {
+        const response = await fetch(`/NotasRapidas/Eliminar?id=${notaId}`, {
             method: 'DELETE',
             credentials: 'include',
             headers: {
@@ -1043,14 +1040,14 @@ async function marcarFavorita(notaId, esFavorita) {
     try {
         console.log('⭐ Cambiando estado favorita:', { notaId, esFavorita });
 
-        const response = await fetch(`/api/NotasRapidas/${notaId}/favorita`, {
+        const response = await fetch(`/NotasRapidas/CambiarFavorita`, {
             method: 'PATCH',
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({ esFavorita: esFavorita, usuarioId: getCurrentUserId() })
+            body: JSON.stringify({ NotaId: notaId, EsFavorita: esFavorita })
         });
 
         const data = await response.json();
