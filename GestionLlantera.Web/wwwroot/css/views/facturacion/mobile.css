@@ -1,3 +1,4 @@
+
 /* ===== BOTONES DE NAVEGACIÓN MÓVILES ===== */
 @media (max-width: 992px) {
     .botones-navegacion-facturacion {
@@ -35,6 +36,7 @@
     }
 
     .botones-navegacion-facturacion .btn-text {
+        font-size: 0.9rem;
         flex: 1;
         text-align: left;
     }
@@ -51,7 +53,7 @@
         height: 100vh;
         max-height: none;
     }
-
+    
     #facturasPendientesModal .modal-content {
         height: 100vh;
         border-radius: 0;
@@ -59,20 +61,20 @@
         display: flex;
         flex-direction: column;
     }
-
+    
     #facturasPendientesModal .modal-body {
         padding: 0.75rem;
         overflow-y: auto;
         flex: 1;
         -webkit-overflow-scrolling: touch;
     }
-
+    
     #facturasPendientesModal .modal-header {
         padding: 0.75rem 1rem;
         border-bottom: 1px solid #dee2e6;
         flex-shrink: 0;
     }
-
+    
     #facturasPendientesModal .modal-title {
         font-size: 1.1rem;
     }
@@ -531,7 +533,7 @@
     }
 }
 
-/*Table de facturas pendientes en móvil */
+/* Tabla de facturas pendientes en móvil */
 @media (max-width: 768px) {
     #facturasPendientesModal .table-responsive {
         border: none;
@@ -547,7 +549,7 @@
         min-width: 650px; /* Ancho mínimo para que se vea bien */
         white-space: nowrap;
     }
-
+    
     #facturasPendientesModal .table th,
     #facturasPendientesModal .table td {
         padding: 0.6rem 0.4rem;
@@ -588,7 +590,7 @@
     #facturasPendientesModal .table td:nth-child(6) {
         min-width: 100px; /* Acciones */
     }
-
+    
     #facturasPendientesModal .table th {
         font-size: 0.7rem;
         font-weight: 600;
@@ -598,7 +600,7 @@
         z-index: 10;
         border-bottom: 2px solid #dee2e6;
     }
-
+    
     /* Botones en tabla móvil */
     #facturasPendientesModal .btn-group-vertical {
         display: flex;
@@ -613,7 +615,7 @@
         gap: 2px;
         justify-content: center;
     }
-
+    
     #facturasPendientesModal .btn-group .btn,
     #facturasPendientesModal .btn-group-vertical .btn {
         padding: 0.25rem 0.4rem;
@@ -631,7 +633,7 @@
     #facturasPendientesModal .btn-group-vertical .btn i {
         font-size: 0.75rem;
     }
-
+    
     #facturasPendientesModal .badge {
         font-size: 0.65rem;
         padding: 0.25rem 0.5rem;
@@ -673,7 +675,7 @@
         background-color: #f8f9fa;
         margin: 0 -0.75rem -0.75rem -0.75rem;
     }
-
+    
     #facturasPendientesModal .pagination-controls {
         flex-direction: column;
         gap: 0.5rem;
@@ -683,12 +685,12 @@
         text-align: center;
         font-size: 0.8rem;
     }
-
+    
     #facturasPendientesModal .pagination {
         justify-content: center;
         margin-bottom: 0;
     }
-
+    
     #facturasPendientesModal .pagination .page-link {
         padding: 0.25rem 0.5rem;
         font-size: 0.75rem;
@@ -947,291 +949,44 @@
     }
 }
 
-/* ===== ESTILOS ESPECÍFICOS PARA FILTROS DE PROFORMAS ===== */
-
-/* Vista Desktop - Filtros de Proformas */
-@media (min-width: 769px) {
-    #proformasModal .filtros-proforma-container {
-        background: #fff;
-        border-radius: 0.5rem;
-        padding: 0.75rem 1rem;
-        margin-bottom: 1rem;
-        border: 1px solid #e9ecef;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-
-    #proformasModal .filtros-principales-proforma-desktop {
-        display: flex;
-        align-items: end;
-        gap: 1rem;
-        margin-bottom: 0.75rem;
-        flex-wrap: wrap;
-    }
-
-    #proformasModal .filtro-busqueda-proforma {
-        flex: 2;
-        min-width: 200px;
-    }
-
-    #proformasModal .filtro-estado-proforma {
-        flex: 1;
-        min-width: 120px;
-    }
-
-    #proformasModal .filtros-acciones-proforma {
-        margin-left: auto;
-        margin-bottom: 0;
-    }
-
-    #proformasModal #busquedaProformasDesktop,
-    #proformasModal #estadoProformasDesktop {
-        width: 100% !important;
-        padding: 0.5rem 0.75rem !important;
-        border: 1px solid #ced4da !important;
-        border-radius: 0.375rem !important;
-        font-size: 0.875rem !important;
-        background-color: #fff !important;
-        height: 38px !important;
-        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
-    }
-
-    #proformasModal #btnLimpiarFiltrosProformasDesktop {
-        padding: 0.5rem 1rem !important;
-        font-size: 0.8rem !important;
-        font-weight: 500 !important;
-        border-radius: 0.375rem !important;
-        height: 38px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.4rem !important;
-        transition: all 0.15s ease-in-out !important;
-        border: 1px solid #6c757d !important;
-        background-color: #6c757d !important;
-        color: white !important;
-        white-space: nowrap !important;
-        min-width: 110px !important;
-    }
-}
-
-/* Vista Móvil - Filtros de Proformas */
-@media (max-width: 768px) {
-    #proformasModal .filtros-proforma-container {
-        background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        border-radius: 1rem;
-        padding: 1.25rem;
-        margin-bottom: 1.25rem;
-        border: 2px solid #e9ecef;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        position: relative;
-        overflow: hidden;
-    }
-
-    #proformasModal .filtros-proforma-container::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #28a745, #20c997, #17a2b8);
-        border-radius: 1rem 1rem 0 0;
-    }
-
-    #proformasModal .filtros-titulo-mobile {
-        text-align: center;
-        margin-bottom: 1rem;
-        color: #495057;
-        font-weight: 600;
-        font-size: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    #proformasModal .filtros-titulo-mobile::before {
-        content: '🔍';
-        font-size: 1.2rem;
-    }
-
-    #proformasModal .filtro-busqueda-proforma {
-        margin-bottom: 1rem;
-        position: relative;
-    }
-
-    #proformasModal .filtro-busqueda-proforma::before {
-        content: '\f002';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 0.9rem;
-        z-index: 5;
-        pointer-events: none;
-    }
-
-    #proformasModal #busquedaProformasMobile {
-        width: 100% !important;
-        padding: 0.75rem 0.75rem 0.75rem 2.5rem !important;
-        border: 2px solid #dee2e6 !important;
-        border-radius: 0.75rem !important;
-        font-size: 0.9rem !important;
-        background-color: #fff !important;
-        transition: all 0.3s ease !important;
-        height: 48px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
-    }
-
-    #proformasModal .filtro-estado-proforma {
-        margin-bottom: 1rem;
-        position: relative;
-    }
-
-    #proformasModal .filtro-estado-proforma::before {
-        content: '\f463';
-        font-family: 'bootstrap-icons';
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        font-size: 0.9rem;
-        z-index: 5;
-        pointer-events: none;
-    }
-
-    #proformasModal #estadoProformasMobile {
-        width: 100% !important;
-        padding: 0.75rem 0.75rem 0.75rem 2.5rem !important;
-        border: 2px solid #dee2e6 !important;
-        border-radius: 0.75rem !important;
-        font-size: 0.9rem !important;
-        background-color: #fff !important;
-        height: 48px !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.04) !important;
-        cursor: pointer !important;
-    }
-
-    #proformasModal .filtros-acciones-proforma {
-        margin-top: 1.5rem;
-        padding-top: 1rem;
-        border-top: 2px dashed #dee2e6;
-        display: flex;
-        justify-content: center;
-    }
-
-    #proformasModal #btnLimpiarFiltrosProformasMobile {
-        width: 80% !important;
-        max-width: 280px !important;
-        padding: 0.75rem 1.5rem !important;
-        font-size: 0.9rem !important;
-        font-weight: 600 !important;
-        border-radius: 2rem !important;
-        min-height: 48px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        gap: 0.5rem !important;
-        transition: all 0.3s ease !important;
-        border: 2px solid #28a745 !important;
-        background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
-        color: white !important;
-        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
-        position: relative !important;
-        overflow: hidden !important;
-    }
-}
-
-@media (max-width: 576px) {
-    #proformasModal .filtros-proforma-container {
+/* Tablet específico */
+@media (min-width: 577px) and (max-width: 991px) {
+    #facturasPendientesModal .modal-body {
         padding: 1rem;
     }
+    
+    #facturasPendientesModal .table {
+        font-size: 0.875rem;
+    }
+    
+    #facturasPendientesModal .btn-group .btn {
+        padding: 0.375rem 0.6rem;
+        font-size: 0.8rem;
+    }
 
-    #proformasModal .filtros-titulo-mobile {
+    /* Filtros en tablet */
+    #facturasPendientesModal .filtros-principales {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    #facturasPendientesModal .filtros-fechas {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    #facturasPendientesModal .form-control,
+    #facturasPendientesModal .form-select {
         font-size: 0.9rem;
+        padding: 0.6rem 0.75rem;
     }
 
-    #proformasModal .filtro-busqueda-proforma,
-    #proformasModal .filtro-estado-proforma {
-        margin-bottom: 0.75rem;
-    }
-
-    #proformasModal #busquedaProformasMobile,
-    #proformasModal #estadoProformasMobile {
-        padding: 0.6rem 0.6rem 0.6rem 2.2rem !important;
-        font-size: 0.85rem !important;
-        height: 44px !important;
-    }
-
-    #proformasModal .filtro-busqueda-proforma::before,
-    #proformasModal .filtro-estado-proforma::before {
-        left: 10px;
+    #facturasPendientesModal .form-label {
         font-size: 0.85rem;
     }
 
-    #proformasModal .filtros-acciones-proforma {
-        margin-top: 1rem;
-        padding-top: 0.75rem;
-    }
-
-    #proformasModal #btnLimpiarFiltrosProformasMobile {
-        width: 90% !important;
-        padding: 0.6rem 1.2rem !important;
-        font-size: 0.85rem !important;
-        min-height: 44px !important;
-    }
-}
-
-/* ===== TABLET ESPECÍFICO ===== */
-@media (min-width: 577px) and (max-width: 992px) {
-    .producto-card-imagen-container {
-        height: 200px;
-    }
-
-    .producto-card-imagen {
-        padding: 8px;
-    }
-}
-
-@media (max-width: 576px) {
-    .producto-card-imagen-container {
-        height: 160px;
-    }
-
-    .producto-card-imagen {
-        padding: 4px;
-    }
-
-    .producto-card-imagen:hover {
-        transform: scale(1.01);
-        padding: 2px;
-    }
-
-    .producto-card-sin-imagen {
-        font-size: 2.5rem;
-    }
-
-    .producto-card-body {
-        padding: 0.75rem;
-    }
-
-    .producto-card-titulo {
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .producto-card-descripcion {
-        font-size: 0.8rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .producto-card-precio {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
+    #facturasPendientesModal .filtros-container {
+        padding: 1.25rem;
     }
 }
 
@@ -1242,12 +997,12 @@
         padding: 1rem;
         text-align: center;
     }
-
+    
     .page-header .d-flex {
         flex-direction: column;
         gap: 1rem;
     }
-
+    
     .page-header h2 {
         font-size: 1.5rem;
         margin-bottom: 1rem;
@@ -1269,16 +1024,16 @@
         padding: 0.5rem;
     }
 
-    /*Tabla responsive en móvil */
+    /* Tabla responsive en móvil */
     .table-responsive {
         font-size: 0.875rem;
     }
-
+    
     .table thead th {
         padding: 0.5rem;
         font-size: 0.75rem;
     }
-
+    
     .table tbody td {
         padding: 0.5rem;
         font-size: 0.8rem;
@@ -1371,7 +1126,7 @@
         min-width: 650px; /* IGUAL QUE FACTURAS PENDIENTES */
         white-space: nowrap;
     }
-
+    
     #proformasModal .table th,
     #proformasModal .table td {
         padding: 0.6rem 0.4rem;
@@ -1412,7 +1167,7 @@
     #proformasModal .table td:nth-child(6) {
         min-width: 100px; /* Acciones */
     }
-
+    
     #proformasModal .table th {
         font-size: 0.7rem;
         font-weight: 600;
@@ -1422,7 +1177,7 @@
         z-index: 10;
         border-bottom: 2px solid #dee2e6;
     }
-
+    
     /* Botones en tabla móvil para Proformas */
     #proformasModal .btn-group {
         display: flex;
@@ -1430,7 +1185,7 @@
         gap: 2px;
         justify-content: center;
     }
-
+    
     #proformasModal .btn-group .btn {
         padding: 0.25rem 0.4rem;
         font-size: 0.65rem;
@@ -1446,7 +1201,7 @@
     #proformasModal .btn-group .btn i {
         font-size: 0.75rem;
     }
-
+    
     #proformasModal .badge {
         font-size: 0.65rem;
         padding: 0.25rem 0.5rem;
@@ -1527,7 +1282,7 @@
     .producto-card-imagen-container {
         height: 200px;
     }
-
+    
     .producto-card-imagen {
         padding: 8px;
     }

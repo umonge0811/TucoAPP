@@ -2711,14 +2711,6 @@ async function cargarProformasBasico(pagina = 1) {
 function mostrarProformas(proformas) {
     console.log('📋 Mostrando proformas:', proformas.length);
 
-    // Guardar proformas originales para filtrado si es la primera carga
-    if (typeof guardarProformasOriginales === 'function' && proformas.length > 0) {
-        if (!window.proformasOriginalesGuardadas) {
-            guardarProformasOriginales(proformas);
-            window.proformasOriginalesGuardadas = true;
-        }
-    }
-
     const tbody = $('#proformasTableBody');
     tbody.empty();
 

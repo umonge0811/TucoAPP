@@ -13,14 +13,6 @@ let filtrosBusqueda = {
 /**
  * Inicializar filtros de proformas
  */
-// Variables globales para filtros de Proformas
-let filtrosBusquedaProformas = {
-    texto: '',
-    estado: 'todos'
-};
-
-let proformasOriginales = [];
-
 function inicializarFiltrosProformas() {
     console.log('🔍 === INICIALIZANDO FILTROS DE PROFORMAS (FRONTEND) ===');
 
@@ -34,149 +26,19 @@ function inicializarFiltrosProformas() {
     setTimeout(() => {
         console.log('🔍 Configurando eventos de filtrado...');
         
-        // Configurar eventos para desktop
-        const $inputBusquedaDesktop = $('#busquedaProformasDesktop');
-        if ($inputBusquedaDesktop.length) {
-            $inputBusquedaDesktop.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
+        // Configurar evento de búsqueda con debounce
+        const $inputBusqueda = $('#busquedaProformas');
+        if ($inputBusqueda.length) {
+            $inputBusqueda.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
                 const termino = $(this).val().trim();
-                console.log('🔍 Término de búsqueda desktop:', termino);
+                console.log('🔍 Término de búsqueda:', termino);
                 
-                filtrosBusquedaProformas.texto = termino;
-                // Sincronizar con móvil
-                $('#busquedaProformasMobile').val(termino);
+                filtrosBusqueda.texto = termino;
                 aplicarFiltrosLocalmenteProformas();
             });
-            console.log('✅ Evento de búsqueda desktop configurado');
-        }
-
-        // Configurar eventos para móvil
-        const $inputBusquedaMobile = $('#busquedaProformasMobile');
-        if ($inputBusquedaMobile.length) {
-            $inputBusquedaMobile.off('input.proformasFilter keyup.proformasFilter').on('input.proformasFilter keyup.proformasFilter', function() {
-                const termino = $(this).val().trim();
-                console.log('🔍 Término de búsqueda móvil:', termino);
-                
-                filtrosBusquedaProformas.texto = termino;
-                // Sincronizar con desktop
-                $('#busquedaProformasDesktop').val(termino);
-                aplicarFiltrosLocalmenteProformas();
-            });
-            console.log('✅ Evento de búsqueda móvil configurado');
-        }
-
-        // Configurar eventos de estado para desktop
-        const $selectEstadoDesktop = $('#estadoProformasDesktop');
-        if ($selectEstadoDesktop.length) {
-            $selectEstadoDesktop.off('change.proformasFilter').on('change.proformasFilter', function() {
-                const estado = $(this).val();
-                console.log('🔍 Estado seleccionado desktop:', estado);
-                
-                filtrosBusquedaProformas.estado = estado;
-                // Sincronizar con móvil
-                $('#estadoProformasMobile').val(estado);
-                aplicarFiltrosLocalmenteProformas();
-            });
-            console.log('✅ Evento de estado desktop configurado');
-        }
-
-        // Configurar eventos de estado para móvil
-        const $selectEstadoMobile = $('#estadoProformasMobile');
-        if ($selectEstadoMobile.length) {
-            $selectEstadoMobile.off('change.proformasFilter').on('change.proformasFilter', function() {
-                const estado = $(this).val();
-                console.log('🔍 Estado seleccionado móvil:', estado);
-                
-                filtrosBusquedaProformas.estado = estado;
-                // Sincronizar con desktop
-                $('#estadoProformasDesktop').val(estado);
-                aplicarFiltrosLocalmenteProformas();
-            });
-            console.log('✅ Evento de estado móvil configurado');
-        }
-
-        // Botones de limpiar filtros
-        $('#btnLimpiarFiltrosProformasDesktop, #btnLimpiarFiltrosProformasMobile').off('click.proformasFilter').on('click.proformasFilter', function() {
-            console.log('🧹 Limpiando filtros de proformas');
-            limpiarFiltrosProformas();
-        });
-
-        console.log('✅ Filtros de proformas inicializados correctamente');
-        
-    }, 500);
-}
-
-function aplicarFiltrosLocalmenteProformas() {
-    console.log('🔍 === APLICANDO FILTROS LOCALMENTE PROFORMAS ===');
-    console.log('🔍 Filtros actuales:', filtrosBusquedaProformas);
-    
-    if (!proformasOriginales || proformasOriginales.length === 0) {
-        console.log('⚠️ No hay proformas originales para filtrar');
-        return;
-    }
-
-    let proformasFiltradas = [...proformasOriginales];
-
-    // Filtrar por texto
-    if (filtrosBusquedaProformas.texto && filtrosBusquedaProformas.texto.length >= 2) {
-        const termino = filtrosBusquedaProformas.texto.toLowerCase();
-        proformasFiltradas = proformasFiltradas.filter(proforma => {
-            return (
-                (proforma.numeroFactura && proforma.numeroFactura.toLowerCase().includes(termino)) ||
-                (proforma.nombreCliente && proforma.nombreCliente.toLowerCase().includes(termino)) ||
-                (proforma.identificacionCliente && proforma.identificacionCliente.toLowerCase().includes(termino))
-            );
-        });
-    }
-
-    // Filtrar por estado
-    if (filtrosBusquedaProformas.estado && filtrosBusquedaProformas.estado !== 'todos') {
-        proformasFiltradas = proformasFiltradas.filter(proforma => 
-            proforma.estado === filtrosBusquedaProformas.estado
-        );
-    }
-
-    console.log(`🔍 Proformas filtradas: ${proformasFiltradas.length} de ${proformasOriginales.length}`);
-    
-    // Mostrar resultados filtrados
-    mostrarProformas(proformasFiltradas);
-}
-
-function limpiarFiltrosProformas() {
-    console.log('🧹 === LIMPIANDO FILTROS PROFORMAS ===');
-    
-    // Resetear objeto de filtros
-    filtrosBusquedaProformas = {
-        texto: '',
-        estado: 'todos'
-    };
-
-    // Limpiar campos en ambas vistas
-    $('#busquedaProformasDesktop, #busquedaProformasMobile').val('');
-    $('#estadoProformasDesktop, #estadoProformasMobile').val('todos');
-
-    // Mostrar todas las proformas
-    if (proformasOriginales && proformasOriginales.length > 0) {
-        mostrarProformas(proformasOriginales);
-    }
-
-    console.log('✅ Filtros de proformas limpiados');
-}
-
-// Función para guardar proformas originales cuando se cargan
-function guardarProformasOriginales(proformas) {
-    proformasOriginales = [...proformas];
-    console.log('📋 Proformas originales guardadas:', proformasOriginales.length);
-}
-
-// Exportar funciones necesarias
-if (typeof window !== 'undefined') {
-    window.inicializarFiltrosProformas = inicializarFiltrosProformas;
-    window.aplicarFiltrosLocalmenteProformas = aplicarFiltrosLocalmenteProformas;
-    window.limpiarFiltrosProformas = limpiarFiltrosProformas;
-    window.guardarProformasOriginales = guardarProformasOriginales;
-    
-    console.log('🌐 Funciones de filtros de proformas exportadas globalmente');
-} de búsqueda');
+            console.log('✅ Evento de búsqueda configurado');
+        } else {
+            console.error('❌ No se encontró el input de búsqueda');
         }
 
         // Configurar evento de cambio de estado
