@@ -1361,14 +1361,14 @@
         border: none;
         margin: 0 -0.75rem;
         padding: 0;
-        overflow-x: auto;
+        overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
     }
 
     #proformasModal .table {
         font-size: 0.75rem;
         margin-bottom: 0;
-        min-width: 650px; /* IGUAL QUE FACTURAS PENDIENTES */
+        min-width: 650px !important; /* IGUAL QUE FACTURAS PENDIENTES */
         white-space: nowrap;
     }
 
