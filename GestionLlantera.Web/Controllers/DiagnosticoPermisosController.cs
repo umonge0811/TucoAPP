@@ -94,37 +94,3 @@ namespace GestionLlantera.Web.Controllers
         }
     }
 }
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-
-namespace GestionLlantera.Web.Controllers
-{
-    [Authorize]
-    [Route("DiagnosticoPermisos")]
-    public class DiagnosticoPermisosController : Controller
-    {
-        [HttpGet("mis-permisos")]
-        public IActionResult MisPermisos()
-        {
-            try
-            {
-                var permisos = new
-                {
-                    success = true,
-                    permisos = new[]
-                    {
-                        new { nombre = "Dashboard.Leer", activo = true },
-                        new { nombre = "Inventario.Leer", activo = true },
-                        new { nombre = "Facturacion.Leer", activo = true }
-                    }
-                };
-
-                return Json(permisos);
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = ex.Message });
-            }
-        }
-    }
-}

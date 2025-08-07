@@ -464,32 +464,5 @@ public class PermisosController : ControllerBase
                 });
             }
         }
-
-        /// <summary>
-        /// Obtener todas las funciones disponibles del sistema
-        /// </summary>
-        [HttpGet("funciones")]
-        public async Task<IActionResult> ObtenerFunciones()
-        {
-            try
-            {
-                var funciones = new[]
-                {
-                    new { id = 1, nombre = "Dashboard.Leer", descripcion = "Ver dashboard" },
-                    new { id = 2, nombre = "Inventario.Leer", descripcion = "Ver inventario" },
-                    new { id = 3, nombre = "Inventario.Escribir", descripcion = "Modificar inventario" },
-                    new { id = 4, nombre = "Facturacion.Leer", descripcion = "Ver facturación" },
-                    new { id = 5, nombre = "Facturacion.Escribir", descripcion = "Modificar facturación" },
-                    new { id = 6, nombre = "Usuarios.Administrar", descripcion = "Administrar usuarios" },
-                    new { id = 7, nombre = "Reportes.Generar", descripcion = "Generar reportes" }
-                };
-
-                return Ok(new { success = true, data = funciones });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { success = false, message = "Error al obtener funciones", details = ex.Message });
-            }
-        }
     }
-}
+    
