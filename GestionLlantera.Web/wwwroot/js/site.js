@@ -68,7 +68,11 @@ async function cargarNotificaciones() {
             if (result.success) {
                 notificacionesCache = result.data || [];
                 renderizarNotificaciones();
+            } else {
+                mostrarErrorNotificaciones();
             }
+        } else {
+            mostrarErrorNotificaciones();
         }
     } catch (error) {
         console.error('Error al cargar notificaciones:', error);
@@ -94,7 +98,12 @@ async function cargarConteoNotificaciones() {
 
 // Función para renderizar notificaciones
 function renderizarNotificaciones() {
-    const contenedor = document.getElementById('notificaciones-contenido');
+    const contenedor = document.getElementById('notificationsList');
+    
+    if (!contenedor) {
+        console.error('No se encontró el contenedor de notificaciones');
+        return;
+    }
 
     if (!notificacionesCache || notificacionesCache.length === 0) {
         contenedor.innerHTML = `
