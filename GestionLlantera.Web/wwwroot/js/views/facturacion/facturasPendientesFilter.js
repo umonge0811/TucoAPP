@@ -489,23 +489,6 @@ function actualizarCardsMobilFacturas(facturas) {
     });
 }
 
-/**
- * Mostrar mensaje cuando no hay facturas pendientes
- */
-function mostrarFacturasPendientesVacias() {
-    console.log('ℹ️ Mostrando mensaje de facturas pendientes vacías');
-    $('#facturasPendientesEmpty').show();
-    $('#facturasPendientesContent').hide();
-    $('#paginacionFacturas').hide();
-}
-
-/**
- * Función auxiliar para formatear moneda
- */
-function formatearMoneda(valor) {
-    return Number(valor || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 });
-}
-
     // Configurar eventos para los botones
     configurarEventosBotonesFacturas();
 
