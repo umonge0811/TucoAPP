@@ -219,3 +219,10 @@ namespace GestionLlantera.Web.Services
                 return token;
             }
             catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener token JWT");
+                return null;
+            }
+        }
+    }
+}
