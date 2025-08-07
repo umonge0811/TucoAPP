@@ -449,7 +449,7 @@ function validarCampoEnTiempoReal(campo) {
                     mensaje = 'El teléfono debe tener exactamente 8 dígitos para Costa Rica';
                 } else if (!validarTelefonoCostaRica(numeroLimpio)) {
                     esValido = false;
-                    mensaje = 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 6, 7 u 8';
+                    mensaje = 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9';
                 }
             } else {
                 // Validación para otros países
@@ -529,7 +529,7 @@ function validarFormularioCliente() {
             mostrarErrorCampo('#telefonoCliente', 'El teléfono debe tener exactamente 8 dígitos para Costa Rica');
             esValido = false;
         } else if (!validarTelefonoCostaRica(numeroLimpio)) {
-            mostrarErrorCampo('#telefonoCliente', 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 6, 7 u 8');
+            mostrarErrorCampo('#telefonoCliente', 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9');
             esValido = false;
         }
     }
@@ -591,7 +591,7 @@ function formatearTelefonoCostaRica(input) {
         if (numeroLimpio.length < 8) {
             input.siblings('.invalid-feedback').text('El teléfono debe tener exactamente 8 dígitos');
         } else {
-            input.siblings('.invalid-feedback').text('Formato inválido para Costa Rica. Debe iniciar con 2, 4, 6, 7 u 8');
+            input.siblings('.invalid-feedback').text('Formato inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9');
         }
     }
 }
@@ -602,9 +602,16 @@ function validarTelefonoCostaRica(numero) {
         return false;
     }
     
-    // Debe iniciar con 2, 4, 6, 7 u 8 (números válidos en Costa Rica)
+    // Debe iniciar con 2, 4, 5, 6, 7, 8 o 9 (números válidos en Costa Rica)
+    // 2xxx-xxxx: Teléfonos fijos
+    // 4xxx-xxxx: Algunos servicios especiales
+    // 5xxx-xxxx: Algunos móviles y servicios
+    // 6xxx-xxxx: Teléfonos móviles
+    // 7xxx-xxxx: Teléfonos móviles
+    // 8xxx-xxxx: Teléfonos móviles
+    // 9xxx-xxxx: Algunos servicios especiales
     const primerDigito = numero.charAt(0);
-    const digitosValidos = ['2', '4', '6', '7', '8'];
+    const digitosValidos = ['2', '4', '5', '6', '7', '8', '9'];
     
     return digitosValidos.includes(primerDigito);
 }
