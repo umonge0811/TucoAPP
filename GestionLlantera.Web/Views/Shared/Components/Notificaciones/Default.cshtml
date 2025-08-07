@@ -1,4 +1,4 @@
-@model GestionLlantera.Web.ViewComponents.NotificacionesViewModel
+﻿@model GestionLlantera.Web.ViewComponents.NotificacionesViewModel
 @using GestionLlantera.Web.Models.DTOs
 
 <!-- Botón de notificaciones -->
@@ -79,36 +79,6 @@
             setTimeout(() => {
                 window.location.href = urlAccion;
             }, 200);
-        }
-    }
-
-    window.eliminarTodasNotificaciones = async function() {
-        if (!confirm('¿Estás seguro de que deseas eliminar todas las notificaciones? Esta acción no se puede deshacer.')) {
-            return;
-        }
-
-        try {
-            const response = await fetch('/web/api/Notificaciones/OcultarTodasNotificaciones', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': getCSRFToken()
-                }
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result.success) {
-                    location.reload();
-                } else {
-                    alert('Error al eliminar las notificaciones: ' + (result.message || 'Error desconocido'));
-                }
-            } else {
-                alert('Error al comunicarse con el servidor');
-            }
-        } catch (error) {
-            console.error('Error al eliminar todas las notificaciones:', error);
-            alert('Error al eliminar las notificaciones');
         }
     }
 

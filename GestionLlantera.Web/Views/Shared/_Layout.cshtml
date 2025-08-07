@@ -4,7 +4,7 @@
 <html lang="es">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>@ViewData["Title"] - Llantera</title>
 
     @* Hojas de estilo base *@
@@ -81,25 +81,6 @@
             &copy; 2025 - Llantera Tuco - Todos los derechos reservados
         </div>
     </footer>
-
-    @* Panel lateral de notificaciones *@
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="notificationsPanel" aria-labelledby="notificationsPanelLabel">
-        <div class="offcanvas-header" id="notificationsHeader">
-            <h5 class="offcanvas-title" id="notificationsPanelLabel">Notificaciones</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body">
-            <div id="notificationsList">
-                <!-- Las notificaciones se cargarán aquí dinámicamente -->
-                <div class="text-center">
-                    <div class="spinner-border spinner-border-sm" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Cargando notificaciones...</p>
-                </div>
-            </div>
-        </div>
-    </div>
 
     @* Scripts *@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
