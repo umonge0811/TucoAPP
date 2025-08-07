@@ -72,6 +72,34 @@ function configurarEventos() {
     $('#nombreCliente, #emailCliente, #telefonoCliente, #contactoCliente, #direccionCliente').on('input blur', function() {
         validarCampoEnTiempoReal($(this));
     });
+
+    // Validación específica para teléfono de Costa Rica (+506)
+    $('#telefonoCliente').on('input', function() {
+        const codigoPais = $('#codigoPaisCliente').val();
+        if (codigoPais === '+506') {
+            formatearTelefonoCostaRica($(this));
+        }
+    });
+
+    // Cambio de código de país
+    $('#codigoPaisCliente').on('change', function() {
+        const codigoPais = $(this).val();
+        const telefonoInput = $('#telefonoCliente');
+        
+        if (codigoPais === '+506') {
+            // Limpiar y reformatear para Costa Rica
+            const numeroLimpio = telefonoInput.val().replace(/\D/g, '');
+            telefonoInput.val(numeroLimpio);
+            telefonoInput.attr('maxlength', '8');
+            telefonoInput.attr('placeholder', '88888888');
+            formatearTelefonoCostaRica(telefonoInput);
+        } else {
+            // Otros países mantienen formato flexible
+            telefonoInput.attr('maxlength', '15');
+            telefonoInput.attr('placeholder', 'Número de teléfono');
+            telefonoInput.removeClass('is-invalid is-valid');
+        }
+    });
 }
 
 // ===== CARGA DE DATOS =====
@@ -409,15 +437,29 @@ function validarCampoEnTiempoReal(campo) {
             break;
 
         case 'telefonoCliente':
+            const codigoPais = $('#codigoPaisCliente').val();
             if (!valor) {
                 esValido = false;
                 mensaje = 'El teléfono es obligatorio';
-            } else if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
-                esValido = false;
-                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
-            } else if (valor.replace(/[\D]/g, '').length < 8) {
-                esValido = false;
-                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+            } else if (codigoPais === '+506') {
+                // Validación específica para Costa Rica
+                const numeroLimpio = valor.replace(/\D/g, '');
+                if (numeroLimpio.length !== 8) {
+                    esValido = false;
+                    mensaje = 'El teléfono debe tener exactamente 8 dígitos para Costa Rica';
+                } else if (!validarTelefonoCostaRica(numeroLimpio)) {
+                    esValido = false;
+                    mensaje = 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9';
+                }
+            } else {
+                // Validación para otros países
+                if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
+                    esValido = false;
+                    mensaje = 'El teléfono solo puede contener números, espacios y guiones';
+                } else if (valor.replace(/[\D]/g, '').length < 8) {
+                    esValido = false;
+                    mensaje = 'El teléfono debe tener al menos 8 dígitos';
+                }
             }
             break;
 
@@ -475,9 +517,21 @@ function validarFormularioCliente() {
 
     // Validar teléfono (obligatorio)
     const telefono = $('#telefonoCliente').val().trim();
+    const codigoPais = $('#codigoPaisCliente').val();
+    
     if (!telefono) {
         mostrarErrorCampo('#telefonoCliente', 'El teléfono es obligatorio');
         esValido = false;
+    } else if (codigoPais === '+506') {
+        // Validación específica para Costa Rica
+        const numeroLimpio = telefono.replace(/\D/g, '');
+        if (numeroLimpio.length !== 8) {
+            mostrarErrorCampo('#telefonoCliente', 'El teléfono debe tener exactamente 8 dígitos para Costa Rica');
+            esValido = false;
+        } else if (!validarTelefonoCostaRica(numeroLimpio)) {
+            mostrarErrorCampo('#telefonoCliente', 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9');
+            esValido = false;
+        }
     }
 
     // Validar dirección (obligatoria)
@@ -503,6 +557,63 @@ function limpiarValidacion(elemento) {
 function validarEmail(email) {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
+}
+
+// ===== VALIDACIÓN ESPECÍFICA PARA COSTA RICA =====
+function formatearTelefonoCostaRica(input) {
+    let valor = input.val();
+    
+    // Remover todos los caracteres que no sean dígitos
+    let numeroLimpio = valor.replace(/\D/g, '');
+    
+    // Limitar a 8 dígitos
+    if (numeroLimpio.length > 8) {
+        numeroLimpio = numeroLimpio.substring(0, 8);
+    }
+    
+    // Actualizar el valor del input sin formato
+    input.val(numeroLimpio);
+    
+    // Validar formato específico de Costa Rica
+    const esValido = validarTelefonoCostaRica(numeroLimpio);
+    
+    // Aplicar clases de validación
+    input.removeClass('is-invalid is-valid');
+    input.siblings('.invalid-feedback').text('');
+    
+    if (numeroLimpio.length === 0) {
+        // Campo vacío, no mostrar validación
+        return;
+    } else if (esValido) {
+        input.addClass('is-valid');
+    } else {
+        input.addClass('is-invalid');
+        if (numeroLimpio.length < 8) {
+            input.siblings('.invalid-feedback').text('El teléfono debe tener exactamente 8 dígitos');
+        } else {
+            input.siblings('.invalid-feedback').text('Formato inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9');
+        }
+    }
+}
+
+function validarTelefonoCostaRica(numero) {
+    // Debe tener exactamente 8 dígitos
+    if (numero.length !== 8) {
+        return false;
+    }
+    
+    // Debe iniciar con 2, 4, 5, 6, 7, 8 o 9 (números válidos en Costa Rica)
+    // 2xxx-xxxx: Teléfonos fijos
+    // 4xxx-xxxx: Algunos servicios especiales
+    // 5xxx-xxxx: Algunos móviles y servicios
+    // 6xxx-xxxx: Teléfonos móviles
+    // 7xxx-xxxx: Teléfonos móviles
+    // 8xxx-xxxx: Teléfonos móviles
+    // 9xxx-xxxx: Algunos servicios especiales
+    const primerDigito = numero.charAt(0);
+    const digitosValidos = ['2', '4', '5', '6', '7', '8', '9'];
+    
+    return digitosValidos.includes(primerDigito);
 }
 
 // ===== UTILIDADES =====

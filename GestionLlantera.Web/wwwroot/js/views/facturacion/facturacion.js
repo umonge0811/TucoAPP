@@ -2628,7 +2628,7 @@ async function abrirProformas() {
         const modal = new bootstrap.Modal(document.getElementById('proformasModal'));
         
         // Configurar evento para cuando el modal sea completamente visible
-        $('#proformasModal').on('shown.bs.modal', function() {
+        $('#proformasModal').on('shown.bs.modal', async function() {
             console.log('📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***');
             console.log('📋 Elementos disponibles en el DOM:');
             console.log('📋 - Input búsqueda:', $('#busquedaProformas').length);
@@ -2636,6 +2636,14 @@ async function abrirProformas() {
             console.log('📋 - Tabla body:', $('#proformasTableBody').length);
             console.log('📋 - Loading:', $('#proformasLoading').length);
             console.log('📋 - Content:', $('#proformasContent').length);
+            
+            // Ejecutar verificación de vencimiento automáticamente al abrir el modal
+            console.log('📅 Ejecutando verificación automática de vencimiento...');
+            try {
+                await verificarVencimientoProformasAutomatico();
+            } catch (error) {
+                console.error('❌ Error en verificación automática:', error);
+            }
             
             // Inicializar filtros usando el módulo dedicado
             if (typeof inicializarFiltrosProformas === 'function') {
@@ -3470,6 +3478,49 @@ async function verificarVencimientoProformas() {
             text: 'No se pudo completar la verificación de vencimiento: ' + error.message,
             confirmButtonColor: '#dc3545'
         });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Verificar vencimiento de proformas automáticamente (sin confirmación)
+ */
+async function verificarVencimientoProformasAutomatico() {
+    try {
+        console.log('📅 === VERIFICANDO VENCIMIENTO AUTOMÁTICAMENTE ===');
+
+        const response = await fetch('/Facturacion/VerificarVencimientoProformas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📅 Resultado verificación automática:', resultado);
+
+        if (resultado.success) {
+            const proformasExpiradas = resultado.proformasExpiradas || 0;
+            console.log(`📅 Verificación automática completada: ${proformasExpiradas} proformas expiradas`);
+            
+            // Solo mostrar notificación si se encontraron proformas expiradas
+            if (proformasExpiradas > 0) {
+                mostrarToast('Verificación completada', 
+                           `${proformasExpiradas} proformas han sido marcadas como expiradas`, 
+                           'info');
+            }
+        } else {
+            console.warn('⚠️ Error en verificación automática:', resultado.message);
+        }
+
+    } catch (error) {
+        console.error('❌ Error en verificación automática:', error);
+        // No mostrar error al usuario para la verificación automática
     }
 }
 

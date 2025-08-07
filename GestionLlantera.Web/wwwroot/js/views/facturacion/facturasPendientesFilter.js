@@ -41,39 +41,56 @@ function configurarEventosFacturasPendientes() {
     // Limpiar eventos anteriores
     $(document).off('.facturasPendientesFilter');
 
-    // Configurar evento de búsqueda con delegación
-    $(document).on('input.facturasPendientesFilter keyup.facturasPendientesFilter', '#busquedaFacturasPendientes', function() {
+    // Configurar eventos de búsqueda para ambas versiones (desktop y móvil)
+    $(document).on('input.facturasPendientesFilter keyup.facturasPendientesFilter', '#facturasPendientesModal #busquedaFacturasPendientes, #facturasPendientesModal #busquedaFacturasPendientesMobile', function() {
         const termino = $(this).val().trim();
         console.log('🔍 Término de búsqueda facturas:', termino);
+
+        // Sincronizar el valor en ambos campos
+        $('#busquedaFacturasPendientes, #busquedaFacturasPendientesMobile').val(termino);
 
         filtrosBusquedaFacturas.texto = termino;
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    // Configurar evento de cambio de estado con delegación
-    $(document).on('change.facturasPendientesFilter', '#estadoFacturasPendientes', function() {
+    // Configurar eventos de cambio de estado para ambas versiones
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #estadoFacturasPendientes, #facturasPendientesModal #estadoFacturasPendientesMobile', function() {
         const estado = $(this).val();
         console.log('🔍 Estado de facturas seleccionado:', estado);
+
+        // Sincronizar el valor en ambos campos
+        $('#estadoFacturasPendientes, #estadoFacturasPendientesMobile').val(estado);
 
         filtrosBusquedaFacturas.estado = estado;
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    // Configurar filtros de fecha con delegación
-    $(document).on('change.facturasPendientesFilter', '#fechaDesdeFacturas', function() {
-        filtrosBusquedaFacturas.fechaDesde = $(this).val();
+    // Configurar filtros de fecha desde para ambas versiones
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #fechaDesdeFacturas, #facturasPendientesModal #fechaDesdeFacturasMobile', function() {
+        const fecha = $(this).val();
+        filtrosBusquedaFacturas.fechaDesde = fecha;
         console.log('🔍 Fecha desde:', filtrosBusquedaFacturas.fechaDesde);
+
+        // Sincronizar el valor en ambos campos
+        $('#fechaDesdeFacturas, #fechaDesdeFacturasMobile').val(fecha);
+
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    $(document).on('change.facturasPendientesFilter', '#fechaHastaFacturas', function() {
-        filtrosBusquedaFacturas.fechaHasta = $(this).val();
+    // Configurar filtros de fecha hasta para ambas versiones
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #fechaHastaFacturas, #facturasPendientesModal #fechaHastaFacturasMobile', function() {
+        const fecha = $(this).val();
+        filtrosBusquedaFacturas.fechaHasta = fecha;
         console.log('🔍 Fecha hasta:', filtrosBusquedaFacturas.fechaHasta);
+
+        // Sincronizar el valor en ambos campos
+        $('#fechaHastaFacturas, #fechaHastaFacturasMobile').val(fecha);
+
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    // Configurar botón limpiar con delegación
-    $(document).on('click.facturasPendientesFilter', '#btnLimpiarFiltrosFacturas', function(e) {
+    // Configurar botones limpiar para ambas versiones
+    $(document).on('click.facturasPendientesFilter', '#facturasPendientesModal #btnLimpiarFiltrosFacturas, #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile', function(e) {
         e.preventDefault();
         console.log('🔍 Limpiando filtros de facturas...');
         limpiarFiltrosFacturas();
@@ -487,11 +504,11 @@ function limpiarFiltrosFacturas() {
         fechaHasta: ''
     };
 
-    // Limpiar campos del formulario
-    $('#busquedaFacturasPendientes').val('');
-    $('#estadoFacturasPendientes').val('todos');
-    $('#fechaDesdeFacturas').val('');
-    $('#fechaHastaFacturas').val('');
+    // Limpiar campos del formulario para ambas versiones (desktop y móvil)
+    $('#facturasPendientesModal #busquedaFacturasPendientes, #facturasPendientesModal #busquedaFacturasPendientesMobile').val('');
+    $('#facturasPendientesModal #estadoFacturasPendientes, #facturasPendientesModal #estadoFacturasPendientesMobile').val('todos');
+    $('#facturasPendientesModal #fechaDesdeFacturas, #facturasPendientesModal #fechaDesdeFacturasMobile').val('');
+    $('#facturasPendientesModal #fechaHastaFacturas, #facturasPendientesModal #fechaHastaFacturasMobile').val('');
 
     // Resetear paginación
     paginaActualFacturas = 1;
@@ -589,7 +606,7 @@ function configurarEventosBotonesFacturas() {
 function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
     const inicio = ((paginaActualFacturas - 1) * facturasPorPagina) + 1;
     const fin = Math.min(paginaActualFacturas * facturasPorPagina, conteoActual);
-    
+
     $('#facturasPendientesInfo').text(`Mostrando ${inicio}-${fin} de ${conteoActual} facturas`);
 }
 
@@ -598,12 +615,17 @@ function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
  */
 function crearFilaFacturaPendiente(factura) {
     const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
+    const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+
     let estadoBadge = '';
 
     // Asignar badge según el estado
     switch (factura.estado) {
         case 'Pendiente':
-            estadoBadge = '<span class="badge bg-warning">Pendiente</span>';
+            estadoBadge = '<span class="badge bg-warning text-dark">Pendiente</span>';
             break;
         case 'Pagada':
             estadoBadge = '<span class="badge bg-success">Pagada</span>';
@@ -621,29 +643,48 @@ function crearFilaFacturaPendiente(factura) {
     const fila = `
         <tr data-factura-id="${factura.facturaId || factura.id}">
             <td>
-                <strong>${factura.numeroFactura || 'N/A'}</strong><br>
-                <small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
+                <div class="fw-bold text-primary">${factura.numeroFactura || 'N/A'}</div>
+                <small class="text-muted d-block">${factura.tipoDocumento || 'Factura'}</small>
+                <!-- Estado en móvil (oculto en desktop) -->
+                <div class="d-inline d-md-none mt-1">
+                    ${estadoBadge}
+                </div>
             </td>
             <td>
-                <strong>${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</strong><br>
-                <small class="text-muted">${factura.emailCliente || factura.email || ''}</small>
+                <div class="fw-bold">${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</div>
+                ${factura.emailCliente || factura.email ? `<small class="text-muted d-block">${factura.emailCliente || factura.email}</small>` : ''}
+                <!-- Información adicional en móvil -->
+                <div class="d-block d-lg-none">
+                    <small class="text-muted">${fecha} ${hora}</small><br>
+                    <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+                </div>
+            </td>
+            <!-- Información (solo desktop) -->
+            <td class="d-none d-lg-table-cell">
+                <div class="fw-bold">${fecha}</div>
+                <small class="text-muted d-block">${hora}</small>
+                <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
             </td>
             <td>
-                <strong>${fecha}</strong><br>
-                <small class="text-muted">Por: ${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+                <div class="fw-bold text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</div>
+                <small class="text-muted d-none d-md-block">${factura.metodoPago || 'Efectivo'}</small>
             </td>
-            <td>
-                <strong class="text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
+            <!-- Estado (solo desktop) -->
+            <td class="d-none d-md-table-cell">
+                ${estadoBadge}
             </td>
-            <td>${estadoBadge}</td>
             <td class="text-center">
-                <div class="btn-group btn-group-sm">
-                    <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
-                        <i class="bi bi-eye"></i>
+                <div class="btn-group-vertical btn-group-sm d-inline-block d-sm-none">
+                    <!-- Botones verticales en móvil -->
+                    ${factura.estado === 'Pendiente' ? `
+                    <button type="button" class="btn btn-outline-success btn-sm" title="Procesar" data-factura-escapada="${facturaEscapada}">
+                        <i class="bi bi-check-circle"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
-                        <i class="bi bi-printer"></i>
-                    </button>
+                    ` : ''}
+                </div>
+                <div class="btn-group btn-group-sm d-none d-sm-inline-block">
+                    <!-- Botones horizontales en tablet/desktop -->
+                    
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>

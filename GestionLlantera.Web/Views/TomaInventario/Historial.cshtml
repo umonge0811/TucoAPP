@@ -53,20 +53,20 @@
 }
 
 <!-- Breadcrumb -->
-<nav aria-label="breadcrumb"></nav>
+<nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="@Url.Action("Index", "Dashboard")">
-                <i class="fas fa-home me-1"></i>Dashboard
+            <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                <i class="bi bi-house-door me-1"></i>Dashboard
             </a>
         </li>
         <li class="breadcrumb-item">
-            <a href="@Url.Action("Index", "Inventario")">
-                <i class="fas fa-boxes me-1"></i>Inventario
+            <a href="@Url.Action("Index", "Inventario")" class="text-decoration-none">
+                <i class="bi bi-boxes me-1"></i>Inventario
             </a>
         </li>
         <li class="breadcrumb-item active" aria-current="page">
-            <i class="fas fa-history me-1"></i>Historial de Inventarios
+            <i class="bi bi-clock-history me-1"></i>Historial de Inventarios
         </li>
     </ol>
 </nav>

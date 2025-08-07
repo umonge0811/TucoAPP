@@ -285,6 +285,95 @@ function actualizarPaginacionEntregas(pendientes) {
 }
 
 /**
+ * Mostrar controles de paginación
+ */
+function mostrarPaginacionEntregas(paginaActual, totalPaginas) {
+    console.log('📄 === MOSTRANDO PAGINACIÓN DE ENTREGAS ===');
+    console.log('📄 Página actual:', paginaActual, 'Total páginas:', totalPaginas);
+
+    const paginacion = $('#paginacionEntregas');
+    if (paginacion.length === 0) {
+        console.error('❌ No se encontró el contenedor de paginación');
+        return;
+    }
+
+    let html = '<nav aria-label="Paginación de entregas pendientes"><ul class="pagination justify-content-center mb-0">';
+
+    // Botón anterior
+    if (paginaActual > 1) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${paginaActual - 1})">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+                    <span class="page-link">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </span>
+                </li>`;
+    }
+
+    // Páginas (mostrar máximo 5 páginas)
+    const iniciarPagina = Math.max(1, paginaActual - 2);
+    const finalizarPagina = Math.min(totalPaginas, iniciarPagina + 4);
+
+    if (iniciarPagina > 1) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(1)">1</a>
+                </li>`;
+        if (iniciarPagina > 2) {
+            html += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+        }
+    }
+
+    for (let i = iniciarPagina; i <= finalizarPagina; i++) {
+        if (i === paginaActual) {
+            html += `<li class="page-item active">
+                        <span class="page-link">${i}</span>
+                    </li>`;
+        } else {
+            html += `<li class="page-item">
+                        <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${i})">${i}</a>
+                    </li>`;
+        }
+    }
+
+    if (finalizarPagina < totalPaginas) {
+        if (finalizarPagina < totalPaginas - 1) {
+            html += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+        }
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${totalPaginas})">${totalPaginas}</a>
+                </li>`;
+    }
+
+    // Botón siguiente
+    if (paginaActual < totalPaginas) {
+        html += `<li class="page-item">
+                    <a class="page-link" href="#" onclick="cambiarPaginaEntregas(${paginaActual + 1})">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>`;
+    } else {
+        html += `<li class="page-item disabled">
+                    <span class="page-link">
+                        Siguiente <i class="bi bi-chevron-right"></i>
+                    </span>
+                </li>`;
+    }
+
+    html += '</ul></nav>';
+
+    paginacion.html(html).show();
+}
+
+
+/**
  * Cambiar página de entregas pendientes
  */
 function cambiarPaginaEntregas(nuevaPagina) {
