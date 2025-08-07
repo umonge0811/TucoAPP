@@ -292,7 +292,10 @@
 
             <div class="modal-body">
                 <!-- Filtros de búsqueda -->
-                        <div class="filtros-factura-container">
+                <div class="filtros-factura-container">
+                    <!-- Vista Desktop - Filtros horizontales -->
+                    <div class="d-none d-md-block">
+                        <div class="filtros-principales-desktop">
                             <!-- Campo de búsqueda -->
                             <div class="filtro-busqueda-factura">
                                 <label class="form-label">
@@ -329,14 +332,64 @@
                                 </div>
                             </div>
 
-                            <!-- Botones de acción -->
+                            <!-- Botón limpiar -->
                             <div class="filtros-acciones-factura">
                                 <button type="button" id="btnLimpiarFiltrosFacturas" class="btn">
                                     <i class="bi bi-arrow-clockwise"></i>
-                                    Limpiar Filtros
+                                    <span class="d-none d-lg-inline">Limpiar Filtros</span>
+                                    <span class="d-inline d-lg-none">Limpiar</span>
                                 </button>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Vista Móvil/Tablet - Filtros verticales -->
+                    <div class="d-block d-md-none">
+                        <!-- Campo de búsqueda -->
+                        <div class="filtro-busqueda-factura">
+                            <label class="form-label">
+                                <i class="bi bi-search me-1"></i>Buscar
+                            </label>
+                            <input type="text" 
+                                   id="busquedaFacturasPendientesMobile" 
+                                   class="form-control" 
+                                   placeholder="Número, cliente...">
+                        </div>
+
+                        <!-- Campo de estado -->
+                        <div class="filtro-estado-factura">
+                            <label class="form-label">
+                                <i class="bi bi-funnel me-1"></i>Estado
+                            </label>
+                            <select id="estadoFacturasPendientesMobile" class="form-select">
+                                <option value="todos">Todos</option>
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="Pagada">Pagada</option>
+                                <option value="Anulada">Anulada</option>
+                            </select>
+                        </div>
+
+                        <!-- Filtros de fecha -->
+                        <div class="filtros-fechas-factura">
+                            <div class="filtro-fecha-factura">
+                                <label class="form-label">Desde</label>
+                                <input type="date" id="fechaDesdeFacturasMobile" class="form-control">
+                            </div>
+                            <div class="filtro-fecha-factura">
+                                <label class="form-label">Hasta</label>
+                                <input type="date" id="fechaHastaFacturasMobile" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="filtros-acciones-factura">
+                            <button type="button" id="btnLimpiarFiltrosFacturasMobile" class="btn">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Loading -->
                 <div id="facturasPendientesLoading" class="text-center py-5">

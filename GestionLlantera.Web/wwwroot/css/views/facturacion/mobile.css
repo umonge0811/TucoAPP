@@ -85,19 +85,163 @@
     }
 }
 
-/* ===== ÁREA DE FILTROS DEL MODAL - DISEÑO LIMPIO Y MODERNO ===== */
+/* ===== ÁREA DE FILTROS DEL MODAL - DISEÑO RESPONSIVO ===== */
 
-@media (max-width: 768px) {
-    /* Contenedor principal de filtros - evitar conflictos con Bootstrap */
+/* Vista Desktop - Filtros horizontales y compactos */
+#facturasPendientesModal .filtros-factura-container {
+    background: #fff;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Layout horizontal para desktop */
+@media (min-width: 769px) {
     #facturasPendientesModal .filtros-factura-container {
-        background: #fff;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border: 1px solid #e9ecef;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        padding: 0.75rem 1rem;
     }
 
+    /* Contenedor principal de filtros en línea */
+    #facturasPendientesModal .filtros-principales-desktop {
+        display: flex;
+        align-items: end;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    /* Campo de búsqueda en desktop */
+    #facturasPendientesModal .filtro-busqueda-factura {
+        flex: 2;
+        min-width: 200px;
+    }
+
+    #facturasPendientesModal .filtro-busqueda-factura .form-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    #facturasPendientesModal #busquedaFacturasPendientes {
+        width: 100% !important;
+        padding: 0.5rem 0.75rem !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.375rem !important;
+        font-size: 0.875rem !important;
+        background-color: #fff !important;
+        height: 38px !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+
+    /* Campo de estado en desktop */
+    #facturasPendientesModal .filtro-estado-factura {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    #facturasPendientesModal .filtro-estado-factura .form-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    #facturasPendientesModal #estadoFacturasPendientes {
+        width: 100% !important;
+        padding: 0.5rem 0.75rem !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.375rem !important;
+        font-size: 0.875rem !important;
+        background-color: #fff !important;
+        height: 38px !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+
+    /* Filtros de fecha en desktop - en línea */
+    #facturasPendientesModal .filtros-fechas-factura {
+        display: flex;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    #facturasPendientesModal .filtro-fecha-factura {
+        flex: 1;
+        min-width: 130px;
+    }
+
+    #facturasPendientesModal .filtro-fecha-factura .form-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    #facturasPendientesModal #fechaDesdeFacturas,
+    #facturasPendientesModal #fechaHastaFacturas {
+        width: 100% !important;
+        padding: 0.5rem 0.6rem !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.375rem !important;
+        font-size: 0.875rem !important;
+        background-color: #fff !important;
+        height: 38px !important;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+    }
+
+    /* Botón limpiar en desktop - compacto */
+    #facturasPendientesModal .filtros-acciones-factura {
+        margin-left: auto;
+        margin-bottom: 0;
+    }
+
+    #facturasPendientesModal #btnLimpiarFiltrosFacturas {
+        padding: 0.5rem 1rem !important;
+        font-size: 0.8rem !important;
+        font-weight: 500 !important;
+        border-radius: 0.375rem !important;
+        height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.4rem !important;
+        transition: all 0.15s ease-in-out !important;
+        border: 1px solid #6c757d !important;
+        background-color: #6c757d !important;
+        color: white !important;
+        white-space: nowrap !important;
+        min-width: 110px !important;
+    }
+
+    #facturasPendientesModal #btnLimpiarFiltrosFacturas:hover {
+        background-color: #5c636a !important;
+        border-color: #565e64 !important;
+        color: white !important;
+        transform: translateY(-1px) !important;
+    }
+
+    #facturasPendientesModal #btnLimpiarFiltrosFacturas i {
+        font-size: 0.75rem;
+    }
+
+    /* Focus states para desktop */
+    #facturasPendientesModal #busquedaFacturasPendientes:focus,
+    #facturasPendientesModal #estadoFacturasPendientes:focus,
+    #facturasPendientesModal #fechaDesdeFacturas:focus,
+    #facturasPendientesModal #fechaHastaFacturas:focus {
+        border-color: #86b7fe !important;
+        box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25) !important;
+        outline: 0 !important;
+    }
+}
+
+/* Vista Móvil y Tablet - Filtros verticales */
+@media (max-width: 768px) {
     /* Campo de búsqueda principal */
     #facturasPendientesModal .filtro-busqueda-factura {
         margin-bottom: 0.75rem;

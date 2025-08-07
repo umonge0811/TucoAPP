@@ -41,39 +41,56 @@ function configurarEventosFacturasPendientes() {
     // Limpiar eventos anteriores
     $(document).off('.facturasPendientesFilter');
 
-    // Configurar evento de búsqueda con delegación - selector específico para evitar conflictos
-    $(document).on('input.facturasPendientesFilter keyup.facturasPendientesFilter', '#facturasPendientesModal #busquedaFacturasPendientes', function() {
+    // Configurar eventos de búsqueda para ambas versiones (desktop y móvil)
+    $(document).on('input.facturasPendientesFilter keyup.facturasPendientesFilter', '#facturasPendientesModal #busquedaFacturasPendientes, #facturasPendientesModal #busquedaFacturasPendientesMobile', function() {
         const termino = $(this).val().trim();
         console.log('🔍 Término de búsqueda facturas:', termino);
 
+        // Sincronizar el valor en ambos campos
+        $('#busquedaFacturasPendientes, #busquedaFacturasPendientesMobile').val(termino);
+        
         filtrosBusquedaFacturas.texto = termino;
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    // Configurar evento de cambio de estado con delegación - selector específico
-    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #estadoFacturasPendientes', function() {
+    // Configurar eventos de cambio de estado para ambas versiones
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #estadoFacturasPendientes, #facturasPendientesModal #estadoFacturasPendientesMobile', function() {
         const estado = $(this).val();
         console.log('🔍 Estado de facturas seleccionado:', estado);
 
+        // Sincronizar el valor en ambos campos
+        $('#estadoFacturasPendientes, #estadoFacturasPendientesMobile').val(estado);
+        
         filtrosBusquedaFacturas.estado = estado;
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    // Configurar filtros de fecha con delegación - selectores específicos
-    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #fechaDesdeFacturas', function() {
-        filtrosBusquedaFacturas.fechaDesde = $(this).val();
+    // Configurar filtros de fecha desde para ambas versiones
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #fechaDesdeFacturas, #facturasPendientesModal #fechaDesdeFacturasMobile', function() {
+        const fecha = $(this).val();
+        filtrosBusquedaFacturas.fechaDesde = fecha;
         console.log('🔍 Fecha desde:', filtrosBusquedaFacturas.fechaDesde);
+
+        // Sincronizar el valor en ambos campos
+        $('#fechaDesdeFacturas, #fechaDesdeFacturasMobile').val(fecha);
+        
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #fechaHastaFacturas', function() {
-        filtrosBusquedaFacturas.fechaHasta = $(this).val();
+    // Configurar filtros de fecha hasta para ambas versiones
+    $(document).on('change.facturasPendientesFilter', '#facturasPendientesModal #fechaHastaFacturas, #facturasPendientesModal #fechaHastaFacturasMobile', function() {
+        const fecha = $(this).val();
+        filtrosBusquedaFacturas.fechaHasta = fecha;
         console.log('🔍 Fecha hasta:', filtrosBusquedaFacturas.fechaHasta);
+
+        // Sincronizar el valor en ambos campos
+        $('#fechaHastaFacturas, #fechaHastaFacturasMobile').val(fecha);
+        
         aplicarFiltrosLocalmenteFacturas();
     });
 
-    // Configurar botón limpiar con delegación - selector específico
-    $(document).on('click.facturasPendientesFilter', '#facturasPendientesModal #btnLimpiarFiltrosFacturas', function(e) {
+    // Configurar botones limpiar para ambas versiones
+    $(document).on('click.facturasPendientesFilter', '#facturasPendientesModal #btnLimpiarFiltrosFacturas, #facturasPendientesModal #btnLimpiarFiltrosFacturasMobile', function(e) {
         e.preventDefault();
         console.log('🔍 Limpiando filtros de facturas...');
         limpiarFiltrosFacturas();
@@ -487,11 +504,11 @@ function limpiarFiltrosFacturas() {
         fechaHasta: ''
     };
 
-    // Limpiar campos del formulario con selectores específicos
-    $('#facturasPendientesModal #busquedaFacturasPendientes').val('');
-    $('#facturasPendientesModal #estadoFacturasPendientes').val('todos');
-    $('#facturasPendientesModal #fechaDesdeFacturas').val('');
-    $('#facturasPendientesModal #fechaHastaFacturas').val('');
+    // Limpiar campos del formulario para ambas versiones (desktop y móvil)
+    $('#facturasPendientesModal #busquedaFacturasPendientes, #facturasPendientesModal #busquedaFacturasPendientesMobile').val('');
+    $('#facturasPendientesModal #estadoFacturasPendientes, #facturasPendientesModal #estadoFacturasPendientesMobile').val('todos');
+    $('#facturasPendientesModal #fechaDesdeFacturas, #facturasPendientesModal #fechaDesdeFacturasMobile').val('');
+    $('#facturasPendientesModal #fechaHastaFacturas, #facturasPendientesModal #fechaHastaFacturasMobile').val('');
 
     // Resetear paginación
     paginaActualFacturas = 1;
