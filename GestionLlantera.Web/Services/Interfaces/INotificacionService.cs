@@ -1,4 +1,4 @@
-﻿using GestionLlantera.Web.Models.DTOs;
+using GestionLlantera.Web.Models.DTOs;
 
 namespace GestionLlantera.Web.Services.Interfaces
 {
@@ -8,5 +8,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<int> ObtenerConteoNoLeidasAsync();
         Task<bool> MarcarComoLeidaAsync(int notificacionId);
         Task<bool> MarcarTodasComoLeidasAsync();
+        Task<dynamic> OcultarNotificacionAsync(int notificacionId);
+        Task<dynamic> OcultarTodasNotificacionesAsync();
     }
 }

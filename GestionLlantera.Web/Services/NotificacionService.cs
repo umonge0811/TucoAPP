@@ -152,17 +152,79 @@ namespace GestionLlantera.Web.Services
             {
                 ConfigurarAuthorizationHeader();
 
-                // ✅ USAR URL CENTRALIZADA - Construye la URL completa desde configuración
+                // ✅ USAR URL CENTRALIZADA
                 var url = _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas");
-                _logger.LogInformation($"🌐 URL construida: {url}");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
 
-                var response = await _httpClient.PutAsync(url, null);
+                var response = await _httpClient.PostAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
+                _logger.LogInformation($"Respuesta API al marcar todas como leídas: {response.StatusCode}");
+
                 return response.IsSuccessStatusCode;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas");
+                _logger.LogError(ex, "Excepción al marcar todas las notificaciones como leídas");
                 return false;
+            }
+        }
+
+        public async Task<dynamic> OcultarNotificacionAsync(int notificacionId)
+        {
+            try
+            {
+                ConfigurarAuthorizationHeader();
+
+                var url = _apiConfig.GetApiUrl("Notificaciones/ocultar");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var requestBody = new { notificacionId };
+                var json = JsonConvert.SerializeObject(requestBody);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PostAsync(url, content);
+                _logger.LogInformation($"Respuesta API al ocultar notificación: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject(responseContent);
+                    return result ?? new { success = true };
+                }
+
+                return new { success = false, message = "Error al ocultar notificación" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Excepción al ocultar notificación");
+                return new { success = false, message = "Error al ocultar notificación" };
+            }
+        }
+
+        public async Task<dynamic> OcultarTodasNotificacionesAsync()
+        {
+            try
+            {
+                ConfigurarAuthorizationHeader();
+
+                var url = _apiConfig.GetApiUrl("Notificaciones/ocultar-todas");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
+                _logger.LogInformation($"Respuesta API al ocultar todas las notificaciones: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject(responseContent);
+                    return result ?? new { success = true };
+                }
+
+                return new { success = false, message = "Error al ocultar notificaciones" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Excepción al ocultar todas las notificaciones");
+                return new { success = false, message = "Error al ocultar notificaciones" };
             }
         }
     }
