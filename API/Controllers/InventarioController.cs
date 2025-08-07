@@ -497,12 +497,22 @@ namespace API.Controllers
 
                 var imagenesGuardadas = new List<ImagenesProducto>();
 
+                var consecutivo = 1;
                 foreach (var imagen in imagenes)
                 {
                     if (imagen.Length > 0)
                     {
-                        string nombreArchivo = $"{Guid.NewGuid()}_{Path.GetFileName(imagen.FileName)}";
+                        // Limpiar el nombre del producto para usarlo en el archivo
+                        string nombreProductoLimpio = LimpiarNombreArchivo(producto.NombreProducto);
+                        
+                        // Obtener la extensión del archivo original
+                        string extension = Path.GetExtension(imagen.FileName);
+                        
+                        // Crear nombre compuesto: ProductoID_Consecutivo_NombreProducto.extension
+                        string nombreArchivo = $"{id}_{consecutivo}_{nombreProductoLimpio}{extension}";
+                        
                         string rutaArchivo = Path.Combine(uploadsFolder, nombreArchivo);
+                        consecutivo++;
 
                         using (var stream = new FileStream(rutaArchivo, FileMode.Create))
                         {
@@ -1117,6 +1127,37 @@ namespace API.Controllers
         // =====================================
         // MÉTODOS AUXILIARES
         // =====================================
+
+        /// <summary>
+        /// Limpia el nombre del producto para usarlo como parte del nombre de archivo
+        /// </summary>
+        private string LimpiarNombreArchivo(string nombreProducto)
+        {
+            if (string.IsNullOrWhiteSpace(nombreProducto))
+                return "SinNombre";
+
+            // Reemplazar caracteres no válidos por guiones bajos
+            char[] caracteresInvalidos = Path.GetInvalidFileNameChars();
+            string nombreLimpio = nombreProducto;
+            
+            foreach (char c in caracteresInvalidos)
+            {
+                nombreLimpio = nombreLimpio.Replace(c, '_');
+            }
+            
+            // Reemplazar espacios por guiones bajos y limitar longitud
+            nombreLimpio = nombreLimpio.Replace(' ', '_')
+                                     .Replace('-', '_')
+                                     .Trim('_');
+            
+            // Limitar a 50 caracteres para evitar nombres muy largos
+            if (nombreLimpio.Length > 50)
+            {
+                nombreLimpio = nombreLimpio.Substring(0, 50).TrimEnd('_');
+            }
+            
+            return nombreLimpio;
+        }
 
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {
