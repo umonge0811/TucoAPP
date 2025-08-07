@@ -574,11 +574,13 @@
                                     title="Verificar proformas vencidas">
                                 <i class="bi bi-calendar-x me-1"></i>Verificar Vencimiento
                             </button>
-                            <!-- Botón de Actualizar eliminado -->
+                            <button type="button" class="btn btn-outline-primary" onclick="cargarProformas()">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                            </button>
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="proformas-table table-striped table-hover">
+                        <table class="table table-hover table-striped">
                             <thead class="table-success">
                                 <tr>
                                     <th>Número de Proforma</th>
@@ -624,9 +626,9 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer d-flex justify-content-end">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
         </div>
     </div>
 </div>

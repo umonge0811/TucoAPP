@@ -274,16 +274,16 @@ function mostrarProformasEnTabla(proformas) {
         // Asignar badge según el estado
         switch (proforma.estado) {
             case 'Vigente':
-                estadoBadge = '<span class="proformas-badge bg-success">Vigente</span>';
+                estadoBadge = '<span class="badge bg-success">Vigente</span>';
                 break;
             case 'Facturada':
-                estadoBadge = '<span class="proformas-badge bg-primary">Facturada</span>';
+                estadoBadge = '<span class="badge bg-primary">Facturada</span>';
                 break;
             case 'Expirada':
-                estadoBadge = '<span class="proformas-badge bg-danger">Expirada</span>';
+                estadoBadge = '<span class="badge bg-danger">Expirada</span>';
                 break;
             default:
-                estadoBadge = `<span class="proformas-badge bg-secondary">${proforma.estado || 'Sin Estado'}</span>`;
+                estadoBadge = `<span class="badge bg-secondary">${proforma.estado || 'Sin Estado'}</span>`;
         }
 
         const fila = `
@@ -305,15 +305,15 @@ function mostrarProformasEnTabla(proformas) {
                 </td>
                 <td>${estadoBadge}</td>
                 <td class="text-center">
-                    <div class="proformas-btn-group">
-                        <button type="button" class="btn btn-outline-info btn-sm" title="Ver detalles" data-proforma-id="${proforma.facturaId || proforma.id}">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-info" title="Ver detalles" data-proforma-id="${proforma.facturaId || proforma.id}">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary btn-sm" title="Imprimir" data-proforma-id="${proforma.facturaId || proforma.id}">
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-proforma-id="${proforma.facturaId || proforma.id}">
                             <i class="bi bi-printer"></i>
                         </button>
                         ${proforma.estado === 'Vigente' ? `
-                        <button type="button" class="btn btn-outline-success btn-sm" title="Convertir a Factura" data-proforma-data='${JSON.stringify(proforma).replace(/'/g, "&#39;")}'>
+                        <button type="button" class="btn btn-outline-success" title="Convertir a Factura" data-proforma-data='${JSON.stringify(proforma).replace(/'/g, "&#39;")}'>
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
                         ` : ''}
