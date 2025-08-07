@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
-using Tuco.Clases.Models;
-using Tuco.Clases.DTOs;
 using API.Extensions;
 using System.Security.Claims;
+using Tuco.Clases.DTOs;
+using Tuco.Clases.Models;
 
 namespace API.Controllers
 {
