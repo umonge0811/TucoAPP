@@ -497,12 +497,22 @@ namespace API.Controllers
 
                 var imagenesGuardadas = new List<ImagenesProducto>();
 
+                var consecutivo = 1;
                 foreach (var imagen in imagenes)
                 {
                     if (imagen.Length > 0)
                     {
-                        string nombreArchivo = $"{Guid.NewGuid()}_{Path.GetFileName(imagen.FileName)}";
+                        // Limpiar el nombre del producto para usarlo en el archivo (incluyendo medida si es llanta)
+                        string nombreProductoLimpio = LimpiarNombreArchivo(producto.NombreProducto, id);
+                        
+                        // Obtener la extensión del archivo original
+                        string extension = Path.GetExtension(imagen.FileName);
+                        
+                        // Crear nombre compuesto: ProductoID_Consecutivo_NombreProducto.extension
+                        string nombreArchivo = $"{id}_{consecutivo}_{nombreProductoLimpio}{extension}";
+                        
                         string rutaArchivo = Path.Combine(uploadsFolder, nombreArchivo);
+                        consecutivo++;
 
                         using (var stream = new FileStream(rutaArchivo, FileMode.Create))
                         {
@@ -1117,6 +1127,71 @@ namespace API.Controllers
         // =====================================
         // MÉTODOS AUXILIARES
         // =====================================
+
+        /// <summary>
+        /// Limpia el nombre del producto para usarlo como parte del nombre de archivo
+        /// </summary>
+        private string LimpiarNombreArchivo(string nombreProducto, int? productoId = null)
+        {
+            if (string.IsNullOrWhiteSpace(nombreProducto))
+                return "SinNombre";
+
+            string nombreFinal = nombreProducto;
+
+            // Si tenemos el ID del producto, verificar si es llanta para agregar medida
+            if (productoId.HasValue)
+            {
+                try
+                {
+                    var llanta = _context.Llantas.FirstOrDefault(l => l.ProductoId == productoId.Value);
+                    if (llanta != null && llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+                    {
+                        string medidaLlanta = "";
+                        if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                        {
+                            // Formato completo: 215/55R16
+                            medidaLlanta = $"{llanta.Ancho}/{llanta.Perfil}R{llanta.Diametro}";
+                        }
+                        else
+                        {
+                            // Formato sin perfil: 215R16
+                            medidaLlanta = $"{llanta.Ancho}R{llanta.Diametro}";
+                        }
+                        
+                        // Agregar medida al nombre: "NombreProducto_215-55R16"
+                        nombreFinal = $"{nombreProducto}_{medidaLlanta}";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Si hay error obteniendo info de llanta, continuar con nombre original
+                    _logger.LogWarning(ex, "Error obteniendo información de llanta para producto {ProductoId}", productoId);
+                }
+            }
+
+            // Reemplazar caracteres no válidos por guiones bajos
+            char[] caracteresInvalidos = Path.GetInvalidFileNameChars();
+            string nombreLimpio = nombreFinal;
+            
+            foreach (char c in caracteresInvalidos)
+            {
+                nombreLimpio = nombreLimpio.Replace(c, '_');
+            }
+            
+            // Reemplazar espacios y caracteres especiales por guiones bajos
+            nombreLimpio = nombreLimpio.Replace(' ', '_')
+                                     .Replace('-', '_')
+                                     .Replace('/', '_')
+                                     .Trim('_');
+            
+            // Limitar a 70 caracteres para acomodar la medida adicional
+            if (nombreLimpio.Length > 70)
+            {
+                nombreLimpio = nombreLimpio.Substring(0, 70).TrimEnd('_');
+            }
+            
+            return nombreLimpio;
+        }
 
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {

@@ -68,11 +68,7 @@ async function cargarNotificaciones() {
             if (result.success) {
                 notificacionesCache = result.data || [];
                 renderizarNotificaciones();
-            } else {
-                mostrarErrorNotificaciones();
             }
-        } else {
-            mostrarErrorNotificaciones();
         }
     } catch (error) {
         console.error('Error al cargar notificaciones:', error);
@@ -98,23 +94,15 @@ async function cargarConteoNotificaciones() {
 
 // Función para renderizar notificaciones
 function renderizarNotificaciones() {
-    const contenedor = document.getElementById('notificationsList');
-    
-    if (!contenedor) {
-        console.error('No se encontró el contenedor de notificaciones');
-        return;
-    }
+    const contenedor = document.getElementById('notificaciones-contenido');
 
     if (!notificacionesCache || notificacionesCache.length === 0) {
         contenedor.innerHTML = `
-            <div class="text-center py-3">
-                <i class="bi bi-bell text-muted" style="font-size: 3rem;"></i>
-                <p class="text-muted mt-2">No tienes notificaciones</p>
+            <div class="text-center py-5">
+                <i class="bi bi-bell-slash" style="font-size: 3rem; color: #dee2e6;"></i>
+                <h6 class="mt-3 text-muted">No tienes notificaciones</h6>
+                <p class="text-muted small">Cuando recibas notificaciones aparecerán aquí.</p>
             </div>
-        `;
-        document.getElementById('notificationsHeader').innerHTML = `
-            <h5 class="offcanvas-title">Notificaciones</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         `;
         return;
     }
@@ -140,7 +128,7 @@ function renderizarNotificaciones() {
         const isUnread = !notificacion.leida;
 
         html += `
-            <div class="notification-item ${isUnread ? 'unread' : ''}" data-notification-id="${notificacion.notificacionId}" style="position: relative;">
+            <div class="notification-item ${isUnread ? 'unread' : ''}" style="position: relative;">
                 <div class="notification-icon bg-${obtenerColorTipo(notificacion.tipo)}">
                     <i class="bi ${icono}"></i>
                 </div>
@@ -173,28 +161,6 @@ function renderizarNotificaciones() {
             </div>
         `;
     }
-
-    html += `
-        </div>
-        <div class="text-center mt-3">
-            <div class="d-flex gap-2 justify-content-center">
-                <button class="btn btn-outline-primary btn-sm" onclick="marcarTodasComoLeidas()">
-                    <i class="bi bi-check-all me-1"></i>
-                    Marcar todas como leídas
-                </button>
-                <button class="btn btn-outline-danger btn-sm" onclick="eliminarTodasNotificaciones()">
-                    <i class="bi bi-trash3 me-1"></i>
-                    Eliminar todas
-                </button>
-            </div>
-        </div>
-    `;
-
-    // Actualizar encabezado con contador
-    document.getElementById('notificationsHeader').innerHTML = `
-        <h5 class="offcanvas-title">Notificaciones (${notificacionesCache.length})</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
-    `;
 
     contenedor.innerHTML = html;
 }
@@ -296,37 +262,31 @@ async function marcarNotificacionComoLeida(notificacionId) {
     }
 }
 
-// Función para ocultar una notificación específica
+// Función para ocultar notificación individual
 async function ocultarNotificacion(notificacionId) {
     try {
-        const response = await fetch('/web/api/Notificaciones/OcultarNotificacion', {
+        const response = await fetch('/Notificaciones/OcultarNotificacion', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'RequestVerificationToken': getCSRFToken()
             },
-            body: JSON.stringify({ NotificacionId: notificacionId })
+            body: JSON.stringify({ notificacionId: notificacionId })
         });
 
         if (response.ok) {
             const result = await response.json();
             if (result.success) {
-                // Remover el elemento de la lista
-                const elemento = document.querySelector(`[data-notification-id="${notificacionId}"]`);
-                if (elemento) {
-                    elemento.remove();
-                }
+                // Eliminar de la caché local
+                notificacionesCache = notificacionesCache.filter(n => n.notificacionId !== notificacionId);
 
-                // Actualizar contador
-                cargarConteoNotificaciones();
-
-                // Recargar la lista si no quedan notificaciones
-                const remainingNotifications = document.querySelectorAll('.notification-item');
-                if (remainingNotifications.length === 0) {
-                    cargarNotificaciones();
+                // Actualizar conteo si estaba no leída
+                const notificacionOriginal = Array.from(arguments[0]).find(n => n.notificacionId === notificacionId);
+                if (notificacionOriginal && !notificacionOriginal.leida) {
+                    conteoNoLeidas = Math.max(0, conteoNoLeidas - 1);
+                    actualizarBadges();
                 }
-            } else {
-                console.error('Error al ocultar notificación:', result.message);
+                renderizarNotificaciones();
             }
         }
     } catch (error) {
@@ -358,39 +318,6 @@ async function marcarTodasComoLeidas() {
         }
     } catch (error) {
         console.error('Error al marcar todas como leídas:', error);
-    }
-}
-
-// Función para eliminar todas las notificaciones
-async function eliminarTodasNotificaciones() {
-    if (!confirm('¿Estás seguro de que deseas eliminar todas las notificaciones? Esta acción no se puede deshacer.')) {
-        return;
-    }
-
-    try {
-        const response = await fetch('/web/api/Notificaciones/OcultarTodasNotificaciones', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'RequestVerificationToken': getCSRFToken()
-            }
-        });
-
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                // Recargar la lista de notificaciones
-                cargarNotificaciones();
-                cargarConteoNotificaciones();
-            } else {
-                alert('Error al eliminar las notificaciones: ' + (result.message || 'Error desconocido'));
-            }
-        } else {
-            alert('Error al comunicarse con el servidor');
-        }
-    } catch (error) {
-        console.error('Error al eliminar todas las notificaciones:', error);
-        alert('Error al eliminar las notificaciones');
     }
 }
 
@@ -431,6 +358,4 @@ function inicializarNotificaciones() {
 }
 
 // Auto-inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    inicializarNotificaciones();
-});
+document.addEventListener('DOMContentLoaded', inicializarNotificaciones);
