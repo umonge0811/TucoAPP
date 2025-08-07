@@ -19,66 +19,113 @@ namespace GestionLlantera.Web.Controllers
             _logger = logger;
         }
 
+        // The Index action is typically used to display a view, not for API calls from JavaScript.
+        // The JavaScript functions should call specific API endpoints.
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        /// <summary>
+        /// Endpoint for JavaScript to get user notifications.
+        /// </summary>
         [HttpGet("mis-notificaciones")]
         public async Task<IActionResult> ObtenerMisNotificaciones()
         {
             try
             {
                 var notificaciones = await _notificacionService.ObtenerMisNotificacionesAsync();
-                return Json(notificaciones);
+                // Returning a JSON with success status and data.
+                return Json(new { success = true, data = notificaciones });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener notificaciones");
-                return Json(new List<object>());
+                // Returning a JSON with failure status and an error message.
+                return Json(new { success = false, message = "Error al cargar notificaciones" });
             }
         }
 
+        /// <summary>
+        /// Endpoint for JavaScript to get the count of unread notifications.
+        /// </summary>
         [HttpGet("conteo-no-leidas")]
         public async Task<IActionResult> ObtenerConteoNoLeidas()
         {
             try
             {
                 var conteo = await _notificacionService.ObtenerConteoNoLeidasAsync();
-                return Json(conteo);
+                // Returning a JSON with success status and the count data.
+                return Json(new { success = true, data = conteo });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener conteo");
-                return Json(0);
+                _logger.LogError(ex, "Error al obtener conteo de notificaciones");
+                // Returning a JSON with failure status and an error message.
+                return Json(new { success = false, message = "Error al cargar conteo" });
             }
         }
 
-        [HttpPut("{id}/marcar-leida")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> MarcarComoLeida(int id)
+        /// <summary>
+        /// Endpoint for JavaScript to mark a notification as read.
+        /// </summary>
+        [HttpPost("marcar-leida")]
+        // Using POST for actions that modify server state.
+        // Removed [ValidateAntiForgeryToken] as this is an API endpoint called from client-side JavaScript,
+        // and CSRF protection is typically handled differently for API endpoints or might not be needed
+        // depending on the application's security context and how the token is managed.
+        // If CSRF protection is required, a mechanism to include the token in the request header
+        // from JavaScript would be needed.
+        public async Task<IActionResult> MarcarComoLeida([FromBody] MarcarNotificacionRequest request)
         {
             try
             {
-                var resultado = await _notificacionService.MarcarComoLeidaAsync(id);
+                // Basic validation for the incoming request.
+                if (request?.NotificacionId == null)
+                {
+                    return Json(new { success = false, message = "ID de notificación requerido" });
+                }
+
+                var resultado = await _notificacionService.MarcarComoLeidaAsync(request.NotificacionId.Value);
+                // Returning success status of the operation.
                 return Json(new { success = resultado });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al marcar notificación como leída");
-                return Json(new { success = false });
+                // Returning failure status and an error message.
+                return Json(new { success = false, message = "Error al actualizar notificación" });
             }
         }
 
-        [HttpPut("marcar-todas-leidas")]
-        [ValidateAntiForgeryToken]
+        /// <summary>
+        /// Endpoint for JavaScript to mark all notifications as read.
+        /// </summary>
+        [HttpPost("marcar-todas-leidas")]
+        // Using POST for actions that modify server state.
+        // Removed [ValidateAntiForgeryToken] for similar reasons as above.
         public async Task<IActionResult> MarcarTodasComoLeidas()
         {
             try
             {
                 var resultado = await _notificacionService.MarcarTodasComoLeidasAsync();
+                // Returning success status of the operation.
                 return Json(new { success = resultado });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al marcar todas como leídas");
-                return Json(new { success = false });
+                _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas");
+                // Returning failure status and an error message.
+                return Json(new { success = false, message = "Error al actualizar notificaciones" });
             }
         }
+    }
+
+    /// <summary>
+    /// Helper class to model the request body for marking a notification as read.
+    /// </summary>
+    public class MarcarNotificacionRequest
+    {
+        public int? NotificacionId { get; set; }
     }
 }

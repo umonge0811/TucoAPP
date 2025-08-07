@@ -1,4 +1,4 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
+// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
 // for details on configuring this project to bundle and minify static web assets.
 
 // Write your JavaScript code.
@@ -62,10 +62,13 @@ let conteoNoLeidas = 0;
 // Función para cargar notificaciones
 async function cargarNotificaciones() {
     try {
-        const response = await fetch('/api/notificaciones/mis-notificaciones');
+        const response = await fetch('/Notificaciones/ObtenerMisNotificaciones');
         if (response.ok) {
-            notificacionesCache = await response.json();
-            renderizarNotificaciones();
+            const result = await response.json();
+            if (result.success) {
+                notificacionesCache = result.data || [];
+                renderizarNotificaciones();
+            }
         }
     } catch (error) {
         console.error('Error al cargar notificaciones:', error);
@@ -76,10 +79,13 @@ async function cargarNotificaciones() {
 // Función para cargar conteo
 async function cargarConteoNotificaciones() {
     try {
-        const response = await fetch('/api/notificaciones/conteo-no-leidas');
+        const response = await fetch('/Notificaciones/ObtenerConteoNoLeidas');
         if (response.ok) {
-            conteoNoLeidas = await response.json();
-            actualizarBadges();
+            const result = await response.json();
+            if (result.success) {
+                conteoNoLeidas = result.data || 0;
+                actualizarBadges();
+            }
         }
     } catch (error) {
         console.error('Error al cargar conteo:', error);
@@ -212,12 +218,13 @@ function getCSRFToken() {
 // Función para marcar como leída
 async function marcarNotificacionComoLeida(notificacionId) {
     try {
-        const response = await fetch(`/api/notificaciones/${notificacionId}/marcar-leida`, {
-            method: 'PUT',
+        const response = await fetch('/Notificaciones/MarcarComoLeida', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'RequestVerificationToken': getCSRFToken()
-            }
+            },
+            body: JSON.stringify({ notificacionId: notificacionId })
         });
 
         if (response.ok) {
@@ -243,8 +250,8 @@ async function marcarNotificacionComoLeida(notificacionId) {
 // Función para marcar todas como leídas
 async function marcarTodasComoLeidas() {
     try {
-        const response = await fetch('/api/notificaciones/marcar-todas-leidas', {
-            method: 'PUT',
+        const response = await fetch('/Notificaciones/MarcarTodasComoLeidas', {
+            method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'RequestVerificationToken': getCSRFToken()
