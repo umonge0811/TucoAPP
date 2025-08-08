@@ -338,25 +338,6 @@ input[type=number] {
     flex-direction: column;
 }
 
-/* Estilos para medida de llanta */
-.medida-llanta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-}
-
-.medida-llanta .badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
-}
-
-.medida-llanta .badge i {
-    margin-right: 0.25rem;
-}umn;
-}
-
     .producto-card:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
