@@ -572,7 +572,47 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
-        const medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta || null;
+        
+        // ✅ MAPEO MEJORADO DE MEDIDA DE LLANTA
+        let medidaCompleta = null;
+        let esLlanta = producto.esLlanta || producto.EsLlanta || false;
+        
+        try {
+            // Primero verificar si ya viene la medida completa
+            medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta;
+            
+            // Si no tiene medida completa pero es llanta, construirla desde los datos de llanta
+            if (!medidaCompleta && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+                
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        // Formato completo con perfil: 215/55/R16
+                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        // Formato sin perfil: 215/R16
+                        medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+            }
+            
+            // Si aún no tenemos medida, verificar propiedades alternativas del backend
+            if (!medidaCompleta) {
+                // Verificar formatos alternativos que puedan venir del backend
+                if (producto.Ancho && producto.Diametro) {
+                    if (producto.Perfil && producto.Perfil > 0) {
+                        medidaCompleta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                    } else {
+                        medidaCompleta = `${producto.Ancho}/R${producto.Diametro}`;
+                    }
+                    esLlanta = true;
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta:', error);
+            medidaCompleta = null;
+        }
 
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
@@ -655,7 +695,7 @@ function mostrarResultadosProductos(productos) {
             stockMinimo: stockMinimo,
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
-            esLlanta: producto.esLlanta || producto.EsLlanta || false,
+            esLlanta: esLlanta,
             medidaCompleta: medidaCompleta
         };
 
