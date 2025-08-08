@@ -572,6 +572,7 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+        const medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta || null;
 
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
@@ -655,7 +656,7 @@ function mostrarResultadosProductos(productos) {
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
             esLlanta: producto.esLlanta || producto.EsLlanta || false,
-            medidaCompleta: producto.MedidaCompleta || producto.medidaCompleta || null
+            medidaCompleta: medidaCompleta
         };
 
         // ESCAPAR DATOS
@@ -664,8 +665,6 @@ function mostrarResultadosProductos(productos) {
 
         // ✅ AGREGAR MEDIDA DE LLANTA SI EXISTE
         let infoLlanta = '';
-        // Verificar todas las posibles variantes de la propiedad de medida
-        const medidaLlanta = productoLimpio.medidaCompleta || producto.medidaCompleta || producto.MedidaCompleta || null;
         
         console.log('🔧 Debug llanta:', {
             esLlanta: productoLimpio.esLlanta,
@@ -675,10 +674,10 @@ function mostrarResultadosProductos(productos) {
             nombreProducto: producto.nombreProducto
         });
         
-        if (productoLimpio.esLlanta && medidaLlanta) {
+        if (productoLimpio.esLlanta && medidaCompleta) {
             infoLlanta = `
                 <div class="info-llanta mb-2">
-                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaLlanta}</small>
+                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
                 </div>
             `;
         }
