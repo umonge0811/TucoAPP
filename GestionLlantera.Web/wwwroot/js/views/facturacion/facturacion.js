@@ -341,20 +341,17 @@ function configurarEventos() {
                 console.log('🎯 Iniciando búsqueda con término:', termino);
                 buscarProductos(termino);
             } else if (termino.length === 0) {
-                console.log('🎯 Campo vacío, verificando carga inicial...');
-                // Mostrar productos iniciales si el campo está vacío
-                if (cargaInicialCompletada) {
-                    console.log('🎯 Carga inicial completada, buscando todos los productos');
-                    buscarProductos('');
-                } else {
-                    console.log('🎯 Carga inicial no completada, mostrando mensaje de búsqueda');
-                    $('#resultadosBusqueda').html(`
-                        <div class="col-12 text-center py-4 text-muted">
-                            <i class="bi bi-search display-1"></i>
-                            <p class="mt-2">Busca productos para agregar a la venta</p>
-                        </div>
-                    `);
-                }
+                console.log('🎯 Campo vacío, cargando todos los productos...');
+                // ✅ SIEMPRE CARGAR PRODUCTOS CUANDO EL CAMPO ESTÁ VACÍO
+                buscarProductos('');
+            } else {
+                console.log('🎯 Término muy corto, mostrando mensaje de búsqueda');
+                $('#resultadosBusqueda').html(`
+                    <div class="col-12 text-center py-4 text-muted">
+                        <i class="bi bi-search display-1"></i>
+                        <p class="mt-2">Escribe al menos 2 caracteres para buscar</p>
+                    </div>
+                `);
             }
             timeoutBusquedaActivo = null;
             console.log('🎯 === FIN TIMEOUT DE BÚSQUEDA ===');
@@ -492,11 +489,64 @@ async function buscarProductos(termino) {
             // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (si es necesario)
             let productosFiltrados = data.productos;
             if (termino && termino.length >= 2) {
+                const terminoBusqueda = termino.toLowerCase();
                 productosFiltrados = data.productos.filter(producto => {
                     const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
-                    return nombre.includes(termino.toLowerCase());
+                    const descripcion = (producto.descripcion || producto.Descripcion || '').toLowerCase();
+                    
+                    // ✅ BUSCAR EN NOMBRE Y DESCRIPCIÓN
+                    let cumpleBusqueda = nombre.includes(terminoBusqueda) || descripcion.includes(terminoBusqueda);
+                    
+                    // ✅ BUSCAR EN MEDIDAS DE LLANTAS
+                    if (!cumpleBusqueda && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                        try {
+                            const llantaInfo = producto.llanta || producto.Llanta[0];
+                            
+                            if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                                // Crear múltiples formatos de medida para búsqueda
+                                let medidaCompleta = '';
+                                if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                                    medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                                } else {
+                                    medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                                }
+                                
+                                // Crear texto de búsqueda con múltiples formatos
+                                const textoBusquedaLlanta = `
+                                    ${medidaCompleta}
+                                    ${llantaInfo.ancho}/${llantaInfo.perfil || ''}
+                                    ${llantaInfo.ancho}x${llantaInfo.perfil || ''}x${llantaInfo.diametro}
+                                    ${llantaInfo.ancho} ${llantaInfo.perfil || ''} ${llantaInfo.diametro}
+                                    R${llantaInfo.diametro}
+                                    ${llantaInfo.ancho}
+                                    ${llantaInfo.perfil || ''}
+                                    ${llantaInfo.diametro}
+                                `.toLowerCase();
+                                
+                                cumpleBusqueda = textoBusquedaLlanta.includes(terminoBusqueda);
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Error procesando medida de llanta para búsqueda:', error);
+                        }
+                    }
+                    
+                    // ✅ BUSCAR EN PROPIEDADES ALTERNATIVAS DE MEDIDAS
+                    if (!cumpleBusqueda && (producto.Ancho || producto.Diametro || producto.Perfil)) {
+                        try {
+                            const ancho = producto.Ancho || '';
+                            const perfil = producto.Perfil || '';
+                            const diametro = producto.Diametro || '';
+                            
+                            const medidaAlternativa = `${ancho} ${perfil} ${diametro} R${diametro}`.toLowerCase();
+                            cumpleBusqueda = medidaAlternativa.includes(terminoBusqueda);
+                        } catch (error) {
+                            console.warn('⚠️ Error procesando medidas alternativas:', error);
+                        }
+                    }
+                    
+                    return cumpleBusqueda;
                 });
-                console.log(`🔍 Productos filtrados por término "${termino}": ${productosFiltrados.length}`);
+                console.log(`🔍 Productos filtrados por término "${termino}" (incluyendo medidas): ${productosFiltrados.length}`);
             }
 
             mostrarResultadosProductos(productosFiltrados);
