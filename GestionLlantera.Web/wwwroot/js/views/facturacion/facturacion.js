@@ -670,7 +670,7 @@ function mostrarResultadosProductos(productos) {
             esLlanta: productoLimpio.esLlanta,
             medidaOriginal: producto.MedidaCompleta,
             medidaMapeada: productoLimpio.medidaCompleta,
-            medidaFinal: medidaLlanta,
+            medidaFinal: medidaCompleta,
             nombreProducto: producto.nombreProducto
         });
         
