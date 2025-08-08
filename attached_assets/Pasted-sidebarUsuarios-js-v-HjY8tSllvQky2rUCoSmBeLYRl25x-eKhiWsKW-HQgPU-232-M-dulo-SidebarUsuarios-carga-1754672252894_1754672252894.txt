@@ -1,0 +1,132 @@
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:232 👥 Módulo SidebarUsuarios cargado correctamente
+zoomImagenes.js:183 ✅ Sistema de zoom simplificado cargado
+facturacion.js:222 📋 Funciones de proformas y detalles exportadas globalmente
+facturasPendientesFilter.js:713 📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente
+proformasFilter.js:526 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+InventarioFacturacion.js:942 ✅ verDetalleProducto disponible desde facturacion.js
+InventarioFacturacion.js:945 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anónimo) @ Facturacion:2077
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:207 👥 DOM cargado, inicializando sidebar usuarios...
+facturacion.js:227 🚀 Inicializando módulo de facturación
+facturacion.js:233 🚀 === INICIO inicializarFacturacion ===
+facturacion.js:236 🔐 Cargando permisos del usuario...
+facturacion.js:72 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+facturacion.js:73 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-08-08",
+  "horaActual": "10:55",
+  "tokenDisponible": true
+}
+facturacion.js:90 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+facturacion.js:91 🔐 puedeCrearFacturas: true
+facturacion.js:92 🔐 puedeCompletarFacturas: true
+facturacion.js:93 🔐 puedeEditarFacturas: true
+facturacion.js:94 🔐 puedeAnularFacturas: true
+facturacion.js:95 🔐 esAdmin: true
+facturacion.js:118 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+facturacion.js:119 🎯 Permisos actuales del usuario: Object
+facturacion.js:120 🎯 puedeCompletarFacturas: true (tipo: boolean )
+facturacion.js:121 🎯 puedeCrearFacturas: true (tipo: boolean )
+facturacion.js:140 🎯 Evaluación de permisos:
+facturacion.js:141 🎯   - puedeCompletar (CompletarFacturas): true
+facturacion.js:142 🎯   - puedeCrear (CrearFacturas): true
+facturacion.js:152 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+facturacion.js:153 👑 Botón: Verde - "Completar Venta"
+facturacion.js:154 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+facturacion.js:191 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+facturacion.js:240 🚀 Inicializando modales...
+InventarioFacturacion.js:24 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+InventarioFacturacion.js:30 ✅ Modal de inventario inicializado correctamente
+InventarioFacturacion.js:49 📦 Configurando eventos del modal inventario...
+InventarioFacturacion.js:75 📦 Configurando filtros de inventario...
+facturacion.js:245 🚀 Configurando eventos...
+facturacion.js:249 🚀 Actualizando totales...
+facturacion.js:5553 🔄 Estado botón finalizar actualizado: Object
+facturacion.js:256 🚀 Iniciando carga de productos iniciales...
+facturacion.js:5331 📦 === INICIO cargarProductosIniciales ===
+facturacion.js:5332 📦 cargaInicialCompletada: false
+facturacion.js:5348 📦 Iniciando carga de productos iniciales...
+facturacion.js:446 🔍 === INICIO buscarProductos ===
+facturacion.js:447 🔍 CONTADOR DE LLAMADAS: 1
+facturacion.js:448 🔍 Término recibido: ""
+facturacion.js:449 🔍 busquedaEnProceso: false
+facturacion.js:450 🔍 ultimaBusqueda: ""
+facturacion.js:465 🔍 Iniciando búsqueda válida...
+facturacion.js:259 ✅ Facturación inicializada correctamente
+facturacion.js:260 🚀 === FIN inicializarFacturacion ===
+InventarioFacturacion.js:24 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+InventarioFacturacion.js:30 ✅ Modal de inventario inicializado correctamente
+InventarioFacturacion.js:49 📦 Configurando eventos del modal inventario...
+InventarioFacturacion.js:75 📦 Configurando filtros de inventario...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:205 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:206 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:207 🎯 Deshabilitado: true
+facturacion.js:208 🎯 Texto: Completar Venta
+facturacion.js:209 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:210 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:487 📋 Respuesta del servidor recibida
+facturacion.js:490 ✅ Se encontraron 11 productos disponibles
+facturacion.js:529 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:530 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:531 🔄 Productos recibidos: 11
+facturacion.js:566 🔄 Construyendo HTML para 11 productos
+facturacion.js:581 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:582 🖼️ Datos del producto: Object
+facturacion.js:595 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:600 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:619 🖼️ URL original: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+facturacion.js:631 🖼️ URL final construida: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+facturacion.js:519 ❌ Error buscando productos: ReferenceError: medidaLlanta is not defined
+    at facturacion.js:673:26
+    at Array.forEach (<anonymous>)
+    at mostrarResultadosProductos (facturacion.js:568:15)
+    at buscarProductos (facturacion.js:502:13)
+    at async cargarProductosIniciales (facturacion.js:5361:9)
+buscarProductos @ facturacion.js:519
+await in buscarProductos
+cargarProductosIniciales @ facturacion.js:5361
+inicializarFacturacion @ facturacion.js:257
+(anónimo) @ facturacion.js:228
+e @ jquery.min.js:2
+(anónimo) @ jquery.min.js:2
+setTimeout
+(anónimo) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+facturacion.js:523 🔍 === FIN buscarProductos ===
+facturacion.js:5364 📦 Búsqueda inicial ejecutada
+facturacion.js:5366 📦 === FIN cargarProductosIniciales (exitosa) ===
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
