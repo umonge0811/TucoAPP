@@ -1,0 +1,246 @@
+function mostrarResultadosProductos(productos) {
+    contadorLlamadasMostrarResultados++;
+    console.log('🔄 === INICIO mostrarResultadosProductos ===');
+    console.log('🔄 CONTADOR DE LLAMADAS:', contadorLlamadasMostrarResultados);
+    console.log('🔄 Productos recibidos:', productos ? productos.length : 'null/undefined');
+
+    const container = $('#resultadosBusqueda');
+
+    if (!productos || productos.length === 0) {
+        console.log('🔄 No hay productos, mostrando sin resultados');
+        mostrarSinResultados('productos');
+        return;
+    }
+
+    // ✅ CREAR HASH ÚNICO DEL CONTENIDO PARA DETECTAR CAMBIOS REALES
+    const productosHash = JSON.stringify(productos.map(p => ({
+        id: p.productoId || p.id,
+        nombre: p.nombreProducto || p.nombre,
+        precio: p.precio,
+        stock: p.cantidadEnInventario || p.stock
+    })));
+
+    // ✅ VARIABLE GLOBAL PARA RASTREAR EL ÚLTIMO HASH
+    if (window.lastProductsHash === productosHash) {
+        console.log('🔄 Productos idénticos detectados, omitiendo actualización DOM para prevenir parpadeo');
+        console.log('🔄 === FIN mostrarResultadosProductos (sin cambios) ===');
+        return;
+    }
+
+    // ✅ VERIFICAR SI EL CONTENEDOR YA TIENE CONTENIDO SIMILAR
+    const currentContent = container.html().trim();
+    if (currentContent && !currentContent.includes('spinner-border') && !currentContent.includes('Cargando')) {
+        // Si ya hay contenido de productos, no actualizar a menos que haya cambios reales
+        if (window.lastProductsHash && productos.length === container.find('.producto-card').length) {
+            console.log('🔄 Mismo número de productos detectado, verificando si actualización es necesaria');
+            // Solo continuar si realmente hay cambios
+        }
+    }
+
+    console.log('🔄 Construyendo HTML para', productos.length, 'productos');
+    let html = '';
+    productos.forEach((producto, index) => {
+        // MAPEO DE PROPIEDADES
+        const nombreProducto = producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre';
+        const productoId = producto.productoId || producto.ProductoId || 'unknown';
+        const precio = producto.precio || producto.Precio || 0;
+        const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
+        const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+
+        // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
+        let imagenUrl = '/images/no-image.png'; // Imagen por defecto
+        try {
+            if (producto && typeof producto === 'object') {
+                console.log('🖼️ Procesando imágenes para producto:', producto.nombreProducto);
+                console.log('🖼️ Datos del producto:', {
+                    imagenesProductos: producto.imagenesProductos,
+                    imagenesUrls: producto.imagenesUrls,
+                    imagenes: producto.imagenes
+                });
+
+                let imagenesArray = [];
+
+                // Verificar imagenesProductos (formato principal desde la API)
+                if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+                    imagenesArray = producto.imagenesProductos
+                        .map(img => img.urlimagen || img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
+                }
+                // Verificar imagenesUrls como alternativa (ya vienen con URLs completas)
+                if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+                    imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenesUrls:', imagenesArray);
+                }
+                // Verificar imagenesProductos (formato principal desde la API)
+                else if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+                    imagenesArray = producto.imagenesProductos
+                        .map(img => img.urlimagen || img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
+                }
+                // Verificar imagenes como última alternativa
+                else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+                    imagenesArray = producto.imagenes
+                        .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
+                        .filter(url => url && url.trim() !== '');
+                    console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
+                }
+
+                if (imagenesArray.length > 0) {
+                    let urlImagen = imagenesArray[0];
+                    console.log('🖼️ URL original:', urlImagen);
+
+                    if (urlImagen && urlImagen.trim() !== '') {
+                        // Las URLs ya vienen completas desde la API, usar directamente
+                        if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
+                            imagenUrl = urlImagen; // URL completa desde la API
+                        } else {
+                            // Fallback para URLs relativas
+                            imagenUrl = urlImagen.startsWith('/') ?
+                                `https://localhost:7273${urlImagen}` :
+                                `https://localhost:7273/${urlImagen}`;
+                        }
+                        console.log('🖼️ URL final construida:', imagenUrl);
+                    }
+                } else {
+                    console.log('🖼️ No se encontraron imágenes válidas, usando imagen por defecto');
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando imágenes del producto:', error);
+            imagenUrl = '/images/no-image.png';
+        }
+
+        // CÁLCULO DE PRECIOS
+        const precioBase = (typeof precio === 'number') ? precio : 0;
+        const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
+        const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
+
+        const stockClase = cantidadInventario <= 0 ? 'border-danger' : cantidadInventario <= stockMinimo ? 'border-warning' : '';
+
+        // OBJETO PRODUCTO LIMPIO
+        const productoLimpio = {
+            productoId: productoId,
+            nombreProducto: nombreProducto,
+            precio: precioBase,
+            cantidadEnInventario: cantidadInventario,
+            stockMinimo: stockMinimo,
+            imagenesUrls: producto.imagenesUrls || [],
+            descripcion: producto.descripcion || producto.Descripcion || '',
+            esLlanta: producto.esLlanta || false,
+            medidaCompleta: producto.medidaCompleta || null
+        };
+
+        // ESCAPAR DATOS
+        const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+        const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
+
+        // ✅ AGREGAR MEDIDA DE LLANTA SI EXISTE
+        let infoLlanta = '';
+        if (producto.esLlanta && producto.medidaCompleta) {
+            infoLlanta = `
+                <div class="info-llanta mb-2">
+                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${producto.medidaCompleta}</small>
+                </div>
+            `;
+        }
+
+        html += `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
+                                <div class="producto-card-imagen-container">
+                                    ${imagenUrl ?
+                `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" 
+                                              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
+                                              onload="this.style.opacity='1';" 
+                                              style="opacity:0; transition: opacity 0.3s ease;">
+                                         <div class="producto-card-sin-imagen" style="display:none;">
+                                             <i class="bi bi-image"></i>
+                                         </div>` :
+                `<div class="producto-card-sin-imagen">
+                                             <i class="bi bi-image"></i>
+                                         </div>`
+            }
+                                </div>
+                                <div class="producto-card-body">
+                                    <h6 class="producto-card-titulo" title="${nombreEscapado}">
+                                      ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
+                                    </h6>
+                                    ${infoLlanta}
+                                    <div class="precios-metodos mb-2">
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Efectivo/SINPE</small>
+                                                <span class="text-success fw-bold small">₡${formatearMoneda(precioEfectivo)}</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted d-block">Tarjeta</small>
+                                                <span class="text-orange fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-primary">Stock: ${cantidadInventario}</small>
+                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ?
+                '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                                    </div>
+                                    <div class="producto-card-acciones">
+                                        ${cantidadInventario > 0 ? `
+                                            <button type="button" 
+                                                    class="btn btn-primary btn-sm btn-seleccionar-producto"
+                                                    data-producto="${productoJson}">
+                                                <i class="bi bi-hand-index me-1"></i>Seleccionar
+                                            </button>
+                                        ` : `
+                                            <button type="button" class="btn btn-secondary btn-sm" disabled>
+                                                <i class="bi bi-x-circle me-1"></i>Sin Stock
+                                            </button>
+                                        `}
+                                        <button type="button" 
+                                                class="btn btn-outline-info btn-sm btn-ver-detalle"
+                                                data-producto="${productoJson}">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalle
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+    });
+
+    console.log('🔄 Actualizando DOM (longitud HTML:', html.length, 'caracteres)');
+
+    // ✅ ACTUALIZAR DOM Y GUARDAR HASH
+    container.html(html);
+    window.lastProductsHash = productosHash;
+
+    // ✅ CONFIGURAR EVENTOS UNA SOLA VEZ
+    $('.btn-seleccionar-producto').off('click.facturacion').on('click.facturacion', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const productoJson = $(this).attr('data-producto');
+            const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
+            mostrarModalSeleccionProducto(producto);
+        } catch (error) {
+            console.error('❌ Error parseando producto para selección:', error);
+            mostrarToast('Error', 'No se pudo procesar el producto seleccionado', 'danger');
+        }
+    });
+
+    $('.btn-ver-detalle').off('click.facturacion').on('click.facturacion', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const productoJson = $(this).attr('data-producto');
+            const producto = JSON.parse(productoJson.replace(/&quot;/g, '"'));
+            verDetalleProducto(producto);
+        } catch (error) {
+            console.error('❌ Error parseando producto para detalle:', error);
+            mostrarToast('Error', 'No se pudo mostrar el detalle del producto', 'danger');
+        }
+    });
+
+    console.log('🔄 === FIN mostrarResultadosProductos ===');
+}

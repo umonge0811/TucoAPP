@@ -572,6 +572,47 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+        
+        // ✅ MAPEO MEJORADO DE MEDIDA DE LLANTA
+        let medidaCompleta = null;
+        let esLlanta = producto.esLlanta || producto.EsLlanta || false;
+        
+        try {
+            // Primero verificar si ya viene la medida completa
+            medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta;
+            
+            // Si no tiene medida completa pero es llanta, construirla desde los datos de llanta
+            if (!medidaCompleta && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+                
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        // Formato completo con perfil: 215/55/R16
+                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        // Formato sin perfil: 215/R16
+                        medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+            }
+            
+            // Si aún no tenemos medida, verificar propiedades alternativas del backend
+            if (!medidaCompleta) {
+                // Verificar formatos alternativos que puedan venir del backend
+                if (producto.Ancho && producto.Diametro) {
+                    if (producto.Perfil && producto.Perfil > 0) {
+                        medidaCompleta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                    } else {
+                        medidaCompleta = `${producto.Ancho}/R${producto.Diametro}`;
+                    }
+                    esLlanta = true;
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta:', error);
+            medidaCompleta = null;
+        }
 
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
@@ -592,7 +633,7 @@ function mostrarResultadosProductos(productos) {
                         .map(img => img.urlimagen || img.Urlimagen || img.urlImagen || img.UrlImagen)
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenesProductos:', imagenesArray);
-                } 
+                }
                 // Verificar imagenesUrls como alternativa (ya vienen con URLs completas)
                 if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
                     imagenesArray = producto.imagenesUrls.filter(url => url && url.trim() !== '');
@@ -623,8 +664,8 @@ function mostrarResultadosProductos(productos) {
                             imagenUrl = urlImagen; // URL completa desde la API
                         } else {
                             // Fallback para URLs relativas
-                            imagenUrl = urlImagen.startsWith('/') ? 
-                                `https://localhost:7273${urlImagen}` : 
+                            imagenUrl = urlImagen.startsWith('/') ?
+                                `https://localhost:7273${urlImagen}` :
                                 `https://localhost:7273/${urlImagen}`;
                         }
                         console.log('🖼️ URL final construida:', imagenUrl);
@@ -654,37 +695,55 @@ function mostrarResultadosProductos(productos) {
             stockMinimo: stockMinimo,
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
-            esLlanta: producto.esLlanta || false,
-            marca: producto.marca || null,
-            modelo: producto.modelo || null,
-            medidaCompleta: producto.medidaCompleta || null
+            esLlanta: esLlanta,
+            medidaCompleta: medidaCompleta
         };
 
         // ESCAPAR DATOS
         const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
 
+        // ✅ AGREGAR MEDIDA DE LLANTA SI EXISTE
+        let infoLlanta = '';
+        
+        console.log('🔧 Debug llanta:', {
+            esLlanta: productoLimpio.esLlanta,
+            medidaOriginal: producto.MedidaCompleta,
+            medidaMapeada: productoLimpio.medidaCompleta,
+            medidaFinal: medidaCompleta,
+            nombreProducto: producto.nombreProducto
+        });
+        
+        if (productoLimpio.esLlanta && medidaCompleta) {
+            infoLlanta = `
+                <div class="info-llanta mb-2">
+                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
+                </div>
+            `;
+        }
+
         html += `
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
                                 <div class="producto-card-imagen-container">
-                                    ${imagenUrl ? 
-                                        `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" 
+                                    ${imagenUrl ?
+                `<img src="${imagenUrl}" alt="${nombreEscapado}" class="producto-card-imagen" 
                                               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" 
                                               onload="this.style.opacity='1';" 
                                               style="opacity:0; transition: opacity 0.3s ease;">
                                          <div class="producto-card-sin-imagen" style="display:none;">
                                              <i class="bi bi-image"></i>
                                          </div>` :
-                                        `<div class="producto-card-sin-imagen">
+                `<div class="producto-card-sin-imagen">
                                              <i class="bi bi-image"></i>
                                          </div>`
-                                    }
+            }
                                 </div>
                                 <div class="producto-card-body">
                                     <h6 class="producto-card-titulo" title="${nombreEscapado}">
                                       ${nombreProducto.length > 25 ? nombreProducto.substring(0, 25) + '...' : nombreProducto}
                                     </h6>
+                                    ${infoLlanta}
                                     <div class="precios-metodos mb-2">
                                         <div class="row text-center">
                                             <div class="col-6">
@@ -693,14 +752,14 @@ function mostrarResultadosProductos(productos) {
                                             </div>
                                             <div class="col-6">
                                                 <small class="text-muted d-block">Tarjeta</small>
-                                                <span class="text-warning fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
+                                                <span class="text-orange fw-bold small">₡${formatearMoneda(precioTarjeta)}</span>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <small class="text-primary">Stock: ${cantidadInventario}</small>
-                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ? 
-                                            '<small class="badge bg-warning">Stock Bajo</small>' : ''}
+                                        ${cantidadInventario <= stockMinimo && cantidadInventario > 0 ?
+                '<small class="badge bg-warning">Stock Bajo</small>' : ''}
                                     </div>
                                     <div class="producto-card-acciones">
                                         ${cantidadInventario > 0 ? `
@@ -733,7 +792,7 @@ function mostrarResultadosProductos(productos) {
     window.lastProductsHash = productosHash;
 
     // ✅ CONFIGURAR EVENTOS UNA SOLA VEZ
-    $('.btn-seleccionar-producto').off('click.facturacion').on('click.facturacion', function(e) {
+    $('.btn-seleccionar-producto').off('click.facturacion').on('click.facturacion', function (e) {
         e.preventDefault();
         e.stopPropagation();
         try {
@@ -746,7 +805,7 @@ function mostrarResultadosProductos(productos) {
         }
     });
 
-    $('.btn-ver-detalle').off('click.facturacion').on('click.facturacion', function(e) {
+    $('.btn-ver-detalle').off('click.facturacion').on('click.facturacion', function (e) {
         e.preventDefault();
         e.stopPropagation();
         try {
