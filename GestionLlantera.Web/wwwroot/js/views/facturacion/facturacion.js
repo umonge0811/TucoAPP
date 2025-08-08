@@ -655,7 +655,7 @@ function mostrarResultadosProductos(productos) {
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
             esLlanta: producto.esLlanta || false,
-            medidaCompleta: producto.medidaCompleta || null
+            medidaCompleta: producto.medidaCompleta || producto.MedidaCompleta || null
         };
 
         // ESCAPAR DATOS
@@ -664,10 +664,11 @@ function mostrarResultadosProductos(productos) {
 
         // ✅ AGREGAR MEDIDA DE LLANTA SI EXISTE
         let infoLlanta = '';
-        if (producto.esLlanta && producto.medidaCompleta) {
+        const medidaLlanta = producto.medidaCompleta || producto.MedidaCompleta;
+        if (producto.esLlanta && medidaLlanta) {
             infoLlanta = `
                 <div class="info-llanta mb-2">
-                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${producto.medidaCompleta}</small>
+                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaLlanta}</small>
                 </div>
             `;
         }
