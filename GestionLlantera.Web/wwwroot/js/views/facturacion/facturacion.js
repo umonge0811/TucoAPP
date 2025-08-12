@@ -511,33 +511,49 @@ async function buscarProductos(termino) {
                     // ✅ BUSCAR EN NOMBRE Y DESCRIPCIÓN
                     let cumpleBusqueda = nombre.includes(terminoBusqueda) || descripcion.includes(terminoBusqueda);
                     
-                    // ✅ BUSCAR EN MEDIDAS DE LLANTAS
+                    // ✅ BUSCAR EN MEDIDAS DE LLANTAS (TODOS LOS FORMATOS SIN REQUERIR R)
                     if (!cumpleBusqueda && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
                         try {
                             const llantaInfo = producto.llanta || producto.Llanta[0];
                             
                             if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
-                                // Crear múltiples formatos de medida para búsqueda
-                                let medidaCompleta = '';
-                                if (llantaInfo.perfil && llantaInfo.perfil > 0) {
-                                    medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
-                                } else {
-                                    medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
-                                }
+                                const ancho = llantaInfo.ancho;
+                                const perfil = llantaInfo.perfil || '';
+                                const diametro = llantaInfo.diametro;
                                 
-                                // Crear texto de búsqueda con múltiples formatos incluyendo guiones
-                                const textoBusquedaLlanta = `
-                                    ${medidaCompleta}
-                                    ${llantaInfo.ancho}/${llantaInfo.perfil || ''}
-                                    ${llantaInfo.ancho}-${llantaInfo.perfil || ''}-${llantaInfo.diametro}
-                                    ${llantaInfo.ancho}-${llantaInfo.perfil || ''}/${llantaInfo.diametro}
-                                    ${llantaInfo.ancho}x${llantaInfo.perfil || ''}x${llantaInfo.diametro}
-                                    ${llantaInfo.ancho} ${llantaInfo.perfil || ''} ${llantaInfo.diametro}
-                                    R${llantaInfo.diametro}
-                                    ${llantaInfo.ancho}
-                                    ${llantaInfo.perfil || ''}
-                                    ${llantaInfo.diametro}
-                                `.toLowerCase();
+                                // Crear TODOS los formatos de medida para búsqueda
+                                const formatosBusqueda = [
+                                    // Formato original con R
+                                    `${ancho}/${perfil}/R${diametro}`,
+                                    `${ancho}/R${diametro}`,
+                                    
+                                    // Formatos sin R - ESTOS SON LOS PRINCIPALES
+                                    `${ancho}/${perfil}/${diametro}`,  // 225/50/15
+                                    `${ancho}-${perfil}-${diametro}`,  // 225-50-15
+                                    `${ancho}-${perfil}/${diametro}`,  // 225-50/15
+                                    `${ancho}x${perfil}x${diametro}`,  // 225x50x15
+                                    `${ancho} ${perfil} ${diametro}`,  // 225 50 15
+                                    
+                                    // Formatos adicionales sin perfil
+                                    `${ancho}/${diametro}`,
+                                    `${ancho}-${diametro}`,
+                                    `${ancho}x${diametro}`,
+                                    `${ancho} ${diametro}`,
+                                    
+                                    // Componentes individuales
+                                    `${ancho}`,
+                                    `${perfil}`,
+                                    `${diametro}`,
+                                    
+                                    // Solo el diametro con R para compatibilidad
+                                    `R${diametro}`
+                                ];
+                                
+                                // Crear texto de búsqueda unificado
+                                const textoBusquedaLlanta = formatosBusqueda
+                                    .filter(formato => formato && formato.trim() !== '')
+                                    .join(' ')
+                                    .toLowerCase();
                                 
                                 cumpleBusqueda = textoBusquedaLlanta.includes(terminoBusqueda);
                             }
@@ -553,12 +569,34 @@ async function buscarProductos(termino) {
                             const perfil = producto.Perfil || '';
                             const diametro = producto.Diametro || '';
                             
-                            const medidaAlternativa = `
-                                ${ancho} ${perfil} ${diametro} R${diametro}
-                                ${ancho}/${perfil}/R${diametro}
-                                ${ancho}-${perfil}-${diametro}
-                                ${ancho}x${perfil}x${diametro}
-                            `.toLowerCase();
+                            // Todos los formatos alternativos sin requerir R
+                            const formatosAlternativos = [
+                                // Con R (compatibilidad)
+                                `${ancho}/${perfil}/R${diametro}`,
+                                `${ancho}/R${diametro}`,
+                                
+                                // Sin R - FORMATOS PRINCIPALES
+                                `${ancho}/${perfil}/${diametro}`,  // 225/50/15
+                                `${ancho}-${perfil}-${diametro}`,  // 225-50-15
+                                `${ancho}-${perfil}/${diametro}`,  // 225-50/15
+                                `${ancho}x${perfil}x${diametro}`,  // 225x50x15
+                                `${ancho} ${perfil} ${diametro}`,  // 225 50 15
+                                
+                                // Sin perfil
+                                `${ancho}/${diametro}`,
+                                `${ancho}-${diametro}`,
+                                `${ancho}x${diametro}`,
+                                `${ancho} ${diametro}`,
+                                
+                                // Individuales
+                                `${ancho}`, `${perfil}`, `${diametro}`, `R${diametro}`
+                            ];
+                            
+                            const medidaAlternativa = formatosAlternativos
+                                .filter(formato => formato && formato.trim() !== '')
+                                .join(' ')
+                                .toLowerCase();
+                                
                             cumpleBusqueda = medidaAlternativa.includes(terminoBusqueda);
                         } catch (error) {
                             console.warn('⚠️ Error procesando medidas alternativas:', error);
