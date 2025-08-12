@@ -1,7 +1,7 @@
 // ===== GESTIÓN DE CLIENTES - JAVASCRIPT =====
 
 let modalCliente = null;
-let clientes = []; // Aunque se comenta que no se recrea la tabla, esta variable podría ser útil para otras lógicas.
+let clientes = [];
 let clienteEditando = null;
 
 // ===== INICIALIZACIÓN =====
@@ -37,7 +37,7 @@ function configurarEventos() {
             const elemento = $(this);
             const termino = elemento.val() || '';
             const terminoLimpio = String(termino).trim();
-
+            
             if (terminoLimpio.length >= 2 || terminoLimpio.length === 0) {
                 buscarClientes(terminoLimpio);
             }
@@ -68,13 +68,8 @@ function configurarEventos() {
         limpiarFormularioCliente();
     });
 
-    // Validación en tiempo real para todos los campos del modal de Nuevo Cliente
-    $('#modalNuevoCliente input, #modalNuevoCliente textarea').on('input blur', function() {
-        validarCampoEnTiempoReal($(this));
-    });
-
-    // Validación en tiempo real para todos los campos del modal de Editar Cliente
-    $('#modalEditarCliente input, #modalEditarCliente textarea').on('input blur', function() {
+    // Validación en tiempo real mejorada
+    $('#nombreCliente, #emailCliente, #telefonoCliente, #contactoCliente, #direccionCliente').on('input blur', function() {
         validarCampoEnTiempoReal($(this));
     });
 
@@ -90,7 +85,7 @@ function configurarEventos() {
     $('#codigoPaisCliente').on('change', function() {
         const codigoPais = $(this).val();
         const telefonoInput = $('#telefonoCliente');
-
+        
         if (codigoPais === '+506') {
             // Limpiar y reformatear para Costa Rica
             const numeroLimpio = telefonoInput.val().replace(/\D/g, '');
@@ -116,7 +111,7 @@ async function cargarClientes() {
 async function buscarClientes(termino) {
     try {
         console.log(`🔍 Buscando clientes: "${termino}"`);
-
+        
         // Si el término está vacío, mostrar todos los clientes
         if (!termino || termino.trim() === '') {
             mostrarTodosLosClientes();
@@ -135,35 +130,35 @@ async function buscarClientes(termino) {
 // Nueva función para filtrar clientes directamente en la tabla
 function filtrarClientesEnTabla(termino) {
     let clientesVisibles = 0;
-
+    
     // Obtener todas las filas de la tabla
     $("tbody tr").each(function() {
         const $fila = $(this);
         let coincide = false;
-
+        
         if (!termino) {
             // Si no hay término, mostrar todas las filas
             coincide = true;
         } else {
             // Buscar en el nombre del cliente (columna 2)
             const nombre = $fila.find("td:eq(1)").text().toLowerCase();
-
-            // Buscar en la identificación (columna 3)
+            
+            // Buscar en la identificación (columna 3)  
             const identificacion = $fila.find("td:eq(2)").text().toLowerCase();
-
+            
             // Buscar en el email (columna 4)
             const email = $fila.find("td:eq(3)").text().toLowerCase();
-
+            
             // Buscar en el teléfono (columna 5)
             const telefono = $fila.find("td:eq(4)").text().toLowerCase();
-
+            
             // Verificar si el término coincide con algún campo
-            coincide = nombre.includes(termino) ||
-                      identificacion.includes(termino) ||
-                      email.includes(termino) ||
+            coincide = nombre.includes(termino) || 
+                      identificacion.includes(termino) || 
+                      email.includes(termino) || 
                       telefono.includes(termino);
         }
-
+        
         // Mostrar u ocultar la fila según si coincide
         if (coincide) {
             $fila.show();
@@ -172,7 +167,7 @@ function filtrarClientesEnTabla(termino) {
             $fila.hide();
         }
     });
-
+    
     // Actualizar el estado de la tabla
     if (clientesVisibles === 0) {
         mostrarSinResultados();
@@ -208,11 +203,6 @@ function abrirModalNuevoCliente() {
     clienteEditando = null;
     $('#modalClienteLabel').text('Nuevo Cliente');
     $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Crear Cliente');
-    $('#clienteId').val(''); // Limpiar el ID para nuevo cliente
-
-    // Asegurarse de que el modal de nuevo cliente está configurado correctamente
-    // Si el ID 'modalCliente' se usa para ambos, hay que gestionar el contenido dinámicamente
-    // Asumiendo que hay un modal específico 'modalNuevoCliente' o se limpia el contenido
 
     if (modalCliente) {
         modalCliente.show();
@@ -254,10 +244,6 @@ async function editarCliente(clienteId) {
 }
 
 function llenarFormularioCliente(cliente) {
-    // Limpiar validaciones previas antes de llenar
-    $('#modalCliente .form-control, #modalCliente .form-select').removeClass('is-invalid is-valid');
-    $('#modalCliente .invalid-feedback').text('');
-
     // Asegurar que tenemos el ID correcto
     clienteEditando = {
         id: cliente.id || cliente.clienteId || cliente.ClienteId,
@@ -269,42 +255,20 @@ function llenarFormularioCliente(cliente) {
         direccion: cliente.direccion || cliente.Direccion || ''
     };
 
-    $('#clienteId').val(clienteEditando.clienteId); // Campo oculto para el ID
     $('#nombreCliente').val(clienteEditando.nombre);
-    $('#contactoCliente').val(clienteEditando.contacto); // Asumiendo que este campo se usa para identificación
+    $('#contactoCliente').val(clienteEditando.contacto);
     $('#emailCliente').val(clienteEditando.email);
     $('#telefonoCliente').val(clienteEditando.telefono);
     $('#direccionCliente').val(clienteEditando.direccion);
 
-    // Configurar el código de país si está disponible
-    const telefonoCompleto = cliente.telefono || cliente.Telefono || '';
-    if (telefonoCompleto.startsWith('+506')) {
-        $('#codigoPaisCliente').val('+506');
-        const numeroCostaRica = telefonoCompleto.replace('+506', '').trim().replace(/\D/g, '');
-        $('#telefonoCliente').val(numeroCostaRica);
-        $('#telefonoCliente').attr('maxlength', '8');
-        $('#telefonoCliente').attr('placeholder', '88888888');
-        formatearTelefonoCostaRica($('#telefonoCliente'));
-    } else {
-        $('#codigoPaisCliente').val(''); // O un valor por defecto si aplica
-        $('#telefonoCliente').val(telefonoCompleto.replace(/\D/g, '')); // Limpiar no dígitos
-        $('#telefonoCliente').attr('maxlength', '15');
-        $('#telefonoCliente').attr('placeholder', 'Número de teléfono');
-    }
-
-    // Validar campos después de llenar para mostrar estado inicial
-    $('.form-control').each(function() {
-        validarCampoEnTiempoReal($(this));
-    });
+    // Limpiar validaciones previas
+    $('.form-control').removeClass('is-invalid');
+    $('.invalid-feedback').text('');
 }
 
 async function guardarCliente() {
     try {
-        // Validar el formulario completo antes de proceder
-        const esFormularioValido = clienteEditando ? validarFormularioEditarCliente() : validarFormularioNuevoCliente();
-
-        if (!esFormularioValido) {
-            mostrarToast('Formulario inválido', 'Por favor corrige los errores en el formulario', 'warning');
+        if (!validarFormularioCliente()) {
             return;
         }
 
@@ -314,9 +278,9 @@ async function guardarCliente() {
         const telefonoCompleto = `${codigoPais} ${numeroTelefono}`;
 
         const clienteData = {
-            ClienteId: parseInt($('#clienteId').val()) || 0, // Usa el ID del form, podría ser un campo oculto
+            ClienteId: parseInt($('#clienteId').val()) || 0,
             NombreCliente: $('#nombreCliente').val().trim(),
-            Contacto: $('#contactoCliente').val().trim(), // Asumiendo que 'Contacto' es la identificación
+            Contacto: $('#contactoCliente').val().trim(),
             Email: $('#emailCliente').val().trim(),
             Telefono: telefonoCompleto,
             Direccion: $('#direccionCliente').val().trim()
@@ -328,9 +292,9 @@ async function guardarCliente() {
         let url;
         let method;
 
-        if (clienteEditando || clienteData.ClienteId > 0) {
+        if (clienteEditando) {
             // Actualizar cliente existente
-            const clienteId = clienteEditando ? clienteEditando.clienteId : clienteData.ClienteId;
+            const clienteId = clienteEditando.clienteId || clienteEditando.id;
             clienteData.ClienteId = clienteId;
             url = `/Clientes/ActualizarCliente?id=${clienteId}`;
             method = 'PUT';
@@ -349,8 +313,7 @@ async function guardarCliente() {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Error ${response.status}: ${response.statusText} - ${errorText}`);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
         const resultado = await response.json();
@@ -370,11 +333,11 @@ async function guardarCliente() {
 
     } catch (error) {
         console.error('❌ Error guardando cliente:', error);
-        mostrarError(`Error al guardar cliente: ${error.message}`);
+        mostrarError('Error al guardar cliente');
     } finally {
         $('#btnGuardarCliente').prop('disabled', false);
 
-        if (clienteEditando || parseInt($('#clienteId').val()) > 0) {
+        if (clienteEditando) {
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Actualizar Cliente');
         } else {
             $('#btnGuardarCliente').html('<i class="bi bi-check-circle me-1"></i>Crear Cliente');
@@ -384,9 +347,7 @@ async function guardarCliente() {
 
 async function eliminarCliente(clienteId) {
     try {
-        // Si 'clientes' no está siendo cargado activamente, buscar el nombre puede fallar.
-        // Se asume que 'clientes' se poblaría o se obtendría el nombre de otra forma si es necesario.
-        const cliente = clientes.find(c => c.id === clienteId); // 'clientes' debería estar actualizado
+        const cliente = clientes.find(c => c.id === clienteId);
         const nombreCliente = cliente ? cliente.nombre : `Cliente ${clienteId}`;
 
         const confirmacion = await Swal.fire({
@@ -411,8 +372,7 @@ async function eliminarCliente(clienteId) {
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Error ${response.status}: ${response.statusText} - ${errorText}`);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
 
         const resultado = await response.json();
@@ -426,7 +386,7 @@ async function eliminarCliente(clienteId) {
 
     } catch (error) {
         console.error('❌ Error eliminando cliente:', error);
-        mostrarError(`Error al eliminar cliente: ${error.message}`);
+        mostrarError('Error al eliminar cliente');
     }
 }
 
@@ -444,7 +404,6 @@ function validarCampoEnTiempoReal(campo) {
 
     switch (id) {
         case 'nombreCliente':
-        case 'nombreClienteEdit': // Asumiendo que se usa nombreClienteEdit en el modal de editar
             if (!valor) {
                 esValido = false;
                 mensaje = 'El nombre del cliente es obligatorio';
@@ -458,24 +417,27 @@ function validarCampoEnTiempoReal(campo) {
             break;
 
         case 'contactoCliente':
-        case 'contactoClienteEdit': // Asumiendo que este campo es para la identificación
-            if (valor && !/^[\d\-\s]+$/.test(valor)) {
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La identificación es obligatoria';
+            } else if (!/^[\d\-\s]+$/.test(valor)) {
                 esValido = false;
                 mensaje = 'La identificación solo puede contener números y guiones';
             }
             break;
 
         case 'emailCliente':
-        case 'emailClienteEdit':
-            if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El email es obligatorio';
+            } else if (!validarEmail(valor)) {
                 esValido = false;
                 mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
             }
             break;
 
         case 'telefonoCliente':
-        case 'telefonoClienteEdit':
-            const codigoPais = $('#codigoPaisCliente').val(); // Obtener código de país actual
+            const codigoPais = $('#codigoPaisCliente').val();
             if (!valor) {
                 esValido = false;
                 mensaje = 'El teléfono es obligatorio';
@@ -502,8 +464,10 @@ function validarCampoEnTiempoReal(campo) {
             break;
 
         case 'direccionCliente':
-        case 'direccionClienteEdit':
-            if (valor && valor.length > 500) {
+            if (!valor) {
+                esValido = false;
+                mensaje = 'La dirección es obligatoria';
+            } else if (valor.length > 500) {
                 esValido = false;
                 mensaje = 'La dirección no puede exceder 500 caracteres';
             }
@@ -514,62 +478,67 @@ function validarCampoEnTiempoReal(campo) {
         campo.addClass('is-invalid');
         campo.siblings('.invalid-feedback').text(mensaje);
     } else if (valor) {
-        // Solo marcar como válido si hay valor y pasó las validaciones
         campo.addClass('is-valid');
     }
 
     return esValido;
 }
 
-// Función mejorada para validar formulario completo de Nuevo Cliente
-function validarFormularioNuevoCliente() {
+function validarFormularioCliente() {
     let esValido = true;
-    const campos = $('#modalNuevoCliente input, #modalNuevoCliente textarea'); // Asumiendo que existe un modal con este ID
 
-    campos.each(function () {
-        if (!validarCampoEnTiempoReal($(this))) {
-            esValido = false;
-        }
-    });
+    // Limpiar validaciones previas
+    $('#modalCliente .form-control').removeClass('is-invalid');
+    $('#modalCliente .invalid-feedback').text('');
 
-    // Validación especial para nombre (obligatorio)
+    // Validar nombre (obligatorio)
     const nombre = $('#nombreCliente').val().trim();
     if (!nombre) {
-        $('#nombreCliente').addClass('is-invalid');
-        $('#nombreCliente').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
+        mostrarErrorCampo('#nombreCliente', 'El nombre del cliente es obligatorio');
         esValido = false;
-    } else {
-        // Si el nombre no está vacío, validarlo también
-        if (!validarCampoEnTiempoReal($('#nombreCliente'))) {
-             esValido = false;
+    }
+
+    // Validar identificación (obligatoria)
+    const contacto = $('#contactoCliente').val().trim();
+    if (!contacto) {
+        mostrarErrorCampo('#contactoCliente', 'La identificación es obligatoria');
+        esValido = false;
+    }
+
+    // Validar email (obligatorio y formato)
+    const email = $('#emailCliente').val().trim();
+    if (!email) {
+        mostrarErrorCampo('#emailCliente', 'El email es obligatorio');
+        esValido = false;
+    } else if (!validarEmail(email)) {
+        mostrarErrorCampo('#emailCliente', 'El formato del email no es válido');
+        esValido = false;
+    }
+
+    // Validar teléfono (obligatorio)
+    const telefono = $('#telefonoCliente').val().trim();
+    const codigoPais = $('#codigoPaisCliente').val();
+    
+    if (!telefono) {
+        mostrarErrorCampo('#telefonoCliente', 'El teléfono es obligatorio');
+        esValido = false;
+    } else if (codigoPais === '+506') {
+        // Validación específica para Costa Rica
+        const numeroLimpio = telefono.replace(/\D/g, '');
+        if (numeroLimpio.length !== 8) {
+            mostrarErrorCampo('#telefonoCliente', 'El teléfono debe tener exactamente 8 dígitos para Costa Rica');
+            esValido = false;
+        } else if (!validarTelefonoCostaRica(numeroLimpio)) {
+            mostrarErrorCampo('#telefonoCliente', 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9');
+            esValido = false;
         }
     }
 
-    return esValido;
-}
-
-// Función mejorada para validar formulario completo de Editar Cliente
-function validarFormularioEditarCliente() {
-    let esValido = true;
-    const campos = $('#modalEditarCliente input, #modalEditarCliente textarea'); // Asumiendo que existe un modal con este ID
-
-    campos.each(function () {
-        if (!validarCampoEnTiempoReal($(this))) {
-            esValido = false;
-        }
-    });
-
-    // Validación especial para nombre (obligatorio)
-    const nombre = $('#nombreClienteEdit').val().trim();
-    if (!nombre) {
-        $('#nombreClienteEdit').addClass('is-invalid');
-        $('#nombreClienteEdit').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
+    // Validar dirección (obligatoria)
+    const direccion = $('#direccionCliente').val().trim();
+    if (!direccion) {
+        mostrarErrorCampo('#direccionCliente', 'La dirección es obligatoria');
         esValido = false;
-    } else {
-        // Si el nombre no está vacío, validarlo también
-         if (!validarCampoEnTiempoReal($('#nombreClienteEdit'))) {
-             esValido = false;
-        }
     }
 
     return esValido;
@@ -593,25 +562,25 @@ function validarEmail(email) {
 // ===== VALIDACIÓN ESPECÍFICA PARA COSTA RICA =====
 function formatearTelefonoCostaRica(input) {
     let valor = input.val();
-
+    
     // Remover todos los caracteres que no sean dígitos
     let numeroLimpio = valor.replace(/\D/g, '');
-
+    
     // Limitar a 8 dígitos
     if (numeroLimpio.length > 8) {
         numeroLimpio = numeroLimpio.substring(0, 8);
     }
-
+    
     // Actualizar el valor del input sin formato
     input.val(numeroLimpio);
-
+    
     // Validar formato específico de Costa Rica
     const esValido = validarTelefonoCostaRica(numeroLimpio);
-
+    
     // Aplicar clases de validación
     input.removeClass('is-invalid is-valid');
     input.siblings('.invalid-feedback').text('');
-
+    
     if (numeroLimpio.length === 0) {
         // Campo vacío, no mostrar validación
         return;
@@ -632,22 +601,28 @@ function validarTelefonoCostaRica(numero) {
     if (numero.length !== 8) {
         return false;
     }
-
+    
     // Debe iniciar con 2, 4, 5, 6, 7, 8 o 9 (números válidos en Costa Rica)
+    // 2xxx-xxxx: Teléfonos fijos
+    // 4xxx-xxxx: Algunos servicios especiales
+    // 5xxx-xxxx: Algunos móviles y servicios
+    // 6xxx-xxxx: Teléfonos móviles
+    // 7xxx-xxxx: Teléfonos móviles
+    // 8xxx-xxxx: Teléfonos móviles
+    // 9xxx-xxxx: Algunos servicios especiales
     const primerDigito = numero.charAt(0);
     const digitosValidos = ['2', '4', '5', '6', '7', '8', '9'];
-
+    
     return digitosValidos.includes(primerDigito);
 }
 
 // ===== UTILIDADES =====
 function limpiarFormularioCliente() {
-    $('#formCliente')[0].reset(); // Resetea los campos del formulario asociado a 'formCliente'
-    $('#clienteId').val(''); // Limpiar el ID para nuevo cliente
+    $('#formCliente')[0].reset();
+    $('#clienteId').val(0);
     $('#codigoPaisCliente').val('+506'); // Reset a Costa Rica por defecto
     $('#modalCliente .form-control, #modalCliente .form-select').removeClass('is-invalid is-valid');
     $('#modalCliente .invalid-feedback').text('');
-    clienteEditando = null; // Resetear la variable de cliente editando
 }
 
 function mostrarEstadoCarga(mostrar) {
@@ -686,27 +661,6 @@ function mostrarExito(mensaje) {
         showConfirmButton: false
     });
 }
-
-// Helper para mostrar toasts si se usan en lugar de Swal.fire para notificaciones menores
-function mostrarToast(titulo, mensaje, tipo) {
-     const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.வுகளை.mouseenter(() => Swal.stopTimer());
-            toast.mouseleave(() => Swal.resumeTimer());
-        }
-    });
-    Toast.fire({
-        icon: tipo,
-        title: title,
-        text: mensaje
-    });
-}
-
 
 function debounce(func, wait) {
     let timeout;
