@@ -3,6 +3,7 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
     <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
+    <link rel="stylesheet" href="~/css/views/facturacion/impresora-termica.css"> @* Enlace al nuevo CSS para impresión térmica *@
 }
 
 
@@ -82,6 +83,10 @@
                                             title="Ver inventario completo">
                                         <i class="bi bi-grid-3x3-gap me-2"></i>
                                         <span class="btn-text">Inventario</span>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info btn-sm" onclick="testImpresora()" title="Probar impresora térmica">
+                                        <i class="bi bi-printer me-1"></i>
+                                        Test Impresora
                                     </button>
                                 </div>
                             </div>
@@ -630,10 +635,12 @@
     @section Scripts {
         <!-- Scripts específicos para facturación -->
         <script src="~/js/views/facturacion/zoomImagenes.js"></script>
-        <script src="~/js/views/facturacion/facturacion.js"></script>
+        <script src="~/js/views/facturacion/InventarioFacturacion.js"></script>
         <script src="~/js/views/facturacion/facturasPendientesFilter.js"></script>
         <script src="~/js/views/facturacion/proformasFilter.js"></script>
-        <script src="~/js/views/facturacion/InventarioFacturacion.js"></script>
+        <script src="~/js/views/facturacion/configuracion-impresora.js"></script>
+        <script src="~/js/views/facturacion/facturacion.js"></script>
+        <script src="~/js/views/facturacion/entregasPendientes.js"></script>
 
     <script>
         // ===== CONFIGURACIÓN GLOBAL PARA FACTURACIÓN =====
