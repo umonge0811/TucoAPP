@@ -5334,7 +5334,7 @@ function configurarEventosModalNuevoCliente() {
 
     // Botón guardar
     $('#btnGuardarClienteFacturacion').on('click', function () {
-        guardarClienteFacturacion();
+        guardarNuevoCliente();
     });
 
     // Limpiar formulario al cerrar
@@ -5357,6 +5357,186 @@ function limpiarFormularioClienteFacturacion() {
 
     // Limpiar feedback
     $('#formNuevoClienteFacturacion .invalid-feedback').text('');
+}
+
+// ===== FUNCIONES DE VALIDACIÓN ESPECÍFICAS =====
+
+function validarNombre(nombre) {
+    const $input = $('#nombreClienteFacturacion');
+    const $feedback = $input.siblings('.invalid-feedback');
+    let esValido = true;
+    let mensaje = '';
+
+    if (!nombre) {
+        esValido = false;
+        mensaje = 'El nombre del cliente es obligatorio';
+    } else if (nombre.length < 2) {
+        esValido = false;
+        mensaje = 'El nombre debe tener al menos 2 caracteres';
+    } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
+        esValido = false;
+        mensaje = 'El nombre solo puede contener letras y espacios';
+    }
+
+    if (!esValido) {
+        $input.removeClass('is-valid').addClass('is-invalid');
+        $feedback.text(mensaje);
+    } else if (nombre) {
+        $input.removeClass('is-invalid').addClass('is-valid');
+        $feedback.text('');
+    } else {
+        $input.removeClass('is-valid is-invalid');
+        $feedback.text('');
+    }
+
+    return esValido;
+}
+
+function validarIdentificacion(valor, tipo) {
+    const $input = $('#contactoClienteFacturacion');
+    const $feedback = $('#feedbackIdentificacion');
+    let esValido = true;
+    let mensaje = '';
+
+    if (!valor && tipo !== 'otro' && tipo !== 'extranjera') {
+        // Identificación no es obligatoria para tipos flexibles
+        $input.removeClass('is-valid is-invalid');
+        $feedback.text('');
+        return true;
+    }
+
+    if (valor) {
+        switch (tipo) {
+            case 'nacional':
+                // Formato: X-XXXX-XXXX (9 dígitos)
+                const formatoNacional = /^\d-\d{4}-\d{4}$/;
+                if (!formatoNacional.test(valor)) {
+                    esValido = false;
+                    mensaje = 'Formato incorrecto. Use: X-XXXX-XXXX (ej: 1-2345-6789)';
+                } else {
+                    // Validar que tenga exactamente 9 dígitos
+                    const soloDigitos = valor.replace(/\D/g, '');
+                    if (soloDigitos.length !== 9) {
+                        esValido = false;
+                        mensaje = 'La cédula debe tener exactamente 9 dígitos';
+                    }
+                }
+                break;
+
+            case 'juridica':
+                // Formato: X-XXX-XXXXXX (10 dígitos, debe iniciar con 3)
+                const formatoJuridica = /^3-\d{3}-\d{6}$/;
+                if (!formatoJuridica.test(valor)) {
+                    esValido = false;
+                    mensaje = 'Formato incorrecto. Use: 3-XXX-XXXXXX (debe iniciar con 3)';
+                } else {
+                    const soloDigitos = valor.replace(/\D/g, '');
+                    if (soloDigitos.length !== 10) {
+                        esValido = false;
+                        mensaje = 'La cédula jurídica debe tener exactamente 10 dígitos';
+                    }
+                }
+                break;
+
+            case 'extranjera':
+            case 'otro':
+                // Formato libre, mínimo 3 caracteres
+                if (valor.length < 3) {
+                    esValido = false;
+                    mensaje = 'Debe tener al menos 3 caracteres';
+                } else if (valor.length > 20) {
+                    esValido = false;
+                    mensaje = 'No puede exceder 20 caracteres';
+                }
+                break;
+        }
+    }
+
+    if (!esValido) {
+        $input.removeClass('is-valid').addClass('is-invalid');
+        $feedback.text(mensaje);
+    } else if (valor) {
+        $input.removeClass('is-invalid').addClass('is-valid');
+        $feedback.text('');
+    } else {
+        $input.removeClass('is-valid is-invalid');
+        $feedback.text('');
+    }
+
+    return esValido;
+}
+
+function validarTelefono(telefono) {
+    const $input = $('#telefonoClienteFacturacion');
+    const $feedback = $input.siblings('.invalid-feedback');
+    let esValido = true;
+    let mensaje = '';
+
+    if (telefono) {
+        // Verificar que solo contenga números y guiones
+        if (!/^[\d\-]+$/.test(telefono)) {
+            esValido = false;
+            mensaje = 'El teléfono solo puede contener números y guiones';
+        } else {
+            // Verificar longitud de dígitos (debe tener 8 dígitos)
+            const soloDigitos = telefono.replace(/\D/g, '');
+            if (soloDigitos.length !== 8) {
+                esValido = false;
+                mensaje = 'El teléfono debe tener exactamente 8 dígitos';
+            } else {
+                // Verificar formato XXXX-XXXX
+                if (!/^\d{4}-\d{4}$/.test(telefono)) {
+                    esValido = false;
+                    mensaje = 'Use el formato: 8888-8888';
+                }
+            }
+        }
+    }
+
+    if (!esValido) {
+        $input.removeClass('is-valid').addClass('is-invalid');
+        $feedback.text(mensaje);
+    } else if (telefono) {
+        $input.removeClass('is-invalid').addClass('is-valid');
+        $feedback.text('');
+    } else {
+        $input.removeClass('is-valid is-invalid');
+        $feedback.text('');
+    }
+
+    return esValido;
+}
+
+function validarEmail(email) {
+    const $input = $('#emailClienteFacturacion');
+    const $feedback = $input.siblings('.invalid-feedback');
+    let esValido = true;
+    let mensaje = '';
+
+    if (email) {
+        // Verificar formato de email
+        const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!formatoEmail.test(email)) {
+            esValido = false;
+            mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
+        } else if (email.length > 100) {
+            esValido = false;
+            mensaje = 'El email no puede exceder 100 caracteres';
+        }
+    }
+
+    if (!esValido) {
+        $input.removeClass('is-valid').addClass('is-invalid');
+        $feedback.text(mensaje);
+    } else if (email) {
+        $input.removeClass('is-invalid').addClass('is-valid');
+        $feedback.text('');
+    } else {
+        $input.removeClass('is-valid is-invalid');
+        $feedback.text('');
+    }
+
+    return esValido;
 }
 
 
