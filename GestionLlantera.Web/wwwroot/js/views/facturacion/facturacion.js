@@ -286,7 +286,7 @@ function configurarEventos() {
     // ===== BÚSQUEDA DE PRODUCTOS =====
     let ultimoEventoInput = 0; // Para throttling adicional
 
-    $('#busquedaProducto').on('input', function() {
+    $('#busquedaProducto').on('input keyup', function() {
         contadorEventosInput++;
         const termino = $(this).val().trim();
         const ahora = Date.now();
@@ -298,17 +298,11 @@ function configurarEventos() {
         console.log('🎯 busquedaEnProceso:', busquedaEnProceso);
 
         // ✅ THROTTLING ADICIONAL - PREVENIR EVENTOS MUY RÁPIDOS
-        if (ahora - ultimoEventoInput < 100) {
+        if (ahora - ultimoEventoInput < 50) {
             console.log('⏸️ Evento demasiado rápido, ignorando');
             return;
         }
         ultimoEventoInput = ahora;
-
-        // ✅ NO PROCESAR SI YA HAY UNA BÚSQUEDA EN PROCESO
-        if (busquedaEnProceso) {
-            console.log('⏸️ Búsqueda en proceso, ignorando evento de input');
-            return;
-        }
 
         // Limpiar timeout anterior
         if (timeoutBusquedaActivo) {
@@ -317,6 +311,32 @@ function configurarEventos() {
             timeoutBusquedaActivo = null;
         }
 
+        // ✅ PROCESAR INMEDIATAMENTE SI EL CAMPO ESTÁ VACÍO
+        if (termino.length === 0) {
+            console.log('🎯 Campo vacío detectado - procesando inmediatamente');
+            
+            // ✅ NO PROCESAR SI YA HAY UNA BÚSQUEDA EN PROCESO
+            if (busquedaEnProceso) {
+                console.log('⏸️ Búsqueda en proceso, programando para después');
+                timeoutBusquedaActivo = setTimeout(() => {
+                    if (!busquedaEnProceso) {
+                        window.lastProductsHash = null;
+                        ultimaBusqueda = '';
+                        buscarProductos('');
+                    }
+                    timeoutBusquedaActivo = null;
+                }, 100);
+                return;
+            }
+
+            // Resetear estado para forzar actualización
+            window.lastProductsHash = null;
+            ultimaBusqueda = '';
+            buscarProductos('');
+            return;
+        }
+
+        // ✅ PARA TÉRMINOS NO VACÍOS, USAR TIMEOUT
         timeoutBusquedaActivo = setTimeout(() => {
             console.log('🎯 === EJECUTANDO TIMEOUT DE BÚSQUEDA ===');
             console.log('🎯 Término a buscar:', `"${termino}"`);
@@ -340,13 +360,6 @@ function configurarEventos() {
             if (termino.length >= 2) {
                 console.log('🎯 Iniciando búsqueda con término:', termino);
                 buscarProductos(termino);
-            } else if (termino.length === 0) {
-                console.log('🎯 Campo vacío, cargando todos los productos...');
-                // ✅ SIEMPRE CARGAR PRODUCTOS CUANDO EL CAMPO ESTÁ VACÍO
-                // Resetear el hash para forzar actualización
-                window.lastProductsHash = null;
-                ultimaBusqueda = '';
-                buscarProductos('');
             } else {
                 console.log('🎯 Término muy corto, mostrando mensaje de búsqueda');
                 $('#resultadosBusqueda').html(`
@@ -358,7 +371,7 @@ function configurarEventos() {
             }
             timeoutBusquedaActivo = null;
             console.log('🎯 === FIN TIMEOUT DE BÚSQUEDA ===');
-        }, 800); // Aumentar debounce para mayor estabilidad
+        }, 300); // Reducir debounce para mayor responsividad
     });
 
     // ===== BÚSQUEDA DE CLIENTES =====
