@@ -5091,23 +5091,24 @@ function verDetalleProducto(producto) {
 
 // ===== GESTIÓN DE CLIENTES =====
 function abrirModalNuevoCliente() {
-    // Crear el modal dinámicamente
+    // Crear el modal dinámicamente con validación de cédula
     const modalHtml = `
         <div class="modal fade" id="modalNuevoClienteFacturacion" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">
-                            <i class="bi bi-person-plus me-2"></i>Nuevo Cliente
+                            <i class="bi bi-person-plus me-2"></i>Agregar Cliente Rápido
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <form id="formNuevoClienteFacturacion">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                            <!-- Información básica -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
                                     <label for="nombreClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person me-1"></i>Nombre *
+                                        <i class="bi bi-person me-1"></i>Nombre Completo *
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
@@ -5116,25 +5117,546 @@ function abrirModalNuevoCliente() {
                                            placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
-                                    <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
+                                    <label for="emailClienteFacturacion" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="emailClienteFacturacion" 
+                                           name="email"
+                                           placeholder="cliente@ejemplo.com">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <!-- Tipo de identificación -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        <i class="bi bi-person-badge me-1"></i>Tipo de Identificación
+                                    </label>
+                                    <div class="btn-group w-100" role="group" id="tipoIdentificacion">
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
+                                        <label class="btn btn-outline-primary" for="tipoNacional">
+                                            <i class="bi bi-flag me-1"></i>Cédula Nacional (CR)
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
+                                        <label class="btn btn-outline-info" for="tipoJuridica">
+                                            <i class="bi bi-building me-1"></i>Cédula Jurídica
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoExtranjera" value="extranjera">
+                                        <label class="btn btn-outline-success" for="tipoExtranjera">
+                                            <i class="bi bi-globe me-1"></i>Extranjera
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoOtro" value="otro">
+                                        <label class="btn btn-outline-secondary" for="tipoOtro">
+                                            <i class="bi bi-card-text me-1"></i>Otro Documento
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campo de identificación con validación dinámica -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
                                     <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Identificación
+                                        <i class="bi bi-person-vcard me-1"></i>
+                                        <span id="labelIdentificacion">Cédula Nacional</span>
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
                                            id="contactoClienteFacturacion" 
                                            name="contacto"
                                            placeholder="1-2345-6789"
-                                           maxlength="20">
+                                           maxlength="12">
+                                    <div class="invalid-feedback" id="feedbackIdentificacion"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                    </div>
+                                    <small class="form-text" id="helpIdentificacion">
+                                        <span class="text-info">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Formato requerido: X-XXXX-XXXX (9 dígitos)
+                                        </span>
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="telefonoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="telefonoClienteFacturacion" 
+                                           name="telefono"
+                                           placeholder="8888-8888"
+                                           maxlength="9">
                                     <div class="invalid-feedback"></div>
-                                    <small class="form-text text-muted">Cédula o documento de identidad</small>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Formato: 8888-8888 (8 dígitos)
+                                    </small>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="emailClienteFacturacion" class="form-label">
+
+                            <!-- Dirección -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="direccionClienteFacturacion" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>Dirección
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="direccionClienteFacturacion" 
+                                              name="direccion"
+                                              rows="2"
+                                              placeholder="Dirección completa del cliente"
+                                              maxlength="200"></textarea>
+                                    <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">
+                                        Dirección física o postal del cliente
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Información adicional -->
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
+                                <ul class="mb-0 small">
+                                    <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
+                                    <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos, debe iniciar con 3)</li>
+                                    <li><strong>Extranjera/Otro:</strong> Formato libre (mínimo 3 caracteres)</li>
+                                    <li><strong>Email:</strong> Se verificará que no esté registrado previamente</li>
+                                </ul>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnGuardarClienteFacturacion">
+                            <span class="btn-normal-state">
+                                <i class="bi bi-person-plus me-1"></i>Agregar Cliente
+                            </span>
+                            <span class="btn-loading-state d-none">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Guardando...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalNuevoClienteFacturacion').remove();
+    $('body').append(modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalNuevoClienteFacturacion'));
+    
+    // Configurar eventos del modal
+    configurarEventosModalNuevoCliente();
+    
+    modal.show();
+}
+
+function configurarEventosModalNuevoCliente() {
+    // Cambio de tipo de identificación
+    $('input[name="tipoIdentificacion"]').on('change', function() {
+        const tipo = $(this).val();
+        const $input = $('#contactoClienteFacturacion');
+        const $label = $('#labelIdentificacion');
+        const $help = $('#helpIdentificacion');
+        
+        // Limpiar clases y contenido anterior
+        $input.removeClass('is-valid is-invalid').val('');
+        
+        switch(tipo) {
+            case 'nacional':
+                $label.html('<i class="bi bi-flag me-1"></i>Cédula Nacional');
+                $input.attr('placeholder', '1-2345-6789').attr('maxlength', '12');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXXX-XXXX (9 dígitos)</span>');
+                break;
+            case 'juridica':
+                $label.html('<i class="bi bi-building me-1"></i>Cédula Jurídica');
+                $input.attr('placeholder', '3-101-123456').attr('maxlength', '13');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXX-XXXXXX (10 dígitos, inicia con 3)</span>');
+                break;
+            case 'extranjera':
+                $label.html('<i class="bi bi-globe me-1"></i>Identificación Extranjera');
+                $input.attr('placeholder', 'Número de pasaporte o documento').attr('maxlength', '20');
+                $help.html('<span class="text-success"><i class="bi bi-check-circle me-1"></i>Formato libre (mínimo 3 caracteres)</span>');
+                break;
+            case 'otro':
+                $label.html('<i class="bi bi-card-text me-1"></i>Otro Documento');
+                $input.attr('placeholder', 'Número de documento').attr('maxlength', '20');
+                $help.html('<span class="text-success"><i class="bi bi-check-circle me-1"></i>Formato libre (mínimo 3 caracteres)</span>');
+                break;
+        }
+    });
+
+    // Validación en tiempo real para identificación
+    $('#contactoClienteFacturacion').on('input', function() {
+        const valor = $(this).val();
+        const tipo = $('input[name="tipoIdentificacion"]:checked').val();
+        validarIdentificacion(valor, tipo);
+    });
+
+    // Formateo automático para teléfono
+    $('#telefonoClienteFacturacion').on('input', function() {
+        let valor = $(this).val().replace(/\D/g, ''); // Solo números
+        
+        if (valor.length >= 4) {
+            valor = valor.substring(0, 4) + '-' + valor.substring(4, 8);
+        }
+        
+        $(this).val(valor);
+        validarTelefono(valor);
+    });
+
+    // Validación de email en tiempo real
+    $('#emailClienteFacturacion').on('input blur', function() {
+        const email = $(this).val().trim();
+        validarEmail(email);
+    });
+
+    // Validación de nombre
+    $('#nombreClienteFacturacion').on('input blur', function() {
+        const nombre = $(this).val().trim();
+        validarNombre(nombre);
+    });
+
+    // Botón guardar
+    $('#btnGuardarClienteFacturacion').on('click', function() {
+        guardarClienteFacturacion();
+    });
+
+    // Limpiar formulario al cerrar
+    $('#modalNuevoClienteFacturacion').on('hidden.bs.modal', function() {
+        limpiarFormularioClienteFacturacion();
+    });
+}
+
+function validarIdentificacion(valor, tipo) {
+    const $input = $('#contactoClienteFacturacion');
+    const $feedback = $('#feedbackIdentificacion');
+    
+    if (!valor) {
+        $input.removeClass('is-valid is-invalid');
+        return true; // Opcional
+    }
+    
+    let esValido = false;
+    let mensaje = '';
+    
+    switch(tipo) {
+        case 'nacional':
+            // Formato: X-XXXX-XXXX (9 dígitos)
+            const regexNacional = /^\d-\d{4}-\d{4}$/;
+            esValido = regexNacional.test(valor) && valor.replace(/\D/g, '').length === 9;
+            
+            if (!esValido && valor.length > 0) {
+                // Intentar formatear automáticamente
+                const soloNumeros = valor.replace(/\D/g, '');
+                if (soloNumeros.length <= 9) {
+                    let formateado = soloNumeros;
+                    if (soloNumeros.length >= 1) {
+                        formateado = soloNumeros.substring(0, 1);
+                        if (soloNumeros.length > 1) {
+                            formateado += '-' + soloNumeros.substring(1, 5);
+                            if (soloNumeros.length > 5) {
+                                formateado += '-' + soloNumeros.substring(5, 9);
+                            }
+                        }
+                    }
+                    if (formateado !== valor) {
+                        $input.val(formateado);
+                        valor = formateado;
+                        esValido = regexNacional.test(formateado) && soloNumeros.length === 9;
+                    }
+                }
+            }
+            
+            if (!esValido && valor.length > 0) {
+                mensaje = 'Formato incorrecto. Debe ser X-XXXX-XXXX (9 dígitos)';
+            }
+            break;
+            
+        case 'juridica':
+            // Formato: X-XXX-XXXXXX (10 dígitos, inicia con 3)
+            const regexJuridica = /^3-\d{3}-\d{6}$/;
+            esValido = regexJuridica.test(valor);
+            
+            if (!esValido && valor.length > 0) {
+                // Intentar formatear automáticamente
+                const soloNumeros = valor.replace(/\D/g, '');
+                if (soloNumeros.length <= 10 && (soloNumeros.length === 0 || soloNumeros[0] === '3')) {
+                    let formateado = soloNumeros;
+                    if (soloNumeros.length >= 1) {
+                        formateado = soloNumeros.substring(0, 1);
+                        if (soloNumeros.length > 1) {
+                            formateado += '-' + soloNumeros.substring(1, 4);
+                            if (soloNumeros.length > 4) {
+                                formateado += '-' + soloNumeros.substring(4, 10);
+                            }
+                        }
+                    }
+                    if (formateado !== valor) {
+                        $input.val(formateado);
+                        valor = formateado;
+                        esValido = regexJuridica.test(formateado);
+                    }
+                }
+            }
+            
+            if (!esValido && valor.length > 0) {
+                if (!valor.startsWith('3')) {
+                    mensaje = 'Las cédulas jurídicas deben iniciar con 3';
+                } else {
+                    mensaje = 'Formato incorrecto. Debe ser 3-XXX-XXXXXX (10 dígitos)';
+                }
+            }
+            break;
+            
+        case 'extranjera':
+        case 'otro':
+            // Formato libre, mínimo 3 caracteres
+            esValido = valor.length >= 3;
+            if (!esValido && valor.length > 0) {
+                mensaje = 'Debe tener al menos 3 caracteres';
+            }
+            break;
+    }
+    
+    if (esValido) {
+        $input.addClass('is-valid').removeClass('is-invalid');
+        $feedback.text('');
+    } else if (valor.length > 0) {
+        $input.addClass('is-invalid').removeClass('is-valid');
+        $feedback.text(mensaje);
+    } else {
+        $input.removeClass('is-valid is-invalid');
+        $feedback.text('');
+    }
+    
+    return esValido;
+}
+
+function validarTelefono(telefono) {
+    const $input = $('#telefonoClienteFacturacion');
+    
+    if (!telefono) {
+        $input.removeClass('is-valid is-invalid');
+        return true; // Opcional
+    }
+    
+    // Formato: 8888-8888 (8 dígitos)
+    const regex = /^\d{4}-\d{4}$/;
+    const esValido = regex.test(telefono);
+    
+    if (esValido) {
+        $input.addClass('is-valid').removeClass('is-invalid');
+    } else {
+        $input.addClass('is-invalid').removeClass('is-valid');
+    }
+    
+    return esValido;
+}
+
+function validarEmail(email) {
+    const $input = $('#emailClienteFacturacion');
+    
+    if (!email) {
+        $input.removeClass('is-valid is-invalid');
+        return true; // Opcional
+    }
+    
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const esValido = regex.test(email);
+    
+    if (esValido) {
+        $input.addClass('is-valid').removeClass('is-invalid');
+    } else {
+        $input.addClass('is-invalid').removeClass('is-valid');
+    }
+    
+    return esValido;
+}
+
+function validarNombre(nombre) {
+    const $input = $('#nombreClienteFacturacion');
+    
+    if (!nombre) {
+        $input.addClass('is-invalid').removeClass('is-valid');
+        return false;
+    }
+    
+    const esValido = nombre.length >= 2;
+    
+    if (esValido) {
+        $input.addClass('is-valid').removeClass('is-invalid');
+    } else {
+        $input.addClass('is-invalid').removeClass('is-valid');
+    }
+    
+    return esValido;
+}
+
+async function guardarClienteFacturacion() {
+    try {
+        console.log('💾 === GUARDANDO CLIENTE DESDE FACTURACIÓN ===');
+        
+        const $btnGuardar = $('#btnGuardarClienteFacturacion');
+        
+        // Deshabilitar botón y mostrar loading
+        $btnGuardar.prop('disabled', true);
+        $btnGuardar.find('.btn-normal-state').addClass('d-none');
+        $btnGuardar.find('.btn-loading-state').removeClass('d-none');
+        
+        // Obtener datos del formulario
+        const nombre = $('#nombreClienteFacturacion').val().trim();
+        const email = $('#emailClienteFacturacion').val().trim();
+        const contacto = $('#contactoClienteFacturacion').val().trim();
+        const telefono = $('#telefonoClienteFacturacion').val().trim();
+        const direccion = $('#direccionClienteFacturacion').val().trim();
+        const tipoIdentificacion = $('input[name="tipoIdentificacion"]:checked').val();
+        
+        // Validaciones finales
+        let esValido = true;
+        let mensajesError = [];
+        
+        if (!validarNombre(nombre)) {
+            mensajesError.push('El nombre es requerido (mínimo 2 caracteres)');
+            esValido = false;
+        }
+        
+        if (email && !validarEmail(email)) {
+            mensajesError.push('El formato del email no es válido');
+            esValido = false;
+        }
+        
+        if (contacto && !validarIdentificacion(contacto, tipoIdentificacion)) {
+            mensajesError.push('El formato de la identificación no es válido');
+            esValido = false;
+        }
+        
+        if (telefono && !validarTelefono(telefono)) {
+            mensajesError.push('El formato del teléfono no es válido');
+            esValido = false;
+        }
+        
+        if (!esValido) {
+            throw new Error(mensajesError.join('. '));
+        }
+        
+        // Preparar datos para envío
+        const clienteData = {
+            NombreCliente: nombre,
+            Email: email || null,
+            Contacto: contacto || null,
+            Telefono: telefono || null,
+            Direccion: direccion || null
+        };
+        
+        console.log('💾 Datos del cliente a enviar:', clienteData);
+        
+        // Enviar datos al servidor
+        const response = await fetch('/Clientes/CrearCliente', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(clienteData),
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+        
+        const resultado = await response.json();
+        console.log('💾 Respuesta del servidor:', resultado);
+        
+        if (resultado.success || resultado.clienteId) {
+            // Cliente creado exitosamente
+            const clienteCreado = resultado.data || resultado;
+            
+            console.log('✅ Cliente creado exitosamente:', clienteCreado);
+            
+            // Seleccionar automáticamente el cliente recién creado
+            clienteSeleccionado = {
+                clienteId: clienteCreado.clienteId || clienteCreado.ClienteId,
+                nombre: clienteCreado.nombreCliente || clienteCreado.NombreCliente || nombre,
+                identificacion: clienteCreado.contacto || clienteCreado.Contacto || contacto,
+                telefono: clienteCreado.telefono || clienteCreado.Telefono || telefono,
+                email: clienteCreado.email || clienteCreado.Email || email,
+                direccion: clienteCreado.direccion || clienteCreado.Direccion || direccion
+            };
+            
+            // Actualizar interfaz del cliente
+            $('#clienteBusqueda').val(clienteSeleccionado.nombre);
+            $('#nombreClienteSeleccionado').text(clienteSeleccionado.nombre);
+            $('#emailClienteSeleccionado').text(clienteSeleccionado.email || 'Sin email');
+            $('#clienteSeleccionado').removeClass('d-none');
+            
+            // Actualizar estado del botón finalizar
+            actualizarEstadoBotonFinalizar();
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalNuevoClienteFacturacion'));
+            modal.hide();
+            
+            // Mostrar mensaje de éxito
+            mostrarToast('Cliente agregado', `${clienteSeleccionado.nombre} ha sido agregado exitosamente y seleccionado para la venta`, 'success');
+            
+        } else {
+            throw new Error(resultado.message || 'Error desconocido al crear cliente');
+        }
+        
+    } catch (error) {
+        console.error('❌ Error guardando cliente:', error);
+        
+        let mensajeError = 'Error al guardar el cliente';
+        if (error.message.includes('email')) {
+            mensajeError = 'Ya existe un cliente con este email';
+        } else if (error.message) {
+            mensajeError = error.message;
+        }
+        
+        mostrarToast('Error', mensajeError, 'danger');
+        
+    } finally {
+        // Restaurar botón
+        const $btnGuardar = $('#btnGuardarClienteFacturacion');
+        $btnGuardar.prop('disabled', false);
+        $btnGuardar.find('.btn-normal-state').removeClass('d-none');
+        $btnGuardar.find('.btn-loading-state').addClass('d-none');
+    }
+}
+
+function limpiarFormularioClienteFacturacion() {
+    console.log('🧹 Limpiando formulario de cliente');
+    
+    // Limpiar campos
+    $('#formNuevoClienteFacturacion')[0].reset();
+    
+    // Remover clases de validación
+    $('#formNuevoClienteFacturacion .form-control').removeClass('is-valid is-invalid');
+    
+    // Resetear tipo de identificación a nacional
+    $('#tipoNacional').prop('checked', true).trigger('change');
+    
+    // Limpiar feedback
+    $('#formNuevoClienteFacturacion .invalid-feedback').text('');
+}
                                         <i class="bi bi-envelope me-1"></i>Email
                                     </label>
                                     <input type="email" 
