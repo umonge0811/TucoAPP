@@ -269,11 +269,42 @@ function llenarFormularioCliente(cliente) {
     $('#nombreCliente').val(clienteEditando.nombre);
     $('#contactoCliente').val(clienteEditando.contacto);
     $('#emailCliente').val(clienteEditando.email);
-    $('#telefonoCliente').val(clienteEditando.telefono);
+    
+    // Separar código de país del teléfono
+    const telefonoCompleto = clienteEditando.telefono || '';
+    if (telefonoCompleto.startsWith('+506')) {
+        // Si ya tiene código de país de Costa Rica, separarlo
+        $('#codigoPaisCliente').val('+506');
+        $('#telefonoCliente').val(telefonoCompleto.replace('+506', '').trim());
+    } else if (telefonoCompleto.startsWith('+1')) {
+        // Si tiene código de país de USA/Canadá
+        $('#codigoPaisCliente').val('+1');
+        $('#telefonoCliente').val(telefonoCompleto.replace('+1', '').trim());
+    } else if (telefonoCompleto.startsWith('+52')) {
+        // Si tiene código de país de México
+        $('#codigoPaisCliente').val('+52');
+        $('#telefonoCliente').val(telefonoCompleto.replace('+52', '').trim());
+    } else if (telefonoCompleto.startsWith('+')) {
+        // Para otros códigos de país, extraer automáticamente
+        const match = telefonoCompleto.match(/^(\+\d{1,3})(.*)/);
+        if (match) {
+            $('#codigoPaisCliente').val(match[1]);
+            $('#telefonoCliente').val(match[2].trim());
+        } else {
+            // Si no se puede separar, usar Costa Rica por defecto
+            $('#codigoPaisCliente').val('+506');
+            $('#telefonoCliente').val(telefonoCompleto);
+        }
+    } else {
+        // Si no tiene código de país, usar Costa Rica por defecto
+        $('#codigoPaisCliente').val('+506');
+        $('#telefonoCliente').val(telefonoCompleto);
+    }
+    
     $('#direccionCliente').val(clienteEditando.direccion);
 
     // Limpiar validaciones previas
-    $('.form-control').removeClass('is-invalid');
+    $('.form-control').removeClass('is-invalid is-valid');
     $('.invalid-feedback').text('');
 }
 
