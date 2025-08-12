@@ -1486,11 +1486,28 @@ function actualizarTotales() {
 }
 
 async function limpiarVenta() {
-    if (productosEnVenta.length === 0) return;
+    // ✅ VERIFICAR SI HAY ALGO QUE LIMPIAR (PRODUCTOS O CLIENTE)
+    const tieneProductos = productosEnVenta.length > 0;
+    const tieneCliente = clienteSeleccionado !== null;
+    
+    if (!tieneProductos && !tieneCliente) {
+        console.log('🧹 No hay nada que limpiar');
+        return;
+    }
+
+    // ✅ DETERMINAR MENSAJE SEGÚN LO QUE HAY QUE LIMPIAR
+    let textoConfirmacion = '¿Estás seguro de que deseas limpiar ';
+    if (tieneProductos && tieneCliente) {
+        textoConfirmacion += 'toda la venta (productos y cliente)?';
+    } else if (tieneProductos) {
+        textoConfirmacion += 'todos los productos del carrito?';
+    } else {
+        textoConfirmacion += 'el cliente seleccionado?';
+    }
 
     const confirmacion = await Swal.fire({
         title: '¿Limpiar carrito?',
-        text: '¿Estás seguro de que deseas limpiar toda la venta?',
+        text: textoConfirmacion,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -1500,6 +1517,7 @@ async function limpiarVenta() {
     });
 
     if (confirmacion.isConfirmed) {
+        // ✅ LIMPIAR SIEMPRE TODO INDEPENDIENTEMENTE DE QUE HAYA O NO
         productosEnVenta = [];
         clienteSeleccionado = null;
         facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
@@ -1523,7 +1541,18 @@ async function limpiarVenta() {
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
         $('#btnGuardarProforma').show();
-        mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
+        
+        // ✅ MENSAJE DINÁMICO SEGÚN LO QUE SE LIMPIÓ
+        let mensajeLimpieza = 'Venta limpiada';
+        if (tieneProductos && tieneCliente) {
+            mensajeLimpieza = 'Se han removido todos los productos y el cliente seleccionado';
+        } else if (tieneProductos) {
+            mensajeLimpieza = 'Se han removido todos los productos';
+        } else {
+            mensajeLimpieza = 'Se ha removido el cliente seleccionado';
+        }
+        
+        mostrarToast('Venta limpiada', mensajeLimpieza, 'info');
     }
 }
 
@@ -6061,6 +6090,14 @@ function actualizarEstadoBotonFinalizar() {
     const puedeFinalizarVenta = tieneProductos && tieneCliente;
 
     const $btnFinalizar = $('#btnFinalizarVenta');
+    const $btnLimpiar = $('#btnLimpiarVenta'); // ✅ AGREGAR REFERENCIA AL BOTÓN LIMPIAR
+
+    // ✅ HABILITAR BOTÓN LIMPIAR SI HAY PRODUCTOS O CLIENTE SELECCIONADO
+    if (tieneProductos || tieneCliente) {
+        $btnLimpiar.prop('disabled', false);
+    } else {
+        $btnLimpiar.prop('disabled', true);
+    }
 
     if (puedeFinalizarVenta) {
         $btnFinalizar.prop('disabled', false)
@@ -6085,7 +6122,8 @@ function actualizarEstadoBotonFinalizar() {
         tieneProductos,
         tieneCliente,
         puedeFinalizarVenta,
-        disabled: $btnFinalizar.prop('disabled')
+        disabled: $btnFinalizar.prop('disabled'),
+        limpiarDisabled: $btnLimpiar.prop('disabled') // ✅ AGREGAR LOG DEL BOTÓN LIMPIAR
     });
 }
 
