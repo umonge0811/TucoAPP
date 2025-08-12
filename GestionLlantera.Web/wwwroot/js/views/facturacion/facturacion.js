@@ -5479,7 +5479,7 @@ async function guardarNuevoCliente() {
             // Cerrar modal
             $('#modalNuevoClienteFacturacion').modal('hide');
 
-            // Seleccionar el cliente creado automáticamente
+            // Seleccionar el cliente creado automáticamente1
             seleccionarCliente({
                 id: resultado.clienteId,
                 nombre: clienteData.nombreCliente,
