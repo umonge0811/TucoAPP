@@ -286,7 +286,7 @@ function configurarEventos() {
     // ===== BÚSQUEDA DE PRODUCTOS =====
     let ultimoEventoInput = 0; // Para throttling adicional
 
-    $('#busquedaProducto').on('input keyup', function() {
+    $('#busquedaProducto').on('input keyup paste', function() {
         contadorEventosInput++;
         const termino = $(this).val().trim();
         const ahora = Date.now();
@@ -297,14 +297,14 @@ function configurarEventos() {
         console.log('🎯 timeoutBusquedaActivo:', timeoutBusquedaActivo !== null);
         console.log('🎯 busquedaEnProceso:', busquedaEnProceso);
 
-        // ✅ THROTTLING ADICIONAL - PREVENIR EVENTOS MUY RÁPIDOS
-        if (ahora - ultimoEventoInput < 50) {
+        // ✅ THROTTLING MUY LIGERO SOLO PARA EVENTOS CONSECUTIVOS
+        if (ahora - ultimoEventoInput < 10) {
             console.log('⏸️ Evento demasiado rápido, ignorando');
             return;
         }
         ultimoEventoInput = ahora;
 
-        // Limpiar timeout anterior
+        // Limpiar timeout anterior SIEMPRE
         if (timeoutBusquedaActivo) {
             console.log('🎯 Limpiando timeout anterior...');
             clearTimeout(timeoutBusquedaActivo);
@@ -315,63 +315,61 @@ function configurarEventos() {
         if (termino.length === 0) {
             console.log('🎯 Campo vacío detectado - procesando inmediatamente');
             
-            // ✅ NO PROCESAR SI YA HAY UNA BÚSQUEDA EN PROCESO
-            if (busquedaEnProceso) {
-                console.log('⏸️ Búsqueda en proceso, programando para después');
-                timeoutBusquedaActivo = setTimeout(() => {
-                    if (!busquedaEnProceso) {
-                        window.lastProductsHash = null;
-                        ultimaBusqueda = '';
-                        buscarProductos('');
-                    }
-                    timeoutBusquedaActivo = null;
-                }, 100);
-                return;
-            }
-
-            // Resetear estado para forzar actualización
+            // Forzar actualización inmediata
             window.lastProductsHash = null;
             ultimaBusqueda = '';
+            
+            // Si hay búsqueda en proceso, forzar parada y ejecutar
+            if (busquedaEnProceso) {
+                console.log('🎯 Interrumpiendo búsqueda en proceso para campo vacío');
+                busquedaEnProceso = false;
+            }
+            
             buscarProductos('');
             return;
         }
 
-        // ✅ PARA TÉRMINOS NO VACÍOS, USAR TIMEOUT
+        // ✅ PARA TÉRMINOS CORTOS (1 carácter), MOSTRAR MENSAJE INMEDIATAMENTE
+        if (termino.length === 1) {
+            console.log('🎯 Término de 1 carácter, mostrando mensaje inmediatamente');
+            $('#resultadosBusqueda').html(`
+                <div class="col-12 text-center py-4 text-muted">
+                    <i class="bi bi-search display-1"></i>
+                    <p class="mt-2">Escribe al menos 2 caracteres para buscar</p>
+                </div>
+            `);
+            return;
+        }
+
+        // ✅ PARA TÉRMINOS VÁLIDOS (2+ caracteres), USAR TIMEOUT CORTO
         timeoutBusquedaActivo = setTimeout(() => {
             console.log('🎯 === EJECUTANDO TIMEOUT DE BÚSQUEDA ===');
             console.log('🎯 Término a buscar:', `"${termino}"`);
             console.log('🎯 ultimaBusqueda:', `"${ultimaBusqueda}"`);
-            console.log('🎯 busquedaEnProceso:', busquedaEnProceso);
 
-            // ✅ VERIFICAR NUEVAMENTE EL ESTADO ANTES DE PROCEDER
-            if (busquedaEnProceso) {
-                console.log('⏸️ Búsqueda iniciada en otro lugar, omitiendo timeout');
+            // ✅ VERIFICAR SI EL TÉRMINO CAMBIÓ DURANTE EL TIMEOUT
+            const terminoActual = $('#busquedaProducto').val().trim();
+            if (terminoActual !== termino) {
+                console.log('🎯 Término cambió durante timeout, omitiendo búsqueda');
                 timeoutBusquedaActivo = null;
                 return;
             }
 
-            // Prevenir búsquedas duplicadas del mismo término
-            if (termino === ultimaBusqueda) {
-                console.log('⏸️ Búsqueda duplicada omitida:', termino);
-                timeoutBusquedaActivo = null;
-                return;
-            }
-
+            // ✅ SIEMPRE EJECUTAR BÚSQUEDA PARA TÉRMINOS VÁLIDOS
             if (termino.length >= 2) {
                 console.log('🎯 Iniciando búsqueda con término:', termino);
+                
+                // Forzar actualización si es necesario
+                if (termino !== ultimaBusqueda) {
+                    window.lastProductsHash = null;
+                }
+                
                 buscarProductos(termino);
-            } else {
-                console.log('🎯 Término muy corto, mostrando mensaje de búsqueda');
-                $('#resultadosBusqueda').html(`
-                    <div class="col-12 text-center py-4 text-muted">
-                        <i class="bi bi-search display-1"></i>
-                        <p class="mt-2">Escribe al menos 2 caracteres para buscar</p>
-                    </div>
-                `);
             }
+            
             timeoutBusquedaActivo = null;
             console.log('🎯 === FIN TIMEOUT DE BÚSQUEDA ===');
-        }, 300); // Reducir debounce para mayor responsividad
+        }, 150); // Timeout más corto para mayor responsividad
     });
 
     // ===== BÚSQUEDA DE CLIENTES =====
@@ -462,14 +460,14 @@ async function buscarProductos(termino) {
     console.log('🔍 busquedaEnProceso:', busquedaEnProceso);
     console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
 
-    // ✅ PREVENIR MÚLTIPLES LLAMADAS SIMULTÁNEAS
-    if (busquedaEnProceso) {
+    // ✅ PERMITIR INTERRUMPIR BÚSQUEDAS PARA CAMPO VACÍO
+    if (busquedaEnProceso && termino.length > 0) {
         console.log('⏸️ Búsqueda ya en proceso, omitiendo llamada duplicada');
         return;
     }
 
-    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS (EXCEPTO LA PRIMERA CARGA)
-    if (termino === ultimaBusqueda && cargaInicialCompletada) {
+    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS SOLO SI NO ES FORZADA
+    if (termino === ultimaBusqueda && cargaInicialCompletada && window.lastProductsHash) {
         console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
         return;
     }
@@ -619,8 +617,8 @@ function mostrarResultadosProductos(productos) {
         stock: p.cantidadEnInventario || p.stock
     })));
 
-    // ✅ VARIABLE GLOBAL PARA RASTREAR EL ÚLTIMO HASH
-    if (window.lastProductsHash === productosHash) {
+    // ✅ VARIABLE GLOBAL PARA RASTREAR EL ÚLTIMO HASH - SOLO OMITIR SI REALMENTE ES IDÉNTICO
+    if (window.lastProductsHash === productosHash && productos.length > 0) {
         console.log('🔄 Productos idénticos detectados, omitiendo actualización DOM para prevenir parpadeo');
         console.log('🔄 === FIN mostrarResultadosProductos (sin cambios) ===');
         return;
