@@ -1,0 +1,176 @@
+// ===== GESTIÓN DE CLIENTES =====
+function abrirModalNuevoCliente() {
+    // Crear el modal dinámicamente con validación de cédula
+    const modalHtml = `
+        <div class="modal fade" id="modalNuevoClienteFacturacion" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-person-plus me-2"></i>Agregar Cliente Rápido
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formNuevoClienteFacturacion">
+                            <!-- Información básica -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="nombreClienteFacturacion" class="form-label">
+                                        <i class="bi bi-person me-1"></i>Nombre Completo *
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="nombreClienteFacturacion" 
+                                           name="nombre" 
+                                           placeholder="Juan Pérez González"
+                                           required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="emailClienteFacturacion" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Email
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="emailClienteFacturacion" 
+                                           name="email"
+                                           placeholder="cliente@ejemplo.com">
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+
+                            <!-- Tipo de identificación -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        <i class="bi bi-person-badge me-1"></i>Tipo de Identificación
+                                    </label>
+                                    <div class="btn-group w-100" role="group" id="tipoIdentificacion">
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
+                                        <label class="btn btn-outline-primary" for="tipoNacional">
+                                            <i class="bi bi-flag me-1"></i>Cédula Nacional (CR)
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
+                                        <label class="btn btn-outline-info" for="tipoJuridica">
+                                            <i class="bi bi-building me-1"></i>Cédula Jurídica
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoExtranjera" value="extranjera">
+                                        <label class="btn btn-outline-success" for="tipoExtranjera">
+                                            <i class="bi bi-globe me-1"></i>Extranjera
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoOtro" value="otro">
+                                        <label class="btn btn-outline-secondary" for="tipoOtro">
+                                            <i class="bi bi-card-text me-1"></i>Otro Documento
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campo de identificación con validación dinámica -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="contactoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-person-vcard me-1"></i>
+                                        <span id="labelIdentificacion">Cédula Nacional</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="contactoClienteFacturacion" 
+                                           name="contacto"
+                                           placeholder="1-2345-6789"
+                                           maxlength="12">
+                                    <div class="invalid-feedback" id="feedbackIdentificacion"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                    </div>
+                                    <small class="form-text" id="helpIdentificacion">
+                                        <span class="text-info">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Formato requerido: X-XXXX-XXXX (9 dígitos)
+                                        </span>
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="telefonoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                                    </label>
+                                    <input type="tel" 
+                                           class="form-control" 
+                                           id="telefonoClienteFacturacion" 
+                                           name="telefono"
+                                           placeholder="8888-8888"
+                                           maxlength="9">
+                                    <div class="invalid-feedback"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Formato: 8888-8888 (8 dígitos)
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Dirección -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="direccionClienteFacturacion" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>Dirección
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="direccionClienteFacturacion" 
+                                              name="direccion"
+                                              rows="2"
+                                              placeholder="Dirección completa del cliente"
+                                              maxlength="200"></textarea>
+                                    <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">
+                                        Dirección física o postal del cliente
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Información adicional -->
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
+                                <ul class="mb-0 small">
+                                    <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
+                                    <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos, debe iniciar con 3)</li>
+                                    <li><strong>Extranjera/Otro:</strong> Formato libre (mínimo 3 caracteres)</li>
+                                    <li><strong>Email:</strong> Se verificará que no esté registrado previamente</li>
+                                </ul>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success" id="btnGuardarClienteFacturacion">
+                            <span class="btn-normal-state">
+                                <i class="bi bi-person-plus me-1"></i>Agregar Cliente
+                            </span>
+                            <span class="btn-loading-state d-none">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Guardando...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remover modal anterior si existe
+    $('#modalNuevoClienteFacturacion').remove();
+    $('body').append(modalHtml);
+
+    const modal = new bootstrap.Modal(document.getElementById('modalNuevoClienteFacturacion'));
+
+    // Configurar eventos del modal
+    configurarEventosModalNuevoCliente();
+
+    modal.show();
+}
