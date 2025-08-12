@@ -58,6 +58,17 @@ function configurarEventos() {
         abrirModalNuevoCliente();
     });
 
+    // Validación en tiempo real mejorada
+    $('#nombreCliente, #emailCliente, #telefonoCliente, #contactoCliente, #direccionCliente').on('input blur', function () {
+        validarCampoEnTiempoReal($(this));
+    });
+
+    // Configurar cambio de tipo de identificación
+    configurarCambioTipoIdentificacion();
+
+    // Configurar formateo automático de teléfono
+    configurarFormateoTelefono();
+
     // Guardar cliente
     $('#btnGuardarCliente').on('click', function() {
         guardarCliente();
@@ -417,20 +428,17 @@ function validarCampoEnTiempoReal(campo) {
             break;
 
         case 'contactoCliente':
-            if (!valor) {
-                esValido = false;
-                mensaje = 'La identificación es obligatoria';
-            } else if (!/^[\d\-\s]+$/.test(valor)) {
-                esValido = false;
-                mensaje = 'La identificación solo puede contener números y guiones';
+            if (valor) {
+                const tipoIdentificacion = $('input[name="tipoIdentificacion"]:checked').val();
+                if (!validarIdentificacionPorTipo(valor, tipoIdentificacion)) {
+                    esValido = false;
+                    mensaje = obtenerMensajeErrorIdentificacion(tipoIdentificacion);
+                }
             }
             break;
 
         case 'emailCliente':
-            if (!valor) {
-                esValido = false;
-                mensaje = 'El email es obligatorio';
-            } else if (!validarEmail(valor)) {
+            if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
                 esValido = false;
                 mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
             }
@@ -438,20 +446,17 @@ function validarCampoEnTiempoReal(campo) {
 
         case 'telefonoCliente':
             const codigoPais = $('#codigoPaisCliente').val();
-            if (!valor) {
-                esValido = false;
-                mensaje = 'El teléfono es obligatorio';
-            } else if (codigoPais === '+506') {
+            if (valor && codigoPais === '+506') {
                 // Validación específica para Costa Rica
                 const numeroLimpio = valor.replace(/\D/g, '');
-                if (numeroLimpio.length !== 8) {
+                if (numeroLimpio.length > 0 && numeroLimpio.length !== 8) {
                     esValido = false;
                     mensaje = 'El teléfono debe tener exactamente 8 dígitos para Costa Rica';
-                } else if (!validarTelefonoCostaRica(numeroLimpio)) {
+                } else if (numeroLimpio.length === 8 && !validarTelefonoCostaRica(numeroLimpio)) {
                     esValido = false;
                     mensaje = 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9';
                 }
-            } else {
+            } else if (valor) {
                 // Validación para otros países
                 if (!/^[\d\-\s\+\(\)]+$/.test(valor)) {
                     esValido = false;
@@ -464,10 +469,7 @@ function validarCampoEnTiempoReal(campo) {
             break;
 
         case 'direccionCliente':
-            if (!valor) {
-                esValido = false;
-                mensaje = 'La dirección es obligatoria';
-            } else if (valor.length > 500) {
+            if (valor && valor.length > 500) {
                 esValido = false;
                 mensaje = 'La dirección no puede exceder 500 caracteres';
             }
@@ -484,64 +486,146 @@ function validarCampoEnTiempoReal(campo) {
     return esValido;
 }
 
+function validarIdentificacionPorTipo(valor, tipo) {
+    switch (tipo) {
+        case 'nacional':
+            return validarCedulaNacional(valor);
+        case 'juridica':
+            return validarCedulaJuridica(valor);
+        case 'dimex':
+            return validarDimex(valor);
+        case 'pasaporte':
+            return validarPasaporte(valor);
+        default:
+            return true;
+    }
+}
+
+function validarCedulaNacional(cedula) {
+    // Formato: X-XXXX-XXXX (9 dígitos)
+    const formato = /^\d-\d{4}-\d{4}$/;
+    if (!formato.test(cedula)) return false;
+
+    const digitos = cedula.replace(/\-/g, '');
+    return digitos.length === 9;
+}
+
+function validarCedulaJuridica(cedula) {
+    // Formato: X-XXX-XXXXXX (10 dígitos)
+    const formato = /^\d-\d{3}-\d{6}$/;
+    if (!formato.test(cedula)) return false;
+
+    const digitos = cedula.replace(/\-/g, '');
+    return digitos.length === 10;
+}
+
+function validarDimex(dimex) {
+    // Formato: 12 dígitos sin guiones
+    const formato = /^\d{12}$/;
+    return formato.test(dimex);
+}
+
+function validarPasaporte(pasaporte) {
+    // Formato libre alfanumérico, mínimo 6 caracteres
+    return pasaporte.length >= 6 && /^[A-Za-z0-9]+$/.test(pasaporte);
+}
+
+function validarTelefonoCostaRica(numero) {
+    // Números válidos en Costa Rica empiezan con: 2, 4, 5, 6, 7, 8, 9
+    const primerDigito = numero.charAt(0);
+    return ['2', '4', '5', '6', '7', '8', '9'].includes(primerDigito);
+}
+
+function obtenerMensajeErrorIdentificacion(tipo) {
+    switch (tipo) {
+        case 'nacional':
+            return 'Formato incorrecto. Use: X-XXXX-XXXX (9 dígitos)';
+        case 'juridica':
+            return 'Formato incorrecto. Use: X-XXX-XXXXXX (10 dígitos)';
+        case 'dimex':
+            return 'Formato incorrecto. Use: 12 dígitos sin guiones';
+        case 'pasaporte':
+            return 'Mínimo 6 caracteres alfanuméricos';
+        default:
+            return 'Formato de identificación incorrecto';
+    }
+}
+
+
 function validarFormularioCliente() {
     let esValido = true;
+    const campos = $('#modalCliente input, #modalCliente textarea, #modalCliente select');
 
-    // Limpiar validaciones previas
-    $('#modalCliente .form-control').removeClass('is-invalid');
-    $('#modalCliente .invalid-feedback').text('');
+    // Validar todos los campos usando validarCampoEnTiempoReal
+    campos.each(function () {
+        const $campo = $(this);
+        if ($campo.attr('id') !== 'clienteId' && $campo.attr('id') !== 'codigoPaisCliente') {
+            if (!validarCampoEnTiempoReal($campo)) {
+                esValido = false;
+            }
+        }
+    });
 
-    // Validar nombre (obligatorio)
+    // Validación especial para nombre (obligatorio)
     const nombre = $('#nombreCliente').val().trim();
     if (!nombre) {
-        mostrarErrorCampo('#nombreCliente', 'El nombre del cliente es obligatorio');
-        esValido = false;
-    }
-
-    // Validar identificación (obligatoria)
-    const contacto = $('#contactoCliente').val().trim();
-    if (!contacto) {
-        mostrarErrorCampo('#contactoCliente', 'La identificación es obligatoria');
-        esValido = false;
-    }
-
-    // Validar email (obligatorio y formato)
-    const email = $('#emailCliente').val().trim();
-    if (!email) {
-        mostrarErrorCampo('#emailCliente', 'El email es obligatorio');
-        esValido = false;
-    } else if (!validarEmail(email)) {
-        mostrarErrorCampo('#emailCliente', 'El formato del email no es válido');
-        esValido = false;
-    }
-
-    // Validar teléfono (obligatorio)
-    const telefono = $('#telefonoCliente').val().trim();
-    const codigoPais = $('#codigoPaisCliente').val();
-    
-    if (!telefono) {
-        mostrarErrorCampo('#telefonoCliente', 'El teléfono es obligatorio');
-        esValido = false;
-    } else if (codigoPais === '+506') {
-        // Validación específica para Costa Rica
-        const numeroLimpio = telefono.replace(/\D/g, '');
-        if (numeroLimpio.length !== 8) {
-            mostrarErrorCampo('#telefonoCliente', 'El teléfono debe tener exactamente 8 dígitos para Costa Rica');
-            esValido = false;
-        } else if (!validarTelefonoCostaRica(numeroLimpio)) {
-            mostrarErrorCampo('#telefonoCliente', 'Número inválido para Costa Rica. Debe iniciar con 2, 4, 5, 6, 7, 8 o 9');
-            esValido = false;
-        }
-    }
-
-    // Validar dirección (obligatoria)
-    const direccion = $('#direccionCliente').val().trim();
-    if (!direccion) {
-        mostrarErrorCampo('#direccionCliente', 'La dirección es obligatoria');
+        $('#nombreCliente').addClass('is-invalid');
+        $('#nombreCliente').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
         esValido = false;
     }
 
     return esValido;
+}
+
+function configurarCambioTipoIdentificacion() {
+    $('input[name="tipoIdentificacion"]').on('change', function () {
+        const tipo = $(this).val();
+        const $input = $('#contactoCliente');
+        const $label = $('#labelIdentificacion');
+        const $help = $('#helpIdentificacion');
+
+        // Limpiar clases y contenido anterior
+        $input.removeClass('is-valid is-invalid').val('');
+
+        switch (tipo) {
+            case 'nacional':
+                $label.html('<i class="bi bi-flag me-1"></i>Cédula Nacional');
+                $input.attr('placeholder', '1-2345-6789').attr('maxlength', '12');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXXX-XXXX (9 dígitos)</span>');
+                break;
+            case 'juridica':
+                $label.html('<i class="bi bi-building me-1"></i>Cédula Jurídica');
+                $input.attr('placeholder', '3-101-123456').attr('maxlength', '13');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXX-XXXXXX (10 dígitos)</span>');
+                break;
+            case 'dimex':
+                $label.html('<i class="bi bi-globe me-1"></i>DIMEX/NITE');
+                $input.attr('placeholder', '123456789012').attr('maxlength', '12');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>12 dígitos sin guiones</span>');
+                break;
+            case 'pasaporte':
+                $label.html('<i class="bi bi-passport me-1"></i>Pasaporte');
+                $input.attr('placeholder', 'A12345678').attr('maxlength', '20');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Alfanumérico, mínimo 6 caracteres</span>');
+                break;
+        }
+    });
+}
+
+function configurarFormateoTelefono() {
+    $('#telefonoCliente').on('input', function () {
+        const codigoPais = $('#codigoPaisCliente').val();
+        let valor = $(this).val().replace(/\D/g, ''); // Solo números
+
+        if (codigoPais === '+506') {
+            // Formato para Costa Rica: XXXX-XXXX
+            if (valor.length >= 4) {
+                valor = valor.substring(0, 4) + '-' + valor.substring(4, 8);
+            }
+        }
+
+        $(this).val(valor);
+    });
 }
 
 function mostrarErrorCampo(selector, mensaje) {
