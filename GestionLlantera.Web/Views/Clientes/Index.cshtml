@@ -289,103 +289,201 @@
 
 <!-- Modal Nuevo/Editar Cliente -->
 <div class="modal fade" id="modalCliente" tabindex="-1" aria-labelledby="modalClienteLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalClienteLabel">Nuevo Cliente</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalClienteLabel">
+                    <i class="bi bi-person-plus me-2"></i>Nuevo Cliente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <!-- Información adicional -->
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
+                    <ul class="mb-0 small">
+                        <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
+                        <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos con guiones)</li>
+                        <li><strong>DIMEX/NITE:</strong> Formato XXXXXXXXXXXX (12 dígitos sin guiones)</li>
+                        <li><strong>Pasaporte:</strong> Formato libre alfanumérico</li>
+                        <li><strong>Teléfono Costa Rica:</strong> 8 dígitos (ej: 88888888)</li>
+                    </ul>
+                </div>
+
                 <form id="formCliente">
                     <input type="hidden" id="clienteId" value="0">
 
-                    <div class="mb-3">
-                        <label for="nombreCliente" class="form-label">
-                            <i class="bi bi-person me-1"></i>Nombre Completo *
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="nombreCliente" 
-                               placeholder="Juan Pérez González"
-                               required>
-                        <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="contactoCliente" class="form-label">
-                            <i class="bi bi-person-badge me-1"></i>Identificación
-                        </label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="contactoCliente"
-                               placeholder="1-2345-6789"
-                               maxlength="20">
-                        <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">Cédula o documento de identidad</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="emailCliente" class="form-label">
-                            <i class="bi bi-envelope me-1"></i>Email
-                        </label>
-                        <input type="email" 
-                               class="form-control" 
-                               id="emailCliente"
-                               placeholder="cliente@ejemplo.com">
-                        <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">Correo electrónico válido</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="telefonoCliente" class="form-label">
-                            <i class="bi bi-telephone me-1"></i>Teléfono / WhatsApp
-                        </label>
-                        <div class="input-group">
-                            <select class="form-select" id="codigoPaisCliente" style="max-width: 120px;">
-                                <option value="+506" data-pais="CR" selected>🇨🇷 +506</option>
-                                <option value="+1" data-pais="US">🇺🇸 +1</option>
-                                <option value="+52" data-pais="MX">🇲🇽 +52</option>
-                                <option value="+57" data-pais="CO">🇨🇴 +57</option>
-                                <option value="+58" data-pais="VE">🇻🇪 +58</option>
-                                <option value="+507" data-pais="PA">🇵🇦 +507</option>
-                                <option value="+503" data-pais="SV">🇸🇻 +503</option>
-                                <option value="+502" data-pais="GT">🇬🇹 +502</option>
-                                <option value="+504" data-pais="HN">🇭🇳 +504</option>
-                                <option value="+505" data-pais="NI">🇳🇮 +505</option>
-                                <option value="+34" data-pais="ES">🇪🇸 +34</option>
-                            </select>
-                            <input type="tel" 
+                    <!-- Nombre -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="nombreCliente" class="form-label">
+                                <i class="bi bi-person me-1"></i>Nombre Completo *
+                            </label>
+                            <input type="text" 
                                    class="form-control" 
-                                   id="telefonoCliente"
-                                   placeholder="88888888"
-                                   maxlength="8">
+                                   id="nombreCliente" 
+                                   name="nombre"
+                                   placeholder="Juan Pérez González"
+                                   required>
+                            <div class="invalid-feedback"></div>
+                            <div class="valid-feedback">
+                                <i class="bi bi-check-circle me-1"></i>Nombre válido
+                            </div>
+                            <small class="form-text text-muted">
+                                Nombre completo del cliente (mínimo 2 caracteres)
+                            </small>
                         </div>
-                        <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">
-                            <i class="bi bi-whatsapp text-success me-1"></i>
-                            Formato para Costa Rica: 88888888 (8 dígitos, sin espacios ni guiones)
-                        </small>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="direccionCliente" class="form-label">
-                            <i class="bi bi-geo-alt me-1"></i>Dirección
-                        </label>
-                        <textarea class="form-control" 
-                                  id="direccionCliente" 
-                                  rows="3"
-                                  placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
-                                  maxlength="500"></textarea>
-                        <div class="invalid-feedback"></div>
-                        <small class="form-text text-muted">Dirección completa del cliente</small>
+                    <!-- Tipo de Identificación -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label class="form-label">
+                                <i class="bi bi-card-text me-1"></i>Tipo de Identificación
+                            </label>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
+                                        <label class="form-check-label" for="tipoNacional">
+                                            <i class="bi bi-flag me-1"></i>Nacional
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
+                                        <label class="form-check-label" for="tipoJuridica">
+                                            <i class="bi bi-building me-1"></i>Jurídica
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoDimex" value="dimex">
+                                        <label class="form-check-label" for="tipoDimex">
+                                            <i class="bi bi-globe me-1"></i>DIMEX/NITE
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoPasaporte" value="pasaporte">
+                                        <label class="form-check-label" for="tipoPasaporte">
+                                            <i class="bi bi-passport me-1"></i>Pasaporte
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Identificación -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="contactoCliente" class="form-label" id="labelIdentificacion">
+                                <i class="bi bi-flag me-1"></i>Cédula Nacional
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="contactoCliente"
+                                   name="identificacion"
+                                   placeholder="1-2345-6789"
+                                   maxlength="12">
+                            <div class="invalid-feedback"></div>
+                            <div class="valid-feedback">
+                                <i class="bi bi-check-circle me-1"></i>Identificación válida
+                            </div>
+                            <small class="form-text text-muted" id="helpIdentificacion">
+                                <span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXXX-XXXX (9 dígitos)</span>
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="emailCliente" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Correo Electrónico
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="emailCliente"
+                                   name="email"
+                                   placeholder="cliente@ejemplo.com">
+                            <div class="invalid-feedback"></div>
+                            <div class="valid-feedback">
+                                <i class="bi bi-check-circle me-1"></i>Email válido
+                            </div>
+                            <small class="form-text text-muted">
+                                Correo electrónico válido (opcional)
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="telefonoCliente" class="form-label">
+                                <i class="bi bi-telephone me-1"></i>Teléfono / WhatsApp
+                            </label>
+                            <div class="input-group">
+                                <select class="form-select" id="codigoPaisCliente" style="max-width: 120px;">
+                                    <option value="+506" data-pais="CR" selected>🇨🇷 +506</option>
+                                    <option value="+1" data-pais="US">🇺🇸 +1</option>
+                                    <option value="+52" data-pais="MX">🇲🇽 +52</option>
+                                    <option value="+57" data-pais="CO">🇨🇴 +57</option>
+                                    <option value="+58" data-pais="VE">🇻🇪 +58</option>
+                                    <option value="+507" data-pais="PA">🇵🇦 +507</option>
+                                    <option value="+503" data-pais="SV">🇸🇻 +503</option>
+                                    <option value="+502" data-pais="GT">🇬🇹 +502</option>
+                                    <option value="+504" data-pais="HN">🇭🇳 +504</option>
+                                    <option value="+505" data-pais="NI">🇳🇮 +505</option>
+                                    <option value="+34" data-pais="ES">🇪🇸 +34</option>
+                                </select>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="telefonoCliente" 
+                                       name="telefono"
+                                       placeholder="8888-8888"
+                                       maxlength="9">
+                            </div>
+                            <div class="invalid-feedback"></div>
+                            <div class="valid-feedback">
+                                <i class="bi bi-check-circle me-1"></i>Formato correcto
+                            </div>
+                            <small class="form-text text-muted">
+                                Formato: 8888-8888 (8 dígitos)
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Dirección -->
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="direccionCliente" class="form-label">
+                                <i class="bi bi-geo-alt me-1"></i>Dirección
+                            </label>
+                            <textarea class="form-control" 
+                                      id="direccionCliente" 
+                                      name="direccion"
+                                      rows="3"
+                                      placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                      maxlength="500"></textarea>
+                            <div class="invalid-feedback"></div>
+                            <small class="form-text text-muted">
+                                Dirección física o postal del cliente
+                            </small>
+                        </div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
                 <button type="button" class="btn btn-primary" id="btnGuardarCliente">
-                    <i class="bi bi-check-circle me-1"></i>Guardar
+                    <i class="bi bi-check-circle me-1"></i>Guardar Cliente
                 </button>
             </div>
         </div>
