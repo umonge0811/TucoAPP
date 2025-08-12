@@ -1,0 +1,420 @@
+
+/* ===== ESTILOS PARA IMPRESIÓN TÉRMICA ===== */
+
+/* Configuración de página para impresión */
+@page {
+    size: 80mm auto;
+    margin: 2mm;
+    padding: 0;
+}
+
+/* Estilos generales para recibos térmicos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif !important;
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    color: #000 !important;
+    background: #fff !important;
+    width: 100%;
+    max-width: 80mm;
+}
+
+/* Contenedor principal del recibo */
+.recibo-container-termico {
+    width: 100%;
+    max-width: 80mm;
+    padding: 2mm;
+    font-family: 'Arial', sans-serif;
+    font-size: 11px;
+    line-height: 1.2;
+    color: #000;
+}
+
+/* ===== ENCABEZADO ===== */
+.encabezado-termico {
+    text-align: center;
+    margin-bottom: 4mm;
+    border-bottom: 1px dashed #000;
+    padding-bottom: 3mm;
+}
+
+.nombre-empresa-termico {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    margin-bottom: 1mm;
+}
+
+.info-empresa-termico, 
+.telefono-termico {
+    font-size: 10px !important;
+    margin-bottom: 0.5mm;
+}
+
+.tipo-documento-termico {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    margin: 2mm 0;
+}
+
+.numero-factura-termico {
+    font-size: 12px !important;
+    font-weight: bold !important;
+}
+
+/* ===== INFORMACIÓN DE TRANSACCIÓN ===== */
+.info-transaccion-termico {
+    font-size: 10px !important;
+    margin-bottom: 3mm;
+}
+
+.info-transaccion-termico div {
+    margin-bottom: 0.5mm;
+}
+
+/* ===== SEPARADORES ===== */
+.separador-termico {
+    border-top: 1px dashed #000;
+    margin: 3mm 0;
+    height: 0;
+}
+
+.separador-pago-termico,
+.separador-pendientes-termico,
+.separador-proforma-termico {
+    border-top: 1px dashed #000;
+    margin: 1mm 0;
+    padding-top: 1mm;
+}
+
+.separador-total-termico {
+    border-top: 1px solid #000;
+    margin: 1mm 0;
+}
+
+/* ===== SECCIONES PRINCIPALES ===== */
+.titulo-seccion-termico {
+    font-weight: bold !important;
+    text-align: center;
+    margin-bottom: 2mm;
+    font-size: 12px !important;
+}
+
+/* ===== PRODUCTOS ===== */
+.seccion-productos-termico {
+    margin-bottom: 3mm;
+}
+
+.producto-item-termico {
+    margin-bottom: 1mm;
+}
+
+.producto-nombre-termico {
+    font-size: 10px !important;
+    margin-bottom: 0.5mm;
+    font-weight: bold;
+}
+
+.producto-detalle-termico {
+    font-size: 10px !important;
+    font-family: 'Courier New', monospace;
+}
+
+/* ===== TOTALES ===== */
+.seccion-totales-termico {
+    margin-bottom: 3mm;
+}
+
+.linea-total-termico {
+    font-size: 10px !important;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 0.5mm;
+}
+
+.total-final-termico {
+    font-size: 12px !important;
+    font-weight: bold !important;
+    font-family: 'Courier New', monospace;
+    padding-top: 1mm;
+}
+
+/* ===== MÉTODO DE PAGO ===== */
+.seccion-pago-termico {
+    margin-bottom: 3mm;
+}
+
+.linea-pago-termico {
+    margin-bottom: 1mm;
+}
+
+.metodo-monto-termico {
+    font-size: 10px !important;
+    font-family: 'Courier New', monospace;
+}
+
+.referencia-termico {
+    font-size: 9px !important;
+    color: #666;
+    margin-top: 0.5mm;
+}
+
+.total-pagado-termico {
+    font-size: 10px !important;
+    font-weight: bold !important;
+    font-family: 'Courier New', monospace;
+}
+
+/* ===== PRODUCTOS PENDIENTES ===== */
+.seccion-pendientes-termico {
+    margin-bottom: 3mm;
+    border: 1px solid #000;
+    padding: 2mm;
+}
+
+.info-pendientes-termico {
+    text-align: center;
+    font-size: 10px !important;
+    margin-bottom: 2mm;
+}
+
+.info-pendientes-termico div {
+    margin-bottom: 0.5mm;
+}
+
+.producto-pendiente-termico {
+    margin-bottom: 1mm;
+    font-size: 9px !important;
+}
+
+.pendiente-nombre-termico {
+    font-weight: bold !important;
+    margin-bottom: 0.5mm;
+}
+
+.pendiente-cantidad-termico {
+    font-size: 9px !important;
+    color: #666;
+}
+
+.pendiente-codigo-termico {
+    font-size: 9px !important;
+    font-family: 'Courier New', monospace;
+}
+
+.instrucciones-pendientes-termico {
+    text-align: center;
+    font-size: 10px !important;
+    margin: 2mm 0;
+}
+
+.instrucciones-pendientes-termico div {
+    margin-bottom: 0.5mm;
+}
+
+.codigo-seguimiento-termico, 
+.codigos-seguimiento-termico {
+    text-align: center;
+    margin-top: 2mm;
+    width: 100%;
+}
+
+.codigo-seguimiento-termico div:first-child, 
+.codigos-seguimiento-termico div:first-child {
+    font-size: 10px !important;
+    margin-bottom: 0.5mm;
+    text-align: center;
+}
+
+.codigo-recuadro-termico {
+    font-size: 12px !important;
+    font-weight: bold !important;
+    font-family: 'Courier New', monospace;
+    border: 2px solid #000;
+    padding: 2mm;
+    margin: 1mm auto;
+    display: block;
+    background: #f9f9f9;
+    text-align: center;
+    width: 80%;
+    max-width: 40mm;
+}
+
+/* ===== SECCIÓN PROFORMA ===== */
+.seccion-proforma-termico {
+    margin-bottom: 3mm;
+    border: 2px solid #000;
+    padding: 2mm;
+    background: #f0f0f0;
+}
+
+.advertencia-proforma-termico {
+    font-size: 9px !important;
+    text-align: center;
+}
+
+.info-proforma-termico {
+    margin-bottom: 1mm;
+}
+
+.info-proforma-termico div {
+    margin-bottom: 0.5mm;
+}
+
+.codigo-proforma-termico {
+    text-align: center;
+    margin-top: 2mm;
+}
+
+.codigo-proforma-termico div:first-child {
+    font-size: 9px !important;
+    margin-bottom: 0.5mm;
+}
+
+.conservar-documento-termico {
+    font-size: 10px !important;
+    font-weight: bold !important;
+    margin-top: 1mm;
+    color: #d63384;
+}
+
+/* ===== PIE DE PÁGINA ===== */
+.pie-pagina-termico {
+    text-align: center;
+    font-size: 10px !important;
+    border-top: 1px dashed #000;
+    padding-top: 3mm;
+    margin-top: 3mm;
+}
+
+.pie-pagina-termico div {
+    margin-bottom: 0.5mm;
+}
+
+.fecha-generacion-termico {
+    font-size: 9px !important;
+    color: #666;
+    margin-top: 2mm;
+}
+
+.espaciado-final-termico {
+    height: 5mm;
+}
+
+/* ===== ESTILOS PARA VISTA PREVIA EN PANTALLA ===== */
+@media screen {
+    body {
+        background: #f5f5f5 !important;
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        min-height: 100vh;
+    }
+
+    .recibo-container-termico {
+        background: white;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        max-width: 320px;
+        padding: 15px;
+    }
+}
+
+/* ===== ESTILOS ESPECÍFICOS PARA IMPRESIÓN ===== */
+@media print {
+    body {
+        background: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 11px !important;
+    }
+
+    .recibo-container-termico {
+        box-shadow: none !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 2mm !important;
+        margin: 0 !important;
+        background: none !important;
+        font-size: 11px !important;
+    }
+
+    .seccion-proforma-termico {
+        background: #f0f0f0 !important;
+        border: 2px solid #000 !important;
+    }
+
+    .conservar-documento-termico {
+        color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    /* Asegurar que todo se imprima en negro */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Títulos más grandes para legibilidad */
+    .nombre-empresa-termico {
+        font-size: 18px !important;
+    }
+
+    .tipo-documento-termico {
+        font-size: 16px !important;
+    }
+
+    .numero-factura-termico {
+        font-size: 14px !important;
+    }
+
+    .titulo-seccion-termico {
+        font-size: 14px !important;
+    }
+
+    .total-final-termico {
+        font-size: 14px !important;
+    }
+
+    .codigo-recuadro-termico {
+        font-size: 14px !important;
+    }
+}
+
+/* ===== CONFIGURACIÓN PARA IMPRESORAS 58MM ===== */
+@media print and (max-width: 58mm) {
+    @page {
+        size: 58mm auto;
+        margin: 1mm;
+    }
+
+    body {
+        font-size: 9px !important;
+    }
+
+    .recibo-container-termico {
+        font-size: 9px !important;
+    }
+
+    .nombre-empresa-termico {
+        font-size: 14px !important;
+    }
+
+    .tipo-documento-termico {
+        font-size: 12px !important;
+    }
+
+    .numero-factura-termico {
+        font-size: 10px !important;
+    }
+
+    .titulo-seccion-termico {
+        font-size: 10px !important;
+    }
+}

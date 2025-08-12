@@ -1,7 +1,12 @@
 
-/* Configuración específica para impresoras térmicas 80mm */
+/* 
+ * ===== CSS LEGACY PARA COMPATIBILIDAD =====
+ * Este archivo mantiene estilos básicos para compatibilidad.
+ * Los estilos principales para impresión térmica están en impresion-termica.css
+ */
+
+/* Configuración básica para impresoras térmicas 80mm */
 @media print {
-    /* Configuración base para papel de 80mm */
     @page {
         size: 80mm auto;
         margin: 2mm;
@@ -9,12 +14,12 @@
     
     body {
         font-family: 'Arial', sans-serif !important;
-        font-size: 11px !important; /* Tamaño base legible */
+        font-size: 11px !important;
         line-height: 1.2 !important;
         color: #000 !important;
     }
     
-    /* Títulos principales */
+    /* Estilos básicos para compatibilidad con código existente */
     .recibo-header h3, .empresa-nombre {
         font-size: 16px !important;
         font-weight: bold !important;
@@ -22,13 +27,11 @@
         margin: 2mm 0 !important;
     }
     
-    /* Información del cliente */
     .cliente-info, .factura-info {
         font-size: 10px !important;
         margin: 1mm 0 !important;
     }
     
-    /* Tabla de productos */
     .productos-table {
         font-size: 10px !important;
         width: 100% !important;
@@ -45,7 +48,6 @@
         padding: 1mm !important;
     }
     
-    /* Totales */
     .totales-section {
         font-size: 12px !important;
         font-weight: bold !important;
@@ -53,7 +55,6 @@
         margin: 2mm 0 !important;
     }
     
-    /* Códigos de seguimiento */
     .codigo-seguimiento {
         font-size: 10px !important;
         text-align: center !important;
@@ -68,14 +69,12 @@
         text-align: center !important;
     }
     
-    /* Instrucciones */
     .instrucciones-pendientes {
         font-size: 9px !important;
         text-align: center !important;
         margin: 2mm 0 !important;
     }
     
-    /* Ajustes para proformas */
     .seccion-proforma {
         background: #f0f0f0 !important;
         border: 2px solid #000 !important;
@@ -85,7 +84,6 @@
     }
 }
 
-/* Configuración para pantalla (vista previa) */
 @media screen {
     .recibo-container {
         max-width: 80mm;
