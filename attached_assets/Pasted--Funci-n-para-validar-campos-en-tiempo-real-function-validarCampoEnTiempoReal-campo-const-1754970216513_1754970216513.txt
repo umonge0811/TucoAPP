@@ -1,0 +1,78 @@
+// Función para validar campos en tiempo real
+function validarCampoEnTiempoReal(campo) {
+    const valor = campo.val().trim();
+    const tipo = campo.attr('type') || campo.prop('tagName').toLowerCase();
+    const id = campo.attr('id');
+    let esValido = true;
+    let mensaje = '';
+    // Limpiar validación previa
+    campo.removeClass('is-invalid is-valid');
+    campo.siblings('.invalid-feedback').text('');
+    switch (id) {
+        case 'nombreClienteFacturacion':
+            if (!valor) {
+                esValido = false;
+                mensaje = 'El nombre del cliente es obligatorio';
+            } else if (valor.length < 2) {
+                esValido = false;
+                mensaje = 'El nombre debe tener al menos 2 caracteres';
+            } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El nombre solo puede contener letras y espacios';
+            }
+            break;
+        case 'contactoClienteFacturacion':
+            if (valor && !/^[\d\-\s]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'La identificación solo puede contener números y guiones';
+            }
+            break;
+        case 'emailClienteFacturacion':
+            if (valor && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'Ingrese un email válido (ejemplo: cliente@ejemplo.com)';
+            }
+            break;
+        case 'telefonoClienteFacturacion':
+            if (valor && !/^[\d\-\s\+\(\)]+$/.test(valor)) {
+                esValido = false;
+                mensaje = 'El teléfono solo puede contener números, espacios y guiones';
+            } else if (valor && valor.replace(/[\D]/g, '').length < 8) {
+                esValido = false;
+                mensaje = 'El teléfono debe tener al menos 8 dígitos';
+            }
+            break;
+        case 'direccionClienteFacturacion':
+            if (valor && valor.length > 500) {
+                esValido = false;
+                mensaje = 'La dirección no puede exceder 500 caracteres';
+            }
+            break;
+    }
+    if (!esValido) {
+        campo.addClass('is-invalid');
+        campo.siblings('.invalid-feedback').text(mensaje);
+    } else if (valor) {
+        campo.addClass('is-valid');
+    }
+    return esValido;
+}
+
+// Función mejorada para validar formulario completo
+function validarFormularioNuevoCliente() {
+    let esValido = true;
+    const campos = $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea');
+    campos.each(function () {
+        if (!validarCampoEnTiempoReal($(this))) {
+            esValido = false;
+        }
+    });
+    // Validación especial para nombre (obligatorio)
+    const nombre = $('#nombreClienteFacturacion').val().trim();
+    if (!nombre) {
+        $('#nombreClienteFacturacion').addClass('is-invalid');
+        $('#nombreClienteFacturacion').siblings('.invalid-feedback').text('El nombre del cliente es obligatorio');
+        esValido = false;
+    }
+    return esValido;
+}
