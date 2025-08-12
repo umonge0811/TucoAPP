@@ -1,0 +1,97 @@
+
+/* Configuración específica para impresoras térmicas 80mm */
+@media print {
+    /* Configuración base para papel de 80mm */
+    @page {
+        size: 80mm auto;
+        margin: 2mm;
+    }
+    
+    body {
+        font-family: 'Arial', sans-serif !important;
+        font-size: 11px !important; /* Tamaño base legible */
+        line-height: 1.2 !important;
+        color: #000 !important;
+    }
+    
+    /* Títulos principales */
+    .recibo-header h3, .empresa-nombre {
+        font-size: 16px !important;
+        font-weight: bold !important;
+        text-align: center !important;
+        margin: 2mm 0 !important;
+    }
+    
+    /* Información del cliente */
+    .cliente-info, .factura-info {
+        font-size: 10px !important;
+        margin: 1mm 0 !important;
+    }
+    
+    /* Tabla de productos */
+    .productos-table {
+        font-size: 10px !important;
+        width: 100% !important;
+    }
+    
+    .productos-table th {
+        font-size: 10px !important;
+        font-weight: bold !important;
+        border-bottom: 1px solid #000 !important;
+    }
+    
+    .productos-table td {
+        font-size: 10px !important;
+        padding: 1mm !important;
+    }
+    
+    /* Totales */
+    .totales-section {
+        font-size: 12px !important;
+        font-weight: bold !important;
+        text-align: right !important;
+        margin: 2mm 0 !important;
+    }
+    
+    /* Códigos de seguimiento */
+    .codigo-seguimiento {
+        font-size: 10px !important;
+        text-align: center !important;
+        margin: 2mm 0 !important;
+    }
+    
+    .codigo-recuadro {
+        font-size: 12px !important;
+        font-weight: bold !important;
+        border: 2px solid #000 !important;
+        padding: 2mm !important;
+        text-align: center !important;
+    }
+    
+    /* Instrucciones */
+    .instrucciones-pendientes {
+        font-size: 9px !important;
+        text-align: center !important;
+        margin: 2mm 0 !important;
+    }
+    
+    /* Ajustes para proformas */
+    .seccion-proforma {
+        background: #f0f0f0 !important;
+        border: 2px solid #000 !important;
+        padding: 2mm !important;
+        font-size: 12px !important;
+        font-weight: bold !important;
+    }
+}
+
+/* Configuración para pantalla (vista previa) */
+@media screen {
+    .recibo-container {
+        max-width: 80mm;
+        font-size: 11px;
+        margin: 0 auto;
+        border: 1px solid #ccc;
+        padding: 5mm;
+    }
+}

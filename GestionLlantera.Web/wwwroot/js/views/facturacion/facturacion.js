@@ -4304,12 +4304,38 @@ function generarRecibo(factura, productos, totales) {
 
                         .instrucciones-pendientes {
                             text-align: center;
-                            font-size: 6px;
+                            font-size: 9px !important; /* Aumentado de 6px a 9px */
                             margin: 2mm 0;
                         }
 
                         .instrucciones-pendientes div {
                             margin-bottom: 0.5mm;
+                        }
+                        
+                        /* Estilos adicionales para impresora térmica 80mm */
+                        @media print {
+                            h1, h2, h3, h4, h5, h6 {
+                                font-size: 14px !important; /* Títulos más grandes */
+                                font-weight: bold !important;
+                            }
+                            
+                            .recibo-header h3 {
+                                font-size: 16px !important; /* Título principal más grande */
+                            }
+                            
+                            .producto-item {
+                                font-size: 11px !important; /* Productos legibles */
+                                line-height: 1.3 !important;
+                            }
+                            
+                            .totales-section {
+                                font-size: 12px !important; /* Totales destacados */
+                                font-weight: bold !important;
+                            }
+                            
+                            .cliente-info {
+                                font-size: 10px !important; /* Info cliente legible */
+                            }
                         }
 
                         .codigo-seguimiento, .codigos-seguimiento {
@@ -4319,13 +4345,13 @@ function generarRecibo(factura, productos, totales) {
                         }
 
                         .codigo-seguimiento div:first-child, .codigos-seguimiento div:first-child {
-                            font-size: 6px;
+                            font-size: 9px !important; /* Aumentado de 6px a 9px */
                             margin-bottom: 0.5mm;
                             text-align: center;
                         }
 
                         .codigo-recuadro {
-                            font-size: 8px;
+                            font-size: 11px !important; /* Aumentado de 8px a 11px */
                             font-weight: bold;
                             font-family: 'Courier New', monospace;
                             border: 2px solid #000;
@@ -4358,12 +4384,13 @@ function generarRecibo(factura, productos, totales) {
                             }
                         }
 
-                        /* Estilos para impresión */
+                        /* Estilos para impresión - Optimizado para impresora térmica 80mm */
                         @media print {
                             body {
                                 background: none !important;
                                 padding: 0 !important;
                                 margin: 0 !important;
+                                font-size: 12px !important; /* Aumentado de tamaño base */
                             }
 
                             .recibo-container {
@@ -4373,6 +4400,7 @@ function generarRecibo(factura, productos, totales) {
                                 padding: 2mm !important;
                                 margin: 0 !important;
                                 background: none !important;
+                                font-size: 12px !important; /* Tamaño base aumentado */
                             }
 
                             .seccion-proforma {
