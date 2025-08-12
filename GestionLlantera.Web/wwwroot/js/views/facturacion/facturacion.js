@@ -5091,23 +5091,24 @@ function verDetalleProducto(producto) {
 
 // ===== GESTIÓN DE CLIENTES =====
 function abrirModalNuevoCliente() {
-    // Crear el modal dinámicamente
+    // Crear el modal dinámicamente con validación de cédula
     const modalHtml = `
         <div class="modal fade" id="modalNuevoClienteFacturacion" tabindex="-1">
-            <div class="modal-dialog">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">
-                            <i class="bi bi-person-plus me-2"></i>Nuevo Cliente
+                            <i class="bi bi-person-plus me-2"></i>Agregar Cliente Rápido
                         </h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <form id="formNuevoClienteFacturacion">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                            <!-- Información básica -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
                                     <label for="nombreClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person me-1"></i>Nombre *
+                                        <i class="bi bi-person me-1"></i>Nombre Completo *
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
@@ -5116,24 +5117,8 @@ function abrirModalNuevoCliente() {
                                            placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
-                                    <small class="form-text text-muted">Ingrese el nombre completo del cliente</small>
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Identificación
-                                    </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="contactoClienteFacturacion" 
-                                           name="contacto"
-                                           placeholder="1-2345-6789"
-                                           maxlength="20">
-                                    <div class="invalid-feedback"></div>
-                                    <small class="form-text text-muted">Cédula o documento de identidad</small>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-6">
                                     <label for="emailClienteFacturacion" class="form-label">
                                         <i class="bi bi-envelope me-1"></i>Email
                                     </label>
@@ -5143,9 +5128,64 @@ function abrirModalNuevoCliente() {
                                            name="email"
                                            placeholder="cliente@ejemplo.com">
                                     <div class="invalid-feedback"></div>
-                                    <small class="form-text text-muted">Correo electrónico válido</small>
                                 </div>
-                                <div class="col-md-6 mb-3">
+                            </div>
+
+                            <!-- Tipo de identificación -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label class="form-label">
+                                        <i class="bi bi-person-badge me-1"></i>Tipo de Identificación
+                                    </label>
+                                    <div class="btn-group w-100" role="group" id="tipoIdentificacion">
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
+                                        <label class="btn btn-outline-primary" for="tipoNacional">
+                                            <i class="bi bi-flag me-1"></i>Cédula Nacional (CR)
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
+                                        <label class="btn btn-outline-info" for="tipoJuridica">
+                                            <i class="bi bi-building me-1"></i>Cédula Jurídica
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoExtranjera" value="extranjera">
+                                        <label class="btn btn-outline-success" for="tipoExtranjera">
+                                            <i class="bi bi-globe me-1"></i>Extranjera
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoOtro" value="otro">
+                                        <label class="btn btn-outline-secondary" for="tipoOtro">
+                                            <i class="bi bi-card-text me-1"></i>Otro Documento
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campo de identificación con validación dinámica -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="contactoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-person-vcard me-1"></i>
+                                        <span id="labelIdentificacion">Cédula Nacional</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="contactoClienteFacturacion" 
+                                           name="contacto"
+                                           placeholder="1-2345-6789"
+                                           maxlength="12">
+                                    <div class="invalid-feedback" id="feedbackIdentificacion"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                    </div>
+                                    <small class="form-text" id="helpIdentificacion">
+                                        <span class="text-info">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            Formato requerido: X-XXXX-XXXX (9 dígitos)
+                                        </span>
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
                                     <label for="telefonoClienteFacturacion" class="form-label">
                                         <i class="bi bi-telephone me-1"></i>Teléfono
                                     </label>
@@ -5154,23 +5194,45 @@ function abrirModalNuevoCliente() {
                                            id="telefonoClienteFacturacion" 
                                            name="telefono"
                                            placeholder="8888-8888"
-                                           maxlength="15">
+                                           maxlength="9">
                                     <div class="invalid-feedback"></div>
-                                    <small class="form-text text-muted">Número de teléfono (8 dígitos)</small>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Formato: 8888-8888 (8 dígitos)
+                                    </small>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="direccionClienteFacturacion" class="form-label">
-                                    <i class="bi bi-geo-alt me-1"></i>Dirección
-                                </label>
-                                <textarea class="form-control" 
-                                          id="direccionClienteFacturacion" 
-                                          name="direccion" 
-                                          rows="3"
-                                          placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
-                                          maxlength="500"></textarea>
-                                <div class="invalid-feedback"></div>
-                                <small class="form-text text-muted">Dirección completa del cliente</small>
+
+                            <!-- Dirección -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="direccionClienteFacturacion" class="form-label">
+                                        <i class="bi bi-geo-alt me-1"></i>Dirección
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="direccionClienteFacturacion" 
+                                              name="direccion"
+                                              rows="2"
+                                              placeholder="Dirección completa del cliente"
+                                              maxlength="200"></textarea>
+                                    <div class="invalid-feedback"></div>
+                                    <small class="form-text text-muted">
+                                        Dirección física o postal del cliente
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Información adicional -->
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
+                                <ul class="mb-0 small">
+                                    <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
+                                    <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos, debe iniciar con 3)</li>
+                                    <li><strong>Extranjera/Otro:</strong> Formato libre (mínimo 3 caracteres)</li>
+                                    <li><strong>Email:</strong> Se verificará que no esté registrado previamente</li>
+                                </ul>
                             </div>
                         </form>
                     </div>
@@ -5178,9 +5240,9 @@ function abrirModalNuevoCliente() {
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             <i class="bi bi-x-circle me-1"></i>Cancelar
                         </button>
-                        <button type="button" class="btn btn-primary" id="btnGuardarClienteFacturacion">
+                        <button type="button" class="btn btn-success" id="btnGuardarClienteFacturacion">
                             <span class="btn-normal-state">
-                                <i class="bi bi-check-circle me-1"></i>Guardar Cliente
+                                <i class="bi bi-person-plus me-1"></i>Agregar Cliente
                             </span>
                             <span class="btn-loading-state d-none">
                                 <span class="spinner-border spinner-border-sm me-2"></span>Guardando...
@@ -5191,22 +5253,113 @@ function abrirModalNuevoCliente() {
             </div>
         </div>
     `;
+
     // Remover modal anterior si existe
     $('#modalNuevoClienteFacturacion').remove();
-    // Agregar modal al DOM
     $('body').append(modalHtml);
-    // Mostrar modal
+
     const modal = new bootstrap.Modal(document.getElementById('modalNuevoClienteFacturacion'));
+
+    // Configurar eventos del modal
+    configurarEventosModalNuevoCliente();
+
     modal.show();
-    // Configurar evento para guardar
-    $('#btnGuardarClienteFacturacion').on('click', function () {
-        guardarNuevoCliente();
+}
+
+function configurarEventosModalNuevoCliente() {
+    // Cambio de tipo de identificación
+    $('input[name="tipoIdentificacion"]').on('change', function () {
+        const tipo = $(this).val();
+        const $input = $('#contactoClienteFacturacion');
+        const $label = $('#labelIdentificacion');
+        const $help = $('#helpIdentificacion');
+
+        // Limpiar clases y contenido anterior
+        $input.removeClass('is-valid is-invalid').val('');
+
+        switch (tipo) {
+            case 'nacional':
+                $label.html('<i class="bi bi-flag me-1"></i>Cédula Nacional');
+                $input.attr('placeholder', '1-2345-6789').attr('maxlength', '12');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXXX-XXXX (9 dígitos)</span>');
+                break;
+            case 'juridica':
+                $label.html('<i class="bi bi-building me-1"></i>Cédula Jurídica');
+                $input.attr('placeholder', '3-101-123456').attr('maxlength', '13');
+                $help.html('<span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXX-XXXXXX (10 dígitos, inicia con 3)</span>');
+                break;
+            case 'extranjera':
+                $label.html('<i class="bi bi-globe me-1"></i>Identificación Extranjera');
+                $input.attr('placeholder', 'Número de pasaporte o documento').attr('maxlength', '20');
+                $help.html('<span class="text-success"><i class="bi bi-check-circle me-1"></i>Formato libre (mínimo 3 caracteres)</span>');
+                break;
+            case 'otro':
+                $label.html('<i class="bi bi-card-text me-1"></i>Otro Documento');
+                $input.attr('placeholder', 'Número de documento').attr('maxlength', '20');
+                $help.html('<span class="text-success"><i class="bi bi-check-circle me-1"></i>Formato libre (mínimo 3 caracteres)</span>');
+                break;
+        }
     });
-    // Limpiar validaciones y validar en tiempo real
-    $('#modalNuevoClienteFacturacion input, #modalNuevoClienteFacturacion textarea').on('input blur', function () {
-        validarCampoEnTiempoReal($(this));
+
+    // Validación en tiempo real para identificación
+    $('#contactoClienteFacturacion').on('input', function () {
+        const valor = $(this).val();
+        const tipo = $('input[name="tipoIdentificacion"]:checked').val();
+        validarIdentificacion(valor, tipo);
+    });
+
+    // Formateo automático para teléfono
+    $('#telefonoClienteFacturacion').on('input', function () {
+        let valor = $(this).val().replace(/\D/g, ''); // Solo números
+
+        if (valor.length >= 4) {
+            valor = valor.substring(0, 4) + '-' + valor.substring(4, 8);
+        }
+
+        $(this).val(valor);
+        validarTelefono(valor);
+    });
+
+    // Validación de email en tiempo real
+    $('#emailClienteFacturacion').on('input blur', function () {
+        const email = $(this).val().trim();
+        validarEmail(email);
+    });
+
+    // Validación de nombre
+    $('#nombreClienteFacturacion').on('input blur', function () {
+        const nombre = $(this).val().trim();
+        validarNombre(nombre);
+    });
+
+    // Botón guardar
+    $('#btnGuardarClienteFacturacion').on('click', function () {
+        guardarClienteFacturacion();
+    });
+
+    // Limpiar formulario al cerrar
+    $('#modalNuevoClienteFacturacion').on('hidden.bs.modal', function () {
+        limpiarFormularioClienteFacturacion();
     });
 }
+
+function limpiarFormularioClienteFacturacion() {
+    console.log('🧹 Limpiando formulario de cliente');
+
+    // Limpiar campos
+    $('#formNuevoClienteFacturacion')[0].reset();
+
+    // Remover clases de validación
+    $('#formNuevoClienteFacturacion .form-control').removeClass('is-valid is-invalid');
+
+    // Resetear tipo de identificación a nacional
+    $('#tipoNacional').prop('checked', true).trigger('change');
+
+    // Limpiar feedback
+    $('#formNuevoClienteFacturacion .invalid-feedback').text('');
+}
+
+
 // Función para validar campos en tiempo real
 function validarCampoEnTiempoReal(campo) {
     const valor = campo.val().trim();
