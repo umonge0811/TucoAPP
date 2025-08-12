@@ -343,6 +343,9 @@ function configurarEventos() {
             } else if (termino.length === 0) {
                 console.log('🎯 Campo vacío, cargando todos los productos...');
                 // ✅ SIEMPRE CARGAR PRODUCTOS CUANDO EL CAMPO ESTÁ VACÍO
+                // Resetear el hash para forzar actualización
+                window.lastProductsHash = null;
+                ultimaBusqueda = '';
                 buscarProductos('');
             } else {
                 console.log('🎯 Término muy corto, mostrando mensaje de búsqueda');
@@ -511,10 +514,12 @@ async function buscarProductos(termino) {
                                     medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
                                 }
                                 
-                                // Crear texto de búsqueda con múltiples formatos
+                                // Crear texto de búsqueda con múltiples formatos incluyendo guiones
                                 const textoBusquedaLlanta = `
                                     ${medidaCompleta}
                                     ${llantaInfo.ancho}/${llantaInfo.perfil || ''}
+                                    ${llantaInfo.ancho}-${llantaInfo.perfil || ''}-${llantaInfo.diametro}
+                                    ${llantaInfo.ancho}-${llantaInfo.perfil || ''}/${llantaInfo.diametro}
                                     ${llantaInfo.ancho}x${llantaInfo.perfil || ''}x${llantaInfo.diametro}
                                     ${llantaInfo.ancho} ${llantaInfo.perfil || ''} ${llantaInfo.diametro}
                                     R${llantaInfo.diametro}
@@ -537,7 +542,12 @@ async function buscarProductos(termino) {
                             const perfil = producto.Perfil || '';
                             const diametro = producto.Diametro || '';
                             
-                            const medidaAlternativa = `${ancho} ${perfil} ${diametro} R${diametro}`.toLowerCase();
+                            const medidaAlternativa = `
+                                ${ancho} ${perfil} ${diametro} R${diametro}
+                                ${ancho}/${perfil}/R${diametro}
+                                ${ancho}-${perfil}-${diametro}
+                                ${ancho}x${perfil}x${diametro}
+                            `.toLowerCase();
                             cumpleBusqueda = medidaAlternativa.includes(terminoBusqueda);
                         } catch (error) {
                             console.warn('⚠️ Error procesando medidas alternativas:', error);
@@ -4645,6 +4655,9 @@ function mostrarSinResultados(tipo) {
         <div class="col-12 text-center py-4 text-muted">
             <i class="bi bi-search display-1"></i>
             <p class="mt-2">${mensaje}</p>
+            <button class="btn btn-outline-primary btn-sm mt-2" onclick="cargarProductosIniciales()">
+                <i class="bi bi-arrow-clockwise me-1"></i>Mostrar todos los productos
+            </button>
         </div>
     `);
 }
