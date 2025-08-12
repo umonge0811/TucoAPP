@@ -1486,11 +1486,28 @@ function actualizarTotales() {
 }
 
 async function limpiarVenta() {
-    if (productosEnVenta.length === 0) return;
+    // ✅ VERIFICAR SI HAY ALGO QUE LIMPIAR (PRODUCTOS O CLIENTE)
+    const tieneProductos = productosEnVenta.length > 0;
+    const tieneCliente = clienteSeleccionado !== null;
+    
+    if (!tieneProductos && !tieneCliente) {
+        console.log('🧹 No hay nada que limpiar');
+        return;
+    }
+
+    // ✅ DETERMINAR MENSAJE SEGÚN LO QUE HAY QUE LIMPIAR
+    let textoConfirmacion = '¿Estás seguro de que deseas limpiar ';
+    if (tieneProductos && tieneCliente) {
+        textoConfirmacion += 'toda la venta (productos y cliente)?';
+    } else if (tieneProductos) {
+        textoConfirmacion += 'todos los productos del carrito?';
+    } else {
+        textoConfirmacion += 'el cliente seleccionado?';
+    }
 
     const confirmacion = await Swal.fire({
         title: '¿Limpiar carrito?',
-        text: '¿Estás seguro de que deseas limpiar toda la venta?',
+        text: textoConfirmacion,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -1500,6 +1517,7 @@ async function limpiarVenta() {
     });
 
     if (confirmacion.isConfirmed) {
+        // ✅ LIMPIAR SIEMPRE TODO INDEPENDIENTEMENTE DE QUE HAYA O NO
         productosEnVenta = [];
         clienteSeleccionado = null;
         facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
@@ -1523,7 +1541,18 @@ async function limpiarVenta() {
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
         $('#btnGuardarProforma').show();
-        mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
+        
+        // ✅ MENSAJE DINÁMICO SEGÚN LO QUE SE LIMPIÓ
+        let mensajeLimpieza = 'Venta limpiada';
+        if (tieneProductos && tieneCliente) {
+            mensajeLimpieza = 'Se han removido todos los productos y el cliente seleccionado';
+        } else if (tieneProductos) {
+            mensajeLimpieza = 'Se han removido todos los productos';
+        } else {
+            mensajeLimpieza = 'Se ha removido el cliente seleccionado';
+        }
+        
+        mostrarToast('Venta limpiada', mensajeLimpieza, 'info');
     }
 }
 
@@ -5103,98 +5132,156 @@ function abrirModalNuevoCliente() {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <!-- Información adicional -->
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
+                            <ul class="mb-0 small">
+                                <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
+                                <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos con guiones)</li>
+                                <li><strong>DIMEX/NITE:</strong> Formato XXXXXXXXXXXX (12 dígitos sin guiones)</li>
+                                <li><strong>Pasaporte:</strong> Formato libre alfanumérico</li>
+                                <li><strong>Teléfono Costa Rica:</strong> 8 dígitos (ej: 88888888)</li>
+                            </ul>
+                        </div>
+
                         <form id="formNuevoClienteFacturacion">
-                            <!-- Información básica -->
+                            <input type="hidden" id="clienteId" value="0">
+
+                            <!-- Nombre -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <label for="nombreClienteFacturacion" class="form-label">
                                         <i class="bi bi-person me-1"></i>Nombre Completo *
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
                                            id="nombreClienteFacturacion" 
-                                           name="nombre" 
+                                           name="nombre"
                                            placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="emailClienteFacturacion" class="form-label">
-                                        <i class="bi bi-envelope me-1"></i>Email
-                                    </label>
-                                    <input type="email" 
-                                           class="form-control" 
-                                           id="emailClienteFacturacion" 
-                                           name="email"
-                                           placeholder="cliente@ejemplo.com">
-                                    <div class="invalid-feedback"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Nombre válido
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Nombre completo del cliente (mínimo 2 caracteres)
+                                    </small>
                                 </div>
                             </div>
 
-                            <!-- Tipo de identificación -->
+                            <!-- Tipo de Identificación -->
                             <div class="row mb-3">
                                 <div class="col-12">
                                     <label class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Tipo de Identificación
+                                        <i class="bi bi-card-text me-1"></i>Tipo de Identificación
                                     </label>
-                                    <div class="btn-group w-100" role="group" id="tipoIdentificacion">
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
-                                        <label class="btn btn-outline-primary" for="tipoNacional">
-                                            <i class="bi bi-flag me-1"></i>Cédula Nacional (CR)
-                                        </label>
-                                        
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
-                                        <label class="btn btn-outline-info" for="tipoJuridica">
-                                            <i class="bi bi-building me-1"></i>Cédula Jurídica
-                                        </label>
-                                        
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoExtranjera" value="extranjera">
-                                        <label class="btn btn-outline-success" for="tipoExtranjera">
-                                            <i class="bi bi-globe me-1"></i>Extranjera
-                                        </label>
-                                        
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoOtro" value="otro">
-                                        <label class="btn btn-outline-secondary" for="tipoOtro">
-                                            <i class="bi bi-card-text me-1"></i>Otro Documento
-                                        </label>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
+                                                <label class="form-check-label" for="tipoNacional">
+                                                    <i class="bi bi-flag me-1"></i>Nacional
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
+                                                <label class="form-check-label" for="tipoJuridica">
+                                                    <i class="bi bi-building me-1"></i>Jurídica
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoDimex" value="dimex">
+                                                <label class="form-check-label" for="tipoDimex">
+                                                    <i class="bi bi-globe me-1"></i>DIMEX/NITE
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoPasaporte" value="pasaporte">
+                                                <label class="form-check-label" for="tipoPasaporte">
+                                                    <i class="bi bi-passport me-1"></i>Pasaporte
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Campo de identificación con validación dinámica -->
+                            <!-- Identificación -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-vcard me-1"></i>
-                                        <span id="labelIdentificacion">Cédula Nacional</span>
+                                <div class="col-12">
+                                    <label for="contactoClienteFacturacion" class="form-label" id="labelIdentificacion">
+                                        <i class="bi bi-flag me-1"></i>Cédula Nacional
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
-                                           id="contactoClienteFacturacion" 
-                                           name="contacto"
+                                           id="contactoClienteFacturacion"
+                                           name="identificacion"
                                            placeholder="1-2345-6789"
                                            maxlength="12">
-                                    <div class="invalid-feedback" id="feedbackIdentificacion"></div>
+                                    <div class="invalid-feedback"></div>
                                     <div class="valid-feedback">
-                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                        <i class="bi bi-check-circle me-1"></i>Identificación válida
                                     </div>
-                                    <small class="form-text" id="helpIdentificacion">
-                                        <span class="text-info">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Formato requerido: X-XXXX-XXXX (9 dígitos)
-                                        </span>
+                                    <small class="form-text text-muted" id="helpIdentificacion">
+                                        <span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXXX-XXXX (9 dígitos)</span>
                                     </small>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="telefonoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                            </div>
+
+                            <!-- Email -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="emailClienteFacturacion" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Correo Electrónico
                                     </label>
-                                    <input type="tel" 
+                                    <input type="email" 
                                            class="form-control" 
-                                           id="telefonoClienteFacturacion" 
-                                           name="telefono"
-                                           placeholder="8888-8888"
-                                           maxlength="9">
+                                           id="emailClienteFacturacion"
+                                           name="email"
+                                           placeholder="cliente@ejemplo.com">
+                                    <div class="invalid-feedback"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Email válido
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Correo electrónico válido (opcional)
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="telefonoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Teléfono / WhatsApp
+                                    </label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="codigoPaisCliente" style="max-width: 120px;">
+                                            <option value="+506" data-pais="CR" selected>🇨🇷 +506</option>
+                                            <option value="+1" data-pais="US">🇺🇸 +1</option>
+                                            <option value="+52" data-pais="MX">🇲🇽 +52</option>
+                                            <option value="+57" data-pais="CO">🇨🇴 +57</option>
+                                            <option value="+58" data-pais="VE">🇻🇪 +58</option>
+                                            <option value="+507" data-pais="PA">🇵🇦 +507</option>
+                                            <option value="+503" data-pais="SV">🇸🇻 +503</option>
+                                            <option value="+502" data-pais="GT">🇬🇹 +502</option>
+                                            <option value="+504" data-pais="HN">🇭🇳 +504</option>
+                                            <option value="+505" data-pais="NI">🇳🇮 +505</option>
+                                            <option value="+34" data-pais="ES">🇪🇸 +34</option>
+                                        </select>
+                                        <input type="tel" 
+                                               class="form-control" 
+                                               id="telefonoClienteFacturacion" 
+                                               name="telefono"
+                                               placeholder="8888-8888"
+                                               maxlength="9">
+                                    </div>
                                     <div class="invalid-feedback"></div>
                                     <div class="valid-feedback">
                                         <i class="bi bi-check-circle me-1"></i>Formato correcto
@@ -5214,25 +5301,14 @@ function abrirModalNuevoCliente() {
                                     <textarea class="form-control" 
                                               id="direccionClienteFacturacion" 
                                               name="direccion"
-                                              rows="2"
-                                              placeholder="Dirección completa del cliente"
-                                              maxlength="200"></textarea>
+                                              rows="3"
+                                              placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                              maxlength="500"></textarea>
                                     <div class="invalid-feedback"></div>
                                     <small class="form-text text-muted">
                                         Dirección física o postal del cliente
                                     </small>
                                 </div>
-                            </div>
-
-                            <!-- Información adicional -->
-                            <div class="alert alert-info">
-                                <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
-                                <ul class="mb-0 small">
-                                    <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
-                                    <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos, debe iniciar con 3)</li>
-                                    <li><strong>Extranjera/Otro:</strong> Formato libre (mínimo 3 caracteres)</li>
-                                    <li><strong>Email:</strong> Se verificará que no esté registrado previamente</li>
-                                </ul>
                             </div>
                         </form>
                     </div>
@@ -5265,7 +5341,6 @@ function abrirModalNuevoCliente() {
 
     modal.show();
 }
-
 function configurarEventosModalNuevoCliente() {
     // Cambio de tipo de identificación
     $('input[name="tipoIdentificacion"]').on('change', function () {
@@ -5659,7 +5734,7 @@ async function guardarNuevoCliente() {
             // Cerrar modal
             $('#modalNuevoClienteFacturacion').modal('hide');
 
-            // Seleccionar el cliente creado automáticamente
+            // Seleccionar el cliente creado automáticamente1
             seleccionarCliente({
                 id: resultado.clienteId,
                 nombre: clienteData.nombreCliente,
@@ -6015,6 +6090,14 @@ function actualizarEstadoBotonFinalizar() {
     const puedeFinalizarVenta = tieneProductos && tieneCliente;
 
     const $btnFinalizar = $('#btnFinalizarVenta');
+    const $btnLimpiar = $('#btnLimpiarVenta'); // ✅ AGREGAR REFERENCIA AL BOTÓN LIMPIAR
+
+    // ✅ HABILITAR BOTÓN LIMPIAR SI HAY PRODUCTOS O CLIENTE SELECCIONADO
+    if (tieneProductos || tieneCliente) {
+        $btnLimpiar.prop('disabled', false);
+    } else {
+        $btnLimpiar.prop('disabled', true);
+    }
 
     if (puedeFinalizarVenta) {
         $btnFinalizar.prop('disabled', false)
@@ -6039,7 +6122,8 @@ function actualizarEstadoBotonFinalizar() {
         tieneProductos,
         tieneCliente,
         puedeFinalizarVenta,
-        disabled: $btnFinalizar.prop('disabled')
+        disabled: $btnFinalizar.prop('disabled'),
+        limpiarDisabled: $btnLimpiar.prop('disabled') // ✅ AGREGAR LOG DEL BOTÓN LIMPIAR
     });
 }
 
