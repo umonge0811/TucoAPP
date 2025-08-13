@@ -16,6 +16,16 @@ const CONFIG_TERMICA = {
     TIMEOUT_IMPRESION: 15000,
     DELAY_CERRAR_VENTANA: 1000,
     
+    // ===== CONFIGURACIÓN DE LA EMPRESA =====
+    EMPRESA: {
+        nombre: 'LLANTAS Y MÁS TC',
+        descripcion: 'Sistema de Facturación',
+        telefono: '(506) 8916-6180',
+        correo: 'info@llantasymastc.com',
+        sitioWeb: 'www.llantasymastc.com',
+        desarrolladoPor: 'Desarrollado por TUCO Systems' // Opcional
+    },
+    
     // Estilos para diferentes tipos de documento
     ESTILOS: {
         factura: {
@@ -188,12 +198,14 @@ function construirContenidoRecibo(datosFactura, productos, totales, tipoDocument
  */
 function construirEncabezado(numeroFactura, tipoDocumento) {
     const config = CONFIG_TERMICA.ESTILOS[tipoDocumento] || CONFIG_TERMICA.ESTILOS.factura;
+    const empresa = CONFIG_TERMICA.EMPRESA;
     
     return `
         <div class="encabezado-termico">
-            <div class="nombre-empresa-termico">GESTIÓN LLANTERA</div>
-            <div class="info-empresa-termico">Sistema de Facturación</div>
-            <div class="telefono-termico">Tel: (506) 0000-0000</div>
+            <div class="nombre-empresa-termico">${empresa.nombre}</div>
+            <div class="info-empresa-termico">${empresa.descripcion}</div>
+            <div class="telefono-termico">Tel: ${empresa.telefono}</div>
+            <div class="info-empresa-termico">Correo: ${empresa.correo}</div>
             <div class="tipo-documento-termico">${config.titulo}</div>
             <div class="numero-factura-termico">No. ${numeroFactura || 'N/A'}</div>
         </div>
@@ -470,11 +482,14 @@ function construirSeccionProforma(numeroFactura) {
  * Construir pie de página
  */
 function construirPiePagina(fecha, hora) {
+    const empresa = CONFIG_TERMICA.EMPRESA;
+    
     return `
         <div class="pie-pagina-termico">
             <div>¡Gracias por su compra!</div>
             <div>Vuelva pronto</div>
-            <div>www.gestionllantera.com</div>
+            <div>${empresa.sitioWeb}</div>
+            ${empresa.desarrolladoPor ? `<div style="font-size: 11px; margin-top: 2mm; color: #666;">${empresa.desarrolladoPor}</div>` : ''}
             <div class="fecha-generacion-termico">Recibo: ${fecha} ${hora}</div>
         </div>
     `;
