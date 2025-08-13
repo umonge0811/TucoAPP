@@ -1,0 +1,849 @@
+/**
+ * Verificar stock de productos de una factura pendiente
+ */
+async function verificarStockFacturaPendiente(facturaId) {
+    try {
+        console.log('📦 === VERIFICANDO STOCK PARA FACTURA ===');
+        console.log('📦 Factura ID:', facturaId);
+        
+        const response = await fetch('/Facturacion/VerificarStockFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ facturaId: facturaId }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', response.status, errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📦 === RESPUESTA DEL SERVIDOR ===');
+        console.log('📦 Resultado completo:', JSON.stringify(resultado, null, 2));
+        console.log('📦 Tipo:', typeof resultado);
+        console.log('📦 Propiedades:', Object.keys(resultado || {}));
+        
+        // ✅ PROCESAMIENTO SIMPLIFICADO Y ROBUSTO
+        let tieneProblemas = false;
+        let productosConProblemas = [];
+        let success = true;
+        let message = 'Verificación completada';
+
+        if (resultado) {
+            // 1. Verificar si la operación fue exitosa
+            if (resultado.success === false || resultado.error) {
+                success = false;
+                message = resultado.message || resultado.error || 'Error en la verificación';
+            }
+
+            // 2. Detectar problemas de stock
+            tieneProblemas = resultado.hayProblemasStock === true || 
+                           resultado.tieneProblemas === true ||
+                           (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas) && resultado.productosConProblemas.length > 0);
+
+            // 3. Extraer productos con problemas
+            if (resultado.productosConProblemas) {
+                if (Array.isArray(resultado.productosConProblemas)) {
+                    productosConProblemas = resultado.productosConProblemas;
+                } else if (typeof resultado.productosConProblemas === 'object') {
+                    // Si es un objeto, buscar arrays dentro
+                    for (const [key, value] of Object.entries(resultado.productosConProblemas)) {
+                        if (Array.isArray(value)) {
+                            productosConProblemas = value;
+                            console.log(`📦 Productos encontrados en '${key}':`, value.length);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 4. Normalizar productos con problemas
+            productosConProblemas = productosConProblemas.map(producto => ({
+                productoId: producto.productoId || producto.ProductoId || 0,
+                nombreProducto: producto.nombreProducto || producto.NombreProducto || 'Producto sin nombre',
+                descripcion: producto.descripcion || producto.Descripcion || '',
+                precio: producto.precio || producto.Precio || 0,
+                cantidadRequerida: producto.cantidadRequerida || producto.CantidadRequerida || 0,
+                stockDisponible: producto.stockDisponible || producto.StockDisponible || 0,
+                problema: producto.problema || 'Stock insuficiente'
+            }));
+
+            // 5. Actualizar mensaje
+            if (tieneProblemas) {
+                message = `Se encontraron ${productosConProblemas.length} productos con problemas de stock`;
+            }
+        }
+        
+        console.log('📦 === RESULTADO FINAL ===');
+        console.log('📦 Success:', success);
+        console.log('📦 Tiene problemas:', tieneProblemas);
+        console.log('📦 Productos con problemas:', productosConProblemas.length);
+        console.log('📦 Productos normalizados:', productosConProblemas);
+        
+        return {
+            success: success,
+            tieneProblemas: tieneProblemas,
+            productosConProblemas: productosConProblemas,
+            message: message
+        };
+        
+    } catch (error) {
+        console.error('❌ Error verificando stock:', error);
+        return { 
+            success: false, 
+            tieneProblemas: false, 
+            productosConProblemas: [],
+            message: error.message || 'Error de conexión'
+        };
+    }
+}
+
+/**
+ * Mostrar modal con problemas de stock
+ */
+function mostrarModalProblemasStock(productosConProblemas, factura) {
+    console.log('⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===');
+    console.log('⚠️ Productos recibidos:', productosConProblemas);
+    console.log('⚠️ Factura:', factura);
+    
+    // Validar entrada
+    if (!Array.isArray(productosConProblemas) || productosConProblemas.length === 0) {
+        console.error('❌ Array de productos inválido o vacío');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Sin problemas de stock',
+            text: 'No se encontraron productos con problemas de stock para mostrar',
+            confirmButtonColor: '#ffc107'
+        });
+        return;
+    }
+    
+    try {
+        console.log('⚠️ Inicializando modal de problemas de stock...');
+        
+        // Verificar que el modal existe en el DOM
+        const modalElement = document.getElementById('problemasStockModal');
+        if (!modalElement) {
+            console.error('❌ Modal problemasStockModal no encontrado en el DOM');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error del sistema',
+                text: 'El modal de problemas de stock no está disponible',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+        
+        // ✅ VARIABLE PARA CONTROLAR SI EL MODAL SE CERRÓ POR UNA ACCIÓN VÁLIDA
+        let modalCerradoPorAccion = false;
+        
+        // ✅ LIMPIAR EVENTOS ANTERIORES Y CONFIGURAR NUEVO COMPORTAMIENTO
+        $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function() {
+            console.log('🔍 === MODAL PROBLEMAS STOCK CERRADO ===');
+            console.log('🔍 Modal cerrado por acción válida:', modalCerradoPorAccion);
+            
+            // Solo limpiar carrito si NO fue cerrado por una acción válida
+            if (!modalCerradoPorAccion) {
+                console.log('❌ === MODAL CERRADO SIN ACCIÓN VÁLIDA ===');
+                console.log('❌ Limpiando carrito por cancelación del usuario');
+                
+                // Limpiar carrito completamente
+                productosEnVenta = [];
+                clienteSeleccionado = null;
+                facturaPendienteActual = null;
+                
+                // Limpiar interfaz
+                $('#clienteBusqueda').val('');
+                $('#clienteSeleccionado').addClass('d-none');
+                actualizarVistaCarrito();
+                actualizarTotales();
+                actualizarEstadoBotonFinalizar();
+                
+                // Mostrar notificación
+                mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
+                
+                console.log('✅ Carrito limpiado por cancelación');
+            } else {
+                console.log('✅ Modal cerrado por acción válida - carrito mantenido');
+            }
+            
+            // Resetear la variable para futuros usos
+            modalCerradoPorAccion = false;
+        });
+        
+        // ✅ FUNCIÓN HELPER PARA MARCAR CIERRE VÁLIDO
+        window.marcarCierreValidoProblemasStock = function() {
+            modalCerradoPorAccion = true;
+        };
+        
+        // ✅ CONFIGURAR EVENTOS DE LOS BOTONES DEL MODAL
+        configurarEventosModalProblemasStock();
+        
+        // Mostrar modal
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        // Estado inicial: mostrar loading
+        $('#problemasStockLoading').show();
+        $('#problemasStockContent').hide();
+        
+        // Procesar y mostrar productos después de un breve delay
+        setTimeout(() => {
+            mostrarProductosConProblemas(productosConProblemas, factura);
+        }, 300);
+        
+    } catch (error) {
+        console.error('❌ Error mostrando modal de problemas:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo mostrar el modal de problemas de stock',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+function mostrarProductosConProblemas(productos, factura) {
+    console.log('⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===');
+    console.log('⚠️ Cantidad de productos:', productos?.length || 0);
+    console.log('⚠️ Productos detallados:', productos);
+    console.log('⚠️ Factura:', factura);
+    
+    try {
+        // Validar productos
+        if (!Array.isArray(productos) || productos.length === 0) {
+            console.error('❌ No hay productos válidos para mostrar');
+            $('#problemasStockLoading').hide();
+            $('#problemasStockContent').html(`
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No se encontraron productos con problemas de stock específicos.
+                </div>
+            `).show();
+            return;
+        }
+        
+        // Extraer información de la factura
+        const numeroFactura = factura?.numeroFactura || facturaPendienteActual?.numeroFactura || 'N/A';
+        const nombreCliente = factura?.nombreCliente || clienteSeleccionado?.nombre || 'Cliente General';
+        
+        console.log('⚠️ Información de la factura extraída:', {
+            numeroFactura,
+            nombreCliente
+        });
+        
+        // Generar HTML de la tabla
+        let html = '';
+        let productosValidos = 0;
+        
+        productos.forEach((producto, index) => {
+            try {
+                // Validar estructura del producto
+                const productoId = producto.productoId || producto.ProductoId || index;
+                const nombreProducto = producto.nombreProducto || producto.NombreProducto || `Producto ${index + 1}`;
+                const cantidadRequerida = parseInt(producto.cantidadRequerida || producto.CantidadRequerida || 0);
+                const stockDisponible = parseInt(producto.stockDisponible || producto.StockDisponible || 0);
+                const faltante = Math.max(0, cantidadRequerida - stockDisponible);
+                
+                console.log(`⚠️ Procesando producto ${index + 1}:`, {
+                    productoId,
+                    nombreProducto,
+                    cantidadRequerida,
+                    stockDisponible,
+                    faltante
+                });
+                
+                // Solo mostrar si realmente hay problema
+                if (cantidadRequerida > stockDisponible) {
+                    html += `
+                        <tr class="problema-stock-row" data-producto-id="${productoId}">
+                            <td>
+                                <strong>${nombreProducto}</strong>
+                                <br><small class="text-muted">ID: ${productoId}</small>
+                                ${producto.descripcion ? `<br><small class="text-muted">${producto.descripcion}</small>` : ''}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">${cantidadRequerida}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge ${stockDisponible > 0 ? 'bg-warning' : 'bg-danger'}">${stockDisponible}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">${faltante}</span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger btn-eliminar-problema" 
+                                        data-producto-id="${productoId}"
+                                        title="Eliminar este producto de la factura">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    productosValidos++;
+                }
+            } catch (error) {
+                console.error(`❌ Error procesando producto ${index}:`, error, producto);
+            }
+        });
+        
+        console.log('⚠️ Productos válidos con problemas:', productosValidos);
+        
+        if (productosValidos === 0) {
+            $('#problemasStockLoading').hide();
+            $('#problemasStockContent').html(`
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Todos los productos tienen stock suficiente.
+                </div>
+            `).show();
+            return;
+        }
+        
+        // Actualizar información de la factura
+        $('#problemasStockFactura').text(numeroFactura);
+        $('#problemasStockCliente').text(nombreCliente);
+        
+        // Actualizar tabla
+        $('#problemasStockTableBody').html(html);
+        
+        // ✅ CONFIGURAR EVENTOS PARA BOTONES DE ELIMINAR PRODUCTO
+        $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productoId = $(this).data('producto-id');
+            console.log('🗑️ Eliminar producto problema ID:', productoId);
+            eliminarProductoProblema(productoId);
+        });
+        
+        // Mostrar contenido y ocultar loading
+        $('#problemasStockLoading').hide();
+        $('#problemasStockContent').show();
+        
+        console.log('✅ Modal de problemas de stock mostrado correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error en mostrarProductosConProblemas:', error);
+        $('#problemasStockLoading').hide();
+        $('#problemasStockContent').html(`
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error al procesar los problemas de stock: ${error.message}
+            </div>
+        `).show();
+    }
+}
+
+/**
+ * Eliminar producto con problema de stock
+ */
+function eliminarProductoProblema(productoId) {
+    console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA ===');
+    console.log('🗑️ Producto ID:', productoId);
+    console.log('🗑️ Factura pendiente actual:', facturaPendienteActual);
+    
+    // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE
+    if (facturaPendienteActual && facturaPendienteActual.facturaId) {
+        // Si es factura pendiente, usar endpoint del servidor
+        eliminarProductoConProblema(facturaPendienteActual.facturaId, productoId);
+    } else {
+        // Si es carrito local, eliminar directamente
+        const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+        if (indiceEnCarrito !== -1) {
+            const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+            productosEnVenta.splice(indiceEnCarrito, 1);
+            actualizarVistaCarrito();
+            actualizarTotales();
+            
+            // Ocultar fila en la tabla
+            $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                $(this).remove();
+            });
+            
+            mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
+        }
+    }
+}
+
+/**
+ * Registrar productos pendientes de entrega y capturar códigos de seguimiento
+ */
+async function registrarProductosPendientesEntrega(facturaId, productosConProblemas) {
+    try {
+        console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===');
+        console.log('📦 Factura ID:', facturaId);
+        console.log('📦 Productos con problemas recibidos:', productosConProblemas);
+        
+        if (!productosConProblemas || productosConProblemas.length === 0) {
+            console.log('📦 No hay productos pendientes para registrar');
+            return { success: true, message: 'No hay productos pendientes' };
+        }
+
+        // Obtener información del usuario actual
+        const usuarioActual = obtenerUsuarioActual();
+        const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
+
+        // Estructura correcta que espera el controlador
+        const datosRegistro = {
+            facturaId: facturaId,
+            usuarioCreacion: usuarioId,
+            productosPendientes: productosConProblemas.map(producto => {
+                // Normalizar datos del producto
+                const cantidadRequerida = producto.cantidadRequerida || producto.cantidadRequirida || producto.cantidad || 0;
+                const stockDisponible = producto.stockDisponible || producto.stock || 0;
+                const cantidadPendiente = Math.max(0, cantidadRequerida - stockDisponible);
+                
+                console.log(`📦 Procesando producto ${producto.productoId}:`, {
+                    cantidadRequerida,
+                    stockDisponible,
+                    cantidadPendiente
+                });
+                
+                return {
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto || 'Sin nombre',
+                    cantidadSolicitada: cantidadRequerida,
+                    cantidadPendiente: cantidadPendiente,
+                    stockDisponible: stockDisponible,
+                    precioUnitario: producto.precioUnitario || 0,
+                    observaciones: `Stock insuficiente al momento de la facturación. Disponible: ${stockDisponible}, Requerido: ${cantidadRequerida}`
+                };
+            })
+        };
+
+        console.log('📦 Datos a enviar al servidor:', JSON.stringify(datosRegistro, null, 2));
+
+        const response = await fetch('/Facturacion/RegistrarPendientesEntrega', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(datosRegistro),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📦 === RESPUESTA COMPLETA DEL SERVIDOR ===');
+        console.log('📦 Resultado completo:', resultado);
+        console.log('📦 Tipo de resultado:', typeof resultado);
+        console.log('📦 Propiedades:', Object.keys(resultado || {}));
+
+        if (resultado.success) {
+            console.log('✅ Productos pendientes registrados exitosamente');
+            
+            // ✅ CAPTURAR CÓDIGOS DE SEGUIMIENTO CON MÚLTIPLES ESTRATEGIAS
+            let codigosCapturados = [];
+            
+            // Estrategia 1: Desde pendientesCreados directo
+            if (resultado.pendientesCreados && Array.isArray(resultado.pendientesCreados)) {
+                console.log('🎫 Capturando desde resultado.pendientesCreados...');
+                codigosCapturados = resultado.pendientesCreados.map(pendiente => ({
+                    productoId: pendiente.productoId,
+                    nombreProducto: pendiente.nombreProducto,
+                    cantidadPendiente: pendiente.cantidadPendiente,
+                    codigoSeguimiento: pendiente.codigoSeguimiento
+                }));
+            }
+            // Estrategia 2: Desde data.pendientesCreados
+            else if (resultado.data && resultado.data.pendientesCreados && Array.isArray(resultado.data.pendientesCreados)) {
+                console.log('🎫 Capturando desde resultado.data.pendientesCreados...');
+                codigosCapturados = resultado.data.pendientesCreados.map(pendiente => ({
+                    productoId: pendiente.productoId,
+                    nombreProducto: pendiente.nombreProducto,
+                    cantidadPendiente: pendiente.cantidadPendiente,
+                    codigoSeguimiento: pendiente.codigoSeguimiento
+                }));
+            }
+            // Estrategia 3: Buscar en cualquier propiedad que sea array
+            else {
+                console.log('🔍 Buscando códigos en otras propiedades...');
+                for (const [key, value] of Object.entries(resultado)) {
+                    if (Array.isArray(value) && value.length > 0) {
+                        const firstItem = value[0];
+                        if (firstItem && firstItem.codigoSeguimiento) {
+                            console.log(`🎫 Códigos encontrados en resultado.${key}`);
+                            codigosCapturados = value.map(pendiente => ({
+                                productoId: pendiente.productoId,
+                                nombreProducto: pendiente.nombreProducto,
+                                cantidadPendiente: pendiente.cantidadPendiente,
+                                codigoSeguimiento: pendiente.codigoSeguimiento
+                            }));
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // ✅ GUARDAR CÓDIGOS GLOBALMENTE
+            if (codigosCapturados.length > 0) {
+                window.codigosSeguimientoPendientes = codigosCapturados;
+                console.log('🎫 === CÓDIGOS DE SEGUIMIENTO CAPTURADOS ===');
+                console.log('🎫 Cantidad:', codigosCapturados.length);
+                console.log('🎫 Códigos:', window.codigosSeguimientoPendientes);
+                codigosCapturados.forEach((codigo, index) => {
+                    console.log(`🎫 ${index + 1}. ${codigo.nombreProducto}: ${codigo.codigoSeguimiento}`);
+                });
+            } else {
+                console.warn('⚠️ No se pudieron capturar códigos de seguimiento de la respuesta');
+                // Fallback: generar códigos básicos
+                window.codigosSeguimientoPendientes = productosConProblemas.map((producto, index) => ({
+                    productoId: producto.productoId,
+                    nombreProducto: producto.nombreProducto,
+                    cantidadPendiente: producto.cantidadPendiente || Math.max(0, (producto.cantidadRequerida || 0) - (producto.stockDisponible || 0)),
+                    codigoSeguimiento: `FAC-${facturaId}-${producto.productoId}`
+                }));
+                console.log('🎫 Códigos fallback generados:', window.codigosSeguimientoPendientes);
+            }
+            
+            const cantidadRegistrados = resultado.pendientesCreados?.length || codigosCapturados.length || productosConProblemas.length;
+            mostrarToast('Productos Pendientes', 
+                `Se registraron ${cantidadRegistrados} productos para entrega posterior`, 
+                'info');
+            return resultado;
+        } else {
+            throw new Error(resultado.message || 'Error al registrar productos pendientes');
+        }
+
+    } catch (error) {
+        console.error('❌ Error registrando productos pendientes:', error);
+        mostrarToast('Error', 'No se pudieron registrar los productos pendientes: ' + error.message, 'warning');
+        return { success: false, message: error.message };
+    }
+}
+
+/**
+ * Eliminar producto con problema de stock desde el endpoint del servidor
+ */
+async function eliminarProductoConProblema(facturaId, productoId) {
+    try {
+        console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA DE STOCK ===');
+        console.log('🗑️ Factura ID:', facturaId);
+        console.log('🗑️ Producto ID:', productoId);
+        
+        const confirmacion = await Swal.fire({
+            title: '¿Eliminar producto?',
+            text: '¿Está seguro de que desea eliminar este producto de la factura?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        const response = await fetch('/Facturacion/EliminarProductosFactura', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                facturaId: facturaId,
+                productosAEliminar: [productoId]
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Respuesta del servidor:', resultado);
+
+        if (resultado.success) {
+            // Eliminar producto del carrito local
+            const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId === productoId);
+            if (indiceEnCarrito !== -1) {
+                const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+                productosEnVenta.splice(indiceEnCarrito, 1);
+                
+                // Actualizar vista del carrito
+                actualizarVistaCarrito();
+                actualizarTotales();
+                actualizarEstadoBotonFinalizar();
+                
+                // Mostrar confirmación de eliminación con SweetAlert
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Producto Eliminado!',
+                    text: `${nombreProducto} ha sido eliminado exitosamente de la factura`,
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#28a745',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: true
+                });
+                
+                // Ocultar fila en la tabla de problemas
+                $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                    $(this).remove();
+                    
+                    // Verificar si quedan productos con problemas
+                    const problemasRestantes = $('.problema-stock-row').length;
+                    console.log('🔍 Problemas restantes:', problemasRestantes);
+                    
+                    if (problemasRestantes === 0) {
+                        console.log('✅ No quedan productos con problemas - cerrando modal y abriendo finalización');
+                        
+                        // ✅ PRESERVAR INFORMACIÓN DE LA FACTURA ANTES DE CONTINUAR
+                        if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+                            console.log('📋 Preservando número de factura:', facturaPendienteActual.numeroFactura);
+                            
+                            // Asegurar que la factura pendiente mantenga su información
+                            window.facturaParaRecibo = {
+                                numeroFactura: facturaPendienteActual.numeroFactura,
+                                nombreCliente: facturaPendienteActual.nombreCliente || clienteSeleccionado?.nombre,
+                                usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre
+                            };
+                        }
+                        
+                        // Marcar cierre válido para evitar limpiar carrito
+                        if (window.marcarCierreValidoProblemasStock) {
+                            window.marcarCierreValidoProblemasStock();
+                        }
+                        
+                        // Cerrar modal de problemas
+                        $('#problemasStockModal').modal('hide');
+                        
+                        // Abrir modal de finalización después de un breve delay
+                        setTimeout(() => {
+                            if (productosEnVenta.length > 0) {
+                                mostrarModalFinalizarVenta();
+                            } else {
+                                mostrarToast('Carrito vacío', 'No quedan productos para finalizar la venta', 'warning');
+                            }
+                        }, 500);
+                    }
+                });
+                
+                console.log('✅ Producto eliminado exitosamente');
+            }
+            
+            // Actualizar carrito después de eliminar
+            actualizarCarritoDespuesDeEliminar([productoId]);
+            
+        } else {
+            throw new Error(resultado.message || 'Error al eliminar el producto');
+        }
+
+    } catch (error) {
+        console.error('❌ Error eliminando producto:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo eliminar el producto: ' + error.message,
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+/**
+ * Actualizar carrito después de eliminar productos de una factura
+ */
+function actualizarCarritoDespuesDeEliminar(productosEliminados) {
+    console.log('🔄 === ACTUALIZANDO CARRITO DESPUÉS DE ELIMINAR ===');
+    console.log('🔄 Productos a eliminar del carrito:', productosEliminados);
+    console.log('🔄 Estado inicial del carrito:', productosEnVenta.length, 'productos');
+
+    try {
+        // ✅ ELIMINAR PRODUCTOS DEL CARRITO LOCAL
+        productosEliminados.forEach(productoId => {
+            const indiceEnCarrito = productosEnVenta.findIndex(p => p.productoId == productoId);
+            if (indiceEnCarrito !== -1) {
+                const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
+                productosEnVenta.splice(indiceEnCarrito, 1);
+                console.log('🗑️ Producto eliminado del carrito:', nombreProducto);
+            }
+        });
+
+        console.log('🔄 Estado final del carrito:', productosEnVenta.length, 'productos');
+
+        // ✅ ACTUALIZAR VISTA DEL CARRITO
+        actualizarVistaCarrito();
+        actualizarTotales();
+        actualizarEstadoBotonFinalizar();
+
+        // ✅ LIMPIAR ESTADO DE FACTURA PENDIENTE SI NO QUEDAN PRODUCTOS
+        if (productosEnVenta.length === 0) {
+            facturaPendienteActual = null;
+            clienteSeleccionado = null;
+            $('#clienteBusqueda').val('');
+            $('#clienteSeleccionado').addClass('d-none');
+            console.log('🧹 Carrito limpiado completamente - no quedan productos');
+        }
+
+        console.log('✅ Carrito actualizado exitosamente después de eliminar productos');
+
+    } catch (error) {
+        console.error('❌ Error actualizando carrito después de eliminar:', error);
+    }
+}
+
+/**
+ * Configurar eventos de los botones del modal de problemas de stock
+ */
+function configurarEventosModalProblemasStock() {
+    console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
+    
+    // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
+    $(document).off('click.problemasStock', '#btnFacturarTodosModos');
+    $(document).off('click.problemasStock', '#btnCancelarProblemasStock');
+    
+    // ✅ CONFIGURAR EVENTO FACTURAR DE TODOS MODOS (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnFacturarTodosModos', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('✅ BOTÓN FACTURAR DE TODOS MODOS CLICKEADO');
+        facturarTodosModos();
+    });
+    
+    // ✅ CONFIGURAR EVENTO CANCELAR (delegación de eventos)
+    $(document).on('click.problemasStock', '#btnCancelarProblemasStock', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('❌ BOTÓN CANCELAR CLICKEADO');
+        cancelarProblemasStock();
+    });
+    
+    console.log('✅ Eventos del modal de problemas de stock configurados con delegación');
+}
+
+/**
+ * Facturar de todos modos - Crear registros pendientes para productos sin stock
+ */
+async function facturarTodosModos() {
+    console.log('⚠️ === FACTURAR DE TODOS MODOS ===');
+    console.log('⚠️ Usuario decidió facturar con productos pendientes de entrega');
+    
+    try {
+        // ✅ CONFIRMAR LA ACCIÓN CON EL USUARIO
+        const confirmacion = await Swal.fire({
+            title: '¿Facturar de todos modos?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Esta acción:</strong></p>
+                    <ul>
+                        <li>Creará la factura con todos los productos</li>
+                        <li>Los productos sin stock quedarán pendientes de entrega</li>
+                        <li>Se registrarán automáticamente para entrega posterior</li>
+                        <li>El cliente recibirá notificación cuando llegue el stock</li>
+                    </ul>
+                    <p class="text-warning"><strong>¿Desea continuar?</strong></p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, Facturar de todos modos',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM CORRECTAMENTE
+        const productosConProblemas = [];
+        $('.problema-stock-row').each(function() {
+            const $fila = $(this);
+            const productoId = $fila.data('producto-id');
+            const nombreProducto = $fila.find('td:first strong').text().trim();
+            
+            // ✅ CAPTURAR CANTIDADES CORRECTAMENTE DESDE LAS COLUMNAS DE LA TABLA
+            const cantidadSolicitada = parseInt($fila.find('td:eq(1) .badge.bg-info').text().trim()) || 0;
+            const stockDisponible = parseInt($fila.find('td:eq(2) .badge.bg-warning, td:eq(2) .badge.bg-danger').text().trim()) || 0;
+            const cantidadPendiente = parseInt($fila.find('td:eq(3) .badge.bg-danger').text().trim()) || 0;
+            
+            console.log(`📦 Procesando producto ${productoId}:`, {
+                nombreProducto,
+                cantidadSolicitada,
+                stockDisponible,
+                cantidadPendiente
+            });
+            
+            if (productoId && cantidadSolicitada > 0) {
+                // Buscar el producto en el carrito para obtener precio
+                const productoEnCarrito = productosEnVenta.find(p => p.productoId == productoId);
+                
+                productosConProblemas.push({
+                    productoId: parseInt(productoId),
+                    nombreProducto: nombreProducto,
+                    cantidadSolicitada: cantidadSolicitada,
+                    cantidadRequerida: cantidadSolicitada, // Alias
+                    cantidadRequirida: cantidadSolicitada, // Alias adicional
+                    cantidad: cantidadSolicitada, // Otro alias
+                    cantidadPendiente: cantidadPendiente > 0 ? cantidadPendiente : Math.max(0, cantidadSolicitada - stockDisponible),
+                    stockDisponible: stockDisponible,
+                    stock: stockDisponible, // Alias adicional
+                    precioUnitario: productoEnCarrito?.precioUnitario || 0
+                });
+            }
+        });
+        
+        console.log('🔍 Productos con problemas capturados correctamente:', productosConProblemas);
+        
+        // ✅ VALIDAR QUE SE CAPTURARON DATOS
+        if (productosConProblemas.length === 0) {
+            console.warn('⚠️ No se capturaron productos con problemas');
+            mostrarToast('Advertencia', 'No se detectaron productos con problemas para procesar', 'warning');
+            return;
+        }
+        
+        // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
+        if (window.marcarCierreValidoProblemasStock) {
+            window.marcarCierreValidoProblemasStock();
+        }
+        
+        // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
+        window.productosPendientesEntrega = productosConProblemas;
+        window.codigosSeguimientoPendientes = []; // Inicializar array para códigos
+        
+        console.log('💾 Productos pendientes guardados globalmente:', window.productosPendientesEntrega);
+        
+        // ✅ CERRAR MODAL DE PROBLEMAS
+        $('#problemasStockModal').modal('hide');
+        
+        // ✅ CONTINUAR CON MODAL DE FINALIZACIÓN DESPUÉS DE UN BREVE DELAY
+        setTimeout(() => {
+            // Agregar flag para indicar que hay pendientes
+            window.facturaConPendientes = true;
+            mostrarModalFinalizarVenta();
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ Error en facturarTodosModos:', error);
+        mostrarToast('Error', 'No se pudo procesar la facturación con pendientes', 'danger');
+    }
+}
+
+
+function cancelarProblemasStock() {
+    console.log('❌ === CANCELANDO MODAL PROBLEMAS DE STOCK ===');
+    console.log('❌ Usuario canceló modal de problemas de stock');
+    
+    // Cerrar modal
+    $('#problemasStockModal').modal('hide');
+    
+    // El evento hidden.bs.modal se encargará de limpiar el carrito
+}
