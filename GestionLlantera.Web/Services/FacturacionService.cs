@@ -395,22 +395,19 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, string estado = null, int tamano = 1000)
+        public async Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, int tamano = 1000)
         {
             try
             {
                 _logger.LogInformation("📋 === OBTENIENDO FACTURAS CON FILTROS ===");
-                _logger.LogInformation("📋 Estado: {Estado}, Tamaño: {Tamano}", estado, tamano);
+                _logger.LogInformation("📋 Estado: {Estado}, Tamaño: {Tamano}",  tamano);
 
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
 
                 // Construir URL con parámetros
                 var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/facturas?tamano={tamano}";
-                if (!string.IsNullOrEmpty(estado) && estado != "todos")
-                {
-                    url += $"&estado={estado}";
-                }
+               
 
                 _logger.LogInformation("📋 URL de consulta: {Url}", url);
 

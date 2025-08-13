@@ -699,7 +699,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // Traer todas las facturas sin filtro de estado
-                var resultado = await _facturacionService.ObtenerTodasLasFacturasAsync();
+                var resultado = await _facturacionService.ObtenerFacturasAsync(token, tamano);
 
                 _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);

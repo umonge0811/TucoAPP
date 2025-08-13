@@ -120,7 +120,7 @@ async function cargarTodasLasFacturasPendientes() {
         $('#facturasPendientesEmpty').hide();
 
         // Realizar petición para obtener TODAS las facturas pendientes
-        const response = await fetch('/Facturacion/ObtenerFacturasPendientes?tamano=1000', {
+        const response = await fetch('/Facturacion/ObtenerFacturas?tamano=1000', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

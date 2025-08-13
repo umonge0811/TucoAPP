@@ -67,7 +67,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Obtiene facturas con filtros opcionales
         /// </summary>
-        Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, string estado = null, int tamano = 1000);
+        Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, int tamano = 1000);
 
         Task<(bool success, object? data, string? message, string? details)> ObtenerFacturaPorIdAsync(int facturaId, string jwtToken = null);
     }
