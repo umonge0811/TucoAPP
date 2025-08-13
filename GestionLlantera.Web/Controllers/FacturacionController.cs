@@ -692,78 +692,87 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerFacturas(int tamano = 1000)
+        public async Task<IActionResult> ObtenerFacturas(string estado = null, int pagina = 1, int tamano = 20)
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo todas las facturas desde el servicio de facturación");
+                _logger.LogInformation("🔍 Obteniendo facturas - Estado: {Estado}, Página: {Pagina}, Tamaño: {Tamano}",
+                    estado ?? "todos", pagina, tamano);
 
-                var token = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    return Json(new { success = false, message = "Sesión expirada" });
-                }
-
-                // Traer todas las facturas sin filtro de estado
-                var resultado = await _facturacionService.ObtenerFacturasAsync(token, tamano);
-
-                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
-                    resultado.success, resultado.message);
+                var resultado = await _facturacionService.ObtenerFacturasAsync(estado, pagina, tamano);
 
                 if (resultado.success && resultado.data != null)
                 {
-                    // El data contiene la respuesta completa del API
-                    try
+                    var facturas = resultado.data as IEnumerable<object>;
+
+                    if (facturas != null)
                     {
-                        // Deserializar la respuesta para extraer las facturas
-                        var jsonData = System.Text.Json.JsonSerializer.Serialize(resultado.data);
-                        var responseElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonData);
+                        _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturas.Count());
 
-                        if (responseElement.TryGetProperty("facturas", out var facturasElement))
+                        return Ok(new
                         {
-                            var facturasList = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
-                            var facturasCount = facturasList?.Count ?? 0;
-
-                            _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturasCount);
-
-                            return Ok(new
-                            {
-                                success = true,
-                                facturas = facturasList,
-                                message = $"Se encontraron {facturasCount} facturas"
-                            });
-                        }
-                        else
-                        {
-                            // Si no hay propiedad facturas, devolver data directamente
-                            return Ok(resultado.data);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "❌ Error procesando respuesta de facturas");
-                        return Ok(resultado.data); // Devolver data sin procesar como fallback
+                            success = true,
+                            facturas = facturas,
+                            message = $"Se encontraron {facturas.Count()} facturas"
+                        });
                     }
                 }
 
-                _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
-                return Json(new
+                _logger.LogWarning("⚠️ No se encontraron facturas");
+                return Ok(new
                 {
-                    success = false,
-                    message = resultado.message ?? "No se pudieron obtener las facturas",
+                    success = true,
                     facturas = new List<object>(),
-                    totalFacturas = 0
+                    message = "No se encontraron facturas"
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo facturas");
-                return Json(new
+                _logger.LogError(ex, "❌ Error obteniendo facturas");
+                return StatusCode(500, new
                 {
                     success = false,
-                    message = "Error interno del servidor",
-                    facturas = new List<object>(),
-                    totalFacturas = 0
+                    message = "Error interno del servidor al obtener facturas"
+                });
+            }
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDetalleFactura(int facturaId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Obteniendo detalle de factura ID: {FacturaId}", facturaId);
+
+                var resultado = await _facturacionService.ObtenerDetalleFacturaAsync(facturaId);
+
+                if (resultado.success && resultado.data != null)
+                {
+                    _logger.LogInformation("✅ Detalle de factura obtenido exitosamente");
+
+                    return Ok(new
+                    {
+                        success = true,
+                        factura = resultado.data,
+                        message = "Detalle de factura obtenido correctamente"
+                    });
+                }
+
+                _logger.LogWarning("⚠️ No se encontró la factura con ID: {FacturaId}", facturaId);
+                return NotFound(new
+                {
+                    success = false,
+                    message = "No se encontró la factura especificada"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo detalle de factura ID: {FacturaId}", facturaId);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error interno del servidor al obtener detalle de factura"
                 });
             }
         }
