@@ -3982,17 +3982,22 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
 
         // ✅ PREPARAR INFORMACIÓN DE PAGO MÚLTIPLE PARA EL RECIBO
         let infoPagoMultiple = null;
+        let detallesPagoParaRecibo = null;
+        
         if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 0) {
+            detallesPagoParaRecibo = detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || ''
+            }));
+            
             infoPagoMultiple = {
                 metodoPago: 'Multiple',
-                detallesPago: detallesPagoActuales.map(pago => ({
-                    metodoPago: pago.metodoPago,
-                    monto: pago.monto,
-                    referencia: pago.referencia || '',
-                    observaciones: pago.observaciones || ''
-                }))
+                detallesPago: detallesPagoParaRecibo
             };
             console.log('🖨️ Información de pago múltiple preparada:', infoPagoMultiple);
+            console.log('🖨️ Detalles de pago para recibo:', detallesPagoParaRecibo);
         }
 
         const totalesRecibo = {
@@ -4000,7 +4005,8 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             iva: iva,
             total: total,
             metodoPago: esPagoMultiple ? 'Multiple' : metodoPago,
-            infoPagoMultiple: infoPagoMultiple, // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
+            detallesPago: detallesPagoParaRecibo, // ✅ AGREGAR DETALLES DE PAGO MÚLTIPLE DIRECTAMENTE
+            infoPagoMultiple: infoPagoMultiple, // ✅ MANTENER COMPATIBILIDAD
             cliente: {
                 nombre: nombreCliente,
                 nombreCliente: nombreCliente

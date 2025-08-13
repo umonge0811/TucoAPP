@@ -292,21 +292,32 @@ function construirSeccionPago(totales, detallesPago = null) {
     // Verificar si es pago múltiple - priorizar totales.detallesPago, luego parámetro, luego window
     const detallesPagoValidos = totales.detallesPago || detallesPago || window.detallesPagoActuales;
     
-    console.log('🔍 === DEBUG SECCIÓN PAGO ===');
+    console.log('🔍 === DEBUG SECCIÓN PAGO MEJORADO ===');
+    console.log('🔍 totales completo:', totales);
     console.log('🔍 totales.metodoPago:', totales.metodoPago);
     console.log('🔍 totales.detallesPago:', totales.detallesPago);
+    console.log('🔍 totales.infoPagoMultiple:', totales.infoPagoMultiple);
     console.log('🔍 detallesPago (parámetro):', detallesPago);
     console.log('🔍 window.detallesPagoActuales:', window.detallesPagoActuales);
     console.log('🔍 detallesPagoValidos:', detallesPagoValidos);
     
-    if (detallesPagoValidos && detallesPagoValidos.length > 1) {
+    // ✅ VERIFICAR TAMBIÉN EN infoPagoMultiple SI NO HAY DETALLES DIRECTOS
+    let detallesPagoFinal = detallesPagoValidos;
+    if (!detallesPagoFinal && totales.infoPagoMultiple && totales.infoPagoMultiple.detallesPago) {
+        detallesPagoFinal = totales.infoPagoMultiple.detallesPago;
+        console.log('🔍 Usando detalles desde infoPagoMultiple:', detallesPagoFinal);
+    }
+    
+    if (detallesPagoFinal && detallesPagoFinal.length > 1) {
+        console.log('✅ Construyendo sección de pago múltiple con', detallesPagoFinal.length, 'métodos');
         let html = `
             <div class="seccion-pago-termico">
                 <div class="titulo-seccion-termico">DETALLE DE PAGOS MÚLTIPLES</div>
         `;
         
-        detallesPagoValidos.forEach(pago => {
+        detallesPagoFinal.forEach((pago, index) => {
             const metodoPagoNombre = window.CONFIGURACION_PRECIOS?.[pago.metodoPago]?.nombre || pago.metodoPago;
+            console.log(`💳 Pago ${index + 1}: ${metodoPagoNombre} - ₡${pago.monto}`);
             html += `
                 <div class="linea-pago-termico">
                     <div class="metodo-monto-termico">${formatearLineaTermica(metodoPagoNombre + ':', `₡${pago.monto.toFixed(0)}`)}</div>
@@ -315,13 +326,14 @@ function construirSeccionPago(totales, detallesPago = null) {
             `;
         });
         
-        const totalPagado = detallesPagoValidos.reduce((sum, p) => sum + p.monto, 0);
+        const totalPagado = detallesPagoFinal.reduce((sum, p) => sum + p.monto, 0);
         html += `
                 <div class="separador-pago-termico"></div>
                 <div class="total-pagado-termico">${formatearLineaTermica('Total Pagado:', `₡${totalPagado.toFixed(0)}`)}</div>
             </div>
         `;
         
+        console.log('✅ Sección de pago múltiple construida correctamente');
         return html;
     } else {
         return `
