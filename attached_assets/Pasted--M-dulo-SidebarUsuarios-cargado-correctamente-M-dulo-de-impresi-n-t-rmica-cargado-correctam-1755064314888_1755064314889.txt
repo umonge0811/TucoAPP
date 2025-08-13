@@ -1,0 +1,486 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 🖨️ Módulo de impresión térmica cargado correctamente
+ ✅ Sistema de zoom simplificado cargado
+ 📋 Funciones de proformas y detalles exportadas globalmente
+ 📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ ✅ verDetalleProducto disponible desde facturacion.js
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anónimo) @ Facturacion:2081
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-08-12",
+  "horaActual": "23:51",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 10 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 10
+ 🔄 Construyendo HTML para 10 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Miller
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Producto Ordenando URL API
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar (2).jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar (2).jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/446768a1-6e0c-448b-b96e-2b987083e1da_al-amin-mir-jRM_bQIb_80-unsplash.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/446768a1-6e0c-448b-b96e-2b987083e1da_al-amin-mir-jRM_bQIb_80-unsplash.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Bridgeston Turanza 6
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+ 🔧 Debug llanta: Object
+ 🔄 Actualizando DOM (longitud HTML: 47863 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+ 👥 Inicializando módulo de usuarios conectados del sidebar
+ ✅ Módulo de usuarios conectados del sidebar inicializado
+ ✅ Contador del sidebar actualizado: 1 usuarios
+ ✅ Panel de usuarios conectados (sidebar) actualizado
+ 🖼️ Procesando imágenes para modal de producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ URL original en modal: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🖼️ URL final en modal: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🛒 === INICIO AGREGAR PRODUCTO ===
+ 🛒 Producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🛒 Cantidad: 1
+ 🛒 Precio base: 120000
+ 🛒 Stock disponible: 12
+ 🔄 Estado botón finalizar actualizado: Object
+ ✅ Producto agregado exitosamente
+ 🛒 === FIN AGREGAR PRODUCTO ===
+ 🧹 Limpiando eventos del modal de producto
+ 👥 Buscando clientes: "fr"
+ 🔄 Estado botón finalizar actualizado: Object
+ Cliente seleccionado: Object
+ 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+ 📋 Cliente completo: Object
+ 📋 Propiedades disponibles: Array(7)
+ 📋 Factura pendiente actual: null
+ 📋 Proforma original para conversión: undefined
+ 📋 Ocultando información especial
+ 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+ 🎯 Permisos del usuario: Object
+ 🎯 puedeCompletarFacturas: true
+ 🎯 puedeCrearFacturas: true
+ 🎯 esAdmin: true
+ 🎯 Es conversión de proforma: false
+ 🎯 Es factura pendiente: false
+ 🎯 Botón de proforma mostrado - No es factura pendiente
+ 👑 Modal configurado para administrador/cajero - Venta completa con ajuste de stock
+ 📋 Datos mapeados para formulario: Object
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn btn-success
+ 🎯 Deshabilitado: false
+ 🎯 Texto: 
+                    
+                    Completar y Pagar
+                
+ 🎯 Título: Procesar venta completa, marcar como pagada, ajustar stock e imprimir factura
+ 🎯 Botón Proforma Visible: false
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 🔍 === PROCESANDO VENTA FINAL ===
+ 🔍 Es pago múltiple: true
+ 🔍 Detalles de pago actuales: Array(2)
+ 🔍 Es factura pendiente: false
+ 🔍 Factura ID: null
+ 🆕 Creando nueva factura
+ 🆕 === CREANDO NUEVO DOCUMENTO ===
+ 🆕 Tipo de documento: Factura
+ 🆕 Es conversión de proforma: false
+ 🔐 === VERIFICACIÓN DE PERMISOS ===
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeCrearFacturas: true
+ 🔐 tipoDocumento: Factura
+ 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+ 📋 Estado determinado: Object
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 👤 Usuario actual para documento: Object
+ 📋 Datos de documento preparados: Object
+ ✅ Documento creado: Object
+ 💰 Factura pagada - Procesando venta completa
+ 💰 === INICIO AJUSTE INVENTARIO FRONTEND ===
+ 💰 Usuario autorizado - Ajustando inventario automáticamente
+ 📦 Ajustando stock para productos: Array(1)
+ ✅ Stock ajustado exitosamente
+ 📦 === ACTUALIZANDO VISTA POST-AJUSTE ===
+ 🧹 Limpiando estado de búsqueda...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 2
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 10 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 2
+ 🔄 Productos recibidos: 10
+ 🔄 Construyendo HTML para 10 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Kumho Miller
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Producto Ordenando URL API
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar (2).jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar (2).jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/446768a1-6e0c-448b-b96e-2b987083e1da_al-amin-mir-jRM_bQIb_80-unsplash.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/446768a1-6e0c-448b-b96e-2b987083e1da_al-amin-mir-jRM_bQIb_80-unsplash.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Bridgeston Turanza 6
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+ 🔧 Debug llanta: Object
+ 🔄 Actualizando DOM (longitud HTML: 47863 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+ ✅ Vista principal de productos actualizada
+ 💰 === FIN AJUSTE INVENTARIO FRONTEND ===
+ 🖨️ Generando recibo para nueva factura pagada: Object
+ 🖨️ === GENERANDO RECIBO PARA FACTURA COMPLETADA ===
+ 🖨️ Resultado factura: Object
+ 🖨️ Productos: Array(1)
+ 🖨️ Método de pago: multiple
+ 🖨️ Factura pendiente actual: null
+ 🖨️ Factura preservada para recibo: undefined
+ 🖨️ Es pago múltiple: true
+ 🖨️ Detalles de pago: Array(2)
+ 🖨️ Datos desde resultadoFactura: Object
+ 🖨️ Nombre cliente completado desde clienteSeleccionado: Freddy Sanchez
+ 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+ 👤 facturaConfig disponible: true
+ 👤 Usuario encontrado en facturaConfig: Object
+ 👤 Tipo de usuario obtenido: object
+ 👤 Propiedades del usuario: Array(5)
+ 👤 ID de usuario: 4
+ 👤 Nombre de usuario: Julissa Mejias
+ 🖨️ Usuario creador completado desde usuarioActual: Julissa Mejias
+ 🖨️ Información final determinada: Object
+ 🖨️ Usando configuración de efectivo para pago múltiple
+ 🖨️ Información de pago múltiple preparada: Object
+ 🖨️ Datos del recibo preparados: Object
+ 🖨️ === GENERANDO RECIBO (usando módulo térmico) ===
+ 🖨️ Datos recibidos: Object
+ 🖨️ Información de pago múltiple: Object
+ 🖨️ Opciones del recibo: Object
+ 🖨️ === INICIANDO GENERACIÓN DE RECIBO TÉRMICO ===
+ 🖨️ Datos recibidos: Object
+ 🔍 === DEBUG SECCIÓN PAGO ===
+ 🔍 totales.metodoPago: Multiple
+ 🔍 totales.detallesPago: undefined
+ 🔍 detallesPago (parámetro): null
+ 🔍 window.detallesPagoActuales: undefined
+ 🔍 detallesPagoValidos: undefined
+ 🖨️ Iniciando impresión con ventana emergente
+ ✅ Ventana de impresión creada exitosamente
+ ✅ Recibo térmico generado exitosamente
+ ✅ Recibo incluye desglose de pago múltiple
+ ✅ Recibo de factura completada generado exitosamente
+ ✅ Número: FAC-202508-000018
+ ✅ Cliente: Freddy Sanchez
+ ✅ Cajero: Julissa Mejias
+ ✅ Pago múltiple: Sí
+ 🔄 Estado botón finalizar actualizado: Object
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+ 📦 === ACTUALIZANDO VISTA POST-AJUSTE ===
+ 🧹 Limpiando estado de búsqueda...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 3
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 10 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 3
+ 🔄 Productos recibidos: 10
+facturacion.js:675 🔄 Construyendo HTML para 10 productos
+facturacion.js:730 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Agregar Marca Agrega Modelo
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/df842469-e12d-46c1-985c-bb53d4aec0ec_Harxon_logo.png
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Kumho Mobile
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/2e87b201-a50f-46fd-951e-daf5749b973c_deca639fa6ea47f09e52d3cd99927720-free__1_-removebg-preview.png
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Firestone Extreme
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/19020e25-aa4e-4914-a654-8f9b50b61128_ss1-removebg-preview.png
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Kumho Miller
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/815c5daa-e255-4889-a428-7f91f88308a1_descargar.webp
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Producto Ordenando URL API
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar (2).jpg
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/84a7110a-cf50-4b1d-b04f-fa71866652cb_descargar (2).jpg
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/446768a1-6e0c-448b-b96e-2b987083e1da_al-amin-mir-jRM_bQIb_80-unsplash.jpg
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/446768a1-6e0c-448b-b96e-2b987083e1da_al-amin-mir-jRM_bQIb_80-unsplash.jpg
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Bridgeston Turanza 6
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:897 🔄 Actualizando DOM (longitud HTML: 47863 caracteres)
+facturacion.js:930 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:616 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:619 📦 Productos mostrados exitosamente
+facturacion.js:632 🔍 === FIN buscarProductos ===
+facturacion.js:5344 📦 Búsqueda inicial ejecutada
+facturacion.js:5346 📦 === FIN cargarProductosIniciales (exitosa) ===
+InventarioFacturacion.js:859 ✅ Vista principal de productos actualizada

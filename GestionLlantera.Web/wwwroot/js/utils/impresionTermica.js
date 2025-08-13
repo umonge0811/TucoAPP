@@ -16,6 +16,16 @@ const CONFIG_TERMICA = {
     TIMEOUT_IMPRESION: 15000,
     DELAY_CERRAR_VENTANA: 1000,
     
+    // ===== CONFIGURACIÓN DE LA EMPRESA =====
+    EMPRESA: {
+        nombre: 'LLANTAS Y MÁS TC',
+        descripcion: 'Sistema de Facturación',
+        telefono: '(506) 8916-6180',
+        correo: 'info@llantasymastc.com',
+        sitioWeb: 'www.llantasymastc.com',
+        desarrolladoPor: 'Desarrollado por ticodevcr.com' // Opcional
+    },
+    
     // Estilos para diferentes tipos de documento
     ESTILOS: {
         factura: {
@@ -43,6 +53,7 @@ function generarReciboTermico(datosFactura, productos, totales, opciones = {}) {
     const configuracion = {
         ancho: opciones.ancho || CONFIG_TERMICA.ANCHO_80MM,
         tipo: opciones.tipo || 'factura',
+        detallesPago: opciones.detallesPago || null,
         ...opciones
     };
 
@@ -160,7 +171,7 @@ function construirContenidoRecibo(datosFactura, productos, totales, tipoDocument
     const infoTransaccion = construirInfoTransaccion(fecha, hora, nombreCliente, usuarioCreador);
     const seccionProductos = construirSeccionProductos(productos, configuracion.ancho);
     const seccionTotales = construirSeccionTotales(totales, configuracion.ancho);
-    const seccionPago = construirSeccionPago(totales);
+    const seccionPago = construirSeccionPago(totales, configuracion.detallesPago);
     const seccionPendientes = construirSeccionPendientes(datosFactura.numeroFactura);
     const seccionProforma = tipoDocumento === 'proforma' ? construirSeccionProforma(datosFactura.numeroFactura) : '';
     const piePagina = construirPiePagina(fecha, hora);
@@ -188,12 +199,14 @@ function construirContenidoRecibo(datosFactura, productos, totales, tipoDocument
  */
 function construirEncabezado(numeroFactura, tipoDocumento) {
     const config = CONFIG_TERMICA.ESTILOS[tipoDocumento] || CONFIG_TERMICA.ESTILOS.factura;
+    const empresa = CONFIG_TERMICA.EMPRESA;
     
     return `
         <div class="encabezado-termico">
-            <div class="nombre-empresa-termico">GESTIÓN LLANTERA</div>
-            <div class="info-empresa-termico">Sistema de Facturación</div>
-            <div class="telefono-termico">Tel: (506) 0000-0000</div>
+            <div class="nombre-empresa-termico">${empresa.nombre}</div>
+            <div class="info-empresa-termico">${empresa.descripcion}</div>
+            <div class="telefono-termico">Tel: ${empresa.telefono}</div>
+            <div class="info-empresa-termico">Correo: ${empresa.correo}</div>
             <div class="tipo-documento-termico">${config.titulo}</div>
             <div class="numero-factura-termico">No. ${numeroFactura || 'N/A'}</div>
         </div>
@@ -226,15 +239,29 @@ function construirSeccionProductos(productos, anchoMaximo) {
     productos.forEach(producto => {
         let nombreCompleto = producto.nombreProducto;
         
-        // ✅ USAR LA MISMA LÓGICA QUE EL MODAL DE FINALIZAR VENTA
-        if (producto.esLlanta && producto.medidaCompleta) {
-            nombreCompleto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
-        } else if (producto.EsLlanta && producto.MedidaCompleta) {
-            nombreCompleto = `${producto.MedidaCompleta} ${producto.nombreProducto}`;
-        } else if (producto.medidaLlanta) {
-            nombreCompleto = `${producto.medidaLlanta} ${producto.nombreProducto}`;
-        } else if (producto.MedidaLlanta) {
-            nombreCompleto = `${producto.MedidaLlanta} ${producto.nombreProducto}`;
+        // Solo agregar medida si es llanta Y no está ya incluida en el nombre
+        const esLlanta = producto.esLlanta || producto.EsLlanta;
+        if (esLlanta) {
+            // Remover la palabra "Llanta" del nombre del producto para ahorrar espacio
+            nombreCompleto = nombreCompleto.replace(/\bLlanta\b/gi, '').trim();
+            
+            let medidaLlanta = '';
+            
+            // Obtener la medida de llanta desde diferentes fuentes
+            if (producto.medidaCompleta) {
+                medidaLlanta = producto.medidaCompleta;
+            } else if (producto.MedidaCompleta) {
+                medidaLlanta = producto.MedidaCompleta;
+            } else if (producto.medidaLlanta) {
+                medidaLlanta = producto.medidaLlanta;
+            } else if (producto.MedidaLlanta) {
+                medidaLlanta = producto.MedidaLlanta;
+            }
+            
+            // Solo agregar la medida si no está ya incluida en el nombre del producto
+            if (medidaLlanta && !nombreCompleto.includes(medidaLlanta)) {
+                nombreCompleto = `${medidaLlanta} ${nombreCompleto}`;
+            }
         }
         
         const nombreTruncado = truncarTextoTermico(nombreCompleto, 28);
@@ -273,18 +300,38 @@ function construirSeccionTotales(totales, anchoMaximo) {
 /**
  * Construir sección de método de pago
  */
-function construirSeccionPago(totales) {
+function construirSeccionPago(totales, detallesPago = null) {
     const metodoPago = totales.metodoPago || 'Efectivo';
     
-    // Verificar si es pago múltiple
-    if (window.detallesPagoActuales && window.detallesPagoActuales.length > 1) {
+    // Verificar si es pago múltiple - priorizar totales.detallesPago, luego parámetro, luego window
+    const detallesPagoValidos = totales.detallesPago || detallesPago || window.detallesPagoActuales;
+    
+    console.log('🔍 === DEBUG SECCIÓN PAGO MEJORADO ===');
+    console.log('🔍 totales completo:', totales);
+    console.log('🔍 totales.metodoPago:', totales.metodoPago);
+    console.log('🔍 totales.detallesPago:', totales.detallesPago);
+    console.log('🔍 totales.infoPagoMultiple:', totales.infoPagoMultiple);
+    console.log('🔍 detallesPago (parámetro):', detallesPago);
+    console.log('🔍 window.detallesPagoActuales:', window.detallesPagoActuales);
+    console.log('🔍 detallesPagoValidos:', detallesPagoValidos);
+    
+    // ✅ VERIFICAR TAMBIÉN EN infoPagoMultiple SI NO HAY DETALLES DIRECTOS
+    let detallesPagoFinal = detallesPagoValidos;
+    if (!detallesPagoFinal && totales.infoPagoMultiple && totales.infoPagoMultiple.detallesPago) {
+        detallesPagoFinal = totales.infoPagoMultiple.detallesPago;
+        console.log('🔍 Usando detalles desde infoPagoMultiple:', detallesPagoFinal);
+    }
+    
+    if (detallesPagoFinal && detallesPagoFinal.length > 1) {
+        console.log('✅ Construyendo sección de pago múltiple con', detallesPagoFinal.length, 'métodos');
         let html = `
             <div class="seccion-pago-termico">
                 <div class="titulo-seccion-termico">DETALLE DE PAGOS MÚLTIPLES</div>
         `;
         
-        window.detallesPagoActuales.forEach(pago => {
+        detallesPagoFinal.forEach((pago, index) => {
             const metodoPagoNombre = window.CONFIGURACION_PRECIOS?.[pago.metodoPago]?.nombre || pago.metodoPago;
+            console.log(`💳 Pago ${index + 1}: ${metodoPagoNombre} - ₡${pago.monto}`);
             html += `
                 <div class="linea-pago-termico">
                     <div class="metodo-monto-termico">${formatearLineaTermica(metodoPagoNombre + ':', `₡${pago.monto.toFixed(0)}`)}</div>
@@ -293,13 +340,14 @@ function construirSeccionPago(totales) {
             `;
         });
         
-        const totalPagado = window.detallesPagoActuales.reduce((sum, p) => sum + p.monto, 0);
+        const totalPagado = detallesPagoFinal.reduce((sum, p) => sum + p.monto, 0);
         html += `
                 <div class="separador-pago-termico"></div>
                 <div class="total-pagado-termico">${formatearLineaTermica('Total Pagado:', `₡${totalPagado.toFixed(0)}`)}</div>
             </div>
         `;
         
+        console.log('✅ Sección de pago múltiple construida correctamente');
         return html;
     } else {
         return `
@@ -433,7 +481,7 @@ function construirSeccionProforma(numeroFactura) {
             <div class="advertencia-proforma-termico">
                 <div class="info-proforma-termico">
                     <div><strong>VALIDEZ:</strong> Esta proforma tiene</div>
-                    <div>validez por 30 días calendario</div>
+                    <div>validez por 15 días calendario</div>
                     <div>desde su fecha de emisión.</div>
                 </div>
                 <div class="separador-proforma-termico"></div>
@@ -470,11 +518,14 @@ function construirSeccionProforma(numeroFactura) {
  * Construir pie de página
  */
 function construirPiePagina(fecha, hora) {
+    const empresa = CONFIG_TERMICA.EMPRESA;
+    
     return `
         <div class="pie-pagina-termico">
             <div>¡Gracias por su compra!</div>
             <div>Vuelva pronto</div>
-            <div>www.gestionllantera.com</div>
+            <div>${empresa.sitioWeb}</div>
+            ${empresa.desarrolladoPor ? `<div style="font-size: 13px; font-weight: bold; margin-top: 2mm; color: #000;">${empresa.desarrolladoPor}</div>` : ''}
             <div class="fecha-generacion-termico">Recibo: ${fecha} ${hora}</div>
         </div>
     `;

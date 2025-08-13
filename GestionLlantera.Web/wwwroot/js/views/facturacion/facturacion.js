@@ -1784,10 +1784,16 @@ function actualizarResumenVentaModal() {
         const subtotalProducto = precioAjustado * producto.cantidad;
         subtotal += subtotalProducto;
 
-        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL (evitar duplicación)
         let infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
         if (producto.esLlanta && producto.medidaCompleta) {
-            infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+            // Verificar si la medida ya está incluida en el nombre del producto
+            if (!producto.nombreProducto.includes(producto.medidaCompleta)) {
+                infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+            } else {
+                // Si ya está incluida, solo mostrar el nombre tal como está
+                infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+            }
         }
 
         htmlResumen += `
@@ -2253,6 +2259,14 @@ async function procesarVentaFinal() {
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
 
         console.log('🔍 === PROCESANDO VENTA FINAL ===');
+        console.log('🔍 Es pago múltiple:', esPagoMultiple);
+        console.log('🔍 Detalles de pago actuales:', detallesPagoActuales);
+
+        // ✅ VALIDAR PAGOS MÚLTIPLES SI ES NECESARIO
+        if (esPagoMultiple && !validarPagosMultiples()) {
+            $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+            return;
+        }
 
         const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
         const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
@@ -2288,6 +2302,7 @@ async function procesarVentaFinal() {
     }
 }
 
+
 /**
  * ✅ NUEVA FUNCIÓN: Completar factura existente
  */
@@ -2295,21 +2310,15 @@ async function completarFacturaExistente(facturaId) {
     try {
         console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
         console.log('💰 Factura ID:', facturaId);
+        console.log('💰 Es pago múltiple:', esPagoMultiple);
+        console.log('💰 Detalles de pago:', detallesPagoActuales);
 
-        // ✅ VALIDACIÓN INICIAL
-        //if (!facturaId) {
-        //    console.error('❌ FacturaId es requerido');
-        //    mostrarToast('Error', 'ID de factura no válido', 'danger');
-        //    return;
-        //}
+        const metodoPagoSeleccionado = esPagoMultiple ? 'Multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
 
-
-        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
-        
         // ✅ DATOS COMPLETOS Y VALIDADOS PARA EL CONTROLADOR (SOLO FACTURAS PENDIENTES)
         const datosCompletamiento = {
             facturaId: parseInt(facturaId), // Asegurar que sea número
-            metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
+            metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
             forzarVerificacionStock: false,
             esProforma: false // Esta función solo maneja facturas pendientes
@@ -2324,11 +2333,10 @@ async function completarFacturaExistente(facturaId) {
                 observaciones: pago.observaciones || '',
                 fechaPago: new Date().toISOString()
             }));
+            console.log('💰 Detalles de pago múltiple agregados:', datosCompletamiento.detallesPago);
         }
 
         console.log('📋 Datos de completamiento para factura pendiente:', datosCompletamiento);
-
-        console.log('📋 Datos de completamiento:', datosCompletamiento);
 
         const response = await fetch('/Facturacion/CompletarFactura', {
             method: 'POST',
@@ -2344,50 +2352,52 @@ async function completarFacturaExistente(facturaId) {
 
         if (result.success) {
             console.log('✅ Factura completada exitosamente:', result);
-            
+
             // ✅ PRESERVAR INFORMACIÓN COMPLETA DE FACTURA ANTES DE PROCESAR
             console.log('📋 === PRESERVANDO INFORMACIÓN DE FACTURA PARA RECIBO ===');
             if (facturaPendienteActual) {
                 window.facturaParaRecibo = {
                     numeroFactura: facturaPendienteActual.numeroFactura || `FAC-${facturaId}`,
-                    nombreCliente: facturaPendienteActual.nombreCliente || 
-                                  facturaPendienteActual.NombreCliente ||
-                                  clienteSeleccionado?.nombre || 
-                                  clienteSeleccionado?.nombreCliente ||
-                                  'Cliente General',
+                    nombreCliente: facturaPendienteActual.nombreCliente ||
+                        facturaPendienteActual.NombreCliente ||
+                        clienteSeleccionado?.nombre ||
+                        clienteSeleccionado?.nombreCliente ||
+                        'Cliente General',
                     usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre ||
-                                         facturaPendienteActual.UsuarioCreadorNombre ||
-                                         obtenerUsuarioActual()?.nombre ||
-                                         'Sistema'
+                        facturaPendienteActual.UsuarioCreadorNombre ||
+                        obtenerUsuarioActual()?.nombre ||
+                        'Sistema'
                 };
                 console.log('📋 Información preservada:', window.facturaParaRecibo);
             }
-            
+
             // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
             if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
                 console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===');
                 console.log('📦 Productos pendientes:', window.productosPendientesEntrega);
                 console.log('📦 Factura completada ID:', facturaId);
-                
+
                 await registrarProductosPendientesEntrega(facturaId, window.productosPendientesEntrega);
             }
-            
+
             // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
             const productosParaRecibo = [...productosEnVenta];
-            
+
             // ✅ CERRAR MODAL INMEDIATAMENTE
             modalFinalizarVenta.hide();
-            
+
             // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR CON DATOS COMPLETOS
             console.log('🖨️ Llamando a generarReciboFacturaCompletada con:', {
                 result: result,
                 productos: productosParaRecibo.length,
                 metodoPago: metodoPagoSeleccionado,
-                facturaPendiente: facturaPendienteActual
+                facturaPendiente: facturaPendienteActual,
+                esPagoMultiple: esPagoMultiple,
+                detallesPago: detallesPagoActuales
             });
-            
+
             generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
-            
+
             // ✅ LIMPIAR CARRITO COMPLETAMENTE
             productosEnVenta = [];
             clienteSeleccionado = null;
@@ -2397,7 +2407,7 @@ async function completarFacturaExistente(facturaId) {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
-            
+
             // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
             if (window.productosPendientesEntrega) {
                 delete window.productosPendientesEntrega;
@@ -2436,6 +2446,7 @@ async function completarFacturaExistente(facturaId) {
         throw error;
     }
 }
+
 
 async function crearNuevaFactura(tipoDocumento = 'Factura') {
     try {
@@ -3802,6 +3813,7 @@ async function verificarVencimientoProformasAutomatico() {
 function generarRecibo(factura, productos, totales) {
     console.log('🖨️ === GENERANDO RECIBO (usando módulo térmico) ===');
     console.log('🖨️ Datos recibidos:', { factura, productos: productos.length, totales });
+    console.log('🖨️ Información de pago múltiple:', totales.infoPagoMultiple);
 
     // Verificar que el módulo térmico esté disponible
     if (typeof window.generarReciboTermico !== 'function') {
@@ -3813,26 +3825,33 @@ function generarRecibo(factura, productos, totales) {
     // Preparar datos para el módulo térmico
     const datosFactura = {
         numeroFactura: determinarNumeroFactura(factura, productos),
-        nombreCliente: totales.cliente?.nombre || 
-                      totales.cliente?.nombreCliente || 
-                      factura?.nombreCliente || 
-                      'Cliente General',
-        usuarioCreadorNombre: totales.usuario?.nombre || 
-                             totales.usuario?.nombreUsuario || 
-                             factura?.usuarioCreadorNombre || 
-                             'Sistema'
+        nombreCliente: totales.cliente?.nombre ||
+            totales.cliente?.nombreCliente ||
+            factura?.nombreCliente ||
+            'Cliente General',
+        usuarioCreadorNombre: totales.usuario?.nombre ||
+            totales.usuario?.nombreUsuario ||
+            factura?.usuarioCreadorNombre ||
+            'Sistema'
     };
 
-    // Opciones de configuración
+    // ✅ OPCIONES DE CONFIGURACIÓN CON INFORMACIÓN DE PAGO MÚLTIPLE
     const opciones = {
         ancho: 80, // 80mm por defecto
-        tipo: datosFactura.numeroFactura && datosFactura.numeroFactura.startsWith('PROF') ? 'proforma' : 'factura'
+        tipo: datosFactura.numeroFactura && datosFactura.numeroFactura.startsWith('PROF') ? 'proforma' : 'factura',
+        pagoMultiple: totales.infoPagoMultiple // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
     };
+
+    console.log('🖨️ Opciones del recibo:', opciones);
 
     // Llamar al módulo térmico
     try {
         window.generarReciboTermico(datosFactura, productos, totales, opciones);
         console.log('✅ Recibo térmico generado exitosamente');
+
+        if (totales.infoPagoMultiple) {
+            console.log('✅ Recibo incluye desglose de pago múltiple');
+        }
     } catch (error) {
         console.error('❌ Error generando recibo térmico:', error);
         mostrarToast('Error', 'No se pudo generar el recibo', 'danger');
@@ -3877,12 +3896,14 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Método de pago:', metodoPago);
         console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
         console.log('🖨️ Factura preservada para recibo:', window.facturaParaRecibo);
+        console.log('🖨️ Es pago múltiple:', esPagoMultiple);
+        console.log('🖨️ Detalles de pago:', detallesPagoActuales);
 
         // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA CON MÚLTIPLES FUENTES
         let numeroFactura = 'N/A';
         let nombreCliente = 'Cliente General';
         let usuarioCreadorNombre = 'Sistema';
-        
+
         // ✅ PRIORIZAR INFORMACIÓN DE FACTURA PENDIENTE ACTUAL
         if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
             numeroFactura = facturaPendienteActual.numeroFactura;
@@ -3919,28 +3940,37 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
 
         // ✅ COMPLETAR INFORMACIÓN FALTANTE CON CLIENTE SELECCIONADO Y USUARIO ACTUAL
         if (nombreCliente === 'Cliente General' && clienteSeleccionado) {
-            nombreCliente = clienteSeleccionado.nombre || 
-                           clienteSeleccionado.nombreCliente || 
-                           clienteSeleccionado.NombreCliente || 
-                           'Cliente General';
+            nombreCliente = clienteSeleccionado.nombre ||
+                clienteSeleccionado.nombreCliente ||
+                clienteSeleccionado.NombreCliente ||
+                'Cliente General';
             console.log('🖨️ Nombre cliente completado desde clienteSeleccionado:', nombreCliente);
         }
 
         if (usuarioCreadorNombre === 'Sistema') {
             const usuarioActual = obtenerUsuarioActual();
-            usuarioCreadorNombre = usuarioActual?.nombre || 
-                                  usuarioActual?.nombreUsuario || 
-                                  usuarioActual?.NombreUsuario || 
-                                  'Sistema';
+            usuarioCreadorNombre = usuarioActual?.nombre ||
+                usuarioActual?.nombreUsuario ||
+                usuarioActual?.NombreUsuario ||
+                'Sistema';
             console.log('🖨️ Usuario creador completado desde usuarioActual:', usuarioCreadorNombre);
         }
 
         console.log('🖨️ Información final determinada:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
 
-        // Calcular totales basándose en los productos del carrito
-        const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
-        
+        // ✅ CALCULAR TOTALES SEGÚN EL TIPO DE PAGO
         let subtotal = 0;
+        let configMetodo;
+
+        if (esPagoMultiple) {
+            // Para pago múltiple, usar método base (efectivo)
+            configMetodo = CONFIGURACION_PRECIOS['efectivo'];
+            console.log('🖨️ Usando configuración de efectivo para pago múltiple');
+        } else {
+            configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
+            console.log('🖨️ Usando configuración para método:', metodoPago);
+        }
+
         productos.forEach(producto => {
             const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
             subtotal += precioAjustado * producto.cantidad;
@@ -3956,11 +3986,33 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             usuarioCreadorNombre: usuarioCreadorNombre
         };
 
+        // ✅ PREPARAR INFORMACIÓN DE PAGO MÚLTIPLE PARA EL RECIBO
+        let infoPagoMultiple = null;
+        let detallesPagoParaRecibo = null;
+        
+        if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 0) {
+            detallesPagoParaRecibo = detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || ''
+            }));
+            
+            infoPagoMultiple = {
+                metodoPago: 'Multiple',
+                detallesPago: detallesPagoParaRecibo
+            };
+            console.log('🖨️ Información de pago múltiple preparada:', infoPagoMultiple);
+            console.log('🖨️ Detalles de pago para recibo:', detallesPagoParaRecibo);
+        }
+
         const totalesRecibo = {
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: metodoPago,
+            metodoPago: esPagoMultiple ? 'Multiple' : metodoPago,
+            detallesPago: detallesPagoParaRecibo, // ✅ AGREGAR DETALLES DE PAGO MÚLTIPLE DIRECTAMENTE
+            infoPagoMultiple: infoPagoMultiple, // ✅ MANTENER COMPATIBILIDAD
             cliente: {
                 nombre: nombreCliente,
                 nombreCliente: nombreCliente
@@ -3977,7 +4029,9 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             totalCalculado: total,
             numeroFactura: numeroFactura,
             cliente: nombreCliente,
-            usuario: usuarioCreadorNombre
+            usuario: usuarioCreadorNombre,
+            esPagoMultiple: esPagoMultiple,
+            detallesPago: infoPagoMultiple
         });
 
         // ✅ LLAMAR A LA FUNCIÓN DE GENERACIÓN DE RECIBOS CON DATOS COMPLETOS
@@ -3993,6 +4047,7 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('✅ Número:', numeroFactura);
         console.log('✅ Cliente:', nombreCliente);
         console.log('✅ Cajero:', usuarioCreadorNombre);
+        console.log('✅ Pago múltiple:', esPagoMultiple ? 'Sí' : 'No');
 
     } catch (error) {
         console.error('❌ Error generando recibo para factura completada:', error);
@@ -4007,7 +4062,6 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         });
     }
 }
-
 /**
  * Función de impresión directa cuando falla la ventana emergente
  */

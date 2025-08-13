@@ -281,8 +281,9 @@ body {
 }
 
 .fecha-generacion-termico {
-    font-size: 12px !important;
-    color: #666;
+    font-size: 14px !important;
+    font-weight: bold !important;
+    color: #000;
     margin-top: 2mm;
 }
 
