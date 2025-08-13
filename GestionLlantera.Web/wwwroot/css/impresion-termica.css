@@ -16,8 +16,8 @@
 
 body {
     font-family: 'Arial', sans-serif !important;
-    font-size: 11px !important;
-    line-height: 1.2 !important;
+    font-size: 16px !important;
+    line-height: 1.3 !important;
     color: #000 !important;
     background: #fff !important;
     width: 100%;
@@ -30,8 +30,8 @@ body {
     max-width: 80mm;
     padding: 2mm;
     font-family: 'Arial', sans-serif;
-    font-size: 11px;
-    line-height: 1.2;
+    font-size: 16px;
+    line-height: 1.3;
     color: #000;
 }
 
@@ -44,31 +44,31 @@ body {
 }
 
 .nombre-empresa-termico {
-    font-size: 16px !important;
+    font-size: 22px !important;
     font-weight: bold !important;
     margin-bottom: 1mm;
 }
 
 .info-empresa-termico, 
 .telefono-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     margin-bottom: 0.5mm;
 }
 
 .tipo-documento-termico {
-    font-size: 14px !important;
+    font-size: 20px !important;
     font-weight: bold !important;
     margin: 2mm 0;
 }
 
 .numero-factura-termico {
-    font-size: 12px !important;
+    font-size: 18px !important;
     font-weight: bold !important;
 }
 
 /* ===== INFORMACIÓN DE TRANSACCIÓN ===== */
 .info-transaccion-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     margin-bottom: 3mm;
 }
 
@@ -101,7 +101,7 @@ body {
     font-weight: bold !important;
     text-align: center;
     margin-bottom: 2mm;
-    font-size: 12px !important;
+    font-size: 18px !important;
 }
 
 /* ===== PRODUCTOS ===== */
@@ -114,13 +114,13 @@ body {
 }
 
 .producto-nombre-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     margin-bottom: 0.5mm;
     font-weight: bold;
 }
 
 .producto-detalle-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     font-family: 'Courier New', monospace;
 }
 
@@ -130,13 +130,13 @@ body {
 }
 
 .linea-total-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     font-family: 'Courier New', monospace;
     margin-bottom: 0.5mm;
 }
 
 .total-final-termico {
-    font-size: 12px !important;
+    font-size: 20px !important;
     font-weight: bold !important;
     font-family: 'Courier New', monospace;
     padding-top: 1mm;
@@ -152,18 +152,18 @@ body {
 }
 
 .metodo-monto-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     font-family: 'Courier New', monospace;
 }
 
 .referencia-termico {
-    font-size: 9px !important;
+    font-size: 14px !important;
     color: #666;
     margin-top: 0.5mm;
 }
 
 .total-pagado-termico {
-    font-size: 10px !important;
+    font-size: 16px !important;
     font-weight: bold !important;
     font-family: 'Courier New', monospace;
 }
@@ -211,13 +211,13 @@ body {
 
 .codigo-seguimiento-termico div:first-child, 
 .codigos-seguimiento-termico div:first-child {
-    font-size: 10px !important;
+    font-size: 16px !important;
     margin-bottom: 0.5mm;
     text-align: center;
 }
 
 .codigo-recuadro-termico {
-    font-size: 12px !important;
+    font-size: 18px !important;
     font-weight: bold !important;
     font-family: 'Courier New', monospace;
     border: 2px solid #000;
@@ -313,7 +313,7 @@ body {
         background: none !important;
         padding: 0 !important;
         margin: 0 !important;
-        font-size: 11px !important;
+        font-size: 16px !important;
     }
 
     .recibo-container-termico {
@@ -323,7 +323,7 @@ body {
         padding: 2mm !important;
         margin: 0 !important;
         background: none !important;
-        font-size: 11px !important;
+        font-size: 16px !important;
     }
 
     .seccion-proforma-termico {
@@ -345,27 +345,27 @@ body {
 
     /* Títulos más grandes para legibilidad */
     .nombre-empresa-termico {
-        font-size: 18px !important;
+        font-size: 24px !important;
     }
 
     .tipo-documento-termico {
-        font-size: 16px !important;
+        font-size: 22px !important;
     }
 
     .numero-factura-termico {
-        font-size: 14px !important;
+        font-size: 20px !important;
     }
 
     .titulo-seccion-termico {
-        font-size: 14px !important;
+        font-size: 20px !important;
     }
 
     .total-final-termico {
-        font-size: 14px !important;
+        font-size: 22px !important;
     }
 
     .codigo-recuadro-termico {
-        font-size: 14px !important;
+        font-size: 20px !important;
     }
 }
 
