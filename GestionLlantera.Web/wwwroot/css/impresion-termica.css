@@ -62,7 +62,7 @@ body {
 }
 
 .numero-factura-termico {
-    font-size: 26px !important;
+    font-size: 20px !important;
     font-weight: bold !important;
 }
 
@@ -348,7 +348,7 @@ body {
 
     /* Forzar tamaño del número de factura en cualquier contexto */
     .numero-factura-termico {
-        font-size: 26px !important;
+        font-size: 20px !important;
         font-weight: bold !important;
         line-height: 1.2 !important;
     }
@@ -363,7 +363,7 @@ body {
     }
 
     .numero-factura-termico {
-        font-size: 26px !important;
+        font-size: 20px !important;
     }
 
     .titulo-seccion-termico {
@@ -396,7 +396,7 @@ body {
 .numero-factura-termico,
 .recibo-container-termico .numero-factura-termico,
 body .numero-factura-termico {
-    font-size: 26px !important;
+    font-size: 20px !important;
     font-weight: bold !important;
     line-height: 1.2 !important;
     display: block !important;
