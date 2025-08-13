@@ -1419,9 +1419,12 @@ function actualizarVistaCarrito() {
         const metodoPago = producto.metodoPago || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
-        // ✅ AGREGAR INFORMACIÓN DE LLANTA SI EXISTE
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA
+        let nombreCompletoProducto = producto.nombreProducto;
         let infoLlantaCarrito = '';
+
         if (producto.esLlanta && producto.medidaCompleta) {
+            // Mostrar medida como información adicional debajo del nombre
             infoLlantaCarrito = `
                 <div class="info-llanta-carrito mb-1">
                     <small class="text-primary fw-bold">
@@ -1435,7 +1438,7 @@ function actualizarVistaCarrito() {
             <div class="producto-venta-item border rounded p-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        <h6 class="mb-1">${producto.nombreProducto}</h6>
+                        <h6 class="mb-1">${nombreCompletoProducto}</h6>
                         ${infoLlantaCarrito}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
@@ -1482,6 +1485,7 @@ function actualizarVistaCarrito() {
     // Configurar eventos de cantidad
     configurarEventosCantidad();
 }
+
 
 function configurarEventosCantidad() {
     $('.btn-cantidad-menos').on('click', function() {
@@ -1780,7 +1784,7 @@ function actualizarResumenVentaModal() {
         const subtotalProducto = precioAjustado * producto.cantidad;
         subtotal += subtotalProducto;
 
-        // ✅ AGREGAR INFORMACIÓN DE LLANTA SI EXISTE
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL
         let infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
         if (producto.esLlanta && producto.medidaCompleta) {
             infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
@@ -1835,6 +1839,7 @@ function actualizarResumenVentaModal() {
         $('#campoCambio').hide();
     }
 }
+
 
 function configurarModalSegunPermisos() {
     const $btnConfirmar = $('#btnConfirmarVenta');
@@ -6830,91 +6835,92 @@ async function procesarFacturaPendiente(facturaEscapada) {
 
         console.log('💰 === PROCESANDO FACTURA PENDIENTE ===');
         console.log('💰 Factura escapada recibida:', facturaEscapada);
+        console.log('💰 Tipo de dato recibido:', typeof facturaEscapada);
 
-        // ✅ DESERIALIZAR FACTURA (manejo robusto para ambos formatos)
+        // ✅ MANEJO ROBUSTO DE DIFERENTES FORMATOS DE ENTRADA
         let factura;
+
         if (typeof facturaEscapada === 'string') {
-            // Si es cadena, verificar si está escapada
+            // Si es una cadena, verificar si está escapada
             if (facturaEscapada.includes('&quot;')) {
+                // Cadena escapada, aplicar replace y parsear
                 factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
+                console.log('💰 Factura parseada desde cadena escapada');
             } else {
+                // Cadena JSON normal
                 factura = JSON.parse(facturaEscapada);
+                console.log('💰 Factura parseada desde cadena JSON');
             }
         } else if (typeof facturaEscapada === 'object' && facturaEscapada !== null) {
             // Si ya es un objeto, usarlo directamente
             factura = facturaEscapada;
+            console.log('💰 Factura recibida como objeto directo');
         } else {
             throw new Error('Formato de factura no válido');
         }
 
         console.log('💰 Factura deserializada:', factura);
 
-        // ✅ LIMPIAR CARRITO ACTUAL
-        productosEnVenta = [];
-        clienteSeleccionado = null;
-        facturaPendienteActual = null;
-
         // ✅ CARGAR CLIENTE DESDE LA FACTURA
-        if (factura.clienteId || factura.nombreCliente) {
-            clienteSeleccionado = {
-                clienteId: factura.clienteId || null,
-                id: factura.clienteId || null,
-                nombre: factura.nombreCliente || 'Cliente General',
-                nombreCliente: factura.nombreCliente || 'Cliente General',
-                identificacion: factura.identificacionCliente || '',
-                telefono: factura.telefonoCliente || '',
-                email: factura.emailCliente || '',
-                direccion: factura.direccionCliente || ''
-            };
+        clienteSeleccionado = {
+            clienteId: factura.clienteId || null,
+            nombre: factura.nombreCliente || 'Cliente General',
+            nombreCliente: factura.nombreCliente || 'Cliente General',
+            identificacion: factura.identificacionCliente || '',
+            telefono: factura.telefonoCliente || '',
+            email: factura.emailCliente || '',
+            direccion: factura.direccionCliente || ''
+        };
 
-            // ✅ ACTUALIZAR UI DEL CLIENTE
-            $('#clienteBusqueda').val(clienteSeleccionado.nombre);
-            $('#nombreClienteSeleccionado').text(clienteSeleccionado.nombre);
-            $('#emailClienteSeleccionado').text(clienteSeleccionado.email || 'Sin email');
-            $('#clienteSeleccionado').removeClass('d-none');
+        console.log('👤 Cliente cargado desde factura:', clienteSeleccionado);
 
-            console.log('👤 Cliente cargado desde factura:', clienteSeleccionado);
-        }
-
-        // ✅ CARGAR PRODUCTOS DESDE LA FACTURA CON MEDIDA DE LLANTA
+        // ✅ CARGAR PRODUCTOS DESDE LA FACTURA CON MEDIDA DE LLANTA CORRECTA
         if (factura.detallesFactura && Array.isArray(factura.detallesFactura)) {
             console.log('📦 Cargando productos desde factura pendiente:', factura.detallesFactura.length);
 
             factura.detallesFactura.forEach((detalle, index) => {
                 console.log(`📦 Procesando detalle ${index + 1}:`, detalle);
 
-                // ✅ EXTRAER Y PROCESAR MEDIDA DE LLANTA
+                // ✅ EXTRACCIÓN CORRECTA DE MEDIDA DE LLANTA DESDE LOS DATOS DEL SERVIDOR
                 let esLlanta = false;
                 let medidaCompleta = null;
 
-                // Verificar si el nombre del producto contiene medida de llanta
-                const nombreProducto = detalle.nombreProducto || detalle.NombreProducto || 'Producto';
-                const patronMedida = /^(\d+\/\d+\/R\d+|\d+\/R\d+|\d+x\d+x\d+)/;
-                const matchMedida = nombreProducto.match(patronMedida);
-
-                if (matchMedida) {
+                // PRIORIDAD 1: Verificar medidaLlanta que ya viene del servidor
+                if (detalle.medidaLlanta) {
                     esLlanta = true;
-                    medidaCompleta = matchMedida[0];
-                    console.log(`🔧 Medida extraída del nombre: ${medidaCompleta}`);
+                    medidaCompleta = detalle.medidaLlanta;
+                    console.log(`🔧 Medida desde medidaLlanta: ${medidaCompleta}`);
                 }
-
-                // Si no se encontró en el nombre, verificar propiedades específicas
-                if (!medidaCompleta && (detalle.Medida || detalle.medida || detalle.MedidaCompleta || detalle.medidaCompleta)) {
-                    medidaCompleta = detalle.Medida || detalle.medida || detalle.MedidaCompleta || detalle.medidaCompleta;
+                // PRIORIDAD 2: Verificar esLlanta del servidor
+                else if (detalle.esLlanta) {
                     esLlanta = true;
-                    console.log(`🔧 Medida desde propiedad específica: ${medidaCompleta}`);
+                    // Intentar extraer medida desde otras propiedades
+                    medidaCompleta = detalle.medidaCompleta || detalle.MedidaCompleta || null;
+                    console.log(`🔧 Es llanta confirmada, medida: ${medidaCompleta}`);
+                }
+                // PRIORIDAD 3: Verificar si el nombre del producto contiene medida (fallback)
+                else {
+                    const nombreProducto = detalle.nombreProducto || detalle.NombreProducto || 'Producto';
+                    const patronMedida = /^(\d+\/\d+\/R\d+|\d+\/R\d+|\d+x\d+x\d+)/;
+                    const matchMedida = nombreProducto.match(patronMedida);
+
+                    if (matchMedida) {
+                        esLlanta = true;
+                        medidaCompleta = matchMedida[0];
+                        console.log(`🔧 Medida extraída del nombre: ${medidaCompleta}`);
+                    }
                 }
 
                 const producto = {
                     productoId: detalle.productoId || detalle.ProductoId || 0,
-                    nombreProducto: nombreProducto,
+                    nombreProducto: detalle.nombreProducto || detalle.NombreProducto || 'Producto',
                     precioUnitario: detalle.precioUnitario || detalle.PrecioUnitario || 0,
                     cantidad: detalle.cantidad || detalle.Cantidad || 1,
                     stockDisponible: detalle.stockDisponible || 999,
                     metodoPago: 'efectivo',
                     imagenUrl: null,
                     facturaId: factura.facturaId,
-                    // ✅ INCLUIR INFORMACIÓN DE LLANTA
+                    // ✅ INCLUIR INFORMACIÓN DE LLANTA CORRECTAMENTE MAPEADA
                     esLlanta: esLlanta,
                     medidaCompleta: medidaCompleta
                 };
@@ -6929,65 +6935,51 @@ async function procesarFacturaPendiente(facturaEscapada) {
             });
         }
 
-        // ✅ GUARDAR REFERENCIA A LA FACTURA PENDIENTE
+        console.log('📦 Total productos cargados en carrito:', productosEnVenta.length);
+
+        // ✅ ESTABLECER FACTURA PENDIENTE ACTUAL PARA EL PROCESO
         facturaPendienteActual = {
-            facturaId: factura.facturaId || factura.id,
-            numeroFactura: factura.numeroFactura || `FAC-${factura.facturaId}`,
-            nombreCliente: factura.nombreCliente,
-            usuarioCreadorNombre: factura.usuarioCreadorNombre,
+            ...factura,
             esFacturaPendiente: true
         };
 
         console.log('📋 Factura pendiente establecida:', facturaPendienteActual);
 
-        // ✅ ACTUALIZAR INTERFAZ
+        // Actualizar interfaz del cliente
+        $('#clienteBusqueda').val(clienteSeleccionado.nombre);
+        $('#nombreClienteSeleccionado').text(clienteSeleccionado.nombre);
+        $('#emailClienteSeleccionado').text(clienteSeleccionado.email || 'Sin email');
+        $('#clienteSeleccionado').removeClass('d-none');
+
+        // Actualizar carrito y totales
         actualizarVistaCarrito();
         actualizarTotales();
         actualizarEstadoBotonFinalizar();
 
         console.log('💰 === FACTURA PENDIENTE PROCESADA EXITOSAMENTE ===');
         console.log('💰 Productos en carrito:', productosEnVenta.length);
-        console.log('💰 Cliente seleccionado:', clienteSeleccionado?.nombre);
+        console.log('💰 Cliente seleccionado:', clienteSeleccionado.nombre);
 
-        // ✅ VERIFICAR STOCK ANTES DE PROCEDER
-        if (factura.facturaId) {
-            console.log('📦 Verificando stock para factura:', factura.facturaId);
-            const verificacionStock = await verificarStockFacturaPendiente(factura.facturaId);
+        // ✅ VERIFICAR STOCK ANTES DE PROCEDER (importante para facturas pendientes)
+        console.log('📦 Verificando stock para factura:', factura.facturaId);
+        const stockOK = await verificarStockFacturaPendiente(factura.facturaId);
 
-            if (verificacionStock.success) {
-                if (verificacionStock.tieneProblemas && verificacionStock.productosConProblemas.length > 0) {
-                    console.log('⚠️ Se encontraron problemas de stock');
-
-                    // Guardar productos con problemas globalmente
-                    window.productosPendientesEntrega = verificacionStock.productosConProblemas;
-                    window.facturaConPendientes = factura;
-
-                    mostrarModalProblemasStock(verificacionStock.productosConProblemas, factura);
-                } else {
-                    console.log('✅ Stock verificado correctamente, abriendo modal finalizar');
-                    mostrarModalFinalizarVenta();
-                }
-            } else {
-                console.warn('⚠️ Error en verificación de stock, continuando sin verificar');
+        if (stockOK) {
+            console.log('✅ Stock verificado correctamente, abriendo modal finalizar');
+            // ✅ ABRIR MODAL DE FINALIZAR VENTA DESPUÉS DE UN BREVE DELAY
+            setTimeout(() => {
                 mostrarModalFinalizarVenta();
-            }
+            }, 500);
         } else {
-            console.log('📋 Abriendo modal finalizar venta directamente');
-            mostrarModalFinalizarVenta();
+            console.log('⚠️ Problemas de stock detectados, el modal se abrirá con las alertas correspondientes');
+            // Aún así abrir el modal para que el usuario pueda ver los problemas y decidir
+            setTimeout(() => {
+                mostrarModalFinalizarVenta();
+            }, 500);
         }
 
     } catch (error) {
         console.error('❌ Error procesando factura pendiente:', error);
-
-        // Limpiar estado en caso de error
-        productosEnVenta = [];
-        clienteSeleccionado = null;
-        facturaPendienteActual = null;
-        $('#clienteBusqueda').val('');
-        $('#clienteSeleccionado').addClass('d-none');
-        actualizarVistaCarrito();
-        actualizarTotales();
-
         Swal.fire({
             icon: 'error',
             title: 'Error procesando factura',
@@ -6996,6 +6988,7 @@ async function procesarFacturaPendiente(facturaEscapada) {
         });
     }
 }
+
 
 /**
  * Cargar datos de factura pendiente en el carrito
