@@ -53,47 +53,49 @@ function generarReciboTermico(datosFactura, productos, totales, opciones = {}) {
  */
 function construirMedidaCompleta(producto) {
     try {
-        // Verificar si ya tiene medida completa
+        // Verificar si ya tiene medida completa construida
         if (producto.medidaCompleta) return producto.medidaCompleta;
         if (producto.MedidaCompleta) return producto.MedidaCompleta;
         if (producto.medidaLlanta) return producto.medidaLlanta;
         if (producto.MedidaLlanta) return producto.MedidaLlanta;
         
-        // Construir desde las propiedades individuales
-        let medida = '';
+        // Verificar si tiene información de llanta anidada (como viene desde la API)
+        let llantaInfo = null;
+        if (producto.llanta) {
+            llantaInfo = producto.llanta;
+        } else if (producto.Llanta && Array.isArray(producto.Llanta) && producto.Llanta.length > 0) {
+            llantaInfo = producto.Llanta[0];
+        }
         
-        // Ancho
-        const ancho = producto.ancho || producto.Ancho || '';
-        
-        // Perfil
-        const perfil = producto.perfil || producto.Perfil || '';
-        
-        // Aro
-        const aro = producto.aro || producto.Aro || '';
-        
-        // Índice de carga
-        const indiceCarga = producto.indiceCarga || producto.IndiceCarga || '';
-        
-        // Índice de velocidad
-        const indiceVelocidad = producto.indiceVelocidad || producto.IndiceVelocidad || '';
-        
-        // Construir medida básica (ancho/perfil R aro)
-        if (ancho && perfil && aro) {
-            medida = `${ancho}/${perfil}R${aro}`;
-            
-            // Agregar índices si están disponibles
-            if (indiceCarga && indiceVelocidad) {
-                medida += ` ${indiceCarga}${indiceVelocidad}`;
-            } else if (indiceCarga) {
-                medida += ` ${indiceCarga}`;
+        if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+            if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                // Formato completo con perfil: 215/55/R16
+                return `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+            } else {
+                // Formato sin perfil: 215/R16
+                return `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
             }
         }
         
-        return medida || 'Medida no disponible';
+        // Construir desde las propiedades individuales del producto
+        const ancho = producto.ancho || producto.Ancho || '';
+        const perfil = producto.perfil || producto.Perfil || '';
+        const aro = producto.aro || producto.Aro || producto.diametro || producto.Diametro || '';
+        
+        // Construir medida básica
+        if (ancho && aro) {
+            if (perfil && perfil > 0) {
+                return `${ancho}/${perfil}/R${aro}`;
+            } else {
+                return `${ancho}/R${aro}`;
+            }
+        }
+        
+        return null; // No hay medida disponible
         
     } catch (error) {
         console.error('❌ Error construyendo medida completa:', error);
-        return 'Medida no disponible';
+        return null;
     }
 }
 
@@ -105,9 +107,12 @@ function construirMedidaCompleta(producto) {
     const productosConMedida = productos.map(producto => {
         const productoCompleto = { ...producto };
         
-        // Si es una llanta, construir la medida completa
+        // Si es una llanta, construir la medida completa si no existe
         if (producto.esLlanta || producto.EsLlanta) {
-            productoCompleto.medidaCompleta = construirMedidaCompleta(producto);
+            const medidaConstruida = construirMedidaCompleta(producto);
+            if (medidaConstruida) {
+                productoCompleto.medidaCompleta = medidaConstruida;
+            }
         }
         
         return productoCompleto;
@@ -221,15 +226,15 @@ function construirSeccionProductos(productos, anchoMaximo) {
     productos.forEach(producto => {
         let nombreCompleto = producto.nombreProducto;
         
-        // Si es una llanta, agregar la medida
+        // ✅ USAR LA MISMA LÓGICA QUE EL MODAL DE FINALIZAR VENTA
         if (producto.esLlanta && producto.medidaCompleta) {
-            nombreCompleto = `${producto.nombreProducto} - ${producto.medidaCompleta}`;
+            nombreCompleto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
         } else if (producto.EsLlanta && producto.MedidaCompleta) {
-            nombreCompleto = `${producto.nombreProducto} - ${producto.MedidaCompleta}`;
+            nombreCompleto = `${producto.MedidaCompleta} ${producto.nombreProducto}`;
         } else if (producto.medidaLlanta) {
-            nombreCompleto = `${producto.nombreProducto} - ${producto.medidaLlanta}`;
+            nombreCompleto = `${producto.medidaLlanta} ${producto.nombreProducto}`;
         } else if (producto.MedidaLlanta) {
-            nombreCompleto = `${producto.nombreProducto} - ${producto.MedidaLlanta}`;
+            nombreCompleto = `${producto.MedidaLlanta} ${producto.nombreProducto}`;
         }
         
         const nombreTruncado = truncarTextoTermico(nombreCompleto, 28);
