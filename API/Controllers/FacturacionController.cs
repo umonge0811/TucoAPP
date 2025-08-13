@@ -822,7 +822,7 @@ namespace API.Controllers
                             StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
                             EsLlanta = d.Producto.Llanta.Any(),
                             MedidaLlanta = d.Producto.Llanta.Any() ? 
-                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null,
+                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "/R" + d.Producto.Llanta.First().Diametro : null,
                             MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
                             ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
                         }).ToList()
