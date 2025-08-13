@@ -1780,10 +1780,16 @@ function actualizarResumenVentaModal() {
         const subtotalProducto = precioAjustado * producto.cantidad;
         subtotal += subtotalProducto;
 
+        // ✅ AGREGAR INFORMACIÓN DE LLANTA SI EXISTE
+        let infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+        if (producto.esLlanta && producto.medidaCompleta) {
+            infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+        }
+
         htmlResumen += `
             <tr>
                 <td>
-                    <strong>${producto.nombreProducto}</strong>
+                    ${infoProductoCompleta}
                 </td>
                 <td class="text-center">${producto.cantidad}</td>
                 <td class="text-end">₡${formatearMoneda(precioAjustado)}</td>
@@ -2565,9 +2571,16 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             })) : [],
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+                
+                // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA
+                let nombreCompletoProducto = producto.nombreProducto;
+                if (producto.esLlanta && producto.medidaCompleta) {
+                    nombreCompletoProducto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
+                }
+                
                 return {
                     productoId: producto.productoId,
-                    nombreProducto: producto.nombreProducto,
+                    nombreProducto: nombreCompletoProducto,
                     descripcionProducto: producto.descripcion || '',
                     cantidad: producto.cantidad,
                     precioUnitario: precioAjustado,
