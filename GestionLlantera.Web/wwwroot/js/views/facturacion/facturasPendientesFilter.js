@@ -1150,7 +1150,7 @@ async function imprimirFactura(facturaId) {
             // Usar la función de re-impresión existente en facturacion.js
             if (typeof window.reimprimirFacturaDesdeModal === 'function') {
                 console.log('🖨️ Usando función de re-impresión existente');
-                await window.reimprimirFacturaDesdeModal(facturaId, factura.numeroFactura);
+                await window.reimprimirFacturaDesdeModal(facturaId, factura.numeroFactura, factura);
             } else if (typeof reimprimirFacturaDesdeModal === 'function') {
                 console.log('🖨️ Usando función de re-impresión global');
                 await reimprimirFacturaDesdeModal(facturaId, factura.numeroFactura);

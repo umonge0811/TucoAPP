@@ -3663,37 +3663,47 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
 /**
  * ✅ FUNCIÓN: Re-imprimir factura existente desde modal de detalles
  */
-async function reimprimirFacturaDesdeModal(facturaId, numeroFactura) {
+async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFacturaExistentes = null) {
     try {
         console.log('🖨️ === INICIANDO RE-IMPRESIÓN DE FACTURA DESDE MODAL ===');
         console.log('🖨️ Factura ID:', facturaId);
         console.log('🖨️ Número de factura:', numeroFactura);
 
-        // Mostrar loading
+        // Verificar si el botón existe antes de manipularlo
         const $btn = $('#btnImprimirFacturaModal');
-        const textoOriginal = $btn.html();
-        $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Imprimiendo...');
+        const textoOriginal = $btn.length > 0 ? $btn.html() : '<i class="bi bi-printer me-1"></i>Imprimir';
 
-        // Obtener detalles completos de la factura
-        const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
+        if ($btn.length > 0) {
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Imprimiendo...');
         }
-
-        const resultado = await response.json();
-        console.log('🖨️ Detalles de factura obtenidos:', resultado);
-
-        if (resultado.success && resultado.factura) {
-            const factura = resultado.factura;
-            
+        let factura;
+        // Si ya tenemos los datos, usarlos; si no, obtenerlos
+        if (datosFacturaExistentes) {
+            console.log('🖨️ Usando datos de factura ya obtenidos');
+            factura = datosFacturaExistentes;
+        } else {
+            console.log('🖨️ Obteniendo detalles de factura...');
+            // Obtener detalles completos de la factura
+            const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            const resultado = await response.json();
+            console.log('🖨️ Detalles de factura obtenidos:', resultado);
+            if (resultado.success && resultado.factura) {
+                factura = resultado.factura;
+            } else {
+                throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
+            }
+        }
+        if (factura) {    
             // Preparar datos para el recibo
             const datosFactura = {
                 numeroFactura: factura.numeroFactura || numeroFactura,
@@ -3749,10 +3759,13 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura) {
     } catch (error) {
         console.error('❌ Error re-imprimiendo factura:', error);
         mostrarToast('Error', 'No se pudo re-imprimir la factura: ' + error.message, 'danger');
+        // ✅ CÓDIGO CORREGIDO:
     } finally {
-        // Restaurar botón
+        // Restaurar botón solo si existe
         const $btn = $('#btnImprimirFacturaModal');
-        $btn.prop('disabled', false).html(textoOriginal || '<i class="bi bi-printer me-1"></i>Imprimir');
+        if ($btn.length > 0) {
+            $btn.prop('disabled', false).html(textoOriginal || '<i class="bi bi-printer me-1"></i>Imprimir');
+        }
     }
 }
 
