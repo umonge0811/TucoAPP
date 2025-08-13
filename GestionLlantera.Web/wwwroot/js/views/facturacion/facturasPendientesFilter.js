@@ -1738,14 +1738,17 @@ async function imprimirFactura(facturaId) {
 
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 if (typeof window !== 'undefined') {
-    // Funciones existentes
-    window.cargarFacturasPendientes = cargarFacturasPendientes; // Asegurarse que esta función exista si es llamada globalmente
+    // Funciones principales
+    window.inicializarFiltrosFacturasPendientes = inicializarFiltrosFacturasPendientes;
+    window.cargarTodasLasFacturasPendientes = cargarTodasLasFacturasPendientes;
     window.recargarFacturasPendientes = recargarFacturasPendientes;
+    window.cambiarPaginaFacturas = cambiarPaginaFacturas;
+    window.limpiarFiltrosFacturas = limpiarFiltrosFacturas;
 
-    // Nuevas funciones exportadas
+    // Funciones de acciones de facturas
     window.verDetalleFactura = verDetalleFactura;
     window.imprimirFactura = imprimirFactura;
-    window.mostrarDetalleFacturaModal = mostrarDetalleFacturaModal; // Exportar también esta función auxiliar si es necesario
+    window.mostrarDetalleFacturaModal = mostrarDetalleFacturaModal;
 
     console.log('📋 Funciones de facturas pendientes exportadas globalmente');
 } else {
