@@ -440,11 +440,18 @@ function construirSeccionPendientes(numeroFactura) {
 
     html += `
             <div class="separador-pendientes-termico"></div>
-            <div class="instrucciones-pendientes-termico">
-                <div>📞 Le notificaremos cuando</div>
-                <div>llegue el stock faltante</div>
-                <div>🎫 CONSERVE ESTE RECIBO</div>
-                <div>como respaldo de entrega</div>
+            <div class="instrucciones-pendientes-completas-termico">
+                <div class="titulo-instrucciones-termico">📋 INSTRUCCIONES:</div>
+                <div class="instruccion-item-termico">• Conserve este recibo como</div>
+                <div class="instruccion-item-termico">  comprobante de entrega</div>
+                <div class="instruccion-item-termico">• La entrega se realizará cuando</div>
+                <div class="instruccion-item-termico">  haya stock disponible</div>
+                <div class="instruccion-item-termico">• Será contactado cuando los</div>
+                <div class="instruccion-item-termico">  productos estén listos</div>
+                <div class="instruccion-item-termico">• Use los códigos de seguimiento</div>
+                <div class="instruccion-item-termico">  para consultar el estado</div>
+                <div class="conservar-recibo-termico">🎫 CONSERVE ESTE RECIBO</div>
+                <div class="respaldo-entrega-termico">como respaldo de entrega</div>
             </div>
     `;
 
