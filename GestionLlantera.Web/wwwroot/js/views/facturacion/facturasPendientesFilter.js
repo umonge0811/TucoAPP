@@ -684,7 +684,7 @@ function crearFilaFacturaPendiente(factura) {
                 </div>
                 <div class="btn-group btn-group-sm d-none d-sm-inline-block">
                     <!-- Botones horizontales en tablet/desktop -->
-                    
+
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>
@@ -698,17 +698,275 @@ function crearFilaFacturaPendiente(factura) {
     return fila;
 }
 
+// ===== FUNCIÓN PARA VER DETALLE COMPLETO DE FACTURA =====
+async function verDetalleFactura(facturaId) {
+    try {
+        console.log('👁️ === MOSTRANDO DETALLE DE FACTURA ===');
+        console.log('👁️ Factura ID:', facturaId);
 
-// Exportar funciones para uso global
+        // Mostrar loading
+        const loadingHtml = `
+            <div class="modal fade" id="modalDetalleFactura" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header bg-info text-white">
+                            <h5 class="modal-title">
+                                <i class="bi bi-eye me-2"></i>Detalle de Factura
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center py-5">
+                            <div class="spinner-border text-info" role="status">
+                                <span class="visually-hidden">Cargando detalle...</span>
+                            </div>
+                            <p class="mt-3">Obteniendo información de la factura...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remover modal anterior si existe
+        $('#modalDetalleFactura').remove();
+        $('body').append(loadingHtml);
+
+        const modal = new bootstrap.Modal(document.getElementById('modalDetalleFactura'));
+        modal.show();
+
+        // Obtener detalle de la factura
+        const response = await fetch(`/Facturacion/ObtenerDetalleFactura?facturaId=${facturaId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && resultado.factura) {
+            mostrarDetalleFacturaModal(resultado.factura);
+        } else {
+            throw new Error(resultado.message || 'Error obteniendo detalle de factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error obteniendo detalle de factura:', error);
+
+        // Mostrar error en el modal
+        $('#modalDetalleFactura .modal-body').html(`
+            <div class="text-center py-4">
+                <i class="bi bi-exclamation-triangle text-danger display-1"></i>
+                <h5 class="mt-3 text-danger">Error al cargar detalle</h5>
+                <p class="text-muted">${error.message}</p>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        `);
+    }
+}
+
+function mostrarDetalleFacturaModal(factura) {
+    const estadoBadge = factura.estado === 'Pendiente' ? 'bg-warning' : 
+                       factura.estado === 'Pagada' ? 'bg-success' : 
+                       factura.estado === 'Anulada' ? 'bg-danger' : 'bg-secondary';
+
+    const fechaFactura = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
+    const fechaCreacion = new Date(factura.fechaCreacion).toLocaleString('es-CR');
+
+    // Construir tabla de productos
+    let productosHtml = '';
+    if (factura.detallesFactura && factura.detallesFactura.length > 0) {
+        factura.detallesFactura.forEach(detalle => {
+            const subtotal = detalle.cantidad * detalle.precioUnitario;
+            productosHtml += `
+                <tr>
+                    <td>
+                        <strong>${detalle.nombreProducto}</strong>
+                        ${detalle.descripcionProducto ? `<br><small class="text-muted">${detalle.descripcionProducto}</small>` : ''}
+                    </td>
+                    <td class="text-center">${detalle.cantidad}</td>
+                    <td class="text-end">₡${formatearMoneda(detalle.precioUnitario)}</td>
+                    <td class="text-end">₡${formatearMoneda(subtotal)}</td>
+                </tr>
+            `;
+        });
+    }
+
+    const modalHtml = `
+        <div class="modal-header bg-info text-white">
+            <h5 class="modal-title">
+                <i class="bi bi-receipt me-2"></i>Detalle de Factura ${factura.numeroFactura}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+            <!-- Información General -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-file-earmark me-2"></i>Información de Factura</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Número:</strong></td>
+                                    <td>${factura.numeroFactura}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Estado:</strong></td>
+                                    <td><span class="badge ${estadoBadge}">${factura.estado}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha Factura:</strong></td>
+                                    <td>${fechaFactura}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Fecha Creación:</strong></td>
+                                    <td>${fechaCreacion}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Método Pago:</strong></td>
+                                    <td>${factura.metodoPago || 'No especificado'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Creado por:</strong></td>
+                                    <td>${factura.usuarioCreadorNombre || 'Sistema'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-person me-2"></i>Información del Cliente</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Nombre:</strong></td>
+                                    <td>${factura.nombreCliente}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Identificación:</strong></td>
+                                    <td>${factura.identificacionCliente || 'No especificada'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Teléfono:</strong></td>
+                                    <td>${factura.telefonoCliente || 'No especificado'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>${factura.emailCliente || 'No especificado'}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Dirección:</strong></td>
+                                    <td>${factura.direccionCliente || 'No especificada'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-cart me-2"></i>Productos</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${productosHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Totales -->
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-calculator me-2"></i>Resumen de Totales</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 offset-md-6">
+                            <table class="table table-sm">
+                                <tr>
+                                    <td><strong>Subtotal:</strong></td>
+                                    <td class="text-end">₡${formatearMoneda(factura.subtotal)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>IVA (${factura.porcentajeImpuesto || 13}%):</strong></td>
+                                    <td class="text-end">₡${formatearMoneda(factura.montoImpuesto)}</td>
+                                </tr>
+                                <tr class="table-success">
+                                    <td><strong>TOTAL:</strong></td>
+                                    <td class="text-end"><strong>₡${formatearMoneda(factura.total)}</strong></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Observaciones -->
+            ${factura.observaciones ? `
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0"><i class="bi bi-chat-text me-2"></i>Observaciones</h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">${factura.observaciones}</p>
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <i class="bi bi-x-circle me-1"></i>Cerrar
+            </button>
+            ${factura.estado === 'Pendiente' ? `
+                <button type="button" class="btn btn-success" onclick="procesarFacturaPendiente(${factura.facturaId || factura.id})">
+                    <i class="bi bi-check-circle me-1"></i>Procesar Factura
+                </button>
+            ` : ''}
+            <button type="button" class="btn btn-primary" onclick="imprimirFacturaPendiente(${factura.facturaId || factura.id})">
+                <i class="bi bi-printer me-1"></i>Imprimir
+            </button>
+        </div>
+    `;
+
+    $('#modalDetalleFactura .modal-content').html(modalHtml);
+}
+
+// Helper function to format currency (assuming it's defined elsewhere or needs to be added)
+function formatearMoneda(valor) {
+    if (typeof valor === 'undefined' || valor === null) return '0.00';
+    return Number(valor).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+
+// ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 if (typeof window !== 'undefined') {
-    window.inicializarFiltrosFacturasPendientes = inicializarFiltrosFacturasPendientes;
-    window.configurarEventosFacturasPendientes = configurarEventosFacturasPendientes;
-    window.aplicarFiltrosLocalmenteFacturas = aplicarFiltrosLocalmenteFacturas;
-    window.limpiarFiltrosFacturas = limpiarFiltrosFacturas;
-    window.cambiarPaginaFacturas = cambiarPaginaFacturas;
-    window.mostrarFacturasPendientesEnTabla = mostrarFacturasPendientesEnTabla;
-    window.recargarFacturasPendientes = recargarFacturasPendientes;
-    window.configurarEventosBotonesFacturas = configurarEventosBotonesFacturas;
+    window.abrirFacturasPendientes = abrirFacturasPendientes;
+    window.procesarFacturaPendiente = procesarFacturaPendiente;
+    window.imprimirFacturaPendiente = imprimirFacturaPendiente;
+    window.verDetalleFactura = verDetalleFactura;
 
     console.log('📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente');
 } else {

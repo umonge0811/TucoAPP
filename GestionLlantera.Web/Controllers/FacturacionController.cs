@@ -19,6 +19,7 @@ using System.Security.Claims;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Net.Http; // Agregado para HttpClient
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -29,18 +30,23 @@ namespace GestionLlantera.Web.Controllers
         private readonly IInventarioService _inventarioService;
         private readonly IFacturacionService _facturacionService;
         private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient; // Agregado HttpClient
+        private readonly JsonSerializerOptions _jsonOptions; // Agregado para Json Options
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
             IInventarioService inventarioService,
             IFacturacionService facturacionService,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory // Inyectar IHttpClientFactory
             )
         {
             _logger = logger;
             _inventarioService = inventarioService;
             _facturacionService = facturacionService;
             _configuration = configuration;
+            _httpClient = httpClientFactory.CreateClient("ApiClient"); // Crear cliente HTTP con nombre
+            _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true }; // Configurar Json Options
         }
 
         public async Task<IActionResult> Index()
@@ -1570,16 +1576,91 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
+        // ===== OBTENER DETALLE COMPLETO DE FACTURA =====
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDetalleFactura(int facturaId)
+        {
+            try
+            {
+                _logger.LogInformation("👁️ Obteniendo detalle de factura: {FacturaId}", facturaId);
+
+                // Se asume que _httpClient está configurado para la URL base de la API
+                // y que la ruta /api/Facturacion/facturas/{facturaId} es correcta.
+                var response = await _httpClient.GetAsync($"/api/Facturacion/facturas/{facturaId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonContent = await response.Content.ReadAsStringAsync();
+                    // Usar _jsonOptions para deserializar dinámicamente si la estructura no es fija
+                    var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, _jsonOptions);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        factura = resultado,
+                        message = "Detalle de factura obtenido exitosamente"
+                    });
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del API obteniendo detalle de factura: {Error}", errorContent);
+
+                    // Devolver un BadRequest con el mensaje de error del API
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "Error obteniendo detalle de factura",
+                        details = errorContent
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo detalle de factura: {FacturaId}", facturaId);
+                // Devolver un error 500 con el mensaje de la excepción
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
+            }
+        }
+
+        // ===== FUNCIÓN AUXILIAR PARA OBTENER USUARIO ACTUAL =====
+        private object ObtenerUsuarioActual()
+        {
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var nombreUsuario = HttpContext.Session.GetString("NombreUsuario");
+
+                if (usuarioId.HasValue && !string.IsNullOrEmpty(nombreUsuario))
+                {
+                    return new
+                    {
+                        usuarioId = usuarioId.Value,
+                        nombre = nombreUsuario
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo usuario actual");
+            }
+
+            return new { usuarioId = 1, nombre = "Sistema" };
+        }
     }
 
     // Clases de request para el controlador
     public class MarcarEntregadoRequest
     {
-        public string CodigoSeguimiento { get; set; } = string.Empty;
-        public int PendienteId { get; set; }
-        public int CantidadAEntregar { get; set; }
-        public int UsuarioEntrega { get; set; }
-        public string ObservacionesEntrega { get; set; } = string.Empty;
+        public List<int> ProductosIds { get; set; } = new List<int>();
+        public string? ObservacionesEntrega { get; set; }
+        public DateTime? FechaEntrega { get; set; }
     }
 
     public class VerificarStockFacturaRequest
@@ -1599,7 +1680,17 @@ namespace GestionLlantera.Web.Controllers
     }
 
 
-
+    public class CompletarFacturaWebRequest
+    {
+        public int FacturaId { get; set; }
+        public string MetodoPago { get; set; } = string.Empty;
+        public string Observaciones { get; set; } = string.Empty;
+        public object DetallesPago { get; set; } = new object(); // Puede ser un JSON dinámico o un DTO específico
+        public bool ForzarVerificacionStock { get; set; }
+        public bool EsProforma { get; set; }
+        public string? NumeroFacturaGenerada { get; set; }
+        public int? FacturaGeneradaId { get; set; }
+    }
 
     public class RegistrarPendientesEntregaRequest
     {
