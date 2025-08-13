@@ -242,6 +242,9 @@ function construirSeccionProductos(productos, anchoMaximo) {
         // Solo agregar medida si es llanta Y no está ya incluida en el nombre
         const esLlanta = producto.esLlanta || producto.EsLlanta;
         if (esLlanta) {
+            // Remover la palabra "Llanta" del nombre del producto para ahorrar espacio
+            nombreCompleto = nombreCompleto.replace(/\bLlanta\b/gi, '').trim();
+            
             let medidaLlanta = '';
             
             // Obtener la medida de llanta desde diferentes fuentes
