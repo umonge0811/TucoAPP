@@ -1593,7 +1593,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
                     // Usar _jsonOptions para deserializar dinámicamente si la estructura no es fija
-                    var resultado = JsonSerializer.Deserialize<dynamic>(jsonContent, _jsonOptions);
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonContent, _jsonOptions);
 
                     return Ok(new
                     {
