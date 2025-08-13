@@ -155,6 +155,8 @@ async function cargarTodasLasFacturasPendientes() {
             let facturas = null;
             if (resultado.facturas && Array.isArray(resultado.facturas)) {
                 facturas = resultado.facturas;
+            } else if (resultado.data && resultado.data.facturas && Array.isArray(resultado.data.facturas)) {
+                facturas = resultado.data.facturas;
             } else if (resultado.data && Array.isArray(resultado.data)) {
                 facturas = resultado.data;
             } else if (Array.isArray(resultado)) {
