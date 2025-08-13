@@ -396,7 +396,8 @@ function construirSeccionPendientes(numeroFactura) {
                 nombreCompleto = `${nombreCompleto} - ${pendiente.MedidaLlanta}`;
             }
             
-            const nombreProducto = truncarTextoTermico(nombreCompleto, 22);
+            // ✅ MOSTRAR NOMBRE COMPLETO SIN TRUNCAR
+            const nombreProducto = nombreCompleto;
             const codigoSeguimiento = pendiente.codigoSeguimiento || `${numeroFactura}-${pendiente.productoId}`;
             
             html += `
@@ -419,7 +420,8 @@ function construirSeccionPendientes(numeroFactura) {
                 nombreCompleto = `${nombreCompleto} - ${pendiente.MedidaLlanta}`;
             }
             
-            const nombreProducto = truncarTextoTermico(nombreCompleto, 25);
+            // ✅ MOSTRAR NOMBRE COMPLETO SIN TRUNCAR
+            const nombreProducto = nombreCompleto;
             
             html += `
                 <div class="producto-pendiente-termico">
