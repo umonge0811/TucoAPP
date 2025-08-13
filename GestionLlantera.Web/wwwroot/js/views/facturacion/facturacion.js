@@ -3443,7 +3443,8 @@ async function imprimirProforma(proformaId) {
         const datosProforma = {
             numeroFactura: proforma.numeroFactura || 'PROF-001',
             nombreCliente: proforma.nombreCliente || 'Cliente General',
-            usuarioCreadorNombre: proforma.usuarioCreadorNombre || 'Sistema'
+            usuarioCreadorNombre: proforma.usuarioCreadorNombre || 'Sistema',
+            esReimpresion: false // Las proformas no son reimpresiones
         };
 
         console.log('🖨️ Generando recibo de proforma...');
@@ -3704,11 +3705,12 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
             }
         }
         if (factura) {    
-            // Preparar datos para el recibo
+            // ✅ GENERAR RECIBO PARA REIMPRESIÓN
             const datosFactura = {
                 numeroFactura: factura.numeroFactura || numeroFactura,
                 nombreCliente: factura.nombreCliente || 'Cliente General',
-                usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema'
+                usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema',
+                esReimpresion: true // ✅ MARCAR COMO REIMPRESIÓN
             };
 
             // Preparar productos para el recibo
@@ -4098,7 +4100,8 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const datosRecibo = {
             numeroFactura: numeroFactura,
             nombreCliente: nombreCliente,
-            usuarioCreadorNombre: usuarioCreadorNombre
+            usuarioCreadorNombre: usuarioCreadorNombre,
+            esReimpresion: window.esReimpresionActual || false // ✅ DETECTAR REIMPRESIÓN
         };
 
         // ✅ PREPARAR INFORMACIÓN DE PAGO MÚLTIPLE PARA EL RECIBO
