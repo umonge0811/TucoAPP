@@ -119,8 +119,8 @@ async function cargarTodasLasFacturasPendientes() {
         $('#facturasPendientesContent').hide();
         $('#facturasPendientesEmpty').hide();
 
-        // Realizar petición para obtener TODAS las facturas pendientes
-        const response = await fetch('/Facturacion/ObtenerFacturas?tamano=1000', {
+        // Realizar petición para obtener facturas pendientes específicamente
+        const response = await fetch('/Facturacion/ObtenerFacturasPendientes', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -134,7 +134,7 @@ async function cargarTodasLasFacturasPendientes() {
         }
 
         const resultado = await response.json();
-        console.log('📋 Respuesta del servidor facturas:', resultado);
+        console.log('📋 Respuesta del servidor facturas pendientes:', resultado);ta del servidor facturas:', resultado);
 
         if (resultado.success) {
             // Extraer facturas del resultado
