@@ -1585,44 +1585,30 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("👁️ Obteniendo detalle de factura: {FacturaId}", facturaId);
 
-                // Se asume que _httpClient está configurado para la URL base de la API
-                // y que la ruta /api/Facturacion/facturas/{facturaId} es correcta.
-                var response = await _httpClient.GetAsync($"/api/Facturacion/facturas/{facturaId}");
-
-                if (response.IsSuccessStatusCode)
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
                 {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    // Usar _jsonOptions para deserializar dinámicamente si la estructura no es fija
-                    var resultado = System.Text.Json.JsonSerializer.Deserialize<dynamic>(jsonContent, _jsonOptions);
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
 
-                    return Ok(new
-                    {
-                        success = true,
-                        factura = resultado,
-                        message = "Detalle de factura obtenido exitosamente"
-                    });
+                // Usar el servicio de facturación para obtener el detalle
+                var resultado = await _facturacionService.ObtenerFacturaPorIdAsync(facturaId, token);
+
+                if (resultado.success)
+                {
+                    return Json(new { success = true, factura = resultado.data });
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error del API obteniendo detalle de factura: {Error}", errorContent);
-
-                    // Devolver un BadRequest con el mensaje de error del API
-                    return BadRequest(new
-                    {
-                        success = false,
-                        message = "Error obteniendo detalle de factura",
-                        details = errorContent
-                    });
+                    _logger.LogError("❌ Error del servicio obteniendo factura: {Message}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error obteniendo detalle de factura: {FacturaId}", facturaId);
-                // Devolver un error 500 con el mensaje de la excepción
-                return StatusCode(500, new
-                {
-                    success = false,
+                return Json(new { 
+                    success = false, 
                     message = "Error interno del servidor",
                     details = ex.Message
                 });
