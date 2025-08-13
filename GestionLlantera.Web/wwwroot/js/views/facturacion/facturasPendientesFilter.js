@@ -62,9 +62,7 @@ function configurarEventosFacturasPendientes() {
         $('#estadoFacturasPendientes, #estadoFacturasPendientesMobile').val(estado);
 
         filtrosBusquedaFacturas.estado = estado;
-        
-        // Recargar facturas desde el servidor con el nuevo estado
-        cargarTodasLasFacturasPendientes();
+        aplicarFiltrosLocalmenteFacturas();
     });
 
     // Configurar filtros de fecha desde para ambas versiones
@@ -110,31 +108,19 @@ function configurarEventosFacturasPendientes() {
 }
 
 /**
- * Cargar todas las facturas según el estado seleccionado
+ * Cargar todas las facturas pendientes desde el servidor una sola vez
  */
 async function cargarTodasLasFacturasPendientes() {
     try {
-        console.log('📋 === CARGANDO TODAS LAS FACTURAS ===');
-        
-        // Obtener el estado seleccionado
-        const estadoSeleccionado = $('#estadoFacturasPendientes').val() || $('#estadoFacturasPendientesMobile').val() || 'Pendiente';
-        console.log('📋 Estado seleccionado:', estadoSeleccionado);
+        console.log('📋 === CARGANDO TODAS LAS FACTURAS PENDIENTES ===');
 
         // Mostrar loading
         $('#facturasPendientesLoading').show();
         $('#facturasPendientesContent').hide();
         $('#facturasPendientesEmpty').hide();
 
-        // Construir URL con parámetros
-        let url = '/Facturacion/ObtenerFacturas?tamano=1000';
-        if (estadoSeleccionado && estadoSeleccionado !== 'todos') {
-            url += `&estado=${encodeURIComponent(estadoSeleccionado)}`;
-        }
-
-        console.log('📋 URL de consulta:', url);
-
-        // Realizar petición para obtener facturas
-        const response = await fetch(url, {
+        // Realizar petición para obtener TODAS las facturas pendientes
+        const response = await fetch('/Facturacion/ObtenerFacturasPendientes?tamano=1000', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -162,13 +148,13 @@ async function cargarTodasLasFacturasPendientes() {
             }
 
             if (facturas && facturas.length > 0) {
-                console.log('✅ Facturas cargadas:', facturas.length);
+                console.log('✅ Facturas pendientes cargadas:', facturas.length);
                 todasLasFacturasPendientes = facturas;
 
                 // Aplicar filtros iniciales (mostrar todas)
                 aplicarFiltrosLocalmenteFacturas();
             } else {
-                console.log('ℹ️ No se encontraron facturas con el estado:', estadoSeleccionado);
+                console.log('ℹ️ No se encontraron facturas pendientes');
                 todasLasFacturasPendientes = [];
                 mostrarFacturasPendientesVacias();
             }
@@ -176,15 +162,15 @@ async function cargarTodasLasFacturasPendientes() {
             console.log('❌ Error del servidor:', resultado.message);
             mostrarFacturasPendientesVacias();
             if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', resultado.message || 'Error al cargar facturas', 'warning');
+                mostrarToast('Error', resultado.message || 'Error al cargar facturas pendientes', 'warning');
             }
         }
 
     } catch (error) {
-        console.error('❌ Error cargando facturas:', error);
+        console.error('❌ Error cargando facturas pendientes:', error);
         mostrarFacturasPendientesVacias();
         if (typeof mostrarToast === 'function') {
-            mostrarToast('Error', 'Error al cargar facturas: ' + error.message, 'danger');
+            mostrarToast('Error', 'Error al cargar facturas pendientes: ' + error.message, 'danger');
         }
     } finally {
         $('#facturasPendientesLoading').hide();
@@ -223,10 +209,11 @@ function aplicarFiltrosLocalmenteFacturas() {
             }
         }
 
-        // El filtro por estado se aplica en el servidor, no localmente
-        // Solo aplicar filtro de estado local si es 'todos' y hay múltiples estados
+        // Filtro por estado
         if (filtrosBusquedaFacturas.estado && filtrosBusquedaFacturas.estado !== 'todos') {
-            // No filtrar localmente por estado, ya se filtró en servidor
+            if (factura.estado !== filtrosBusquedaFacturas.estado) {
+                cumpleFiltros = false;
+            }
         }
 
         // Filtro por fecha desde
