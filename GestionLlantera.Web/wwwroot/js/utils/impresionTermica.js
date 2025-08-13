@@ -159,9 +159,42 @@ function construirSeccionProductos(productos, anchoMaximo) {
         const nombreTruncado = truncarTextoTermico(producto.nombreProducto, 28);
         const subtotalProducto = producto.precioUnitario * producto.cantidad;
         
+        // Construir información de medida de llanta
+        let infoLlanta = '';
+        if (producto.esLlanta || producto.EsLlanta) {
+            let medidaLlanta = '';
+            
+            // Intentar obtener medida desde diferentes propiedades
+            if (producto.medidaCompleta) {
+                medidaLlanta = producto.medidaCompleta;
+            } else if (producto.MedidaCompleta) {
+                medidaLlanta = producto.MedidaCompleta;
+            } else if (producto.llanta && producto.llanta.ancho && producto.llanta.diametro) {
+                // Construir medida desde objeto llanta
+                const llanta = producto.llanta;
+                if (llanta.perfil && llanta.perfil > 0) {
+                    medidaLlanta = `${llanta.ancho}/${llanta.perfil}/R${llanta.diametro}`;
+                } else {
+                    medidaLlanta = `${llanta.ancho}/R${llanta.diametro}`;
+                }
+            } else if (producto.Ancho && producto.Diametro) {
+                // Construir medida desde propiedades directas
+                if (producto.Perfil && producto.Perfil > 0) {
+                    medidaLlanta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                } else {
+                    medidaLlanta = `${producto.Ancho}/R${producto.Diametro}`;
+                }
+            }
+            
+            if (medidaLlanta) {
+                infoLlanta = `<div class="producto-medida-termico">📏 ${medidaLlanta}</div>`;
+            }
+        }
+        
         html += `
             <div class="producto-item-termico">
                 <div class="producto-nombre-termico">${nombreTruncado}</div>
+                ${infoLlanta}
                 <div class="producto-detalle-termico">${formatearLineaTermica(
                     `${producto.cantidad} x ₡${producto.precioUnitario.toFixed(0)}`, 
                     `₡${subtotalProducto.toFixed(0)}`,

@@ -97,12 +97,18 @@ namespace API.Controllers
                         FechaUltimaActualizacion = p.FechaUltimaActualizacion,
                         EsLlanta = p.Llanta.Any(),
                         MedidaCompleta = p.Llanta.Any() ? 
-                            p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil + "R" + p.Llanta.First().Diametro : null,
+                            (p.Llanta.First().Perfil != null && p.Llanta.First().Perfil > 0 ? 
+                                p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil + "/R" + p.Llanta.First().Diametro :
+                                p.Llanta.First().Ancho + "/R" + p.Llanta.First().Diametro) : null,
                         Marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
                         Modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         IndiceVelocidad = p.Llanta.Any() ? p.Llanta.First().IndiceVelocidad : null,
                         TipoTerreno = p.Llanta.Any() ? p.Llanta.First().TipoTerreno : null,
-                        ImagenesUrls = p.ImagenesProductos.Select(img => img.Urlimagen).ToList()
+                        ImagenesUrls = p.ImagenesProductos.Select(img => img.Urlimagen).ToList(),
+                        // ✅ AGREGAR PROPIEDADES INDIVIDUALES DE MEDIDA PARA FLEXIBILIDAD
+                        Ancho = p.Llanta.Any() ? p.Llanta.First().Ancho : null,
+                        Perfil = p.Llanta.Any() ? p.Llanta.First().Perfil : null,
+                        Diametro = p.Llanta.Any() ? p.Llanta.First().Diametro : null
                     })
                     .ToListAsync();
 
@@ -887,7 +893,7 @@ namespace API.Controllers
                         (f.IdentificacionCliente != null && f.IdentificacionCliente.ToLower().Contains(termino)) ||
                         (f.TelefonoCliente != null && f.TelefonoCliente.ToLower().Contains(termino)) ||
                         (f.EmailCliente != null && f.EmailCliente.ToLower().Contains(termino)));
-                    
+
                     var totalConBusqueda = await query.CountAsync();
                     _logger.LogInformation("📋 Después de filtro búsqueda '{Termino}': {Total} proformas", termino, totalConBusqueda);
                 }
@@ -1139,7 +1145,7 @@ namespace API.Controllers
 
                     if (detalleAEliminar != null)
                     {
-                        productosEliminados.Add(new {
+                        productosEliminados.Add(new{
                             productoId = detalleAEliminar.ProductoId,
                             nombreProducto = detalleAEliminar.NombreProducto,
                             cantidad = detalleAEliminar.Cantidad,
@@ -1699,10 +1705,10 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("🧪 === TEST PERMISO ENTREGAR PENDIENTES ===");
-                
+
                 var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
                     "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
-                
+
                 var resultado = new
                 {
                     mensaje = "Test de validación del permiso 'Entregar Pendientes'",
@@ -1978,12 +1984,12 @@ namespace API.Controllers
                 {
                     var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
                     var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
-                    
+
                     proforma.Estado = "Expirada";
                     proforma.FechaActualizacion = DateTime.Now;
                     proforma.Observaciones = (proforma.Observaciones ?? "") + 
                         $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
-                    
+
                     cantidadActualizadas++;
 
                     _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
@@ -2050,6 +2056,9 @@ namespace API.Controllers
         public string? MetodoPago { get; set; }
         public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
         public bool ForzarVerificacionStock { get; set; } = false;
+        public bool EsProforma { get; set; } = false; // Añadido para manejar la conversión de proformas
+        public string? NumeroFacturaGenerada { get; set; } // Para proformas convertidas
+        public string? Observaciones { get; set; } // Para observaciones generales
     }
 
     public class DetallePagoCompletarDTO
@@ -2082,7 +2091,7 @@ namespace API.Controllers
     public class MarcarEntregadoPorCodigoRequest
     {
         public string CodigoSeguimiento { get; set; } = string.Empty;
-        public int PendienteId { get; set; }
+        public int PendienteId { get; set; } // Este campo parece redundante si ya se usa CodigoSeguimiento
         public int CantidadAEntregar { get; set; }
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }

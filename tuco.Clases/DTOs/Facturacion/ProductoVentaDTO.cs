@@ -1,4 +1,3 @@
-
 using System.ComponentModel.DataAnnotations;
 
 namespace Tuco.Clases.DTOs.Facturacion
@@ -6,27 +5,27 @@ namespace Tuco.Clases.DTOs.Facturacion
     public class ProductoVentaDTO
     {
         public int ProductoId { get; set; }
-        
+
         [Required]
         public string NombreProducto { get; set; } = string.Empty;
-        
+
         public string? Descripcion { get; set; }
-        
+
         [Required]
         [Range(0.01, double.MaxValue, ErrorMessage = "El precio debe ser mayor a 0")]
         public decimal Precio { get; set; }
-        
+
         public decimal? Costo { get; set; }
         public decimal? PorcentajeUtilidad { get; set; }
-        
+
         [Required]
         [Range(0, int.MaxValue)]
         public int CantidadEnInventario { get; set; }
-        
+
         public int StockMinimo { get; set; }
-        
+
         public DateTime? FechaUltimaActualizacion { get; set; }
-        
+
         // Información de llanta si aplica
         public bool EsLlanta { get; set; }
         public string? MedidaCompleta { get; set; }
@@ -34,10 +33,15 @@ namespace Tuco.Clases.DTOs.Facturacion
         public string? Modelo { get; set; }
         public string? IndiceVelocidad { get; set; }
         public string? TipoTerreno { get; set; }
-        
+
         // Imágenes del producto
         public List<string> ImagenesUrls { get; set; } = new List<string>();
-        
+
+        // ✅ PROPIEDADES INDIVIDUALES PARA CONSTRUCCIÓN DE MEDIDA
+        public string? Ancho { get; set; }
+        public int? Perfil { get; set; }
+        public string? Diametro { get; set; }
+
         // Propiedades calculadas
         public bool TieneStock => CantidadEnInventario > 0;
         public bool StockBajo => CantidadEnInventario <= StockMinimo;
