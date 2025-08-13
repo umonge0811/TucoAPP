@@ -62,7 +62,7 @@ body {
 }
 
 .numero-factura-termico {
-    font-size: 28px !important;
+    font-size: 32px !important;
     font-weight: bold !important;
 }
 
@@ -346,6 +346,13 @@ body {
         print-color-adjust: exact !important;
     }
 
+    /* Forzar tamaño del número de factura en cualquier contexto */
+    .numero-factura-termico {
+        font-size: 34px !important;
+        font-weight: bold !important;
+        line-height: 1.2 !important;
+    }
+
     /* Títulos más grandes para legibilidad */
     .nombre-empresa-termico {
         font-size: 24px !important;
@@ -356,7 +363,7 @@ body {
     }
 
     .numero-factura-termico {
-        font-size: 30px !important;
+        font-size: 34px !important;
     }
 
     .titulo-seccion-termico {
@@ -382,6 +389,19 @@ body {
     .codigo-recuadro-termico {
         font-size: 20px !important;
     }
+}
+
+/* ===== ESTILOS UNIVERSALES PARA NÚMERO DE FACTURA ===== */
+/* Estos estilos se aplican tanto en pantalla como en impresión */
+.numero-factura-termico,
+.recibo-container-termico .numero-factura-termico,
+body .numero-factura-termico {
+    font-size: 32px !important;
+    font-weight: bold !important;
+    line-height: 1.2 !important;
+    display: block !important;
+    text-align: center !important;
+    margin: 2mm 0 !important;
 }
 
 /* ===== CONFIGURACIÓN PARA IMPRESORAS 58MM ===== */
