@@ -289,8 +289,15 @@ function construirSeccionTotales(totales, anchoMaximo) {
 function construirSeccionPago(totales, detallesPago = null) {
     const metodoPago = totales.metodoPago || 'Efectivo';
     
-    // Verificar si es pago múltiple - priorizar detalles pasados como parámetro
-    const detallesPagoValidos = detallesPago || window.detallesPagoActuales;
+    // Verificar si es pago múltiple - priorizar totales.detallesPago, luego parámetro, luego window
+    const detallesPagoValidos = totales.detallesPago || detallesPago || window.detallesPagoActuales;
+    
+    console.log('🔍 === DEBUG SECCIÓN PAGO ===');
+    console.log('🔍 totales.metodoPago:', totales.metodoPago);
+    console.log('🔍 totales.detallesPago:', totales.detallesPago);
+    console.log('🔍 detallesPago (parámetro):', detallesPago);
+    console.log('🔍 window.detallesPagoActuales:', window.detallesPagoActuales);
+    console.log('🔍 detallesPagoValidos:', detallesPagoValidos);
     
     if (detallesPagoValidos && detallesPagoValidos.length > 1) {
         let html = `
