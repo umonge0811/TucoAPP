@@ -399,8 +399,6 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                _logger.LogInformation("📋 === OBTENIENDO FACTURAS CON FILTROS ===");
-                _logger.LogInformation("📋 Estado: {Estado}, Tamaño: {Tamano}",  tamano);
 
                 using var client = new HttpClient();
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
