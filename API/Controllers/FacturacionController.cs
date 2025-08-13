@@ -98,8 +98,8 @@ namespace API.Controllers
                         EsLlanta = p.Llanta.Any(),
                         MedidaCompleta = p.Llanta.Any() ? 
                             (p.Llanta.First().Perfil != null && p.Llanta.First().Perfil > 0 ? 
-                                p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil.ToString() + "R" + p.Llanta.First().Diametro.ToString() :
-                                p.Llanta.First().Ancho + "R" + p.Llanta.First().Diametro.ToString()) : null,
+                                p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil.ToString() + "R" + p.Llanta.First().Diametro :
+                                p.Llanta.First().Ancho + "R" + p.Llanta.First().Diametro) : null,
                         Marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
                         Modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         IndiceVelocidad = p.Llanta.Any() ? p.Llanta.First().IndiceVelocidad : null,
@@ -154,8 +154,8 @@ namespace API.Controllers
                         EsLlanta = p.Llanta.Any(),
                         MedidaCompleta = p.Llanta.Any() ? 
                             (p.Llanta.First().Perfil != null && p.Llanta.First().Perfil > 0 ? 
-                                p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil.ToString() + "R" + p.Llanta.First().Diametro.ToString() :
-                                p.Llanta.First().Ancho + "R" + p.Llanta.First().Diametro.ToString()) : null,
+                                p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil.ToString() + "R" + p.Llanta.First().Diametro :
+                                p.Llanta.First().Ancho + "R" + p.Llanta.First().Diametro) : null,
                         Marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
                         Modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         IndiceVelocidad = p.Llanta.Any() ? p.Llanta.First().IndiceVelocidad : null,
@@ -559,8 +559,8 @@ namespace API.Controllers
                             EsLlanta = d.Producto.Llanta.Any(),
                             MedidaLlanta = d.Producto.Llanta.Any() ? 
                                 (d.Producto.Llanta.First().Perfil != null && d.Producto.Llanta.First().Perfil > 0 ? 
-                                    d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil.ToString() + "R" + d.Producto.Llanta.First().Diametro.ToString() :
-                                    d.Producto.Llanta.First().Ancho + "R" + d.Producto.Llanta.First().Diametro.ToString()) : null,
+                                    d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil.ToString() + "R" + d.Producto.Llanta.First().Diametro :
+                                    d.Producto.Llanta.First().Ancho + "R" + d.Producto.Llanta.First().Diametro) : null,
                             MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
                             ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
                         }).ToList()
