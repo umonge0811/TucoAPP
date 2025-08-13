@@ -31,7 +31,7 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
             _configuration = config;
             _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
-
+            
             /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
             _apiConfig = apiConfig;
 
@@ -122,7 +122,7 @@ namespace GestionLlantera.Web.Services
                     {
                         var url = _apiConfig.GetApiUrl($"Inventario/productos/{producto.ProductoId}");
                         _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                        
                         var response = await _httpClient.GetAsync(url);
 
                         if (!response.IsSuccessStatusCode)
@@ -306,7 +306,7 @@ namespace GestionLlantera.Web.Services
                         // Llamar al endpoint de ajuste de stock en la API
                         var urlAjuste = _apiConfig.GetApiUrl($"Inventario/productos/{productoAjuste.ProductoId}/ajustar-stock");
                         _logger.LogInformation("🌐 URL construida: {url}", urlAjuste);
-
+                        
                         var httpResponse = await _httpClient.PostAsync(urlAjuste, content);
 
                         if (httpResponse.IsSuccessStatusCode)
@@ -468,7 +468,7 @@ namespace GestionLlantera.Web.Services
 
                 var url = _apiConfig.GetApiUrl("Facturacion/facturas/pendientes");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await client.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -481,7 +481,7 @@ namespace GestionLlantera.Web.Services
                     // Verificar si la respuesta tiene la estructura correcta
                     if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                     {
-                        _logger.LogInformation("📋 API confirmed success in obtaining pending invoices");
+                        _logger.LogInformation("📋 API confirmó éxito en obtener facturas pendientes");
 
                         // Extraer las facturas del response
                         if (apiResponse.TryGetProperty("facturas", out var facturasElement))
@@ -525,82 +525,6 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<(bool success, object data, string message)> ObtenerTodasLasFacturasAsync()
-        {
-            try
-            {
-                _logger.LogInformation("📋 === OBTENIENDO TODAS LAS FACTURAS DESDE SERVICIO ===");
-
-                // Se utiliza _httpClient que ya tiene la configuración base
-                var url = _apiConfig.GetApiUrl("Facturacion/facturas?tamano=1000");
-                _logger.LogInformation("🌐 URL construida: {url}", url);
-
-                var response = await _httpClient.GetAsync(url);
-
-                _logger.LogInformation("📋 Respuesta del API: {StatusCode}", response.StatusCode);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var contenido = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation("📋 Contenido recibido (primeros 500 chars): {Contenido}", 
-                        contenido.Length > 500 ? contenido.Substring(0, 500) + "..." : contenido);
-
-                    var resultado = System.Text.Json.JsonSerializer.Deserialize<dynamic>(contenido, _jsonOptions);
-
-                    return (true, resultado, "Todas las facturas obtenidas exitosamente");
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error del API: {StatusCode} - {Error}", response.StatusCode, error);
-                    return (false, null, $"Error del servidor: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error obteniendo todas las facturas desde servicio");
-                return (false, null, "Error interno del servicio");
-            }
-        }
-
-        public async Task<(bool success, object data, string message)> ObtenerFacturasPorEstadoAsync(string estado)
-        {
-            try
-            {
-                _logger.LogInformation("📋 === OBTENIENDO FACTURAS POR ESTADO: {Estado} ===", estado);
-
-                // Se utiliza _httpClient que ya tiene la configuración base
-                var url = _apiConfig.GetApiUrl($"Facturacion/facturas?estado={estado}&tamano=1000");
-                _logger.LogInformation("🌐 URL construida: {url}", url);
-
-                var response = await _httpClient.GetAsync(url);
-
-                _logger.LogInformation("📋 Respuesta del API: {StatusCode}", response.StatusCode);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var contenido = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation("📋 Contenido recibido (primeros 500 chars): {Contenido}", 
-                        contenido.Length > 500 ? contenido.Substring(0, 500) + "..." : contenido);
-
-                    var resultado = System.Text.Json.JsonSerializer.Deserialize<dynamic>(contenido, _jsonOptions);
-
-                    return (true, resultado, $"Facturas con estado {estado} obtenidas exitosamente");
-                }
-                else
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    _logger.LogError("❌ Error del API: {StatusCode} - {Error}", response.StatusCode, error);
-                    return (false, null, $"Error del servidor: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error obteniendo facturas por estado desde servicio");
-                return (false, null, "Error interno del servicio");
-            }
-        }
-
         public async Task<(bool success, object data, string message, string details)> ObtenerProformasAsync(string jwtToken, string estado = null, int pagina = 1, int tamano = 20)
         {
             try
@@ -640,7 +564,7 @@ namespace GestionLlantera.Web.Services
                     // Verificar si la respuesta tiene la estructura correcta
                     if (apiResponse.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
                     {
-                        _logger.LogInformation("📋 API confirmed success in obtaining proformas");
+                        _logger.LogInformation("📋 API confirmó éxito en obtener proformas");
 
                         // Extraer las proformas del response
                         if (apiResponse.TryGetProperty("proformas", out var proformasElement))
@@ -794,7 +718,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl("Facturacion/facturas");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PostAsync(url, content);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -891,7 +815,7 @@ namespace GestionLlantera.Web.Services
                 // Llamar al endpoint del API para verificar stock
                 var url = _apiConfig.GetApiUrl("Facturacion/verificar-stock-factura");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -1357,19 +1281,15 @@ namespace GestionLlantera.Web.Services
                         new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
                 }
 
-                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
-                {
-                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
-                    NullValueHandling = NullValueHandling.Include
-                });
+                var jsonContent = JsonConvert.SerializeObject(request);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 _logger.LogInformation("📤 Enviando request al API: {Request}", jsonContent);
 
                 // Llamar al endpoint del API para eliminar productos
                 var url = _apiConfig.GetApiUrl("Facturacion/eliminar-productos-factura");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PostAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -1434,7 +1354,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl("Facturacion/pendientes-entrega");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.GetAsync(url);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -1562,7 +1482,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl("Facturacion/registrar-pendientes-entrega");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PostAsJsonAsync(url, datosParaAPI);
 
                 var responseContent = await response.Content.ReadAsStringAsync();
@@ -1628,7 +1548,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.GetAsync(url);
 
                 if (response.IsSuccessStatusCode)
@@ -1685,7 +1605,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl("Facturacion/marcar-entregados");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PutAsync(url, content);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
@@ -1727,7 +1647,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl($"Facturacion/marcar-proforma-facturada/{proformaId}");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PutAsync(url, 
                     new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"));
 
@@ -1778,7 +1698,7 @@ namespace GestionLlantera.Web.Services
                 // ✅ USAR SERVICIO CENTRALIZADO PARA CONSTRUIR URL
                 var url = _apiConfig.GetApiUrl("Facturacion/marcar-entregado-por-codigo");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
-
+                
                 var response = await _httpClient.PostAsJsonAsync(url, request);
 
                 var responseContent = await response.Content.ReadAsStringAsync();

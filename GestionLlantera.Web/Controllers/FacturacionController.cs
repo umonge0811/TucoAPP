@@ -690,40 +690,37 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📋 Obteniendo facturas desde el servicio de facturación - Estado: {Estado}", estado ?? "Todas");
+                _logger.LogInformation("📋 Solicitud de facturas desde el controlador Web - Estado: {Estado}", estado);
 
-                // Si no se especifica estado, traer todas las facturas
-                var resultado = string.IsNullOrEmpty(estado) ? 
-                    await _facturacionService.ObtenerTodasLasFacturasAsync() : 
-                    await _facturacionService.ObtenerFacturasPorEstadoAsync(estado);
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var resultado = await _facturacionService.ObtenerFacturasAsync(token, estado, tamano);
+
+                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
+                    resultado.success, resultado.message);
 
                 if (resultado.success && resultado.data != null)
                 {
-                    var facturas = resultado.data as IEnumerable<object>;
+                    _logger.LogInformation("📋 Procesando respuesta del API de facturas");
 
-                    if (facturas != null)
-                    {
-                        _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturas.Count());
-
-                        return Ok(new
-                        {
-                            success = true,
-                            facturas = facturas,
-                            message = string.IsNullOrEmpty(estado) ? 
-                                $"Se encontraron {facturas.Count()} facturas" : 
-                                $"Se encontraron {facturas.Count()} facturas con estado {estado}"
-                        });
-                    }
+                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
+                    return Json(resultado.data);
                 }
-                
-                _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
-                return Json(new
+                else
                 {
-                    success = false,
-                    message = resultado.message ?? "No se pudieron obtener las facturas",
-                    facturas = new List<object>(),
-                    totalFacturas = 0
-                });
+                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
+                    return Json(new
+                    {
+                        success = false,
+                        message = resultado.message ?? "No se pudieron obtener las facturas",
+                        facturas = new List<object>(),
+                        totalFacturas = 0
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -1339,6 +1336,8 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
+                _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
+
                 if (!await this.TienePermisoAsync("Ver Productos"))
                 {
                     return Json(new { success = false, message = "Sin permisos para ver pendientes de entrega" });
