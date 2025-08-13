@@ -62,7 +62,7 @@ function configurarEventosFacturasPendientes() {
         $('#estadoFacturasPendientes, #estadoFacturasPendientesMobile').val(estado);
 
         filtrosBusquedaFacturas.estado = estado;
-
+        
         // Recargar facturas desde el servidor con el nuevo estado
         cargarTodasLasFacturasPendientes();
     });
@@ -115,7 +115,7 @@ function configurarEventosFacturasPendientes() {
 async function cargarTodasLasFacturasPendientes() {
     try {
         console.log('📋 === CARGANDO TODAS LAS FACTURAS ===');
-
+        
         // Obtener el estado seleccionado
         const estadoSeleccionado = $('#estadoFacturasPendientes').val() || $('#estadoFacturasPendientesMobile').val() || 'Pendiente';
         console.log('📋 Estado seleccionado:', estadoSeleccionado);
@@ -697,7 +697,7 @@ function crearFilaFacturaPendiente(factura) {
                 </div>
                 <div class="btn-group btn-group-sm d-none d-sm-inline-block">
                     <!-- Botones horizontales en tablet/desktop -->
-
+                    
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>
