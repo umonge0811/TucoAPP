@@ -1419,11 +1419,24 @@ function actualizarVistaCarrito() {
         const metodoPago = producto.metodoPago || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
+        // ✅ AGREGAR INFORMACIÓN DE LLANTA SI EXISTE
+        let infoLlantaCarrito = '';
+        if (producto.esLlanta && producto.medidaCompleta) {
+            infoLlantaCarrito = `
+                <div class="info-llanta-carrito mb-1">
+                    <small class="text-primary fw-bold">
+                        <i class="bi bi-tire me-1"></i>${producto.medidaCompleta}
+                    </small>
+                </div>
+            `;
+        }
+
         html += `
             <div class="producto-venta-item border rounded p-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <h6 class="mb-1">${producto.nombreProducto}</h6>
+                        ${infoLlantaCarrito}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
                             <small class="badge bg-info">${configMetodo.nombre}</small>
