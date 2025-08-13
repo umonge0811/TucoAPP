@@ -1,5 +1,9 @@
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
+
+// Variable global para marcar reimpresiones
+let esReimpresionActual = false;
+
 let productosEnVenta = [];
 let clienteSeleccionado = null;
 let modalInventario = null;
@@ -3676,6 +3680,7 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
         if ($btn.length > 0) {
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Imprimiendo...');
         }
+
         let factura;
         // Si ya tenemos los datos, usarlos; si no, obtenerlos
         if (datosFacturaExistentes) {
@@ -3692,18 +3697,22 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
                 },
                 credentials: 'include'
             });
+
             if (!response.ok) {
                 throw new Error(`Error HTTP: ${response.status}`);
             }
+
             const resultado = await response.json();
             console.log('🖨️ Detalles de factura obtenidos:', resultado);
+
             if (resultado.success && resultado.factura) {
                 factura = resultado.factura;
             } else {
                 throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
             }
         }
-        if (factura) {    
+
+        if (factura) {
             // Preparar datos para el recibo
             const datosFactura = {
                 numeroFactura: factura.numeroFactura || numeroFactura,
@@ -3743,7 +3752,7 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
             }
 
             console.log('🖨️ Generando recibo para re-impresión...');
-            
+
             // Generar el recibo usando la función existente
             if (typeof generarRecibo === 'function') {
                 generarRecibo(datosFactura, productosParaRecibo, totalesRecibo);
@@ -3760,7 +3769,6 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
     } catch (error) {
         console.error('❌ Error re-imprimiendo factura:', error);
         mostrarToast('Error', 'No se pudo re-imprimir la factura: ' + error.message, 'danger');
-        // ✅ CÓDIGO CORREGIDO:
     } finally {
         // Restaurar botón solo si existe
         const $btn = $('#btnImprimirFacturaModal');
@@ -3769,7 +3777,6 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
         }
     }
 }
-
 /**
  * ✅ FUNCIÓN GLOBAL: Exportar función de re-impresión
  */
@@ -3948,14 +3955,16 @@ function generarRecibo(factura, productos, totales) {
         usuarioCreadorNombre: totales.usuario?.nombre ||
             totales.usuario?.nombreUsuario ||
             factura?.usuarioCreadorNombre ||
-            'Sistema'
+            'Sistema',
+        esReimpresion: factura?.esReimpresion || window.esReimpresionActual || false // ✅ AGREGAR FLAG DE REIMPRESIÓN
     };
 
     // ✅ OPCIONES DE CONFIGURACIÓN CON INFORMACIÓN DE PAGO MÚLTIPLE
     const opciones = {
         ancho: 80, // 80mm por defecto
         tipo: datosFactura.numeroFactura && datosFactura.numeroFactura.startsWith('PROF') ? 'proforma' : 'factura',
-        pagoMultiple: totales.infoPagoMultiple // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
+        pagoMultiple: totales.infoPagoMultiple, // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
+        esReimpresion: datosFactura.esReimpresion || false // ✅ AGREGAR FLAG DE REIMPRESIÓN
     };
 
     console.log('🖨️ Opciones del recibo:', opciones);
@@ -3968,11 +3977,16 @@ function generarRecibo(factura, productos, totales) {
         if (totales.infoPagoMultiple) {
             console.log('✅ Recibo incluye desglose de pago múltiple');
         }
+
+        if (datosFactura.esReimpresion) {
+            console.log('✅ Recibo marcado como REIMPRESIÓN');
+        }
     } catch (error) {
         console.error('❌ Error generando recibo térmico:', error);
         mostrarToast('Error', 'No se pudo generar el recibo', 'danger');
     }
 }
+
 
 /**
  * Determinar número de factura con prioridades
@@ -4099,7 +4113,8 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const datosRecibo = {
             numeroFactura: numeroFactura,
             nombreCliente: nombreCliente,
-            usuarioCreadorNombre: usuarioCreadorNombre
+            usuarioCreadorNombre: usuarioCreadorNombre,
+            esReimpresion: window.esReimpresionActual || false // ✅ AGREGAR FLAG GLOBAL DE REIMPRESIÓN
         };
 
         // ✅ PREPARAR INFORMACIÓN DE PAGO MÚLTIPLE PARA EL RECIBO
@@ -4147,7 +4162,8 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             cliente: nombreCliente,
             usuario: usuarioCreadorNombre,
             esPagoMultiple: esPagoMultiple,
-            detallesPago: infoPagoMultiple
+            detallesPago: infoPagoMultiple,
+            esReimpresion: datosRecibo.esReimpresion
         });
 
         // ✅ LLAMAR A LA FUNCIÓN DE GENERACIÓN DE RECIBOS CON DATOS COMPLETOS
@@ -4164,6 +4180,7 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('✅ Cliente:', nombreCliente);
         console.log('✅ Cajero:', usuarioCreadorNombre);
         console.log('✅ Pago múltiple:', esPagoMultiple ? 'Sí' : 'No');
+        console.log('✅ Es reimpresión:', datosRecibo.esReimpresion ? 'Sí' : 'No');
 
     } catch (error) {
         console.error('❌ Error generando recibo para factura completada:', error);
@@ -4178,6 +4195,8 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         });
     }
 }
+
+
 /**
  * Función de impresión directa cuando falla la ventana emergente
  */

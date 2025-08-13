@@ -1130,6 +1130,10 @@ async function imprimirFactura(facturaId) {
             mostrarToast('Imprimiendo', 'Generando recibo de factura...', 'info');
         }
 
+        // ✅ ESTABLECER FLAG GLOBAL DE REIMPRESIÓN ANTES DE OBTENER DATOS
+        window.esReimpresionActual = true;
+        console.log('🖨️ Flag de reimpresión establecido:', window.esReimpresionActual);
+
         const response = await fetch(`/Facturacion/ObtenerDetalleFactura?facturaId=${facturaId}`, {
             method: 'GET',
             headers: {
@@ -1160,7 +1164,8 @@ async function imprimirFactura(facturaId) {
                 const datosFactura = {
                     numeroFactura: factura.numeroFactura,
                     nombreCliente: factura.nombreCliente,
-                    usuarioCreadorNombre: factura.usuarioCreadorNombre
+                    usuarioCreadorNombre: factura.usuarioCreadorNombre,
+                    esReimpresion: true // ✅ MARCAR COMO REIMPRESIÓN
                 };
 
                 const productos = factura.detallesFactura || [];
@@ -1197,8 +1202,15 @@ async function imprimirFactura(facturaId) {
         } else {
             alert('Error imprimiendo factura: ' + error.message);
         }
+    } finally {
+        // ✅ LIMPIAR FLAG DESPUÉS DE LA IMPRESIÓN
+        setTimeout(() => {
+            window.esReimpresionActual = false;
+            console.log('🖨️ Flag de reimpresión limpiado');
+        }, 2000);
     }
 }
+
 
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 if (typeof window !== 'undefined') {
