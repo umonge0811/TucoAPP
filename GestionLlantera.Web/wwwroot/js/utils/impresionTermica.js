@@ -257,7 +257,7 @@ function construirSeccionProductos(productos, anchoMaximo) {
             <div class="producto-item-termico">
                 <div class="producto-nombre-termico">${nombreTruncado}</div>
                 <div class="producto-detalle-termico">${formatearLineaTermica(
-                    `${producto.cantidad} unidad(es)`, 
+                    `${producto.cantidad} x ₡${producto.precioUnitario.toFixed(0)}`, 
                     `₡${subtotalProducto.toFixed(0)}`,
                     anchoMaximo
                 )}</div>
