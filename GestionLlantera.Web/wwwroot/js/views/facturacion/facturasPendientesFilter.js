@@ -1063,7 +1063,7 @@ function mostrarDetalleFacturaModal(factura) {
 }
 
 /**
- * ✅ FUNCIÓN: Imprimir factura usando sistema de impresión térmica (replicando lógica de facturacion.js)
+ * ✅ FUNCIÓN: Imprimir factura usando el sistema existente de facturacion.js
  */
 async function imprimirFactura(facturaId) {
     try {
@@ -1078,96 +1078,48 @@ async function imprimirFactura(facturaId) {
             return;
         }
 
-        // Mostrar indicador de progreso
-        if (typeof mostrarToast === 'function') {
-            mostrarToast('Imprimiendo', 'Generando recibo de factura...', 'info');
-        }
-
-        // Obtener los detalles completos de la factura
-        const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const resultado = await response.json();
-        console.log('🖨️ Detalles de factura obtenidos:', resultado);
-
-        if (resultado.success && resultado.factura) {
-            const factura = resultado.factura;
-            
-            // Preparar datos para el recibo (siguiendo formato de facturacion.js)
-            const datosFactura = {
-                numeroFactura: factura.numeroFactura || 'N/A',
-                nombreCliente: factura.nombreCliente || 'Cliente General',
-                usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema'
-            };
-
-            // Preparar productos para el recibo
-            const productosParaRecibo = factura.detallesFactura ? factura.detallesFactura.map(detalle => ({
-                nombreProducto: detalle.nombreProducto || 'Producto',
-                cantidad: detalle.cantidad || 1,
-                precioUnitario: detalle.precioUnitario || 0,
-                esLlanta: detalle.esLlanta || false,
-                medidaCompleta: detalle.medidaCompleta || null
-            })) : [];
-
-            // Preparar totales
-            const totalesRecibo = {
-                subtotal: factura.subtotal || 0,
-                iva: factura.montoImpuesto || 0,
-                total: factura.total || 0,
-                metodoPago: factura.metodoPago || 'Efectivo',
-                cliente: {
-                    nombre: factura.nombreCliente || 'Cliente General'
+        // Obtener número de factura para el mensaje
+        let numeroFactura = 'N/A';
+        try {
+            const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
                 },
-                usuario: {
-                    nombre: factura.usuarioCreadorNombre || 'Sistema'
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const resultado = await response.json();
+                if (resultado.success && resultado.factura) {
+                    numeroFactura = resultado.factura.numeroFactura || facturaId;
                 }
-            };
-
-            // Verificar si tiene detalles de pago múltiple
-            if (factura.detallesPago && factura.detallesPago.length > 1) {
-                totalesRecibo.detallesPago = factura.detallesPago;
-                totalesRecibo.metodoPago = 'Multiple';
-                console.log('🖨️ Factura con pago múltiple detectado');
             }
+        } catch (e) {
+            console.warn('⚠️ No se pudo obtener número de factura:', e);
+        }
 
-            console.log('🖨️ Generando recibo térmico...');
-            
-            // Verificar disponibilidad de la función de impresión térmica
-            if (typeof generarReciboTermico === 'function') {
-                console.log('🖨️ Usando generarReciboTermico');
-                generarReciboTermico(datosFactura, productosParaRecibo, totalesRecibo);
-            } else if (typeof generarRecibo === 'function') {
-                console.log('🖨️ Usando generarRecibo como fallback');
-                generarRecibo(datosFactura, productosParaRecibo, totalesRecibo);
-            } else {
-                throw new Error('Sistema de impresión no disponible');
-            }
-
-            // Mostrar mensaje de éxito
-            if (typeof mostrarToast === 'function') {
-                mostrarToast('Impresión', `Factura ${factura.numeroFactura} enviada a impresión`, 'success');
-            }
-
+        // Usar la función de re-impresión existente en facturacion.js
+        if (typeof window.reimprimirFacturaDesdeModal === 'function') {
+            console.log('🖨️ Usando función de re-impresión existente');
+            await window.reimprimirFacturaDesdeModal(facturaId, numeroFactura);
+        } else if (typeof reimprimirFacturaDesdeModal === 'function') {
+            console.log('🖨️ Usando función de re-impresión global');
+            await reimprimirFacturaDesdeModal(facturaId, numeroFactura);
         } else {
-            throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
+            console.error('❌ Función de re-impresión no disponible');
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Error', 'Sistema de impresión no disponible', 'danger');
+            }
         }
 
     } catch (error) {
-        console.error('❌ Error re-imprimiendo factura:', error);
+        console.error('❌ Error imprimiendo factura:', error);
         
         // Mostrar toast de error
         if (typeof mostrarToast === 'function') {
-            mostrarToast('Error', 'No se pudo re-imprimir la factura: ' + error.message, 'danger');
+            mostrarToast('Error', 'No se pudo imprimir la factura: ' + error.message, 'danger');
         } else {
             alert('Error imprimiendo factura: ' + error.message);
         }
