@@ -1337,6 +1337,47 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             }
         }
 
+        // ✅ CAPTURAR INFORMACIÓN DE LLANTA
+        let esLlanta = producto.esLlanta || producto.EsLlanta || false;
+        let medidaCompleta = null;
+        
+        try {
+            // Primero verificar si ya viene la medida completa
+            medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta;
+            
+            // Si no tiene medida completa pero es llanta, construirla desde los datos de llanta
+            if (!medidaCompleta && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+                
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        // Formato completo con perfil: 215/55/R16
+                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        // Formato sin perfil: 215/R16
+                        medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+            }
+            
+            // Si aún no tenemos medida, verificar propiedades alternativas del backend
+            if (!medidaCompleta) {
+                // Verificar formatos alternativos que puedan venir del backend
+                if (producto.Ancho && producto.Diametro) {
+                    if (producto.Perfil && producto.Perfil > 0) {
+                        medidaCompleta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                    } else {
+                        medidaCompleta = `${producto.Ancho}/R${producto.Diametro}`;
+                    }
+                    esLlanta = true;
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta en agregarProductoAVenta:', error);
+            medidaCompleta = null;
+        }
+
         productosEnVenta.push({
             productoId: producto.productoId,
             nombreProducto: producto.nombreProducto,
@@ -1344,7 +1385,9 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             cantidad: cantidad,
             stockDisponible: producto.cantidadEnInventario,
             metodoPago: metodoPago,
-            imagenUrl: imagenUrl
+            imagenUrl: imagenUrl,
+            esLlanta: esLlanta,
+            medidaCompleta: medidaCompleta
         });
 
        /* mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');*/
