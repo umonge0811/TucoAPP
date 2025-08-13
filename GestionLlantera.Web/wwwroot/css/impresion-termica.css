@@ -1,3 +1,4 @@
+
 /* ===== ESTILOS PARA IMPRESIÓN TÉRMICA ===== */
 
 /* Configuración de página para impresión */
@@ -120,18 +121,8 @@ body {
 }
 
 .producto-detalle-termico {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    margin-top: 2px;
-}
-
-.producto-medida-termico {
-    font-size: 9px;
-    color: #666;
-    font-style: italic;
-    margin-top: 1px;
-    margin-bottom: 2px;
+    font-size: 10px !important;
+    font-family: 'Courier New', monospace;
 }
 
 /* ===== TOTALES ===== */
