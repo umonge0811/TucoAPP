@@ -676,6 +676,12 @@ function crearFilaFacturaPendiente(factura) {
             <td class="text-center">
                 <div class="btn-group-vertical btn-group-sm d-inline-block d-sm-none">
                     <!-- Botones verticales en móvil -->
+                    <button type="button" class="btn btn-outline-info btn-sm" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-printer"></i>
+                    </button>
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success btn-sm" title="Procesar" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>
@@ -684,7 +690,12 @@ function crearFilaFacturaPendiente(factura) {
                 </div>
                 <div class="btn-group btn-group-sm d-none d-sm-inline-block">
                     <!-- Botones horizontales en tablet/desktop -->
-
+                    <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                        <i class="bi bi-printer"></i>
+                    </button>
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>
