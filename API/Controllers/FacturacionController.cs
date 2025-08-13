@@ -499,66 +499,73 @@ namespace API.Controllers
             }
         }
 
-        [HttpGet("facturas/{facturaId}/detalle")]
-        public async Task<ActionResult<FacturaDTO>> ObtenerDetalleFactura(int facturaId)
+        [HttpGet("facturas/{id}")]
+        [Authorize]
+        public async Task<ActionResult<FacturaDTO>> ObtenerFacturaPorId(int id)
         {
             try
             {
-                _logger.LogInformation("🔍 Obteniendo detalle de factura ID: {FacturaId}", facturaId);
-
                 var factura = await _context.Facturas
-                    .Include(f => f.Cliente)
                     .Include(f => f.UsuarioCreador)
                     .Include(f => f.DetallesFactura)
-                        .ThenInclude(df => df.Producto)
-                    .FirstOrDefaultAsync(f => f.FacturaId == facturaId);
+                        .ThenInclude(d => d.Producto)
+                            .ThenInclude(p => p.Llanta)
+                    .Where(f => f.FacturaId == id)
+                    .Select(f => new FacturaDTO
+                    {
+                        FacturaId = f.FacturaId,
+                        NumeroFactura = f.NumeroFactura,
+                        ClienteId = f.ClienteId,
+                        NombreCliente = f.NombreCliente,
+                        IdentificacionCliente = f.IdentificacionCliente,
+                        TelefonoCliente = f.TelefonoCliente,
+                        EmailCliente = f.EmailCliente,
+                        DireccionCliente = f.DireccionCliente,
+                        FechaFactura = f.FechaFactura,
+                        FechaVencimiento = f.FechaVencimiento,
+                        Subtotal = f.Subtotal,
+                        DescuentoGeneral = f.DescuentoGeneral,
+                        PorcentajeImpuesto = f.PorcentajeImpuesto,
+                        MontoImpuesto = f.MontoImpuesto ?? 0,
+                        Total = f.Total,
+                        Estado = f.Estado,
+                        TipoDocumento = f.TipoDocumento,
+                        MetodoPago = f.MetodoPago,
+                        Observaciones = f.Observaciones,
+                        UsuarioCreadorId = f.UsuarioCreadorId,
+                        UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
+                        FechaCreacion = f.FechaCreacion,
+                        FechaActualizacion = f.FechaActualizacion,
+                        DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
+                        {
+                            DetalleFacturaId = d.DetalleFacturaId,
+                            ProductoId = d.ProductoId,
+                            NombreProducto = d.NombreProducto,
+                            DescripcionProducto = d.DescripcionProducto,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            PorcentajeDescuento = d.PorcentajeDescuento,
+                            MontoDescuento = d.MontoDescuento,
+                            Subtotal = d.Subtotal,
+                            StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
+                            EsLlanta = d.Producto.Llanta.Any(),
+                            MedidaLlanta = d.Producto.Llanta.Any() ? 
+                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null,
+                            MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
+                        }).ToList()
+                    })
+                    .FirstOrDefaultAsync();
 
                 if (factura == null)
-                {
-                    _logger.LogWarning("⚠️ Factura no encontrada: {FacturaId}", facturaId);
-                    return NotFound("Factura no encontrada");
-                }
+                    return NotFound(new { message = "Factura no encontrada" });
 
-                var facturaDetalle = new FacturaDTO
-                {
-                    FacturaId = factura.FacturaId,
-                    NumeroFactura = factura.NumeroFactura,
-                    FechaFactura = factura.FechaFactura,
-                    FechaCreacion = factura.FechaCreacion,
-                    Estado = factura.Estado,
-                    NombreCliente = factura.Cliente?.Nombre ?? "Cliente General",
-                    EmailCliente = factura.Cliente?.Email,
-                    IdentificacionCliente = factura.Cliente?.Identificacion,
-                    TelefonoCliente = factura.Cliente?.Telefono,
-                    DireccionCliente = factura.Cliente?.Direccion,
-                    UsuarioCreador = factura.UsuarioCreador?.NombreCompleto ?? "Sistema",
-                    UsuarioCreadorNombre = factura.UsuarioCreador?.NombreCompleto ?? "Sistema",
-                    Subtotal = factura.Subtotal,
-                    MontoImpuesto = factura.MontoImpuesto,
-                    PorcentajeImpuesto = factura.PorcentajeImpuesto,
-                    Total = factura.Total,
-                    MetodoPago = factura.MetodoPago,
-                    TipoDocumento = factura.TipoDocumento,
-                    Observaciones = factura.Observaciones,
-                    DetallesFactura = factura.DetallesFactura.Select(df => new DetalleFacturaDTO
-                    {
-                        DetalleFacturaId = df.DetalleFacturaId,
-                        ProductoId = df.ProductoId,
-                        NombreProducto = df.Producto?.Nombre ?? "Producto no encontrado",
-                        DescripcionProducto = df.Producto?.Descripcion,
-                        Cantidad = df.Cantidad,
-                        PrecioUnitario = df.PrecioUnitario,
-                        Subtotal = df.Subtotal
-                    }).ToList()
-                };
-
-                _logger.LogInformation("✅ Detalle de factura obtenido exitosamente: {NumeroFactura}", factura.NumeroFactura);
-                return Ok(facturaDetalle);
+                return Ok(factura);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error obteniendo detalle de factura ID: {FacturaId}", facturaId);
-                return StatusCode(500, "Error interno del servidor");
+                _logger.LogError(ex, "❌ Error al obtener factura: {Id}", id);
+                return StatusCode(500, new { message = "Error al obtener factura" });
             }
         }
 
@@ -1140,7 +1147,7 @@ namespace API.Controllers
 
                     if (detalleAEliminar != null)
                     {
-                        productosEliminados.Add(new{
+                        productosEliminados.Add(new {
                             productoId = detalleAEliminar.ProductoId,
                             nombreProducto = detalleAEliminar.NombreProducto,
                             cantidad = detalleAEliminar.Cantidad,
