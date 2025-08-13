@@ -704,20 +704,28 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);
 
-                if (resultado.success && resultado.data != null)
+                if (resultado.success && resultado.facturas != null)
                 {
-                    var facturas = resultado.data as IEnumerable<object>;
-
-                    if (facturas != null)
+                    // Verificar si facturas es una colección válida
+                    var facturasCollection = resultado.facturas;
+                    
+                    if (facturasCollection != null)
                     {
-                        _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturas.Count());
+                        var facturasList = facturasCollection as IEnumerable<object> ?? 
+                                          (facturasCollection is IEnumerable enumerable ? enumerable.Cast<object>() : null);
 
-                        return Ok(new
+                        if (facturasList != null)
                         {
-                            success = true,
-                            facturas = facturas,
-                            message = $"Se encontraron {facturas.Count()} facturas"
-                        });
+                            var facturasCount = facturasList.Count();
+                            _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturasCount);
+
+                            return Ok(new
+                            {
+                                success = true,
+                                facturas = facturasList,
+                                message = $"Se encontraron {facturasCount} facturas"
+                            });
+                        }
                     }
                 }
 
