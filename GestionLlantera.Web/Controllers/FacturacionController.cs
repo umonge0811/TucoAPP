@@ -686,11 +686,11 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes(string estado = "Pendiente", int tamano = 1000)
+        public async Task<IActionResult> ObtenerFacturas(int tamano = 1000)
         {
             try
             {
-                _logger.LogInformation("📋 Solicitud de facturas desde el controlador Web - Estado: {Estado}", estado);
+                _logger.LogInformation("📋 Obteniendo todas las facturas desde el servicio de facturación");
 
                 var token = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -698,29 +698,37 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                var resultado = await _facturacionService.ObtenerFacturasAsync(token, estado, tamano);
+                // Traer todas las facturas sin filtro de estado
+                var resultado = await _facturacionService.ObtenerTodasLasFacturasAsync();
 
                 _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);
 
                 if (resultado.success && resultado.data != null)
                 {
-                    _logger.LogInformation("📋 Procesando respuesta del API de facturas");
+                    var facturas = resultado.data as IEnumerable<object>;
 
-                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
-                    return Json(resultado.data);
-                }
-                else
-                {
-                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
-                    return Json(new
+                    if (facturas != null)
                     {
-                        success = false,
-                        message = resultado.message ?? "No se pudieron obtener las facturas",
-                        facturas = new List<object>(),
-                        totalFacturas = 0
-                    });
+                        _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturas.Count());
+
+                        return Ok(new
+                        {
+                            success = true,
+                            facturas = facturas,
+                            message = $"Se encontraron {facturas.Count()} facturas"
+                        });
+                    }
                 }
+
+                _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
+                return Json(new
+                {
+                    success = false,
+                    message = resultado.message ?? "No se pudieron obtener las facturas",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
+                });
             }
             catch (Exception ex)
             {
@@ -734,6 +742,7 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ObtenerProformas(string estado = null, int pagina = 1, int tamano = 20)
@@ -1336,8 +1345,6 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
-
                 if (!await this.TienePermisoAsync("Ver Productos"))
                 {
                     return Json(new { success = false, message = "Sin permisos para ver pendientes de entrega" });
@@ -1463,7 +1470,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // ✅ VALIDAR PERMISO EN EL CONTROLADOR WEB
+                // ✅ VALIDACIÓN DE PERMISO EN EL CONTROLADOR WEB
                 var tienePermiso = await this.TienePermisoAsync("Entregar Pendientes");
                 _logger.LogInformation("🔐 === VALIDACIÓN DE PERMISO EN WEB CONTROLLER ===");
                 _logger.LogInformation("🔐 Usuario: {Usuario}", User.Identity?.Name);
