@@ -23,7 +23,7 @@ const CONFIG_TERMICA = {
         telefono: '(506) 8916-6180',
         correo: 'info@llantasymastc.com',
         sitioWeb: 'www.llantasymastc.com',
-        desarrolladoPor: 'Desarrollado por TUCO Systems' // Opcional
+        desarrolladoPor: 'Desarrollado por ticodevcr.com' // Opcional
     },
     
     // Estilos para diferentes tipos de documento
