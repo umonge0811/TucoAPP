@@ -445,7 +445,7 @@ function construirSeccionProforma(numeroFactura) {
             <div class="advertencia-proforma-termico">
                 <div class="info-proforma-termico">
                     <div><strong>VALIDEZ:</strong> Esta proforma tiene</div>
-                    <div>validez por 30 días calendario</div>
+                    <div>validez por 15 días calendario</div>
                     <div>desde su fecha de emisión.</div>
                 </div>
                 <div class="separador-proforma-termico"></div>
