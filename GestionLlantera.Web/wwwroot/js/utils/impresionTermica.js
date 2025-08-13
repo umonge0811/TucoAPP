@@ -239,15 +239,26 @@ function construirSeccionProductos(productos, anchoMaximo) {
     productos.forEach(producto => {
         let nombreCompleto = producto.nombreProducto;
         
-        // ✅ USAR LA MISMA LÓGICA QUE EL MODAL DE FINALIZAR VENTA
-        if (producto.esLlanta && producto.medidaCompleta) {
-            nombreCompleto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
-        } else if (producto.EsLlanta && producto.MedidaCompleta) {
-            nombreCompleto = `${producto.MedidaCompleta} ${producto.nombreProducto}`;
-        } else if (producto.medidaLlanta) {
-            nombreCompleto = `${producto.medidaLlanta} ${producto.nombreProducto}`;
-        } else if (producto.MedidaLlanta) {
-            nombreCompleto = `${producto.MedidaLlanta} ${producto.nombreProducto}`;
+        // Solo agregar medida si es llanta Y no está ya incluida en el nombre
+        const esLlanta = producto.esLlanta || producto.EsLlanta;
+        if (esLlanta) {
+            let medidaLlanta = '';
+            
+            // Obtener la medida de llanta desde diferentes fuentes
+            if (producto.medidaCompleta) {
+                medidaLlanta = producto.medidaCompleta;
+            } else if (producto.MedidaCompleta) {
+                medidaLlanta = producto.MedidaCompleta;
+            } else if (producto.medidaLlanta) {
+                medidaLlanta = producto.medidaLlanta;
+            } else if (producto.MedidaLlanta) {
+                medidaLlanta = producto.MedidaLlanta;
+            }
+            
+            // Solo agregar la medida si no está ya incluida en el nombre del producto
+            if (medidaLlanta && !nombreCompleto.includes(medidaLlanta)) {
+                nombreCompleto = `${medidaLlanta} ${nombreCompleto}`;
+            }
         }
         
         const nombreTruncado = truncarTextoTermico(nombreCompleto, 28);
