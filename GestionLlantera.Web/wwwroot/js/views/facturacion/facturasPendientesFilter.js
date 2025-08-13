@@ -1063,11 +1063,11 @@ function mostrarDetalleFacturaModal(factura) {
 }
 
 /**
- * ✅ FUNCIÓN: Imprimir factura (siguiendo patrón de proformas)
+ * ✅ FUNCIÓN: Imprimir factura usando sistema de impresión térmica (replicando lógica de facturacion.js)
  */
 async function imprimirFactura(facturaId) {
     try {
-        console.log('🖨️ === IMPRIMIENDO FACTURA ===');
+        console.log('🖨️ === IMPRIMIENDO FACTURA DESDE FACTURAS PENDIENTES ===');
         console.log('🖨️ Factura ID:', facturaId);
 
         if (!facturaId) {
@@ -1078,86 +1078,97 @@ async function imprimirFactura(facturaId) {
             return;
         }
 
-        // Mostrar un indicador de progreso
+        // Mostrar indicador de progreso
         if (typeof mostrarToast === 'function') {
             mostrarToast('Imprimiendo', 'Generando recibo de factura...', 'info');
         }
 
-        // Obtener los datos de la factura necesarios para la impresión
-        const response = await fetch(`/Facturacion/ObtenerDetalleFactura?facturaId=${facturaId}`, {
+        // Obtener los detalles completos de la factura
+        const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
             method: 'GET',
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
         });
 
-        // Verificar el estado de la respuesta
         if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
+            throw new Error(`Error HTTP: ${response.status}`);
         }
 
-        // Parsear la respuesta JSON
-        const result = await response.json();
+        const resultado = await response.json();
+        console.log('🖨️ Detalles de factura obtenidos:', resultado);
 
-        // Procesar si la obtención de datos fue exitosa
-        if (result.success && result.factura) {
-            const factura = result.factura;
-            console.log('📋 Datos de factura obtenidos para impresión:', factura);
+        if (resultado.success && resultado.factura) {
+            const factura = resultado.factura;
+            
+            // Preparar datos para el recibo (siguiendo formato de facturacion.js)
+            const datosFactura = {
+                numeroFactura: factura.numeroFactura || 'N/A',
+                nombreCliente: factura.nombreCliente || 'Cliente General',
+                usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema'
+            };
 
-            // Verificar si la función para generar recibo térmico está disponible
-            if (typeof generarReciboTérmico === 'function') {
-                console.log('🖨️ Generando recibo térmico para factura');
+            // Preparar productos para el recibo
+            const productosParaRecibo = factura.detallesFactura ? factura.detallesFactura.map(detalle => ({
+                nombreProducto: detalle.nombreProducto || 'Producto',
+                cantidad: detalle.cantidad || 1,
+                precioUnitario: detalle.precioUnitario || 0,
+                esLlanta: detalle.esLlanta || false,
+                medidaCompleta: detalle.medidaCompleta || null
+            })) : [];
 
-                // Preparar los datos en el formato esperado por generarReciboTérmico
-                const datosImpresion = {
-                    numeroDocumento: factura.numeroFactura,
-                    tipoDocumento: 'Factura',
-                    cliente: {
-                        nombre: factura.nombreCliente,
-                        identificacion: factura.identificacionCliente,
-                        telefono: factura.telefonoCliente,
-                        email: factura.emailCliente,
-                        direccion: factura.direccionCliente
-                    },
-                    fecha: factura.fechaFactura,
-                    metodoPago: factura.metodoPago,
-                    estado: factura.estado,
-                    productos: factura.detallesFactura || [], // Asegurar que sea un array
-                    subtotal: factura.subtotal || 0,
-                    impuesto: factura.montoImpuesto || 0,
-                    total: factura.total || 0,
-                    observaciones: factura.observaciones,
-                    usuarioCreador: factura.usuarioCreadorNombre
-                };
-
-                // Llamar a la función de impresión con los datos preparados
-                generarReciboTérmico(datosImpresion);
-
-                // Mostrar un toast de éxito
-                if (typeof mostrarToast === 'function') {
-                    mostrarToast('Éxito', 'Recibo de factura enviado a impresora', 'success');
+            // Preparar totales
+            const totalesRecibo = {
+                subtotal: factura.subtotal || 0,
+                iva: factura.montoImpuesto || 0,
+                total: factura.total || 0,
+                metodoPago: factura.metodoPago || 'Efectivo',
+                cliente: {
+                    nombre: factura.nombreCliente || 'Cliente General'
+                },
+                usuario: {
+                    nombre: factura.usuarioCreadorNombre || 'Sistema'
                 }
+            };
+
+            // Verificar si tiene detalles de pago múltiple
+            if (factura.detallesPago && factura.detallesPago.length > 1) {
+                totalesRecibo.detallesPago = factura.detallesPago;
+                totalesRecibo.metodoPago = 'Multiple';
+                console.log('🖨️ Factura con pago múltiple detectado');
+            }
+
+            console.log('🖨️ Generando recibo térmico...');
+            
+            // Verificar disponibilidad de la función de impresión térmica
+            if (typeof generarReciboTermico === 'function') {
+                console.log('🖨️ Usando generarReciboTermico');
+                generarReciboTermico(datosFactura, productosParaRecibo, totalesRecibo);
+            } else if (typeof generarRecibo === 'function') {
+                console.log('🖨️ Usando generarRecibo como fallback');
+                generarRecibo(datosFactura, productosParaRecibo, totalesRecibo);
             } else {
-                // Si la función generarReciboTérmico no está disponible
-                console.error('❌ Función generarReciboTérmico no está disponible');
-                if (typeof mostrarToast === 'function') {
-                    mostrarToast('Error', 'Sistema de impresión no disponible', 'danger');
-                }
+                throw new Error('Sistema de impresión no disponible');
+            }
+
+            // Mostrar mensaje de éxito
+            if (typeof mostrarToast === 'function') {
+                mostrarToast('Impresión', `Factura ${factura.numeroFactura} enviada a impresión`, 'success');
             }
 
         } else {
-            // Si la respuesta del servidor indica un error
-            throw new Error(result.message || 'No se pudieron obtener los datos de la factura');
+            throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
         }
 
     } catch (error) {
-        console.error('❌ Error imprimiendo factura:', error);
-
-        // Mostrar un toast de error
+        console.error('❌ Error re-imprimiendo factura:', error);
+        
+        // Mostrar toast de error
         if (typeof mostrarToast === 'function') {
-            mostrarToast('Error', 'No se pudo imprimir la factura: ' + error.message, 'danger');
+            mostrarToast('Error', 'No se pudo re-imprimir la factura: ' + error.message, 'danger');
         } else {
-            // Fallback a alert si no hay toast
             alert('Error imprimiendo factura: ' + error.message);
         }
     }
