@@ -960,6 +960,50 @@ function formatearMoneda(valor) {
     return Number(valor).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// ===== FUNCIÓN PARA IMPRIMIR FACTURA PENDIENTE =====
+function imprimirFacturaPendiente(facturaId) {
+    try {
+        console.log('🖨️ === IMPRIMIENDO FACTURA PENDIENTE ===');
+        console.log('🖨️ Factura ID:', facturaId);
+
+        // Verificar si el módulo de impresión térmica está disponible
+        if (typeof imprimirFacturaTermica === 'function') {
+            // Usar la función de impresión térmica existente
+            imprimirFacturaTermica(facturaId);
+        } else if (typeof window.print === 'function') {
+            // Fallback: usar impresión del navegador
+            console.log('🖨️ Usando impresión del navegador como fallback');
+            
+            // Abrir ventana con los detalles de la factura para imprimir
+            const ventanaImpresion = window.open(`/Facturacion/ObtenerDetalleFactura?facturaId=${facturaId}`, '_blank');
+            
+            if (ventanaImpresion) {
+                ventanaImpresion.onload = function() {
+                    ventanaImpresion.print();
+                    ventanaImpresion.close();
+                };
+            } else {
+                throw new Error('No se pudo abrir la ventana de impresión');
+            }
+        } else {
+            throw new Error('Funciones de impresión no disponibles');
+        }
+
+        if (typeof mostrarToast === 'function') {
+            mostrarToast('Impresión', 'Iniciando impresión de factura...', 'info');
+        }
+
+    } catch (error) {
+        console.error('❌ Error imprimiendo factura pendiente:', error);
+        
+        if (typeof mostrarToast === 'function') {
+            mostrarToast('Error', 'Error al imprimir factura: ' + error.message, 'danger');
+        } else {
+            alert('Error al imprimir factura: ' + error.message);
+        }
+    }
+}
+
 
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 if (typeof window !== 'undefined') {
@@ -967,6 +1011,8 @@ if (typeof window !== 'undefined') {
     window.procesarFacturaPendiente = procesarFacturaPendiente;
     window.imprimirFacturaPendiente = imprimirFacturaPendiente;
     window.verDetalleFactura = verDetalleFactura;
+    window.cambiarPaginaFacturas = cambiarPaginaFacturas;
+    window.recargarFacturasPendientes = recargarFacturasPendientes;
 
     console.log('📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente');
 } else {
