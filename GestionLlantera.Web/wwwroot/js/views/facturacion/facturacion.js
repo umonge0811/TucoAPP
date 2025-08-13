@@ -1784,10 +1784,16 @@ function actualizarResumenVentaModal() {
         const subtotalProducto = precioAjustado * producto.cantidad;
         subtotal += subtotalProducto;
 
-        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL (evitar duplicación)
         let infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
         if (producto.esLlanta && producto.medidaCompleta) {
-            infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+            // Verificar si la medida ya está incluida en el nombre del producto
+            if (!producto.nombreProducto.includes(producto.medidaCompleta)) {
+                infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+            } else {
+                // Si ya está incluida, solo mostrar el nombre tal como está
+                infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+            }
         }
 
         htmlResumen += `
