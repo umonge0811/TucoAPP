@@ -686,52 +686,45 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes(string estado = "Pendiente", int tamano = 1000)
+        public async Task<IActionResult> ObtenerFacturas(string estado = null, int tamano = 1000)
         {
             try
             {
-                _logger.LogInformation("📋 Solicitud de facturas desde el controlador Web - Estado: {Estado}", estado);
+                _logger.LogInformation("🔍 === OBTENIENDO FACTURAS FILTRADAS ===");
+                _logger.LogInformation("🔍 Estado solicitado: {Estado}", estado ?? "Todos");
+                _logger.LogInformation("🔍 Tamaño de página: {Tamano}", tamano);
 
-                var token = this.ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
+                // Obtener JWT token
+                string jwtToken = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
                 {
-                    return Json(new { success = false, message = "Sesión expirada" });
+                    _logger.LogWarning("❌ Token JWT no encontrado");
+                    return Json(new { success = false, message = "No autorizado. Token no encontrado." });
                 }
 
-                var resultado = await _facturacionService.ObtenerFacturasAsync(token, estado, tamano);
+                // Llamar al servicio
+                var resultado = await _facturacionService.ObtenerFacturasAsync(jwtToken, estado, tamano);
 
-                _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
-                    resultado.success, resultado.message);
-
-                if (resultado.success && resultado.data != null)
+                if (resultado.success)
                 {
-                    _logger.LogInformation("📋 Procesando respuesta del API de facturas");
-
-                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
-                    return Json(resultado.data);
+                    _logger.LogInformation("✅ Facturas obtenidas exitosamente desde API");
+                    return Json(new
+                    {
+                        success = true,
+                        facturas = resultado.data,
+                        message = resultado.message
+                    });
                 }
                 else
                 {
-                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
-                    return Json(new
-                    {
-                        success = false,
-                        message = resultado.message ?? "No se pudieron obtener las facturas",
-                        facturas = new List<object>(),
-                        totalFacturas = 0
-                    });
+                    _logger.LogWarning("⚠️ Error del servicio: {Message}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo facturas");
-                return Json(new
-                {
-                    success = false,
-                    message = "Error interno del servidor",
-                    facturas = new List<object>(),
-                    totalFacturas = 0
-                });
+                _logger.LogError(ex, "❌ Error obteniendo facturas filtradas");
+                return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
 
