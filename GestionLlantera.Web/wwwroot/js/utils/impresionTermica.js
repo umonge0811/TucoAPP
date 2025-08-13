@@ -53,6 +53,7 @@ function generarReciboTermico(datosFactura, productos, totales, opciones = {}) {
     const configuracion = {
         ancho: opciones.ancho || CONFIG_TERMICA.ANCHO_80MM,
         tipo: opciones.tipo || 'factura',
+        detallesPago: opciones.detallesPago || null,
         ...opciones
     };
 
@@ -170,7 +171,7 @@ function construirContenidoRecibo(datosFactura, productos, totales, tipoDocument
     const infoTransaccion = construirInfoTransaccion(fecha, hora, nombreCliente, usuarioCreador);
     const seccionProductos = construirSeccionProductos(productos, configuracion.ancho);
     const seccionTotales = construirSeccionTotales(totales, configuracion.ancho);
-    const seccionPago = construirSeccionPago(totales);
+    const seccionPago = construirSeccionPago(totales, configuracion.detallesPago);
     const seccionPendientes = construirSeccionPendientes(datosFactura.numeroFactura);
     const seccionProforma = tipoDocumento === 'proforma' ? construirSeccionProforma(datosFactura.numeroFactura) : '';
     const piePagina = construirPiePagina(fecha, hora);
@@ -285,17 +286,19 @@ function construirSeccionTotales(totales, anchoMaximo) {
 /**
  * Construir sección de método de pago
  */
-function construirSeccionPago(totales) {
+function construirSeccionPago(totales, detallesPago = null) {
     const metodoPago = totales.metodoPago || 'Efectivo';
     
-    // Verificar si es pago múltiple
-    if (window.detallesPagoActuales && window.detallesPagoActuales.length > 1) {
+    // Verificar si es pago múltiple - priorizar detalles pasados como parámetro
+    const detallesPagoValidos = detallesPago || window.detallesPagoActuales;
+    
+    if (detallesPagoValidos && detallesPagoValidos.length > 1) {
         let html = `
             <div class="seccion-pago-termico">
                 <div class="titulo-seccion-termico">DETALLE DE PAGOS MÚLTIPLES</div>
         `;
         
-        window.detallesPagoActuales.forEach(pago => {
+        detallesPagoValidos.forEach(pago => {
             const metodoPagoNombre = window.CONFIGURACION_PRECIOS?.[pago.metodoPago]?.nombre || pago.metodoPago;
             html += `
                 <div class="linea-pago-termico">
@@ -305,7 +308,7 @@ function construirSeccionPago(totales) {
             `;
         });
         
-        const totalPagado = window.detallesPagoActuales.reduce((sum, p) => sum + p.monto, 0);
+        const totalPagado = detallesPagoValidos.reduce((sum, p) => sum + p.monto, 0);
         html += `
                 <div class="separador-pago-termico"></div>
                 <div class="total-pagado-termico">${formatearLineaTermica('Total Pagado:', `₡${totalPagado.toFixed(0)}`)}</div>
