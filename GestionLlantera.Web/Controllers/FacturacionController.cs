@@ -1656,7 +1656,7 @@ namespace GestionLlantera.Web.Controllers
     }
 
     // Clases de request para el controlador
-    public class MarcarEntregadoRequest
+    public class MarcarEntregadosRequest
     {
         public List<int> ProductosIds { get; set; } = new List<int>();
         public string? ObservacionesEntrega { get; set; }
