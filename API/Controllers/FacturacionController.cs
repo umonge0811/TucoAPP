@@ -779,6 +779,8 @@ namespace API.Controllers
                 var facturasPendientes = await _context.Facturas
                     .Include(f => f.UsuarioCreador)
                     .Include(f => f.DetallesFactura)
+                        .ThenInclude(d => d.Producto)
+                            .ThenInclude(p => p.Llanta)
                     .Where(f => f.Estado == "Pendiente")
                     .OrderByDescending(f => f.FechaCreacion)
                     .Select(f => new FacturaDTO
@@ -816,7 +818,13 @@ namespace API.Controllers
                             PrecioUnitario = d.PrecioUnitario,
                             PorcentajeDescuento = d.PorcentajeDescuento,
                             MontoDescuento = d.MontoDescuento,
-                            Subtotal = d.Subtotal
+                            Subtotal = d.Subtotal,
+                            StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
+                            EsLlanta = d.Producto.Llanta.Any(),
+                            MedidaLlanta = d.Producto.Llanta.Any() ? 
+                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null,
+                            MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
                         }).ToList()
                     })
                     .ToListAsync();
@@ -887,7 +895,7 @@ namespace API.Controllers
                         (f.IdentificacionCliente != null && f.IdentificacionCliente.ToLower().Contains(termino)) ||
                         (f.TelefonoCliente != null && f.TelefonoCliente.ToLower().Contains(termino)) ||
                         (f.EmailCliente != null && f.EmailCliente.ToLower().Contains(termino)));
-                    
+
                     var totalConBusqueda = await query.CountAsync();
                     _logger.LogInformation("📋 Después de filtro búsqueda '{Termino}': {Total} proformas", termino, totalConBusqueda);
                 }
@@ -1699,10 +1707,10 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("🧪 === TEST PERMISO ENTREGAR PENDIENTES ===");
-                
+
                 var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
                     "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
-                
+
                 var resultado = new
                 {
                     mensaje = "Test de validación del permiso 'Entregar Pendientes'",
@@ -1978,12 +1986,12 @@ namespace API.Controllers
                 {
                     var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
                     var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
-                    
+
                     proforma.Estado = "Expirada";
                     proforma.FechaActualizacion = DateTime.Now;
                     proforma.Observaciones = (proforma.Observaciones ?? "") + 
                         $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
-                    
+
                     cantidadActualizadas++;
 
                     _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
@@ -2050,6 +2058,9 @@ namespace API.Controllers
         public string? MetodoPago { get; set; }
         public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
         public bool ForzarVerificacionStock { get; set; } = false;
+        public string? NumeroFacturaGenerada { get; set; }
+        public string? Observaciones { get; set; }
+        public bool EsProforma { get; set; } = false;
     }
 
     public class DetallePagoCompletarDTO
