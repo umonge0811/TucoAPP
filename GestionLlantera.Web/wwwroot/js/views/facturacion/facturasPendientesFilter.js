@@ -359,15 +359,15 @@ function mostrarFacturasPendientesEnTabla(facturas) {
             <tr data-factura-id="${factura.facturaId || factura.id}">
                 <td>
                     <strong>${factura.numeroFactura || 'N/A'}</strong><br>
-                    <small class="text-muted">${factura.tipoDocumento || 'Factura'}</small>
+                    <small class="text-muted small">${factura.tipoDocumento || 'Factura'}</small>
                 </td>
                 <td>
                     <strong>${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</strong><br>
-                    <small class="text-muted">${factura.emailCliente || factura.email || ''}</small>
+                    <small class="text-muted small">${factura.emailCliente || factura.email || ''}</small>
                 </td>
                 <td>
                     <strong>${fecha}</strong><br>
-                    <small class="text-muted">Por: ${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
+                    <small class="text-muted small">Por: ${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
                 </td>
                 <td>
                     <strong class="text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
@@ -1062,507 +1062,6 @@ function mostrarDetalleFacturaModal(factura) {
     }
 }
 
-/**
- * ✅ FUNCIÓN: Imprimir factura usando el sistema existente de facturacion.js
- */
-async function imprimirFactura(facturaId) {
-    try {
-        console.log('🖨️ === IMPRIMIENDO FACTURA DESDE FACTURAS PENDIENTES ===');
-        console.log('🖨️ Factura ID:', facturaId);
-
-        if (!facturaId) {
-            console.error('❌ ID de factura no válido para impresión:', facturaId);
-            if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', 'ID de factura no válido', 'danger');
-            }
-            return;
-        }
-
-        // Obtener número de factura para el mensaje
-        let numeroFactura = 'N/A';
-        try {
-            const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-
-            if (response.ok) {
-                const resultado = await response.json();
-                if (resultado.success && resultado.factura) {
-                    numeroFactura = resultado.factura.numeroFactura || facturaId;
-                }
-            }
-        } catch (e) {
-            console.warn('⚠️ No se pudo obtener número de factura:', e);
-        }
-
-        // Usar la función de re-impresión existente en facturacion.js
-        if (typeof window.reimprimirFacturaDesdeModal === 'function') {
-            console.log('🖨️ Usando función de re-impresión existente');
-            await window.reimprimirFacturaDesdeModal(facturaId, numeroFactura);
-        } else if (typeof reimprimirFacturaDesdeModal === 'function') {
-            console.log('🖨️ Usando función de re-impresión global');
-            await reimprimirFacturaDesdeModal(facturaId, numeroFactura);
-        } else {
-            console.error('❌ Función de re-impresión no disponible');
-            if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', 'Sistema de impresión no disponible', 'danger');
-            }
-        }
-
-    } catch (error) {
-        console.error('❌ Error imprimiendo factura:', error);
-        
-        // Mostrar toast de error
-        if (typeof mostrarToast === 'function') {
-            mostrarToast('Error', 'No se pudo imprimir la factura: ' + error.message, 'danger');
-        } else {
-            alert('Error imprimiendo factura: ' + error.message);
-        }
-    }
-}
-
-/**
- * Configurar eventos para los botones de la tabla de facturas pendientes
- */
-function configurarEventosBotonesFacturas() {
-    console.log('🔧 Configurando eventos de botones de facturas...');
-
-    // Limpiar eventos anteriores para evitar duplicación
-    $('.btn-outline-info[data-factura-id]').off('click.facturaVer');
-    $('.btn-outline-secondary[data-factura-id]').off('click.facturaImprimir');
-    $('.btn-outline-success[data-factura-escapada]').off('click.facturaProcesar');
-
-    // Ver detalles de factura
-    $('.btn-outline-info[data-factura-id]').on('click.facturaVer', function() {
-        const facturaId = $(this).data('factura-id');
-        console.log('👁️ Ver detalles de factura:', facturaId);
-
-        // Llamar a la función verDetalleFactura si está disponible
-        if (typeof verDetalleFactura === 'function') {
-            verDetalleFactura(facturaId);
-        } else {
-            console.error('❌ Función verDetalleFactura no está disponible');
-        }
-    });
-
-    // Imprimir factura
-    $('.btn-outline-secondary[data-factura-id]').on('click.facturaImprimir', function() {
-        const facturaId = $(this).data('factura-id');
-        console.log('🖨️ Imprimir factura:', facturaId);
-
-        // Llamar a la función imprimirFactura si está disponible
-        if (typeof imprimirFactura === 'function') {
-            imprimirFactura(facturaId);
-        } else {
-            console.error('❌ Función imprimirFactura no está disponible');
-        }
-    });
-
-    // Procesar factura pendiente
-    $('.btn-outline-success[data-factura-escapada]').on('click.facturaProcesar', function() {
-        try {
-            const facturaEscapada = $(this).data('factura-escapada');
-            // Parsear la cadena JSON escapada de vuelta a un objeto
-            const factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
-            console.log('⚙️ Procesar factura pendiente:', factura);
-
-            // Llamar a la función procesarFacturaPendiente si está disponible
-            if (typeof procesarFacturaPendiente === 'function') {
-                procesarFacturaPendiente(factura);
-            } else {
-                console.error('❌ Función procesarFacturaPendiente no está disponible');
-            }
-        } catch (error) {
-            console.error('❌ Error parseando datos de factura:', error);
-        }
-    });
-
-    console.log('✅ Eventos de botones configurados correctamente');
-}
-
-/**
- * Actualizar el contador de resultados de facturas
- */
-function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
-    const inicio = ((paginaActualFacturas - 1) * facturasPorPagina) + 1;
-    const fin = Math.min(paginaActualFacturas * facturasPorPagina, conteoActual);
-
-    $('#contadorResultadosFacturas').text(`Mostrando ${inicio}-${fin} de ${conteoActual} facturas`);
-}
-
-/**
- * Crear una fila de factura pendiente para la tabla
- */
-function crearFilaFacturaPendiente(factura) {
-    const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
-    const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    let estadoBadge = '';
-
-    // Asignar badge según el estado
-    switch (factura.estado) {
-        case 'Pendiente':
-            estadoBadge = '<span class="badge bg-warning text-dark">Pendiente</span>';
-            break;
-        case 'Pagada':
-            estadoBadge = '<span class="badge bg-success">Pagada</span>';
-            break;
-        case 'Anulada':
-            estadoBadge = '<span class="badge bg-danger">Anulada</span>';
-            break;
-        default:
-            estadoBadge = `<span class="badge bg-secondary">${factura.estado || 'Sin Estado'}</span>`;
-    }
-
-    // ✅ ESCAPAR DATOS DE LA FACTURA PENDIENTE
-    const facturaEscapada = JSON.stringify(factura).replace(/"/g, '&quot;');
-
-    const fila = `
-        <tr data-factura-id="${factura.facturaId || factura.id}">
-            <td>
-                <div class="fw-bold text-primary">${factura.numeroFactura || 'N/A'}</div>
-                <small class="text-muted d-block">${factura.tipoDocumento || 'Factura'}</small>
-                <!-- Estado en móvil (oculto en desktop) -->
-                <div class="d-inline d-md-none mt-1">
-                    ${estadoBadge}
-                </div>
-            </td>
-            <td>
-                <div class="fw-bold">${factura.nombreCliente || factura.clienteNombre || 'Cliente General'}</div>
-                ${factura.emailCliente || factura.email ? `<small class="text-muted d-block">${factura.emailCliente || factura.email}</small>` : ''}
-                <!-- Información adicional en móvil -->
-                <div class="d-block d-lg-none">
-                    <small class="text-muted">${fecha} ${hora}</small><br>
-                    <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
-                </div>
-            </td>
-            <!-- Información (solo desktop) -->
-            <td class="d-none d-lg-table-cell">
-                <div class="fw-bold">${fecha}</div>
-                <small class="text-muted d-block">${hora}</small>
-                <small class="badge bg-info">${factura.usuarioCreador || factura.nombreUsuario || 'Sistema'}</small>
-            </td>
-            <td>
-                <div class="fw-bold text-success">₡${Number(factura.total || 0).toLocaleString('es-CR', { minimumFractionDigits: 2 })}</div>
-                <small class="text-muted d-none d-md-block">${factura.metodoPago || 'Efectivo'}</small>
-            </td>
-            <!-- Estado (solo desktop) -->
-            <td class="d-none d-md-table-cell">
-                ${estadoBadge}
-            </td>
-            <td class="text-center">
-                <div class="btn-group-vertical btn-group-sm d-inline-block d-sm-none">
-                    <!-- Botones verticales en móvil -->
-                    <button type="button" class="btn btn-outline-info btn-sm" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
-                        <i class="bi bi-printer"></i>
-                    </button>
-                    ${factura.estado === 'Pendiente' ? `
-                    <button type="button" class="btn btn-outline-success btn-sm" title="Procesar" data-factura-escapada="${facturaEscapada}">
-                        <i class="bi bi-check-circle"></i>
-                    </button>
-                    ` : ''}
-                </div>
-                <div class="btn-group btn-group-sm d-none d-sm-inline-block">
-                    <!-- Botones horizontales en tablet/desktop -->
-                    <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
-                        <i class="bi bi-printer"></i>
-                    </button>
-                    ${factura.estado === 'Pendiente' ? `
-                    <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
-                        <i class="bi bi-check-circle"></i>
-                    </button>
-                    ` : ''}
-                </div>
-            </td>
-        </tr>
-    `;
-
-    return fila;
-}
-
-// ===== FUNCIÓN PARA VER DETALLE COMPLETO DE FACTURA =====
-async function verDetalleFactura(facturaId) {
-    try {
-        console.log('👁️ === MOSTRANDO DETALLE DE FACTURA ===');
-        console.log('👁️ Factura ID:', facturaId);
-
-        if (!facturaId) {
-            console.error('❌ ID de factura no válido:', facturaId);
-            if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', 'ID de factura no válido', 'danger');
-            }
-            return;
-        }
-
-        const loadingHtml = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary mb-3" role="status">
-                    <span class="visually-hidden">Cargando factura...</span>
-                </div>
-                <p class="text-muted">Obteniendo detalles de la factura...</p>
-            </div>
-        `;
-
-        const modalHtml = `
-            <div class="modal fade" id="modalDetalleFactura" tabindex="-1" data-bs-backdrop="static">
-                <div class="modal-dialog modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">
-                                <i class="bi bi-receipt me-2"></i>Detalles de Factura
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="detalleFacturaContent">
-                                ${loadingHtml}
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="bi bi-x-circle me-1"></i>Cerrar
-                            </button>
-                            <button type="button" class="btn btn-info" id="btnImprimirFacturaDetalle">
-                                <i class="bi bi-printer me-1"></i>Imprimir
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        $('#modalDetalleFactura').remove();
-        $('body').append(modalHtml);
-
-        const modal = new bootstrap.Modal(document.getElementById('modalDetalleFactura'));
-        modal.show();
-
-        $('#btnImprimirFacturaDetalle').on('click', function() {
-            imprimirFactura(facturaId);
-        });
-
-        const response = await fetch(`/Facturacion/ObtenerDetalleFactura?facturaId=${facturaId}`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success && result.factura) {
-            const factura = result.factura;
-            console.log('📋 Factura obtenida:', factura);
-            mostrarDetalleFacturaModal(factura);
-        } else {
-            throw new Error(result.message || 'No se pudieron obtener los detalles de la factura');
-        }
-
-    } catch (error) {
-        console.error('❌ Error obteniendo detalle de factura:', error);
-
-        $('#detalleFacturaContent').html(`
-            <div class="alert alert-danger">
-                <h6><i class="bi bi-exclamation-triangle me-2"></i>Error</h6>
-                <p class="mb-0">No se pudieron cargar los detalles de la factura: ${error.message}</p>
-            </div>
-        `);
-
-        if (typeof mostrarToast === 'function') {
-            mostrarToast('Error', 'No se pudo cargar el detalle de la factura', 'danger');
-        }
-    }
-}
-
-function mostrarDetalleFacturaModal(factura) {
-    try {
-        console.log('📋 === MOSTRANDO DETALLES DE FACTURA EN MODAL ===');
-        console.log('📋 Factura:', factura);
-
-        const subtotalCalculado = factura.detallesFactura ?
-            factura.detallesFactura.reduce((sum, detalle) => sum + (detalle.subtotal || 0), 0) : 0;
-        const ivaCalculado = factura.montoImpuesto || 0;
-        const totalCalculado = factura.total || 0;
-
-        let estadoClass = 'badge bg-secondary';
-        switch (factura.estado?.toLowerCase()) {
-            case 'pagada': estadoClass = 'badge bg-success'; break;
-            case 'pendiente': estadoClass = 'badge bg-warning'; break;
-            case 'anulada': estadoClass = 'badge bg-danger'; break;
-            case 'vencida': estadoClass = 'badge bg-dark'; break;
-        }
-
-        let detallesHtml = '';
-        if (factura.detallesFactura && factura.detallesFactura.length > 0) {
-            detallesHtml = factura.detallesFactura.map(detalle => `
-                <tr>
-                    <td>
-                        <strong>${detalle.nombreProducto || 'Producto sin nombre'}</strong>
-                        ${detalle.descripcionProducto ? `<br><small class="text-muted">${detalle.descripcionProducto}</small>` : ''}
-                    </td>
-                    <td class="text-center">${detalle.cantidad || 0}</td>
-                    <td class="text-end">₡${formatearMoneda(detalle.precioUnitario || 0)}</td>
-                    <td class="text-end">₡${formatearMoneda(detalle.subtotal || 0)}</td>
-                </tr>
-            `).join('');
-        } else {
-            detallesHtml = `
-                <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
-                        <i class="bi bi-inbox display-6"></i><br>
-                        No hay productos en esta factura
-                    </td>
-                </tr>
-            `;
-        }
-
-        const contenidoHtml = `
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <div class="card h-100">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información General</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-2">
-                                <div class="col-sm-5"><strong>Número:</strong></div>
-                                <div class="col-sm-7 text-primary fw-bold">${factura.numeroFactura || 'N/A'}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-5"><strong>Estado:</strong></div>
-                                <div class="col-sm-7"><span class="${estadoClass}">${factura.estado || 'N/A'}</span></div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-5"><strong>Fecha:</strong></div>
-                                <div class="col-sm-7">${factura.fechaFactura ? new Date(factura.fechaFactura).toLocaleDateString('es-ES') : 'N/A'}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-5"><strong>Método de Pago:</strong></div>
-                                <div class="col-sm-7">${factura.metodoPago || 'N/A'}</div>
-                            </div>
-                            <div class="row mb-2">
-                                <div class="col-sm-5"><strong>Creada por:</strong></div>
-                                <div class="col-sm-7">${factura.usuarioCreadorNombre || 'N/A'}</div>
-                            </div>
-                            ${factura.observaciones ? `
-                                <div class="row mb-2">
-                                    <div class="col-sm-5"><strong>Observaciones:</strong></div>
-                                    <div class="col-sm-7"><small class="text-muted">${factura.observaciones}</small></div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <div class="card h-100">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="bi bi-person me-2"></i>Información del Cliente</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-2">
-                                <div class="col-sm-4"><strong>Nombre:</strong></div>
-                                <div class="col-sm-8">${factura.nombreCliente || 'N/A'}</div>
-                            </div>
-                            ${factura.identificacionCliente ? `
-                                <div class="row mb-2">
-                                    <div class="col-sm-4"><strong>Cédula:</strong></div>
-                                    <div class="col-sm-8">${factura.identificacionCliente}</div>
-                                </div>
-                            ` : ''}
-                            ${factura.telefonoCliente ? `
-                                <div class="row mb-2">
-                                    <div class="col-sm-4"><strong>Teléfono:</strong></div>
-                                    <div class="col-sm-8">${factura.telefonoCliente}</div>
-                                </div>
-                            ` : ''}
-                            ${factura.emailCliente ? `
-                                <div class="row mb-2">
-                                    <div class="col-sm-4"><strong>Email:</strong></div>
-                                    <div class="col-sm-8">${factura.emailCliente}</div>
-                                </div>
-                            ` : ''}
-                            ${factura.direccionCliente ? `
-                                <div class="row mb-2">
-                                    <div class="col-sm-4"><strong>Dirección:</strong></div>
-                                    <div class="col-sm-8">${factura.direccionCliente}</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Productos</h6>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Producto</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-end">Precio Unit.</th>
-                                    <th class="text-end">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${detallesHtml}
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <th colspan="3" class="text-end">Subtotal:</th>
-                                    <th class="text-end">₡${formatearMoneda(subtotalCalculado)}</th>
-                                </tr>
-                                <tr>
-                                    <th colspan="3" class="text-end">IVA (13%):</th>
-                                    <th class="text-end">₡${formatearMoneda(ivaCalculado)}</th>
-                                </tr>
-                                <tr class="table-success">
-                                    <th colspan="3" class="text-end">TOTAL:</th>
-                                    <th class="text-end">₡${formatearMoneda(totalCalculado)}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        $('#detalleFacturaContent').html(contenidoHtml);
-        console.log('✅ Detalles de factura mostrados correctamente en modal');
-
-    } catch (error) {
-        console.error('❌ Error mostrando detalles de factura:', error);
-        $('#detalleFacturaContent').html(`
-            <div class="alert alert-danger">
-                <h6><i class="bi bi-exclamation-triangle me-2"></i>Error</h6>
-                <p class="mb-0">Error mostrando los detalles: ${error.message}</p>
-            </div>
-        `);
-    }
-}
-
 // Helper function to format currency (assuming it's defined elsewhere or needs to be added)
 function formatearMoneda(valor) {
     if (typeof valor === 'undefined' || valor === null) return '0.00';
@@ -1648,37 +1147,39 @@ async function imprimirFactura(facturaId) {
             const factura = result.factura;
             console.log('📋 Datos de factura obtenidos para impresión:', factura);
 
-            if (typeof generarReciboTérmico === 'function') {
-                console.log('🖨️ Generando recibo térmico para factura');
+            // Usar la función de re-impresión existente en facturacion.js
+            if (typeof window.reimprimirFacturaDesdeModal === 'function') {
+                console.log('🖨️ Usando función de re-impresión existente');
+                await window.reimprimirFacturaDesdeModal(facturaId, factura.numeroFactura);
+            } else if (typeof reimprimirFacturaDesdeModal === 'function') {
+                console.log('🖨️ Usando función de re-impresión global');
+                await reimprimirFacturaDesdeModal(facturaId, factura.numeroFactura);
+            } else if (typeof generarReciboTermico === 'function') {
+                console.log('🖨️ Usando función de impresión térmica');
 
-                const datosImpresion = {
-                    numeroDocumento: factura.numeroFactura,
-                    tipoDocumento: 'Factura',
-                    cliente: {
-                        nombre: factura.nombreCliente,
-                        identificacion: factura.identificacionCliente,
-                        telefono: factura.telefonoCliente,
-                        email: factura.emailCliente,
-                        direccion: factura.direccionCliente
-                    },
-                    fecha: factura.fechaFactura,
-                    metodoPago: factura.metodoPago,
-                    estado: factura.estado,
-                    productos: factura.detallesFactura || [],
-                    subtotal: factura.subtotal || 0,
-                    impuesto: factura.montoImpuesto || 0,
-                    total: factura.total || 0,
-                    observaciones: factura.observaciones,
-                    usuarioCreador: factura.usuarioCreadorNombre
+                const datosFactura = {
+                    numeroFactura: factura.numeroFactura,
+                    nombreCliente: factura.nombreCliente,
+                    usuarioCreadorNombre: factura.usuarioCreadorNombre
                 };
 
-                generarReciboTérmico(datosImpresion);
+                const productos = factura.detallesFactura || [];
+                const totales = {
+                    subtotal: factura.subtotal || 0,
+                    iva: factura.montoImpuesto || 0,
+                    total: factura.total || 0,
+                    metodoPago: factura.metodoPago || 'Efectivo',
+                    cliente: { nombre: factura.nombreCliente },
+                    usuario: { nombre: factura.usuarioCreadorNombre }
+                };
+
+                generarReciboTermico(datosFactura, productos, totales);
 
                 if (typeof mostrarToast === 'function') {
                     mostrarToast('Éxito', 'Recibo de factura enviado a impresora', 'success');
                 }
             } else {
-                console.error('❌ Función generarReciboTérmico no está disponible');
+                console.error('❌ Sistema de impresión no disponible');
                 if (typeof mostrarToast === 'function') {
                     mostrarToast('Error', 'Sistema de impresión no disponible', 'danger');
                 }
