@@ -489,7 +489,7 @@ function construirPiePagina(fecha, hora) {
             <div>¡Gracias por su compra!</div>
             <div>Vuelva pronto</div>
             <div>${empresa.sitioWeb}</div>
-            ${empresa.desarrolladoPor ? `<div style="font-size: 11px; margin-top: 2mm; color: #666;">${empresa.desarrolladoPor}</div>` : ''}
+            ${empresa.desarrolladoPor ? `<div style="font-size: 13px; font-weight: bold; margin-top: 2mm; color: #000;">${empresa.desarrolladoPor}</div>` : ''}
             <div class="fecha-generacion-termico">Recibo: ${fecha} ${hora}</div>
         </div>
     `;
