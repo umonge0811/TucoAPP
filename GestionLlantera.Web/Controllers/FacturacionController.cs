@@ -686,11 +686,11 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes()
+        public async Task<IActionResult> ObtenerFacturasPendientes(string estado = "Pendiente", int tamano = 1000)
         {
             try
             {
-                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
+                _logger.LogInformation("📋 Solicitud de facturas desde el controlador Web - Estado: {Estado}", estado);
 
                 var token = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -698,17 +698,16 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
+                var resultado = await _facturacionService.ObtenerFacturasAsync(token, estado, tamano);
 
                 _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);
 
                 if (resultado.success && resultado.data != null)
                 {
-                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
+                    _logger.LogInformation("📋 Procesando respuesta del API de facturas");
 
                     // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
-                    // Solo necesitamos devolverla tal como viene
                     return Json(resultado.data);
                 }
                 else
@@ -717,7 +716,7 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new
                     {
                         success = false,
-                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
+                        message = resultado.message ?? "No se pudieron obtener las facturas",
                         facturas = new List<object>(),
                         totalFacturas = 0
                     });
@@ -725,7 +724,7 @@ namespace GestionLlantera.Web.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas");
                 return Json(new
                 {
                     success = false,

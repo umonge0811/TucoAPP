@@ -393,6 +393,68 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, string estado = null, int tamano = 1000)
+        {
+            try
+            {
+                _logger.LogInformation("📋 === OBTENIENDO FACTURAS CON FILTROS ===");
+                _logger.LogInformation("📋 Estado: {Estado}, Tamaño: {Tamano}", estado, tamano);
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                // Construir URL con parámetros
+                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/facturas?tamano={tamano}";
+                if (!string.IsNullOrEmpty(estado) && estado != "todos")
+                {
+                    url += $"&estado={estado}";
+                }
+
+                _logger.LogInformation("📋 URL de consulta: {Url}", url);
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = JsonSerializer.Deserialize<JsonElement>(content);
+
+                    if (resultado.TryGetProperty("facturas", out var facturasElement))
+                    {
+                        var facturas = JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
+                        var totalFacturas = facturas?.Count ?? 0;
+
+                        _logger.LogInformation("✅ Facturas obtenidas exitosamente: {Total} facturas", totalFacturas);
+
+                        return (true, new
+                        {
+                            success = true,
+                            facturas = facturas,
+                            totalFacturas = totalFacturas,
+                            message = $"Se encontraron {totalFacturas} facturas"
+                        }, "Facturas obtenidas exitosamente", null);
+                    }
+                    else
+                    {
+                        return (false, null, "Formato de respuesta inesperado del API", null);
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del API obteniendo facturas: {StatusCode} - {Content}",
+                        response.StatusCode, errorContent);
+
+                    return (false, null, "Error del servidor al obtener facturas", errorContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas");
+                return (false, null, "Error interno al obtener facturas", ex.Message);
+            }
+        }
+
         public async Task<(bool success, object data, string message, string details)> ObtenerFacturasPendientesAsync(string jwtToken)
         {
             try
