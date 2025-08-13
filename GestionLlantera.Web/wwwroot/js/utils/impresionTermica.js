@@ -156,7 +156,20 @@ function construirSeccionProductos(productos, anchoMaximo) {
     `;
 
     productos.forEach(producto => {
-        const nombreTruncado = truncarTextoTermico(producto.nombreProducto, 28);
+        let nombreCompleto = producto.nombreProducto;
+        
+        // Si es una llanta, agregar la medida
+        if (producto.esLlanta && producto.medidaCompleta) {
+            nombreCompleto = `${producto.nombreProducto} - ${producto.medidaCompleta}`;
+        } else if (producto.EsLlanta && producto.MedidaCompleta) {
+            nombreCompleto = `${producto.nombreProducto} - ${producto.MedidaCompleta}`;
+        } else if (producto.medidaLlanta) {
+            nombreCompleto = `${producto.nombreProducto} - ${producto.medidaLlanta}`;
+        } else if (producto.MedidaLlanta) {
+            nombreCompleto = `${producto.nombreProducto} - ${producto.MedidaLlanta}`;
+        }
+        
+        const nombreTruncado = truncarTextoTermico(nombreCompleto, 28);
         const subtotalProducto = producto.precioUnitario * producto.cantidad;
         
         html += `
@@ -258,7 +271,16 @@ function construirSeccionPendientes(numeroFactura) {
     if (tieneCodigosSeguimiento) {
         window.codigosSeguimientoPendientes.forEach(pendiente => {
             const cantidadPendiente = pendiente.cantidadPendiente || 0;
-            const nombreProducto = truncarTextoTermico(pendiente.nombreProducto || 'Producto', 22);
+            let nombreCompleto = pendiente.nombreProducto || 'Producto';
+            
+            // Si es una llanta, agregar la medida
+            if (pendiente.medidaLlanta) {
+                nombreCompleto = `${nombreCompleto} - ${pendiente.medidaLlanta}`;
+            } else if (pendiente.MedidaLlanta) {
+                nombreCompleto = `${nombreCompleto} - ${pendiente.MedidaLlanta}`;
+            }
+            
+            const nombreProducto = truncarTextoTermico(nombreCompleto, 22);
             const codigoSeguimiento = pendiente.codigoSeguimiento || `${numeroFactura}-${pendiente.productoId}`;
             
             html += `
@@ -272,7 +294,16 @@ function construirSeccionPendientes(numeroFactura) {
     } else if (tieneProductosPendientes) {
         window.productosPendientesEntrega.forEach(pendiente => {
             const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
-            const nombreProducto = truncarTextoTermico(pendiente.nombreProducto || 'Producto', 25);
+            let nombreCompleto = pendiente.nombreProducto || 'Producto';
+            
+            // Si es una llanta, agregar la medida
+            if (pendiente.medidaLlanta) {
+                nombreCompleto = `${nombreCompleto} - ${pendiente.medidaLlanta}`;
+            } else if (pendiente.MedidaLlanta) {
+                nombreCompleto = `${nombreCompleto} - ${pendiente.MedidaLlanta}`;
+            }
+            
+            const nombreProducto = truncarTextoTermico(nombreCompleto, 25);
             
             html += `
                 <div class="producto-pendiente-termico">
