@@ -704,19 +704,20 @@ namespace GestionLlantera.Web.Controllers
                 _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);
 
-                if (resultado.success && resultado.facturas != null)
+                if (resultado.success && resultado.data != null)
                 {
-                    // Verificar si facturas es una colección válida
-                    var facturasCollection = resultado.facturas;
-                    
-                    if (facturasCollection != null)
+                    // El data contiene la respuesta completa del API
+                    try
                     {
-                        var facturasList = facturasCollection as IEnumerable<object> ?? 
-                                          (facturasCollection is IEnumerable enumerable ? enumerable.Cast<object>() : null);
+                        // Deserializar la respuesta para extraer las facturas
+                        var jsonData = System.Text.Json.JsonSerializer.Serialize(resultado.data);
+                        var responseElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonData);
 
-                        if (facturasList != null)
+                        if (responseElement.TryGetProperty("facturas", out var facturasElement))
                         {
-                            var facturasCount = facturasList.Count();
+                            var facturasList = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
+                            var facturasCount = facturasList?.Count ?? 0;
+
                             _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturasCount);
 
                             return Ok(new
@@ -726,6 +727,16 @@ namespace GestionLlantera.Web.Controllers
                                 message = $"Se encontraron {facturasCount} facturas"
                             });
                         }
+                        else
+                        {
+                            // Si no hay propiedad facturas, devolver data directamente
+                            return Ok(resultado.data);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Error procesando respuesta de facturas");
+                        return Ok(resultado.data); // Devolver data sin procesar como fallback
                     }
                 }
 
