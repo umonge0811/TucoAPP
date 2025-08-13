@@ -1,9 +1,12 @@
 @{
     ViewData["Title"] = "Facturación";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
-    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
 }
+
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" />
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css" />
+    <link rel="stylesheet" href="~/css/print-thermal.css" />
+
 
 
 
@@ -629,6 +632,7 @@
 
     @section Scripts {
         <!-- Scripts específicos para facturación -->
+        <script src="~/js/utils/impresionTermica.js"></script>
         <script src="~/js/views/facturacion/zoomImagenes.js"></script>
         <script src="~/js/views/facturacion/facturacion.js"></script>
         <script src="~/js/views/facturacion/facturasPendientesFilter.js"></script>
