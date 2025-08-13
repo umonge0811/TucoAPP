@@ -47,11 +47,74 @@ function generarReciboTermico(datosFactura, productos, totales, opciones = {}) {
     };
 
     // Determinar tipo de documento
+
+/**
+ * Construir medida completa de llanta
+ */
+function construirMedidaCompleta(producto) {
+    try {
+        // Verificar si ya tiene medida completa
+        if (producto.medidaCompleta) return producto.medidaCompleta;
+        if (producto.MedidaCompleta) return producto.MedidaCompleta;
+        if (producto.medidaLlanta) return producto.medidaLlanta;
+        if (producto.MedidaLlanta) return producto.MedidaLlanta;
+        
+        // Construir desde las propiedades individuales
+        let medida = '';
+        
+        // Ancho
+        const ancho = producto.ancho || producto.Ancho || '';
+        
+        // Perfil
+        const perfil = producto.perfil || producto.Perfil || '';
+        
+        // Aro
+        const aro = producto.aro || producto.Aro || '';
+        
+        // Índice de carga
+        const indiceCarga = producto.indiceCarga || producto.IndiceCarga || '';
+        
+        // Índice de velocidad
+        const indiceVelocidad = producto.indiceVelocidad || producto.IndiceVelocidad || '';
+        
+        // Construir medida básica (ancho/perfil R aro)
+        if (ancho && perfil && aro) {
+            medida = `${ancho}/${perfil}R${aro}`;
+            
+            // Agregar índices si están disponibles
+            if (indiceCarga && indiceVelocidad) {
+                medida += ` ${indiceCarga}${indiceVelocidad}`;
+            } else if (indiceCarga) {
+                medida += ` ${indiceCarga}`;
+            }
+        }
+        
+        return medida || 'Medida no disponible';
+        
+    } catch (error) {
+        console.error('❌ Error construyendo medida completa:', error);
+        return 'Medida no disponible';
+    }
+}
+
+
     const esProforma = datosFactura.numeroFactura && datosFactura.numeroFactura.startsWith('PROF');
     const tipoDocumento = esProforma ? 'proforma' : configuracion.tipo;
 
+    // Procesar productos para incluir medida completa
+    const productosConMedida = productos.map(producto => {
+        const productoCompleto = { ...producto };
+        
+        // Si es una llanta, construir la medida completa
+        if (producto.esLlanta || producto.EsLlanta) {
+            productoCompleto.medidaCompleta = construirMedidaCompleta(producto);
+        }
+        
+        return productoCompleto;
+    });
+
     // Generar contenido HTML
-    const contenidoHTML = construirContenidoRecibo(datosFactura, productos, totales, tipoDocumento, configuracion);
+    const contenidoHTML = construirContenidoRecibo(datosFactura, productosConMedida, totales, tipoDocumento, configuracion);
     
     // Intentar impresión con ventana emergente
     try {
