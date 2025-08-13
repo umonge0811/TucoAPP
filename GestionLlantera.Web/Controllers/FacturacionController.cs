@@ -1710,12 +1710,7 @@ namespace GestionLlantera.Web.Controllers
         public string? Observaciones { get; set; }
     }
 
-    public class MarcarEntregadosRequest
-    {
-        public List<int> ProductosIds { get; set; } = new List<int>();
-        public string? ObservacionesEntrega { get; set; }
-        public DateTime? FechaEntrega { get; set; }
-    }
+    // La definición duplicada de MarcarEntregadosRequest se ha eliminado.
 
     public class MarcarEntregadoPorCodigoRequest
     {
