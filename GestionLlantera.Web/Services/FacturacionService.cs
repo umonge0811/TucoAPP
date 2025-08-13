@@ -12,6 +12,7 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<FacturacionService> _logger;
         private readonly ApiConfigurationService _apiConfig;
+        private readonly IConfiguration _configuration;
         private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         private readonly string _baseUrl;
@@ -28,6 +29,7 @@ namespace GestionLlantera.Web.Services
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _configuration = config;
             _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
             
             /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
@@ -417,11 +419,11 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var resultado = JsonSerializer.Deserialize<JsonElement>(content);
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
 
                     if (resultado.TryGetProperty("facturas", out var facturasElement))
                     {
-                        var facturas = JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
+                        var facturas = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
                         var totalFacturas = facturas?.Count ?? 0;
 
                         _logger.LogInformation("✅ Facturas obtenidas exitosamente: {Total} facturas", totalFacturas);
