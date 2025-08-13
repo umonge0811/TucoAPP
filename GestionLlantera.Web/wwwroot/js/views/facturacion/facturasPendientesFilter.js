@@ -136,30 +136,21 @@ async function cargarTodasLasFacturasPendientes() {
         const resultado = await response.json();
         console.log('📋 Respuesta del servidor facturas:', resultado);
 
-        if (resultado.success) {
-            // Extraer facturas del resultado
-            let facturas = null;
-            if (resultado.facturas && Array.isArray(resultado.facturas)) {
-                facturas = resultado.facturas;
-            } else if (resultado.data && Array.isArray(resultado.data)) {
-                facturas = resultado.data;
-            } else if (Array.isArray(resultado)) {
-                facturas = resultado;
-            }
+        if (resultado.success && resultado.facturas && resultado.facturas.length > 0) {
+            console.log('✅ Facturas cargadas exitosamente:', resultado.facturas.length);
 
-            if (facturas && facturas.length > 0) {
-                console.log('✅ Facturas pendientes cargadas:', facturas.length);
-                todasLasFacturasPendientes = facturas;
+            // Almacenar todas las facturas
+            todasLasFacturasPendientes = resultado.facturas;
 
-                // Aplicar filtros iniciales (mostrar todas)
-                aplicarFiltrosLocalmenteFacturas();
-            } else {
-                console.log('ℹ️ No se encontraron facturas pendientes');
-                todasLasFacturasPendientes = [];
-                mostrarFacturasPendientesVacias();
-            }
+            // Aplicar filtros locales iniciales
+            aplicarFiltrosLocalmenteFacturas();
+
+        } else if (resultado.success && (!resultado.facturas || resultado.facturas.length === 0)) {
+            console.log('ℹ️ No hay facturas disponibles');
+            todasLasFacturasPendientes = [];
+            mostrarFacturasPendientesVacias();
         } else {
-            console.log('❌ Error del servidor:', resultado.message);
+            console.error('❌ Error del servidor:', resultado.message || 'Error desconocido');
             mostrarFacturasPendientesVacias();
             if (typeof mostrarToast === 'function') {
                 mostrarToast('Error', resultado.message || 'Error al cargar facturas pendientes', 'warning');
@@ -684,7 +675,7 @@ function crearFilaFacturaPendiente(factura) {
                 </div>
                 <div class="btn-group btn-group-sm d-none d-sm-inline-block">
                     <!-- Botones horizontales en tablet/desktop -->
-                    
+
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>
