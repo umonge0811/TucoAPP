@@ -618,10 +618,29 @@ function configurarEventosBotonesFacturas() {
     // Procesar factura pendiente
     $('.btn-outline-success[data-factura-escapada]').on('click.facturaProcesar', function() {
         try {
-            // Obtener los datos de la factura escapados del atributo data-
-            const facturaEscapada = $(this).data('factura-escapada');
-            // Parsear la cadena JSON escapada de vuelta a un objeto JavaScript
-            const factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
+            // Obtener los datos de la factura del atributo data-
+            let facturaData = $(this).data('factura-escapada');
+            console.log('📋 Datos originales recibidos:', facturaData, typeof facturaData);
+            
+            let factura;
+            
+            // Si ya es un objeto, usarlo directamente
+            if (typeof facturaData === 'object' && facturaData !== null) {
+                factura = facturaData;
+            } 
+            // Si es una cadena, parsearla
+            else if (typeof facturaData === 'string') {
+                // Reemplazar entidades HTML escapadas
+                const facturaJson = facturaData.replace(/&quot;/g, '"');
+                factura = JSON.parse(facturaJson);
+            } 
+            // Si no es ni objeto ni cadena, intentar obtenerlo del atributo directamente
+            else {
+                const facturaAttr = $(this).attr('data-factura-escapada');
+                const facturaJson = facturaAttr.replace(/&quot;/g, '"');
+                factura = JSON.parse(facturaJson);
+            }
+            
             console.log('⚙️ Procesar factura pendiente:', factura);
 
             // Llamar a la función de procesamiento si está disponible
@@ -635,6 +654,7 @@ function configurarEventosBotonesFacturas() {
             }
         } catch (error) {
             console.error('❌ Error parseando datos de factura para procesamiento:', error);
+            console.error('❌ Detalles del error:', error.message);
             if (typeof mostrarToast === 'function') {
                 mostrarToast('Error', 'Error al procesar la factura, datos inválidos', 'danger');
             }
