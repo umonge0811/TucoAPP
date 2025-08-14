@@ -1,0 +1,57 @@
+
+        [HttpPut("facturas/{id}/estado")]
+        [Authorize]
+        public async Task<IActionResult> ActualizarEstadoFactura(int id, [FromBody] string nuevoEstado)
+        {
+            // ✅ Verificar permisos según el tipo de cambio de estado
+            if (nuevoEstado == "Pagada")
+            {
+                var validacionCompleto = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
+                    "Solo usuarios con permiso 'CompletarFacturas' pueden marcar facturas como pagadas");
+                if (validacionCompleto != null) return validacionCompleto;
+            }
+            else if (nuevoEstado == "Anulada")
+            {
+                var validacionAnular = await this.ValidarPermisoAsync(_permisosService, "AnularFacturas",
+                    "Solo usuarios con permiso 'AnularFacturas' pueden anular facturas");
+                if (validacionAnular != null) return validacionAnular;
+            }
+            else
+            {
+                var validacionEditar = await this.ValidarPermisoAsync(_permisosService, "EditarFacturas",
+                    "Solo usuarios con permiso 'EditarFacturas' pueden actualizar facturas");
+                if (validacionEditar != null) return validacionEditar;
+            }
+
+            try
+            {
+                var factura = await _context.Facturas.FindAsync(id);
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                var estadosValidos = new[] { "Pendiente", "Pagada", "Anulada", "Vencida" };
+                if (!estadosValidos.Contains(nuevoEstado))
+                    return BadRequest(new { message = "Estado no válido" });
+
+                var estadoAnterior = factura.Estado;
+                factura.Estado = nuevoEstado;
+                factura.FechaActualizacion = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("📝 Estado de factura {NumeroFactura} cambiado de {EstadoAnterior} a {EstadoNuevo}", 
+                    factura.NumeroFactura, estadoAnterior, nuevoEstado);
+
+                return Ok(new { 
+                    message = "Estado actualizado exitosamente", 
+                    estadoAnterior = estadoAnterior,
+                    estadoNuevo = nuevoEstado,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al actualizar estado de factura: {Id}", id);
+                return StatusCode(500, new { message = "Error al actualizar estado" });
+            }
+        }
