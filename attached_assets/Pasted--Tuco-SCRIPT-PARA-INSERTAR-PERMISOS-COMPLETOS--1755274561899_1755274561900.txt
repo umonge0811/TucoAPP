@@ -1,0 +1,299 @@
+# Tuco
+
+-- =============================================
+-- SCRIPT PARA INSERTAR PERMISOS COMPLETOS
+-- Base de datos: DB_tuco
+-- Tabla: Permisos
+-- =============================================
+
+USE [DB_tuco]
+GO
+
+-- Limpiar permisos existentes (opcional, descomenta si necesitas limpiar)
+-- DELETE FROM [dbo].[Permisos];
+-- DBCC CHECKIDENT('Permisos', RESEED, 1);
+
+-- Insertar todos los permisos con sus IDs específicos
+SET IDENTITY_INSERT [dbo].[Permisos] ON;
+
+INSERT INTO [dbo].[Permisos] ([PermisoId], [NombrePermiso], [DescripcionPermiso]) VALUES
+(2, 'Crear Facturas', 'Permite crear y hacer cobros de facturar'),
+(3, 'Ver Costos', 'Permite ver información de costos de productos'),
+(4, 'Ver Utilidades', 'Permite ver información de utilidades y márgenes de ganancia'),
+(5, 'Programar Inventario', 'Permite crear y programar inventarios'),
+(6, 'Gestion Completa', 'Acceso completo a todas las funciones administrativas'),
+(7, 'Editar Productos', 'Permite crear y editar productos'),
+(8, 'Eliminar Productos', 'Permite eliminar productos del sistema'),
+(9, 'Ajustar Stock', 'Permite realizar ajustes de inventario y stock'),
+(10, 'Ver Reportes', 'Permite acceder a reportes y estadísticas'),
+(11, 'Gestion Usuarios', 'Permite gestionar usuarios y sus permisos'),
+(13, 'VerCostos', 'Permite ver los costos de los productos en el inventario'),
+(14, 'VerUtilidades', 'Permite ver las utilidades y porcentajes de ganancia de los productos'),
+(15, 'ProgramarInventario', 'Permite crear y programar nuevos inventarios'),
+(16, 'Iniciar Inventario', 'Para poder dar inicio a los inventarios'),
+(1016, 'Completar Inventario', 'Se utiliza para que los asignados a realizar inventarios puedas dar por finalizado el proceso.'),
+(1017, 'Descargar Reportes', 'Permite descargar reportes en Excel y PDF'),
+(1018, 'Ver Facturación', 'Para acceder al módulo de facturación'),
+(1019, 'Editar Clientes', 'Permite modificar la informacion de los clientes'),
+(1020, 'Ver Productos', 'Para visualizar Productos de Inventario'),
+(1021, 'Ver Historial Inventarios Completo', 'Permite Visualizar inventarios Anteriores'),
+(1022, 'CompletarFacturas', 'Permite completar facturas y cambiar estado a pagada'),
+(1023, 'EditarFacturas', 'Permite editar facturas existentes'),
+(1024, 'AnularFacturas', 'Permite anular facturas'),
+(1025, 'Crear Clientes', 'Permiso para agregar nuevos clientes'),
+(1026, 'Ver Clientes', 'Permiso para ver los clientes del Sistema'),
+(1027, 'Eliminar Clientes', 'Permiso para eliminar un cliente de la Base de Datos'),
+(1028, 'Entregar Pendientes', 'Permite al Usuario Entregar a nivel de sistema productos pendientes de Entrega'),
+(1030, 'Prueba', 'Prueba'),
+(1032, 'Menu_Inventario', 'Permite ver el Menú de inventario'),
+(1033, 'Sub_Menu_VerProductos', 'Permite Visualizar el SubMenú de Modulo de Inventario Ver Productos'),
+(1034, 'Sub_Menu_AgregarProductos', 'Permite Visualizar el SubMenú de Modulo de Inventario Agregar Productos'),
+(1035, 'Sub_Menu_ProgramarInventario', 'Permite Visualizar el SubMenú de Modulo de Inventario Programar Inventario'),
+(1036, 'Sub_Menu_HistorialInventario', 'Permite Visualizar el SubMenú de Modulo de Inventario Historial Inventario'),
+(1037, 'Menu_Ventas', 'Acceso al menú principal de Ventas y módulos relacionados con proceso de venta'),
+(1038, 'Sub_Menu_Clientes', 'Permite gestionar clientes'),
+(1039, 'Sub_Menu_Facturación', 'Permite acceder al sistema de facturación'),
+(1040, 'Sub_Menu_ReportesVentas', 'Permite ver reportes de ventas'),
+(1041, 'Sub_Menu_EntregasPendientes', 'Permite ver entregas pendientes'),
+(1042, 'Menu_Proveedores', 'Acceso al menú principal de Proveedores'),
+(1043, 'Sub_Menu_GestionProveedores', 'Permite gestionar proveedores'),
+(1044, 'Sub_Menu_PedidosProveedores', 'Permite gestionar pedidos a proveedores'),
+(1045, 'Menu_Reportes', 'Acceso al menú principal de Reportes'),
+(1046, 'Sub_Menu_ExportarExcel', 'Permite exportar reportes a Excel'),
+(1047, 'Sub_Menu_ExportarPDF', 'Permite exportar reportes a PDF'),
+(1048, 'Menu_Configuración', 'Acceso al menú principal de Configuración'),
+(1049, 'Sub_Menu_RolesPermisos', 'Permite gestionar roles y permisos'),
+(1050, 'Sub_Menu_GestionUsuarios', 'Permite gestionar usuarios del sistema'),
+(1051, 'Menu_HerramientasSistemaDEV', 'Acceso al menú principal de Herramientas de Sistema'),
+(1052, 'Sub_Menu_DiagnosticoPermisosDEV', 'Permite acceder al diagnóstico de permisos'),
+(1053, 'Sub_Menu_LogsSistemaDEV', 'Permite ver los logs del sistema'),
+(1070, 'Ver Historial Inventarios', 'Permite ver el historial de inventarios asignados al usuario'),
+(1071, 'Ver Detalle Producto', 'Permite al Usuario ver detalles del producto seleccionado'),
+(1072, 'Configuracion', 'Sistema Permite acceder a configuraciones del sistema'),
+(1073, 'Crear Anuncios', 'Permite al usuario crear anuncion que se visualizan en el Dashboard en tiempo real');
+
+SET IDENTITY_INSERT [dbo].[Permisos] OFF;
+
+-- Verificar la inserción
+SELECT COUNT(*) as 'Total Permisos Insertados' FROM [dbo].[Permisos];
+
+-- Mostrar algunos permisos para verificar
+SELECT TOP 10 * FROM [dbo].[Permisos] ORDER BY [PermisoId];
+
+PRINT '✅ Permisos insertados correctamente';
+PRINT 'Total de permisos en la tabla: ' + CAST((SELECT COUNT(*) FROM [dbo].[Permisos]) AS VARCHAR(10));
+
+GO
+
+
+-- =============================================
+-- SCRIPT PARA CREAR ROL ADMINISTRADOR COMPLETO
+-- Base de datos: DB_tuco
+-- =============================================
+
+USE [DB_tuco]
+GO
+
+-- =============================================
+-- 1. CREAR EL ROL ADMINISTRADOR
+-- =============================================
+
+-- Verificar si el rol ya existe, si no existe lo creamos
+IF NOT EXISTS (SELECT 1 FROM [dbo].[Roles] WHERE [NombreRol] = 'Administrador')
+BEGIN
+    INSERT INTO [dbo].[Roles] ([NombreRol], [DescripcionRol])
+    VALUES ('Administrador', 'Rol con acceso completo a todas las funciones del sistema')
+    
+    PRINT '✅ Rol Administrador creado exitosamente'
+END
+ELSE
+BEGIN
+    PRINT '⚠️ El rol Administrador ya existe'
+END
+
+-- Obtener el ID del rol Administrador
+DECLARE @RolAdminId INT
+SELECT @RolAdminId = [RolId] FROM [dbo].[Roles] WHERE [NombreRol] = 'Administrador'
+
+-- =============================================
+-- 2. ASIGNAR TODOS LOS PERMISOS AL ROL ADMINISTRADOR
+-- =============================================
+
+-- Limpiar permisos existentes del rol (por si se ejecuta múltiples veces)
+DELETE FROM [dbo].[RolPermiso] WHERE [RolID] = @RolAdminId
+
+-- Insertar TODOS los permisos existentes en el rol Administrador
+INSERT INTO [dbo].[RolPermiso] ([RolID], [PermisoID])
+SELECT @RolAdminId, [PermisoId]
+FROM [dbo].[Permisos]
+
+-- Verificar cuántos permisos se asignaron
+DECLARE @TotalPermisos INT
+SELECT @TotalPermisos = COUNT(*) FROM [dbo].[RolPermiso] WHERE [RolID] = @RolAdminId
+
+PRINT '✅ Permisos asignados al rol Administrador: ' + CAST(@TotalPermisos AS VARCHAR(10))
+
+-- =============================================
+-- 3. MOSTRAR INFORMACIÓN DEL ROL CREADO
+-- =============================================
+
+-- Mostrar información del rol
+SELECT 
+    r.[RolId],
+    r.[NombreRol],
+    r.[DescripcionRol],
+    COUNT(rp.[PermisoID]) as 'Total_Permisos'
+FROM [dbo].[Roles] r
+LEFT JOIN [dbo].[RolPermiso] rp ON r.[RolId] = rp.[RolID]
+WHERE r.[NombreRol] = 'Administrador'
+GROUP BY r.[RolId], r.[NombreRol], r.[DescripcionRol]
+
+-- Mostrar algunos permisos asignados
+PRINT '📋 Algunos permisos asignados al rol Administrador:'
+SELECT TOP 10 
+    p.[PermisoId],
+    p.[NombrePermiso],
+    p.[DescripcionPermiso],
+    p.[Modulo]
+FROM [dbo].[RolPermiso] rp
+INNER JOIN [dbo].[Permisos] p ON rp.[PermisoID] = p.[PermisoId]
+WHERE rp.[RolID] = @RolAdminId
+ORDER BY p.[PermisoId]
+
+PRINT '✅ Script completado exitosamente'
+PRINT 'Rol ID del Administrador: ' + CAST(@RolAdminId AS VARCHAR(10))
+
+GO
+
+
+
+-- =============================================
+-- SCRIPT PARA CREAR USUARIO ADMINISTRADOR
+-- Base de datos: DB_tuco
+-- Email: admin@llantasymastc.com
+-- Password: admin
+-- =============================================
+
+USE [DB_tuco]
+GO
+
+-- =============================================
+-- 1. CREAR EL USUARIO ADMIN
+-- =============================================
+
+-- Verificar si el usuario ya existe
+IF EXISTS (SELECT 1 FROM [dbo].[Usuarios] WHERE [Email] = 'admin@llantasymastc.com')
+BEGIN
+    PRINT '⚠️ El usuario admin@llantasymastc.com ya existe'
+    
+    -- Mostrar información del usuario existente
+    SELECT 
+        [UsuarioId],
+        [NombreUsuario],
+        [Email],
+        [Activo],
+        [FechaCreacion]
+    FROM [dbo].[Usuarios] 
+    WHERE [Email] = 'admin@llantasymastc.com'
+END
+ELSE
+BEGIN
+    -- Hash de la contraseña "admin" usando BCrypt (este es un ejemplo, deberías usar el mismo algoritmo que tu aplicación)
+    -- Nota: Este hash corresponde a la contraseña "admin" usando BCrypt con salt rounds = 10
+    DECLARE @HashedPassword NVARCHAR(255) = '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36w/8vYmP6ZE.Y9RyFzL4PC'
+    
+    -- Insertar el usuario admin
+    INSERT INTO [dbo].[Usuarios] (
+        [NombreUsuario],
+        [Email],
+        [Contrasena],
+        [Activo],
+        [FechaCreacion],
+        [EsTopVendedor]
+    )
+    VALUES (
+        'Admin',
+        'admin@llantasymastc.com',
+        @HashedPassword,
+        1, -- Activo
+        GETDATE(),
+        0 -- No es top vendedor por defecto
+    )
+    
+    PRINT '✅ Usuario Admin creado exitosamente'
+END
+
+-- Obtener el ID del usuario Admin
+DECLARE @UsuarioAdminId INT
+SELECT @UsuarioAdminId = [UsuarioId] FROM [dbo].[Usuarios] WHERE [Email] = 'admin@llantasymastc.com'
+
+-- =============================================
+-- 2. ASIGNAR ROL ADMINISTRADOR AL USUARIO
+-- =============================================
+
+-- Obtener el ID del rol Administrador
+DECLARE @RolAdminId INT
+SELECT @RolAdminId = [RolId] FROM [dbo].[Roles] WHERE [NombreRol] = 'Administrador'
+
+IF @RolAdminId IS NULL
+BEGIN
+    PRINT '❌ ERROR: No se encontró el rol Administrador. Ejecuta primero el script de creación de rol.'
+    RETURN
+END
+
+-- Verificar si ya existe la relación usuario-rol
+IF NOT EXISTS (SELECT 1 FROM [dbo].[UsuarioRol] WHERE [UsuarioID] = @UsuarioAdminId AND [RolID] = @RolAdminId)
+BEGIN
+    -- Asignar el rol Administrador al usuario Admin
+    INSERT INTO [dbo].[UsuarioRol] ([UsuarioID], [RolID])
+    VALUES (@UsuarioAdminId, @RolAdminId)
+    
+    PRINT '✅ Rol Administrador asignado al usuario Admin'
+END
+ELSE
+BEGIN
+    PRINT '⚠️ El usuario Admin ya tiene asignado el rol Administrador'
+END
+
+-- =============================================
+-- 3. MOSTRAR INFORMACIÓN COMPLETA DEL USUARIO
+-- =============================================
+
+PRINT '📋 INFORMACIÓN DEL USUARIO ADMIN CREADO:'
+PRINT '========================================='
+
+-- Mostrar datos del usuario
+SELECT 
+    u.[UsuarioId],
+    u.[NombreUsuario],
+    u.[Email],
+    u.[Activo],
+    u.[FechaCreacion],
+    r.[NombreRol],
+    r.[DescripcionRol]
+FROM [dbo].[Usuarios] u
+INNER JOIN [dbo].[UsuarioRol] ur ON u.[UsuarioId] = ur.[UsuarioID]
+INNER JOIN [dbo].[Roles] r ON ur.[RolID] = r.[RolId]
+WHERE u.[Email] = 'admin@llantasymastc.com'
+
+-- Contar permisos totales del usuario a través de su rol
+DECLARE @TotalPermisosUsuario INT
+SELECT @TotalPermisosUsuario = COUNT(DISTINCT rp.[PermisoID])
+FROM [dbo].[Usuarios] u
+INNER JOIN [dbo].[UsuarioRol] ur ON u.[UsuarioId] = ur.[UsuarioID]
+INNER JOIN [dbo].[RolPermiso] rp ON ur.[RolID] = rp.[RolID]
+WHERE u.[Email] = 'admin@llantasymastc.com'
+
+PRINT '✅ Script completado exitosamente'
+PRINT 'Usuario ID: ' + CAST(@UsuarioAdminId AS VARCHAR(10))
+PRINT 'Rol ID: ' + CAST(@RolAdminId AS VARCHAR(10))
+PRINT 'Total de permisos del usuario: ' + CAST(@TotalPermisosUsuario AS VARCHAR(10))
+PRINT ''
+PRINT '🔑 CREDENCIALES DE ACCESO:'
+PRINT 'Email: admin@llantasymastc.com'
+PRINT 'Password: admin'
+PRINT ''
+PRINT '⚠️ IMPORTANTE: Cambia la contraseña después del primer acceso por seguridad'
+
+GO
+
