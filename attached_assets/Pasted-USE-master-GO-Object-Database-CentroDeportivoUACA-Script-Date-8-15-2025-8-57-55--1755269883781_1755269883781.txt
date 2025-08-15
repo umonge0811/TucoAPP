@@ -1,0 +1,473 @@
+USE [master]
+GO
+/****** Object:  Database [CentroDeportivoUACA]    Script Date: 8/15/2025 8:57:55 AM ******/
+CREATE DATABASE [CentroDeportivoUACA]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+( NAME = N'CentroDeportivoUACA', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\CentroDeportivoUACA.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
+ LOG ON 
+( NAME = N'CentroDeportivoUACA_log', FILENAME = N'C:\Program Files\Microsoft SQL Server\MSSQL16.SQLEXPRESS\MSSQL\DATA\CentroDeportivoUACA_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
+ WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET COMPATIBILITY_LEVEL = 160
+GO
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [CentroDeportivoUACA].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ANSI_NULL_DEFAULT OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ANSI_NULLS OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ANSI_PADDING OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ANSI_WARNINGS OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ARITHABORT OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET AUTO_CLOSE ON 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET AUTO_SHRINK OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET AUTO_UPDATE_STATISTICS ON 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET CURSOR_CLOSE_ON_COMMIT OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET CURSOR_DEFAULT  GLOBAL 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET CONCAT_NULL_YIELDS_NULL OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET NUMERIC_ROUNDABORT OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET QUOTED_IDENTIFIER OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET RECURSIVE_TRIGGERS OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET  ENABLE_BROKER 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET AUTO_UPDATE_STATISTICS_ASYNC OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET DATE_CORRELATION_OPTIMIZATION OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET TRUSTWORTHY OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ALLOW_SNAPSHOT_ISOLATION OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET PARAMETERIZATION SIMPLE 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET READ_COMMITTED_SNAPSHOT OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET HONOR_BROKER_PRIORITY OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET RECOVERY SIMPLE 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET  MULTI_USER 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET PAGE_VERIFY CHECKSUM  
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET DB_CHAINING OFF 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET TARGET_RECOVERY_TIME = 60 SECONDS 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET DELAYED_DURABILITY = DISABLED 
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET ACCELERATED_DATABASE_RECOVERY = OFF  
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET QUERY_STORE = ON
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30), DATA_FLUSH_INTERVAL_SECONDS = 900, INTERVAL_LENGTH_MINUTES = 60, MAX_STORAGE_SIZE_MB = 1000, QUERY_CAPTURE_MODE = AUTO, SIZE_BASED_CLEANUP_MODE = AUTO, MAX_PLANS_PER_QUERY = 200, WAIT_STATS_CAPTURE_MODE = ON)
+GO
+USE [CentroDeportivoUACA]
+GO
+/****** Object:  Table [dbo].[BitacoraAccesos]    Script Date: 8/15/2025 8:57:55 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[BitacoraAccesos](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[UsuarioId] [int] NULL,
+	[NombreUsuario] [nvarchar](50) NOT NULL,
+	[DireccionIP] [nvarchar](45) NULL,
+	[TipoAcceso] [int] NOT NULL,
+	[Exitoso] [bit] NOT NULL,
+	[Detalles] [nvarchar](500) NULL,
+	[FechaHora] [datetime2](7) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Clientes]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Clientes](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](100) NOT NULL,
+	[Apellidos] [nvarchar](100) NOT NULL,
+	[Cedula] [nvarchar](20) NOT NULL,
+	[Email] [nvarchar](150) NOT NULL,
+	[Telefono] [nvarchar](20) NOT NULL,
+	[Direccion] [nvarchar](200) NULL,
+	[FechaNacimiento] [datetime2](7) NOT NULL,
+	[Activo] [bit] NOT NULL,
+	[FechaRegistro] [datetime2](7) NOT NULL,
+	[Observaciones] [nvarchar](500) NULL,
+ CONSTRAINT [PK_Clientes] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[ConfiguracionSistema]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[ConfiguracionSistema](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Clave] [nvarchar](100) NOT NULL,
+	[Valor] [nvarchar](max) NOT NULL,
+	[Descripcion] [nvarchar](500) NULL,
+	[FechaModificacion] [datetime2](7) NOT NULL,
+	[UsuarioModificacionId] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[DetallesFactura]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[DetallesFactura](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[FacturaId] [int] NOT NULL,
+	[Descripcion] [nvarchar](200) NOT NULL,
+	[Cantidad] [int] NOT NULL,
+	[PrecioUnitario] [decimal](10, 2) NOT NULL,
+	[Total] [decimal](10, 2) NOT NULL,
+	[TipoServicio] [int] NOT NULL,
+	[ReferenciaId] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Facturas]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Facturas](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Numero] [nvarchar](50) NOT NULL,
+	[UsuarioId] [int] NOT NULL,
+	[Fecha] [date] NOT NULL,
+	[Subtotal] [decimal](10, 2) NOT NULL,
+	[IVA] [decimal](10, 2) NOT NULL,
+	[Total] [decimal](10, 2) NOT NULL,
+	[Estado] [int] NOT NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+	[ClienteId] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[Numero] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Instalaciones]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Instalaciones](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](100) NOT NULL,
+	[Descripcion] [nvarchar](500) NULL,
+	[CapacidadMaxima] [int] NOT NULL,
+	[Activa] [bit] NOT NULL,
+	[HoraApertura] [time](7) NOT NULL,
+	[HoraCierre] [time](7) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Membresias]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Membresias](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[TipoMembresiaId] [int] NOT NULL,
+	[FechaInicio] [date] NOT NULL,
+	[FechaVencimiento] [datetime2](7) NOT NULL,
+	[Precio] [decimal](10, 2) NOT NULL,
+	[Activa] [bit] NOT NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+	[ClienteId] [int] NOT NULL,
+	[RenovacionAutomatica] [bit] NOT NULL,
+	[DuracionPersonalizadaMinutos] [int] NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[PagosFactura]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PagosFactura](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[FacturaId] [int] NOT NULL,
+	[TipoPago] [int] NOT NULL,
+	[Monto] [decimal](10, 2) NOT NULL,
+	[MontoColones] [decimal](10, 2) NOT NULL,
+	[TipoCambio] [decimal](10, 2) NULL,
+	[FechaPago] [datetime2](7) NOT NULL,
+	[Referencia] [nvarchar](100) NULL,
+	[Observaciones] [nvarchar](500) NULL,
+	[Moneda] [nvarchar](10) NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Reservas]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Reservas](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[InstalacionId] [int] NOT NULL,
+	[FechaReserva] [date] NOT NULL,
+	[HoraInicio] [time](7) NOT NULL,
+	[HoraFin] [time](7) NOT NULL,
+	[Observaciones] [nvarchar](500) NULL,
+	[Estado] [int] NOT NULL,
+	[Costo] [decimal](10, 2) NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+	[EmailEnviado] [bit] NOT NULL,
+	[ClienteId] [int] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Roles]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Roles](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](50) NOT NULL,
+	[Descripcion] [nvarchar](200) NULL,
+	[PuedeGestionarUsuarios] [bit] NOT NULL,
+	[PuedeGestionarMembresias] [bit] NOT NULL,
+	[PuedeGestionarReservas] [bit] NOT NULL,
+	[PuedeFacturar] [bit] NOT NULL,
+	[PuedeVerReportes] [bit] NOT NULL,
+	[PuedeGestionarPersonal] [bit] NOT NULL,
+	[PuedeModificarConfiguracion] [bit] NOT NULL,
+	[PuedeVerBitacora] [bit] NOT NULL,
+	[Activo] [bit] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[TiposMembresia]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[TiposMembresia](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](100) NOT NULL,
+	[Descripcion] [nvarchar](500) NULL,
+	[Precio] [decimal](10, 2) NOT NULL,
+	[DuracionMeses] [int] NOT NULL,
+	[Activo] [bit] NOT NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Usuarios]    Script Date: 8/15/2025 8:57:56 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Usuarios](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Nombre] [nvarchar](100) NOT NULL,
+	[Apellidos] [nvarchar](100) NOT NULL,
+	[Email] [nvarchar](150) NOT NULL,
+	[Telefono] [nvarchar](20) NOT NULL,
+	[NombreUsuario] [nvarchar](50) NOT NULL,
+	[PasswordHash] [nvarchar](max) NOT NULL,
+	[RolId] [int] NOT NULL,
+	[Activo] [bit] NOT NULL,
+	[Bloqueado] [bit] NOT NULL,
+	[IntentosLogin] [int] NOT NULL,
+	[FechaCreacion] [datetime2](7) NOT NULL,
+	[FechaUltimoAcceso] [datetime2](7) NULL,
+PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[NombreUsuario] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY],
+UNIQUE NONCLUSTERED 
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [IX_Clientes_Cedula]    Script Date: 8/15/2025 8:57:56 AM ******/
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Clientes_Cedula] ON [dbo].[Clientes]
+(
+	[Cedula] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+SET ANSI_PADDING ON
+GO
+/****** Object:  Index [IX_Clientes_Email]    Script Date: 8/15/2025 8:57:56 AM ******/
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Clientes_Email] ON [dbo].[Clientes]
+(
+	[Email] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[BitacoraAccesos] ADD  DEFAULT (getdate()) FOR [FechaHora]
+GO
+ALTER TABLE [dbo].[Clientes] ADD  DEFAULT ((1)) FOR [Activo]
+GO
+ALTER TABLE [dbo].[Clientes] ADD  DEFAULT (getdate()) FOR [FechaRegistro]
+GO
+ALTER TABLE [dbo].[ConfiguracionSistema] ADD  DEFAULT (getdate()) FOR [FechaModificacion]
+GO
+ALTER TABLE [dbo].[DetallesFactura] ADD  DEFAULT ((4)) FOR [TipoServicio]
+GO
+ALTER TABLE [dbo].[Facturas] ADD  DEFAULT ((1)) FOR [Estado]
+GO
+ALTER TABLE [dbo].[Facturas] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[Instalaciones] ADD  DEFAULT ((1)) FOR [Activa]
+GO
+ALTER TABLE [dbo].[Membresias] ADD  DEFAULT ((1)) FOR [Activa]
+GO
+ALTER TABLE [dbo].[Membresias] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[Membresias] ADD  DEFAULT ((0)) FOR [RenovacionAutomatica]
+GO
+ALTER TABLE [dbo].[PagosFactura] ADD  DEFAULT (getdate()) FOR [FechaPago]
+GO
+ALTER TABLE [dbo].[PagosFactura] ADD  DEFAULT ('CRC') FOR [Moneda]
+GO
+ALTER TABLE [dbo].[Reservas] ADD  DEFAULT ((1)) FOR [Estado]
+GO
+ALTER TABLE [dbo].[Reservas] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[Reservas] ADD  DEFAULT ((0)) FOR [EmailEnviado]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeGestionarUsuarios]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeGestionarMembresias]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeGestionarReservas]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeFacturar]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeVerReportes]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeGestionarPersonal]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeModificarConfiguracion]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((0)) FOR [PuedeVerBitacora]
+GO
+ALTER TABLE [dbo].[Roles] ADD  DEFAULT ((1)) FOR [Activo]
+GO
+ALTER TABLE [dbo].[TiposMembresia] ADD  DEFAULT ((1)) FOR [Activo]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  DEFAULT ((1)) FOR [Activo]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  DEFAULT ((0)) FOR [Bloqueado]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  DEFAULT ((0)) FOR [IntentosLogin]
+GO
+ALTER TABLE [dbo].[Usuarios] ADD  DEFAULT (getdate()) FOR [FechaCreacion]
+GO
+ALTER TABLE [dbo].[BitacoraAccesos]  WITH CHECK ADD FOREIGN KEY([UsuarioId])
+REFERENCES [dbo].[Usuarios] ([Id])
+GO
+ALTER TABLE [dbo].[ConfiguracionSistema]  WITH CHECK ADD FOREIGN KEY([UsuarioModificacionId])
+REFERENCES [dbo].[Usuarios] ([Id])
+GO
+ALTER TABLE [dbo].[DetallesFactura]  WITH CHECK ADD FOREIGN KEY([FacturaId])
+REFERENCES [dbo].[Facturas] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Facturas]  WITH CHECK ADD FOREIGN KEY([UsuarioId])
+REFERENCES [dbo].[Usuarios] ([Id])
+GO
+ALTER TABLE [dbo].[Facturas]  WITH CHECK ADD  CONSTRAINT [FK_Facturas_ClienteId] FOREIGN KEY([ClienteId])
+REFERENCES [dbo].[Clientes] ([Id])
+GO
+ALTER TABLE [dbo].[Facturas] CHECK CONSTRAINT [FK_Facturas_ClienteId]
+GO
+ALTER TABLE [dbo].[Membresias]  WITH CHECK ADD FOREIGN KEY([TipoMembresiaId])
+REFERENCES [dbo].[TiposMembresia] ([Id])
+GO
+ALTER TABLE [dbo].[Membresias]  WITH CHECK ADD  CONSTRAINT [FK_Membresias_Clientes_ClienteId] FOREIGN KEY([ClienteId])
+REFERENCES [dbo].[Clientes] ([Id])
+GO
+ALTER TABLE [dbo].[Membresias] CHECK CONSTRAINT [FK_Membresias_Clientes_ClienteId]
+GO
+ALTER TABLE [dbo].[PagosFactura]  WITH CHECK ADD FOREIGN KEY([FacturaId])
+REFERENCES [dbo].[Facturas] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [dbo].[Reservas]  WITH CHECK ADD FOREIGN KEY([InstalacionId])
+REFERENCES [dbo].[Instalaciones] ([Id])
+GO
+ALTER TABLE [dbo].[Reservas]  WITH CHECK ADD  CONSTRAINT [FK_Reservas_Clientes_ClienteId] FOREIGN KEY([ClienteId])
+REFERENCES [dbo].[Clientes] ([Id])
+GO
+ALTER TABLE [dbo].[Reservas] CHECK CONSTRAINT [FK_Reservas_Clientes_ClienteId]
+GO
+ALTER TABLE [dbo].[Usuarios]  WITH CHECK ADD FOREIGN KEY([RolId])
+REFERENCES [dbo].[Roles] ([Id])
+GO
+USE [master]
+GO
+ALTER DATABASE [CentroDeportivoUACA] SET  READ_WRITE 
+GO

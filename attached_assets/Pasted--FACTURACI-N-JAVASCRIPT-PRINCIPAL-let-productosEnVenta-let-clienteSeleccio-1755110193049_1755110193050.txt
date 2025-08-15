@@ -1,9 +1,5 @@
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
-
-// Variable global para marcar reimpresiones
-let esReimpresionActual = false;
-
 let productosEnVenta = [];
 let clienteSeleccionado = null;
 let modalInventario = null;
@@ -42,6 +38,15 @@ const CONFIGURACION_PRECIOS = {
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 let detallesPagoActuales = []; // Array para manejar múltiples pagos
 let esPagoMultiple = false; // Flag para determinar si es pago múltiple
+
+// ===== CONFIGURACIÓN DE IMPRESIÓN TÉRMICA =====
+const CONFIG_TERMICA = {
+    ANCHO_58MM: 32,
+    ANCHO_80MM: 48,
+    MODO_AUTOMATICO: true,
+    TIMEOUT_IMPRESION: 5000,
+    INTENTOS_MAXIMOS: 3
+};
 
 // ===== FUNCIÓN AUXILIAR PARA BUSCAR PERMISOS =====
 function buscarPermiso(permisos, nombrePermiso) {
@@ -2769,11 +2774,106 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     }
                     console.log('💰 === FIN AJUSTE INVENTARIO FRONTEND ===');
                 }
-                // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURAS PAGADAS
+                // ✅ GENERAR E IMPRIMIR RECIBO PARA FACTURAS PAGADAS CON IMPRESIÓN AUTOMÁTICA
                 if (debeImprimir) {
-                    console.log('🖨️ Generando recibo para nueva factura pagada:', resultadoFactura);
-                    // ✅ USAR LA FUNCIÓN ESPECÍFICA PARA FACTURAS COMPLETADAS
-                    generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
+                    console.log('🖨️ Iniciando proceso de impresión automática...');
+
+                    // Preparar datos de factura y productos para el recibo
+                    const datosFactura = {
+                        numeroFactura: resultadoFactura.numeroFactura || 'N/A',
+                        nombreCliente: clienteSeleccionado?.nombre || 'Cliente General',
+                        usuarioCreadorNombre: obtenerUsuarioActual()?.nombre || 'Sistema'
+                    };
+
+                    const productosParaRecibo = [...productosEnVenta];
+
+                    // Preparar totales con información de pago múltiple
+                    const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
+                    let subtotal = 0;
+                    productosEnVenta.forEach(producto => {
+                        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+                        subtotal += precioAjustado * producto.cantidad;
+                    });
+                    const iva = subtotal * 0.13;
+                    const total = subtotal + iva;
+
+                    const totales = {
+                        subtotal: subtotal,
+                        iva: iva,
+                        total: total,
+                        metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
+                        detallesPago: esPagoMultiple ? detallesPagoActuales : null,
+                        cliente: { nombre: clienteSeleccionado?.nombre || 'Cliente General' },
+                        usuario: { nombre: obtenerUsuarioActual()?.nombre || 'Sistema' }
+                    };
+
+                    if (typeof enviarReciboParaImpresionAutomatica === 'function') {
+                        try {
+                            // ✅ INTENTAR IMPRESIÓN AUTOMÁTICA PRIMERO
+                            const impresionAutomaticaExitosa = await enviarReciboParaImpresionAutomatica(
+                                datosFactura,
+                                productosParaRecibo,
+                                totales,
+                                {
+                                    tipo: 'factura',
+                                    ancho: CONFIG_TERMICA?.ANCHO_80MM || 48,
+                                    detallesPago: esPagoMultiple ? detallesPagoActuales : null
+                                }
+                            );
+
+                            if (!impresionAutomaticaExitosa) {
+                                console.log('🔄 Impresión automática falló, usando método manual...');
+                                // Fallback a impresión manual si la automática falla
+                                if (typeof generarReciboTermico === 'function') {
+                                    generarReciboTermico(datosFactura, productosParaRecibo, totales, {
+                                        tipo: 'factura',
+                                        ancho: CONFIG_TERMICA?.ANCHO_80MM || 48,
+                                        detallesPago: esPagoMultiple ? detallesPagoActuales : null
+                                    });
+                                }
+                            }
+
+                            console.log('✅ Proceso de impresión completado');
+
+                        } catch (errorImpresion) {
+                            console.error('❌ Error en proceso de impresión:', errorImpresion);
+
+                            // Fallback final a impresión manual
+                            if (typeof generarReciboTermico === 'function') {
+                                try {
+                                    generarReciboTermico(datosFactura, productosParaRecibo, totales, {
+                                        tipo: 'factura',
+                                        ancho: CONFIG_TERMICA?.ANCHO_80MM || 48,
+                                        detallesPago: esPagoMultiple ? detallesPagoActuales : null
+                                    });
+                                    console.log('✅ Fallback a impresión manual exitoso');
+                                } catch (errorFallback) {
+                                    console.error('❌ Error también en fallback manual:', errorFallback);
+                                    mostrarToast('Advertencia', 'Venta completada pero no se pudo imprimir el recibo', 'warning');
+                                }
+                            } else {
+                                mostrarToast('Advertencia', 'Venta completada pero función de impresión no disponible', 'warning');
+                            }
+                        }
+                    } else {
+                        // Si no existe la función automática, usar solo la manual
+                        console.log('🔄 Función automática no disponible, usando método manual...');
+                        if (typeof generarReciboTermico === 'function') {
+                            try {
+                                generarReciboTermico(datosFactura, productosParaRecibo, totales, {
+                                    tipo: 'factura',
+                                    ancho: CONFIG_TERMICA?.ANCHO_80MM || 48,
+                                    detallesPago: esPagoMultiple ? detallesPagoActuales : null
+                                });
+                                console.log('✅ Impresión manual completada');
+                            } catch (errorImpresion) {
+                                console.error('❌ Error en impresión manual:', errorImpresion);
+                                mostrarToast('Advertencia', 'Venta completada pero no se pudo imprimir el recibo', 'warning');
+                            }
+                        } else {
+                            mostrarToast('Advertencia', 'Venta completada pero función de impresión no disponible', 'warning');
+                        }
+                    }
                 }
                 // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
                 modalFinalizarVenta.hide();
@@ -2839,6 +2939,53 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
     } catch (error) {
         console.error('❌ Error creando nuevo documento:', error);
         throw error;
+    }
+}
+
+/**
+ * ✅ FUNCIÓN DE IMPRESIÓN AUTOMÁTICA CON FALLBACK
+ */
+async function enviarReciboParaImpresionAutomatica(datosFactura, productos, totales, opciones = {}) {
+    try {
+        console.log('🖨️ === INICIANDO IMPRESIÓN AUTOMÁTICA ===');
+        console.log('🖨️ Datos:', { datosFactura, productos: productos.length, totales, opciones });
+
+        // Verificar que el módulo térmico esté disponible
+        if (typeof window.generarReciboTermico !== 'function') {
+            console.warn('⚠️ Módulo de impresión térmica no disponible');
+            return false;
+        }
+
+        // Preparar configuración de impresión automática
+        const configuracionImpresion = {
+            ...opciones,
+            modoAutomatico: true,
+            intentarImpresionDirecta: true,
+            mostrarPreview: false,
+            cerrarVentanaAuto: true
+        };
+
+        console.log('🖨️ Configuración de impresión automática:', configuracionImpresion);
+
+        // Intentar impresión automática
+        const resultado = await window.generarReciboTermico(
+            datosFactura,
+            productos,
+            totales,
+            configuracionImpresion
+        );
+
+        if (resultado && resultado.success) {
+            console.log('✅ Impresión automática exitosa');
+            return true;
+        } else {
+            console.log('⚠️ Impresión automática falló, se requiere fallback manual');
+            return false;
+        }
+
+    } catch (error) {
+        console.error('❌ Error en impresión automática:', error);
+        return false;
     }
 }
 
@@ -3664,124 +3811,6 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
     convertirProformaAFactura(proformaId);
 };
 
-/**
- * ✅ FUNCIÓN: Re-imprimir factura existente desde modal de detalles
- */
-async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFacturaExistentes = null) {
-    try {
-        console.log('🖨️ === INICIANDO RE-IMPRESIÓN DE FACTURA DESDE MODAL ===');
-        console.log('🖨️ Factura ID:', facturaId);
-        console.log('🖨️ Número de factura:', numeroFactura);
-
-        // Verificar si el botón existe antes de manipularlo
-        const $btn = $('#btnImprimirFacturaModal');
-        const textoOriginal = $btn.length > 0 ? $btn.html() : '<i class="bi bi-printer me-1"></i>Imprimir';
-
-        if ($btn.length > 0) {
-            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Imprimiendo...');
-        }
-
-        let factura;
-        // Si ya tenemos los datos, usarlos; si no, obtenerlos
-        if (datosFacturaExistentes) {
-            console.log('🖨️ Usando datos de factura ya obtenidos');
-            factura = datosFacturaExistentes;
-        } else {
-            console.log('🖨️ Obteniendo detalles de factura...');
-            // Obtener detalles completos de la factura
-            const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-
-            const resultado = await response.json();
-            console.log('🖨️ Detalles de factura obtenidos:', resultado);
-
-            if (resultado.success && resultado.factura) {
-                factura = resultado.factura;
-            } else {
-                throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
-            }
-        }
-
-        if (factura) {
-            // Preparar datos para el recibo
-            const datosFactura = {
-                numeroFactura: factura.numeroFactura || numeroFactura,
-                nombreCliente: factura.nombreCliente || 'Cliente General',
-                usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema',
-                esReimpresion: true // ✅ MARCAR COMO REIMPRESIÓN
-            };
-
-            // Preparar productos para el recibo
-            const productosParaRecibo = factura.detallesFactura ? factura.detallesFactura.map(detalle => ({
-                nombreProducto: detalle.nombreProducto || 'Producto',
-                cantidad: detalle.cantidad || 1,
-                precioUnitario: detalle.precioUnitario || 0,
-                esLlanta: detalle.esLlanta || false,
-                medidaCompleta: detalle.medidaCompleta || null
-            })) : [];
-
-            // Preparar totales
-            const totalesRecibo = {
-                subtotal: factura.subtotal || 0,
-                iva: factura.montoImpuesto || 0,
-                total: factura.total || 0,
-                metodoPago: factura.metodoPago || 'Efectivo',
-                cliente: {
-                    nombre: factura.nombreCliente || 'Cliente General'
-                },
-                usuario: {
-                    nombre: factura.usuarioCreadorNombre || 'Sistema'
-                }
-            };
-
-            // Verificar si tiene detalles de pago múltiple
-            if (factura.detallesPago && factura.detallesPago.length > 1) {
-                totalesRecibo.detallesPago = factura.detallesPago;
-                totalesRecibo.metodoPago = 'Multiple';
-                console.log('🖨️ Factura con pago múltiple detectado');
-            }
-
-            console.log('🖨️ Generando recibo para re-impresión...');
-
-            // Generar el recibo usando la función existente
-            if (typeof generarRecibo === 'function') {
-                generarRecibo(datosFactura, productosParaRecibo, totalesRecibo);
-                mostrarToast('Impresión', `Factura ${numeroFactura} enviada a impresión`, 'success');
-            } else {
-                console.error('❌ Función generarRecibo no está disponible');
-                mostrarToast('Error', 'Función de impresión no disponible', 'danger');
-            }
-
-        } else {
-            throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
-        }
-
-    } catch (error) {
-        console.error('❌ Error re-imprimiendo factura:', error);
-        mostrarToast('Error', 'No se pudo re-imprimir la factura: ' + error.message, 'danger');
-    } finally {
-        // Restaurar botón solo si existe
-        const $btn = $('#btnImprimirFacturaModal');
-        if ($btn.length > 0) {
-            $btn.prop('disabled', false).html(textoOriginal || '<i class="bi bi-printer me-1"></i>Imprimir');
-        }
-    }
-}
-/**
- * ✅ FUNCIÓN GLOBAL: Exportar función de re-impresión
- */
-window.reimprimirFacturaDesdeModal = reimprimirFacturaDesdeModal;
-
 
 
 
@@ -3955,16 +3984,14 @@ function generarRecibo(factura, productos, totales) {
         usuarioCreadorNombre: totales.usuario?.nombre ||
             totales.usuario?.nombreUsuario ||
             factura?.usuarioCreadorNombre ||
-            'Sistema',
-        esReimpresion: factura?.esReimpresion || window.esReimpresionActual || false // ✅ AGREGAR FLAG DE REIMPRESIÓN
+            'Sistema'
     };
 
     // ✅ OPCIONES DE CONFIGURACIÓN CON INFORMACIÓN DE PAGO MÚLTIPLE
     const opciones = {
         ancho: 80, // 80mm por defecto
         tipo: datosFactura.numeroFactura && datosFactura.numeroFactura.startsWith('PROF') ? 'proforma' : 'factura',
-        pagoMultiple: totales.infoPagoMultiple, // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
-        esReimpresion: datosFactura.esReimpresion || false // ✅ AGREGAR FLAG DE REIMPRESIÓN
+        pagoMultiple: totales.infoPagoMultiple // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
     };
 
     console.log('🖨️ Opciones del recibo:', opciones);
@@ -3977,16 +4004,11 @@ function generarRecibo(factura, productos, totales) {
         if (totales.infoPagoMultiple) {
             console.log('✅ Recibo incluye desglose de pago múltiple');
         }
-
-        if (datosFactura.esReimpresion) {
-            console.log('✅ Recibo marcado como REIMPRESIÓN');
-        }
     } catch (error) {
         console.error('❌ Error generando recibo térmico:', error);
         mostrarToast('Error', 'No se pudo generar el recibo', 'danger');
     }
 }
-
 
 /**
  * Determinar número de factura con prioridades
@@ -4113,8 +4135,7 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const datosRecibo = {
             numeroFactura: numeroFactura,
             nombreCliente: nombreCliente,
-            usuarioCreadorNombre: usuarioCreadorNombre,
-            esReimpresion: window.esReimpresionActual || false // ✅ AGREGAR FLAG GLOBAL DE REIMPRESIÓN
+            usuarioCreadorNombre: usuarioCreadorNombre
         };
 
         // ✅ PREPARAR INFORMACIÓN DE PAGO MÚLTIPLE PARA EL RECIBO
@@ -4162,8 +4183,7 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             cliente: nombreCliente,
             usuario: usuarioCreadorNombre,
             esPagoMultiple: esPagoMultiple,
-            detallesPago: infoPagoMultiple,
-            esReimpresion: datosRecibo.esReimpresion
+            detallesPago: infoPagoMultiple
         });
 
         // ✅ LLAMAR A LA FUNCIÓN DE GENERACIÓN DE RECIBOS CON DATOS COMPLETOS
@@ -4180,7 +4200,6 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('✅ Cliente:', nombreCliente);
         console.log('✅ Cajero:', usuarioCreadorNombre);
         console.log('✅ Pago múltiple:', esPagoMultiple ? 'Sí' : 'No');
-        console.log('✅ Es reimpresión:', datosRecibo.esReimpresion ? 'Sí' : 'No');
 
     } catch (error) {
         console.error('❌ Error generando recibo para factura completada:', error);
@@ -4195,8 +4214,6 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         });
     }
 }
-
-
 /**
  * Función de impresión directa cuando falla la ventana emergente
  */
@@ -6651,15 +6668,11 @@ function cancelarProblemasStock() {
 }
 
 function imprimirComprobanteEnvio(numeroFactura) {
-    const fecha = new Date().toLocaleDateString('es-CR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-    const hora = new Date().toLocaleTimeString('es-CR', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    console.log('🖨️ === IMPRIMIENDO COMPROBANTE DE ENVÍO ===');
+    console.log('🖨️ Número de factura:', numeroFactura);
+
+    const fecha = new Date().toLocaleDateString('es-CR');
+    const hora = new Date().toLocaleTimeString('es-CR');
 
     const comprobanteHTML = `
         <div id="comprobante-envio" style="width: 58mm; max-width: 58mm; font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.2; margin: 0; padding: 0;">
@@ -6686,38 +6699,33 @@ function imprimirComprobanteEnvio(numeroFactura) {
                 <div style="font-size: 9px; font-weight: bold; margin-bottom: 4px;">INSTRUCCIONES PARA EL CLIENTE</div>
                 <div style="font-size: 8px; margin-bottom: 2px;">Presente este número en caja:</div>
                 <div style="font-size: 12px; font-weight: bold; border: 1px solid #000; padding: 4px; margin: 4px 0;">${numeroFactura}</div>
+                <div style="font-size: 8px;">Esta factura ha sido enviada</div>
+                <div style="font-size: 8px;">al área de caja para procesamiento</div>
             </div>
 
-            <!-- PIE -->
-            <div style="text-align: center; margin-top: 8px; font-size: 7px; border-top: 1px dashed #000; padding-top: 6px;">
-                <div>Gracias por su preferencia</div>
-                <div>Comprobante generado: ${fecha} ${hora}</div>
+            <!-- FOOTER -->
+            <div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;">
+                <div style="font-size: 7px;">Sistema TUCO - Gestión Llantera</div>
+                <div style="font-size: 7px;">${fecha} ${hora}</div>
             </div>
-
-            <!-- ESPACIADO FINAL -->
-            <div style="height: 20px;"></div>
         </div>
     `;
 
-    try {
-        const ventanaImpresion = window.open('', '_blank', 'width=300,height=400,scrollbars=no,resizable=no');
-        if (!ventanaImpresion) {
-            throw new Error('No se pudo abrir ventana de impresión');
-        }
-
+    // Imprimir usando el módulo térmico
+    if (window.generarReciboTermico) {
+        window.generarReciboTermico(comprobanteHTML, 'Comprobante de Envío');
+    } else {
+        // Fallback para impresión normal
+        const ventanaImpresion = window.open('', '_blank');
         ventanaImpresion.document.write(`
-            <!DOCTYPE html>
             <html>
                 <head>
                     <title>Comprobante de Envío - ${numeroFactura}</title>
-                    <meta charset="utf-8">
                     <style>
-                        @page { size: 58mm auto; margin: 0; }
                         @media print {
                             body { margin: 0; padding: 0; }
-                            #comprobante-envio { page-break-inside: avoid; }
+                            @page { margin: 0; }
                         }
-                        body { font-family: 'Courier New', monospace; }
                     </style>
                 </head>
                 <body>
@@ -6725,21 +6733,15 @@ function imprimirComprobanteEnvio(numeroFactura) {
                     <script>
                         window.onload = function() {
                             window.print();
-                            setTimeout(() => window.close(), 1000);
-                        };
+                            window.close();
+                        }
                     </script>
                 </body>
             </html>
         `);
         ventanaImpresion.document.close();
-
-        mostrarToast('Impresión', 'Comprobante de envío generado', 'success');
-    } catch (error) {
-        console.error('Error al imprimir comprobante:', error);
-        mostrarToast('Error', 'No se pudo imprimir el comprobante', 'danger');
     }
 }
-
 // ===== FUNCIÓN PARA RECARGAR PERMISOS DINÁMICAMENTE =====
 function recargarPermisosUsuario() {
     console.log('🔄 === RECARGANDO PERMISOS DE USUARIO ===');
@@ -7687,6 +7689,18 @@ function descargarImagen(urlImagen, nombreProducto) {
         console.error('Error descargando imagen:', error);
         mostrarToast('Error', 'No se pudo descargar la imagen', 'danger');
     }
+}
+
+// ===== EXPORTAR FUNCIONES ADICIONALES =====
+if (typeof window !== 'undefined') {
+    // Funciones de impresión
+    window.enviarReciboParaImpresionAutomatica = enviarReciboParaImpresionAutomatica;
+
+
+    // Configuración térmica
+    window.CONFIG_TERMICA = CONFIG_TERMICA;
+
+    console.log('📋 Funciones de impresión automática exportadas globalmente');
 }
 
 // Exportar funciones globalmente

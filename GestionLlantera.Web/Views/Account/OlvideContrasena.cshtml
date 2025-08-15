@@ -1,4 +1,4 @@
-﻿@using GestionLlantera.Web.Models.ViewModels
+@using GestionLlantera.Web.Models.ViewModels
 @model OlvideContrasenaViewModel
 @{
     ViewData["Title"] = "Recuperar Contraseña";
@@ -66,9 +66,11 @@
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="~/js/utils/buttonUtils.js"></script>
     <script src="~/js/views/account/restablecerContrasena.js"></script>
 }

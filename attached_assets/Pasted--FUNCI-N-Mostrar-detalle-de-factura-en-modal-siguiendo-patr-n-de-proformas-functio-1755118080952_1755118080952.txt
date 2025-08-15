@@ -1,0 +1,183 @@
+/**
+ * ✅ FUNCIÓN: Mostrar detalle de factura en modal (siguiendo patrón de proformas)
+ */
+function mostrarDetalleFacturaModal(factura) {
+    try {
+        console.log('📋 === MOSTRANDO DETALLES DE FACTURA EN MODAL ===');
+        console.log('📋 Factura:', factura);
+
+        // Calcular totales a partir de los detalles de la factura
+        const subtotalCalculado = factura.detallesFactura ?
+            factura.detallesFactura.reduce((sum, detalle) => sum + (detalle.subtotal || 0), 0) : 0;
+        const ivaCalculado = factura.montoImpuesto || 0;
+        const totalCalculado = factura.total || 0;
+
+        // Determinar la clase CSS para el badge de estado
+        let estadoClass = 'badge bg-secondary'; // Estado por defecto
+        switch (factura.estado?.toLowerCase()) { // Convertir a minúsculas para comparación segura
+            case 'pagada': estadoClass = 'badge bg-success'; break;
+            case 'pendiente': estadoClass = 'badge bg-warning'; break; // Usar text-dark para mejor contraste en amarillo
+            case 'anulada': estadoClass = 'badge bg-danger'; break;
+            case 'vencida': estadoClass = 'badge bg-dark'; break; // Oscuro para vencida
+        }
+
+        // Construir el HTML para la lista de productos de la factura
+        let detallesHtml = '';
+        if (factura.detallesFactura && factura.detallesFactura.length > 0) {
+            detallesHtml = factura.detallesFactura.map(detalle => `
+                <tr>
+                    <td>
+                        <strong>${detalle.nombreProducto || 'Producto sin nombre'}</strong>
+                        ${detalle.descripcionProducto ? `<br><small class="text-muted">${detalle.descripcionProducto}</small>` : ''}
+                    </td>
+                    <td class="text-center">${detalle.cantidad || 0}</td>
+                    <td class="text-end">₡${formatearMoneda(detalle.precioUnitario || 0)}</td>
+                    <td class="text-end">₡${formatearMoneda(detalle.subtotal || 0)}</td>
+                </tr>
+            `).join(''); // Unir todas las filas de productos en una sola cadena
+        } else {
+            // Mensaje si no hay productos en la factura
+            detallesHtml = `
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox display-6"></i><br>
+                        No hay productos en esta factura
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Construir el HTML completo del contenido del modal
+        const contenidoHtml = `
+            <div class="row">
+                <!-- Información de la Factura -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Información General</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-5"><strong>Número:</strong></div>
+                                <div class="col-sm-7 text-primary fw-bold">${factura.numeroFactura || 'N/A'}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5"><strong>Estado:</strong></div>
+                                <div class="col-sm-7"><span class="${estadoClass}">${factura.estado || 'N/A'}</span></div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5"><strong>Fecha:</strong></div>
+                                <div class="col-sm-7">${factura.fechaFactura ? new Date(factura.fechaFactura).toLocaleDateString('es-ES') : 'N/A'}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5"><strong>Método de Pago:</strong></div>
+                                <div class="col-sm-7">${factura.metodoPago || 'N/A'}</div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-sm-5"><strong>Creada por:</strong></div>
+                                <div class="col-sm-7">${factura.usuarioCreadorNombre || 'N/A'}</div>
+                            </div>
+                            ${factura.observaciones ? `
+                                <div class="row mb-2">
+                                    <div class="col-sm-5"><strong>Observaciones:</strong></div>
+                                    <div class="col-sm-7"><small class="text-muted">${factura.observaciones}</small></div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Cliente -->
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-person me-2"></i>Información del Cliente</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-2">
+                                <div class="col-sm-4"><strong>Nombre:</strong></div>
+                                <div class="col-sm-8">${factura.nombreCliente || 'N/A'}</div>
+                            </div>
+                            ${factura.identificacionCliente ? `
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Cédula:</strong></div>
+                                    <div class="col-sm-8">${factura.identificacionCliente}</div>
+                                </div>
+                            ` : ''}
+                            ${factura.telefonoCliente ? `
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Teléfono:</strong></div>
+                                    <div class="col-sm-8">${factura.telefonoCliente}</div>
+                                </div>
+                            ` : ''}
+                            ${factura.emailCliente ? `
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Email:</strong></div>
+                                    <div class="col-sm-8">${factura.emailCliente}</div>
+                                </div>
+                            ` : ''}
+                            ${factura.direccionCliente ? `
+                                <div class="row mb-2">
+                                    <div class="col-sm-4"><strong>Dirección:</strong></div>
+                                    <div class="col-sm-8">${factura.direccionCliente}</div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productos de la Factura -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0"><i class="bi bi-list-ul me-2"></i>Productos</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-end">Precio Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${detallesHtml}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="3" class="text-end">Subtotal:</th>
+                                    <th class="text-end">₡${formatearMoneda(subtotalCalculado)}</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="3" class="text-end">IVA (13%):</th>
+                                    <th class="text-end">₡${formatearMoneda(ivaCalculado)}</th>
+                                </tr>
+                                <tr class="table-success">
+                                    <th colspan="3" class="text-end">TOTAL:</th>
+                                    <th class="text-end">₡${formatearMoneda(totalCalculado)}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Insertar el contenido generado en el modal
+        $('#detalleFacturaContent').html(contenidoHtml);
+        console.log('✅ Detalles de factura mostrados correctamente en modal');
+
+    } catch (error) {
+        console.error('❌ Error mostrando detalles de factura:', error);
+        // Mostrar un mensaje de error si algo falla al construir el HTML
+        $('#detalleFacturaContent').html(`
+            <div class="alert alert-danger">
+                <h6><i class="bi bi-exclamation-triangle me-2"></i>Error</h6>
+                <p class="mb-0">Error mostrando los detalles: ${error.message}</p>
+            </div>
+        `);
+    }
+}

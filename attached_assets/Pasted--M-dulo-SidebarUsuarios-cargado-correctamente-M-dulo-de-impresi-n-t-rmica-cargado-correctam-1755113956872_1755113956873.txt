@@ -1,0 +1,215 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 🖨️ Módulo de impresión térmica cargado correctamente
+ ✅ Sistema de zoom simplificado cargado
+ 📋 Funciones de proformas y detalles exportadas globalmente
+ 📋 Módulo de filtros de facturas pendientes (Frontend) cargado correctamente
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ ✅ verDetalleProducto disponible desde facturacion.js
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anónimo) @ Facturacion:2083
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-08-13",
+  "horaActual": "13:34",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 4 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 4
+ 🔄 Construyendo HTML para 4 productos
+ 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta Bridgeston Turanza 6
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+ 🔧 Debug llanta: Object
+ 🔄 Actualizando DOM (longitud HTML: 19144 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+ 👥 Inicializando módulo de usuarios conectados del sidebar
+ ✅ Módulo de usuarios conectados del sidebar inicializado
+ ✅ Contador del sidebar actualizado: 1 usuarios
+ ✅ Panel de usuarios conectados (sidebar) actualizado
+ 📋 === ABRIENDO MODAL DE FACTURAS PENDIENTES ===
+facturacion.js:6695 📋 *** MODAL DE FACTURAS PENDIENTES COMPLETAMENTE VISIBLE ***
+facturacion.js:6696 📋 Elementos disponibles en el DOM:
+facturacion.js:6697 📋 - Input búsqueda: 1
+facturacion.js:6698 📋 - Select estado: 1
+facturacion.js:6699 📋 - Tabla body: 1
+facturacion.js:6700 📋 - Loading: 1
+facturacion.js:6701 📋 - Content: 1
+facturacion.js:6705 ✅ Inicializando filtros de facturas pendientes...
+facturasPendientesFilter.js:18 🔍 === INICIALIZANDO FILTROS DE FACTURAS PENDIENTES (FRONTEND) ===
+facturasPendientesFilter.js:39 🔍 Configurando eventos de filtrado para facturas pendientes...
+facturasPendientesFilter.js:107 ✅ Eventos de filtros de facturas configurados con delegación
+facturasPendientesFilter.js:115 📋 === CARGANDO TODAS LAS FACTURAS PENDIENTES ===
+facturasPendientesFilter.js:32 ✅ Filtros de facturas pendientes inicializados correctamente
+facturasPendientesFilter.js:137 📋 Respuesta del servidor facturas: Object
+facturasPendientesFilter.js:162 ❌ Error del servidor: Facturas obtenidas exitosamente
+facturasPendientesFilter.js:487 ℹ️ Mostrando mensaje de facturas pendientes vacías
+facturasPendientesFilter.js:59 🔍 Estado de facturas seleccionado: Pagada
+facturasPendientesFilter.js:184 🔍 === APLICANDO FILTROS LOCALMENTE A FACTURAS ===
+facturasPendientesFilter.js:185 🔍 Total facturas: 0
+facturasPendientesFilter.js:186 🔍 Filtros: Object
+facturasPendientesFilter.js:487 ℹ️ Mostrando mensaje de facturas pendientes vacías
+facturasPendientesFilter.js:59 🔍 Estado de facturas seleccionado: todos
+facturasPendientesFilter.js:184 🔍 === APLICANDO FILTROS LOCALMENTE A FACTURAS ===
+facturasPendientesFilter.js:185 🔍 Total facturas: 0
+facturasPendientesFilter.js:186 🔍 Filtros: Object
+facturasPendientesFilter.js:487 ℹ️ Mostrando mensaje de facturas pendientes vacías
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:6689 📋 === ABRIENDO MODAL DE FACTURAS PENDIENTES ===
+facturacion.js:6695 📋 *** MODAL DE FACTURAS PENDIENTES COMPLETAMENTE VISIBLE ***
+facturacion.js:6696 📋 Elementos disponibles en el DOM:
+facturacion.js:6697 📋 - Input búsqueda: 1
+facturacion.js:6698 📋 - Select estado: 1
+facturacion.js:6699 📋 - Tabla body: 1
+facturacion.js:6700 📋 - Loading: 1
+facturacion.js:6701 📋 - Content: 1
+facturacion.js:6705 ✅ Inicializando filtros de facturas pendientes...
+facturasPendientesFilter.js:18 🔍 === INICIALIZANDO FILTROS DE FACTURAS PENDIENTES (FRONTEND) ===
+facturasPendientesFilter.js:39 🔍 Configurando eventos de filtrado para facturas pendientes...
+facturasPendientesFilter.js:107 ✅ Eventos de filtros de facturas configurados con delegación
+facturasPendientesFilter.js:115 📋 === CARGANDO TODAS LAS FACTURAS PENDIENTES ===
+facturasPendientesFilter.js:32 ✅ Filtros de facturas pendientes inicializados correctamente
+facturacion.js:6695 📋 *** MODAL DE FACTURAS PENDIENTES COMPLETAMENTE VISIBLE ***
+facturacion.js:6696 📋 Elementos disponibles en el DOM:
+facturacion.js:6697 📋 - Input búsqueda: 1
+facturacion.js:6698 📋 - Select estado: 1
+facturacion.js:6699 📋 - Tabla body: 1
+facturacion.js:6700 📋 - Loading: 1
+facturacion.js:6701 📋 - Content: 1
+facturacion.js:6705 ✅ Inicializando filtros de facturas pendientes...
+facturasPendientesFilter.js:18 🔍 === INICIALIZANDO FILTROS DE FACTURAS PENDIENTES (FRONTEND) ===
+facturasPendientesFilter.js:39 🔍 Configurando eventos de filtrado para facturas pendientes...
+facturasPendientesFilter.js:107 ✅ Eventos de filtros de facturas configurados con delegación
+facturasPendientesFilter.js:115 📋 === CARGANDO TODAS LAS FACTURAS PENDIENTES ===
+facturasPendientesFilter.js:32 ✅ Filtros de facturas pendientes inicializados correctamente
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+facturasPendientesFilter.js:137 📋 Respuesta del servidor facturas: Object
+facturasPendientesFilter.js:162 ❌ Error del servidor: Facturas obtenidas exitosamente
+facturasPendientesFilter.js:487 ℹ️ Mostrando mensaje de facturas pendientes vacías
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+facturasPendientesFilter.js:137 📋 Respuesta del servidor facturas: Object
+facturasPendientesFilter.js:162 ❌ Error del servidor: Facturas obtenidas exitosamente
+facturasPendientesFilter.js:487 ℹ️ Mostrando mensaje de facturas pendientes vacías
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado

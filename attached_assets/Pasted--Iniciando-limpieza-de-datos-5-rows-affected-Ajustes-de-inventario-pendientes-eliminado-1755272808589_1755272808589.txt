@@ -1,0 +1,88 @@
+?? Iniciando limpieza de datos...
+
+(5 rows affected)
+? Ajustes de inventario pendientes eliminados
+
+(0 rows affected)
+? Asignaciones de usuarios a inventarios eliminadas
+
+(0 rows affected)
+? Detalles de inventarios programados eliminados
+
+(6 rows affected)
+? Inventarios programados eliminados
+
+(0 rows affected)
+? Notificaciones eliminadas
+
+(0 rows affected)
+? Historial de acciones eliminado
+
+(0 rows affected)
+? Llantas eliminadas
+Msg 547, Level 16, State 0, Line 49
+The DELETE statement conflicted with the REFERENCE constraint "FK_DetallesFactura_Producto". The conflict occurred in database "DB_tuco", table "dbo.DetallesFactura", column 'ProductoId'.
+The statement has been terminated.
+? Productos eliminados
+
+(0 rows affected)
+? Permisos específicos de usuarios eliminados
+
+(8 rows affected)
+? Relaciones usuario-rol eliminadas
+Msg 547, Level 16, State 0, Line 69
+The DELETE statement conflicted with the REFERENCE constraint "FK_Facturas_Usuario". The conflict occurred in database "DB_tuco", table "dbo.Facturas", column 'UsuarioCreadorId'.
+The statement has been terminated.
+? Todos los usuarios eliminados
+
+(45 rows affected)
+? Relaciones rol-permiso eliminadas
+
+(3 rows affected)
+? Todos los roles eliminados
+
+(1 row affected)
+? Rol Administrador creado con ID: 6
+
+(54 rows affected)
+? 54 permisos asignados al rol Administrador
+
+(1 row affected)
+? Usuario Admin creado con ID: 9
+
+(1 row affected)
+? Rol Administrador asignado al usuario Admin
+Checking identity information: current identity value '9'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '6'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '1025'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '1015'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '5113'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '5328'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '5271'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+Checking identity information: current identity value '2057'.
+DBCC execution completed. If DBCC printed error messages, contact your system administrator.
+? Contador de AjustesInventarioPendientes reiniciado
+? Contadores de identidad reiniciados
+==============================================
+?? LIMPIEZA COMPLETADA EXITOSAMENTE
+==============================================
+Total usuarios: 9 (debe ser 1)
+Total roles: 1 (debe ser 1)
+Total permisos: 54 (se mantienen)
+Total rol-permisos: 54 (todos asignados a Admin)
+==============================================
+?? CREDENCIALES DE ACCESO:
+Usuario: Admin
+Email: admin@llantasymastc.com
+Contraseña: admin
+==============================================
+? Base de datos lista para empezar desde cero
+
+Completion time: 2025-08-15T09:36:22.0072716-06:00

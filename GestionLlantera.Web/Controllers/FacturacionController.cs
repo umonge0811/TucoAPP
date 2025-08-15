@@ -19,6 +19,7 @@ using System.Security.Claims;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+using System.Net.Http; // Agregado para HttpClient
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -29,18 +30,23 @@ namespace GestionLlantera.Web.Controllers
         private readonly IInventarioService _inventarioService;
         private readonly IFacturacionService _facturacionService;
         private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient; // Agregado HttpClient
+        private readonly JsonSerializerOptions _jsonOptions; // Agregado para Json Options
 
         public FacturacionController(
             ILogger<FacturacionController> logger,
             IInventarioService inventarioService,
             IFacturacionService facturacionService,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory // Inyectar IHttpClientFactory
             )
         {
             _logger = logger;
             _inventarioService = inventarioService;
             _facturacionService = facturacionService;
             _configuration = configuration;
+            _httpClient = httpClientFactory.CreateClient("ApiClient"); // Crear cliente HTTP con nombre
+            _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true }; // Configurar Json Options
         }
 
         public async Task<IActionResult> Index()
@@ -686,11 +692,11 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerFacturasPendientes()
+        public async Task<IActionResult> ObtenerFacturas(int tamano = 1000)
         {
             try
             {
-                _logger.LogInformation("📋 Solicitud de facturas pendientes desde el controlador Web");
+                _logger.LogInformation("📋 Obteniendo todas las facturas desde el servicio de facturación");
 
                 var token = this.ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
@@ -698,34 +704,60 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada" });
                 }
 
-                var resultado = await _facturacionService.ObtenerFacturasPendientesAsync(token);
+                // Traer todas las facturas sin filtro de estado
+                var resultado = await _facturacionService.ObtenerFacturasAsync(token, tamano);
 
                 _logger.LogInformation("📋 Resultado del servicio: Success={Success}, Message={Message}",
                     resultado.success, resultado.message);
 
                 if (resultado.success && resultado.data != null)
                 {
-                    _logger.LogInformation("📋 Procesando respuesta del API de facturas pendientes");
-
-                    // El servicio ya procesa la respuesta del API y devuelve la estructura correcta
-                    // Solo necesitamos devolverla tal como viene
-                    return Json(resultado.data);
-                }
-                else
-                {
-                    _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
-                    return Json(new
+                    // El data contiene la respuesta completa del API
+                    try
                     {
-                        success = false,
-                        message = resultado.message ?? "No se pudieron obtener las facturas pendientes",
-                        facturas = new List<object>(),
-                        totalFacturas = 0
-                    });
+                        // Deserializar la respuesta para extraer las facturas
+                        var jsonData = System.Text.Json.JsonSerializer.Serialize(resultado.data);
+                        var responseElement = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(jsonData);
+
+                        if (responseElement.TryGetProperty("facturas", out var facturasElement))
+                        {
+                            var facturasList = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
+                            var facturasCount = facturasList?.Count ?? 0;
+
+                            _logger.LogInformation("✅ {Count} facturas obtenidas exitosamente", facturasCount);
+
+                            return Ok(new
+                            {
+                                success = true,
+                                facturas = facturasList,
+                                message = $"Se encontraron {facturasCount} facturas"
+                            });
+                        }
+                        else
+                        {
+                            // Si no hay propiedad facturas, devolver data directamente
+                            return Ok(resultado.data);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "❌ Error procesando respuesta de facturas");
+                        return Ok(resultado.data); // Devolver data sin procesar como fallback
+                    }
                 }
+
+                _logger.LogWarning("📋 No se pudieron obtener las facturas: {Message}", resultado.message);
+                return Json(new
+                {
+                    success = false,
+                    message = resultado.message ?? "No se pudieron obtener las facturas",
+                    facturas = new List<object>(),
+                    totalFacturas = 0
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error crítico obteniendo facturas pendientes");
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas");
                 return Json(new
                 {
                     success = false,
@@ -735,6 +767,7 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
 
         [HttpGet]
         public async Task<IActionResult> ObtenerProformas(string estado = null, int pagina = 1, int tamano = 20)
@@ -1337,8 +1370,6 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                _logger.LogInformation("📦 === OBTENIENDO PENDIENTES DE ENTREGA ===");
-
                 if (!await this.TienePermisoAsync("Ver Productos"))
                 {
                     return Json(new { success = false, message = "Sin permisos para ver pendientes de entrega" });
@@ -1464,7 +1495,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                // ✅ VALIDAR PERMISO EN EL CONTROLADOR WEB
+                // ✅ VALIDACIÓN DE PERMISO EN EL CONTROLADOR WEB
                 var tienePermiso = await this.TienePermisoAsync("Entregar Pendientes");
                 _logger.LogInformation("🔐 === VALIDACIÓN DE PERMISO EN WEB CONTROLLER ===");
                 _logger.LogInformation("🔐 Usuario: {Usuario}", User.Identity?.Name);
@@ -1545,16 +1576,77 @@ namespace GestionLlantera.Web.Controllers
                 });
             }
         }
+
+        // ===== OBTENER DETALLE COMPLETO DE FACTURA =====
+        [HttpGet]
+        public async Task<IActionResult> ObtenerDetalleFactura(int facturaId)
+        {
+            try
+            {
+                _logger.LogInformation("👁️ Obteniendo detalle de factura: {FacturaId}", facturaId);
+
+                var token = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // Usar el servicio de facturación para obtener el detalle
+                var resultado = await _facturacionService.ObtenerFacturaPorIdAsync(facturaId, token);
+
+                if (resultado.success)
+                {
+                    return Json(new { success = true, factura = resultado.data });
+                }
+                else
+                {
+                    _logger.LogError("❌ Error del servicio obteniendo factura: {Message}", resultado.message);
+                    return Json(new { success = false, message = resultado.message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo detalle de factura: {FacturaId}", facturaId);
+                return Json(new { 
+                    success = false, 
+                    message = "Error interno del servidor",
+                    details = ex.Message
+                });
+            }
+        }
+
+        // ===== FUNCIÓN AUXILIAR PARA OBTENER USUARIO ACTUAL =====
+        private object ObtenerUsuarioActual()
+        {
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                var nombreUsuario = HttpContext.Session.GetString("NombreUsuario");
+
+                if (usuarioId.HasValue && !string.IsNullOrEmpty(nombreUsuario))
+                {
+                    return new
+                    {
+                        usuarioId = usuarioId.Value,
+                        nombre = nombreUsuario
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo usuario actual");
+            }
+
+            return new { usuarioId = 1, nombre = "Sistema" };
+        }
     }
 
     // Clases de request para el controlador
-    public class MarcarEntregadoRequest
+    public class MarcarEntregadosRequest
     {
-        public string CodigoSeguimiento { get; set; } = string.Empty;
-        public int PendienteId { get; set; }
-        public int CantidadAEntregar { get; set; }
-        public int UsuarioEntrega { get; set; }
-        public string ObservacionesEntrega { get; set; } = string.Empty;
+        public List<int> ProductosIds { get; set; } = new List<int>();
+        public string? ObservacionesEntrega { get; set; }
+        public DateTime? FechaEntrega { get; set; }
     }
 
     public class VerificarStockFacturaRequest
@@ -1574,7 +1666,17 @@ namespace GestionLlantera.Web.Controllers
     }
 
 
-
+    public class CompletarFacturaWebRequest
+    {
+        public int FacturaId { get; set; }
+        public string MetodoPago { get; set; } = string.Empty;
+        public string Observaciones { get; set; } = string.Empty;
+        public object DetallesPago { get; set; } = new object(); // Puede ser un JSON dinámico o un DTO específico
+        public bool ForzarVerificacionStock { get; set; }
+        public bool EsProforma { get; set; }
+        public string? NumeroFacturaGenerada { get; set; }
+        public int? FacturaGeneradaId { get; set; }
+    }
 
     public class RegistrarPendientesEntregaRequest
     {
@@ -1594,12 +1696,7 @@ namespace GestionLlantera.Web.Controllers
         public string? Observaciones { get; set; }
     }
 
-    public class MarcarEntregadosRequest
-    {
-        public List<int> ProductosIds { get; set; } = new List<int>();
-        public string? ObservacionesEntrega { get; set; }
-        public DateTime? FechaEntrega { get; set; }
-    }
+    // La definición duplicada de MarcarEntregadosRequest se ha eliminado.
 
     public class MarcarEntregadoPorCodigoRequest
     {

@@ -166,9 +166,12 @@ function construirContenidoRecibo(datosFactura, productos, totales, tipoDocument
                           datosFactura?.usuarioCreadorNombre || 
                           'Sistema';
 
+    // Verificar si es reimpresión
+    const esReimpresion = datosFactura.esReimpresion || false;
+    
     // Construir secciones
     const encabezado = construirEncabezado(datosFactura.numeroFactura, tipoDocumento);
-    const infoTransaccion = construirInfoTransaccion(fecha, hora, nombreCliente, usuarioCreador);
+    const infoTransaccion = construirInfoTransaccion(fecha, hora, nombreCliente, usuarioCreador, esReimpresion);
     const seccionProductos = construirSeccionProductos(productos, configuracion.ancho);
     const seccionTotales = construirSeccionTotales(totales, configuracion.ancho);
     const seccionPago = construirSeccionPago(totales, configuracion.detallesPago);
@@ -216,9 +219,25 @@ function construirEncabezado(numeroFactura, tipoDocumento) {
 /**
  * Construir información de transacción
  */
-function construirInfoTransaccion(fecha, hora, nombreCliente, usuarioCreador) {
+function construirInfoTransaccion(fecha, hora, nombreCliente, usuarioCreador, esReimpresion = false) {
+    let marcaReimpresion = '';
+    
+    if (esReimpresion) {
+        marcaReimpresion = `
+            <div class="marca-reimpresion-termico">
+                <div style="text-align: center; font-weight: bold; font-size: 18px; margin: 2mm 0;">
+                    *** REIMPRESIÓN ***
+                </div>
+                <div style="text-align: center; font-size: 14px; margin-bottom: 2mm;">
+                    ${fecha} ${hora}
+                </div>
+            </div>
+        `;
+    }
+    
     return `
         <div class="info-transaccion-termico">
+            ${marcaReimpresion}
             <div>Fecha: ${fecha}</div>
             <div>Hora: ${hora}</div>
             <div>Cliente: ${truncarTextoTermico(nombreCliente, 25)}</div>

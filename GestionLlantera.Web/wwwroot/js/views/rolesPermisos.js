@@ -181,8 +181,8 @@ function actualizarTablaRoles(roles) {
                             ${modulosOrdenados.map((modulo, index) => `
                                 <div class="accordion-item mb-1">
                                     <h2 class="accordion-header" id="heading-${rol.rolId}-${index}">
-                                        <button class="accordion-button collapsed" type="button" 
-                                                data-bs-toggle="collapse" data-bs-target="#collapse-${rol.rolId}-${index}" 
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#collapse-${rol.rolId}-${index}"
                                                 aria-expanded="false" aria-controls="collapse-${rol.rolId}-${index}"
                                                 style="padding: 0.5rem 0.75rem; font-size: 0.875rem;">
                                             <i class="${obtenerIconoModulo(modulo)} me-2"></i>
@@ -190,7 +190,7 @@ function actualizarTablaRoles(roles) {
                                             <span class="badge bg-primary ms-2">${permisosPorModulo[modulo].length}</span>
                                         </button>
                                     </h2>
-                                    <div id="collapse-${rol.rolId}-${index}" class="accordion-collapse collapse" 
+                                    <div id="collapse-${rol.rolId}-${index}" class="accordion-collapse collapse"
                                          aria-labelledby="heading-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-${rol.rolId}">
                                         <div class="accordion-body p-2">
                                             <div class="permisos-list">
@@ -218,8 +218,8 @@ function actualizarTablaRoles(roles) {
                             ${modulosOrdenados.map((modulo, index) => `
                                 <div class="accordion-item mb-1">
                                     <h2 class="accordion-header" id="heading-mobile-${rol.rolId}-${index}">
-                                        <button class="accordion-button collapsed" type="button" 
-                                                data-bs-toggle="collapse" data-bs-target="#collapse-mobile-${rol.rolId}-${index}" 
+                                        <button class="accordion-button collapsed" type="button"
+                                                data-bs-toggle="collapse" data-bs-target="#collapse-mobile-${rol.rolId}-${index}"
                                                 aria-expanded="false" aria-controls="collapse-mobile-${rol.rolId}-${index}"
                                                 style="padding: 0.375rem 0.5rem; font-size: 0.75rem;">
                                             <i class="${obtenerIconoModulo(modulo)} me-1" style="font-size: 0.8rem;"></i>
@@ -227,7 +227,7 @@ function actualizarTablaRoles(roles) {
                                             <span class="badge bg-primary ms-2" style="font-size: 0.65rem;">${permisosPorModulo[modulo].length}</span>
                                         </button>
                                     </h2>
-                                    <div id="collapse-mobile-${rol.rolId}-${index}" class="accordion-collapse collapse" 
+                                    <div id="collapse-mobile-${rol.rolId}-${index}" class="accordion-collapse collapse"
                                          aria-labelledby="heading-mobile-${rol.rolId}-${index}" data-bs-parent="#accordion-permisos-rol-mobile-${rol.rolId}">
                                         <div class="accordion-body p-2">
                                             <div class="permisos-list">
@@ -360,15 +360,15 @@ function actualizarTablaPermisos(permisos) {
         html += `
             <div class="accordion-item">
                 <h2 class="accordion-header" id="${headingId}">
-                    <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button" 
-                            data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
+                    <button class="accordion-button ${isFirstItem ? '' : 'collapsed'}" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#${collapseId}"
                             aria-expanded="${isFirstItem ? 'true' : 'false'}" aria-controls="${collapseId}">
                         <i class="bi bi-layers me-2"></i>
                         <strong>${modulo}</strong>
                         <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                     </button>
                 </h2>
-                <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}" 
+                <div id="${collapseId}" class="accordion-collapse collapse ${isFirstItem ? 'show' : ''}"
                      aria-labelledby="${headingId}" data-bs-parent="#accordionPermisos">
                     <div class="accordion-body">
                         <!-- Vista Desktop -->
@@ -531,56 +531,114 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         console.log('Permisos por módulo:', permisosPorModulo);
 
-        // Definir las dependencias entre permisos basado en los datos reales
+        // ✅ DEPENDENCIAS DE PERMISOS - CONFIGURACIÓN COMPLETA ACTUALIZADA
         const dependenciasPermisos = {
-            11: [6],  // Gestion Usuarios depende de Gestion Completa
-            8: [7],   // Eliminar Productos depende de Editar Productos
-            9: [7],   // Ajustar Stock depende de Editar Productos
-            4: [3]    // Ver Utilidades depende de Ver Costos
+            // GRUPO 1 (Amarillo) - Cadena Principal
+            1033: [1032],   // 1033 depende de 1032 (base)
+            1020: [1033],   // 1020 depende de 1033
+            1071: [1020],   // 1071 depende de 1020
+            7: [1020],      // 7 depende de 1020
+            8: [7],         // 8 depende de 7
+            9: [7],         // 9 depende de 7
+
+            // GRUPO 2 (Naranja) - Cadena Independiente
+            1034: [1032],   // 1034 depende de 1032 (se activa con permiso 7)
+            1035: [1032],   // 1035 depende de 1032
+            5: [1035],      // 5 depende de 1035
+            16: [1035],     // 16 depende de 1035
+
+            // GRUPO 3 (Verde) - Cadena Simple
+            1036: [1032],   // 1036 depende de 1032
+            1070: [1036],   // 1070 depende de 1036
+            1021: [1036],   // 1021 depende de 1036
+
+            // GRUPO 4 (Azul Claro) - Cadena Compleja
+            1038: [1037],   // 1038 depende de 1037 (base)
+            1026: [1038],   // 1026 depende de 1038
+            1019: [1026],   // 1019 depende de 1026
+            1025: [1019],   // 1025 depende de 1019
+            1027: [1019],   // 1027 depende de 1019
+
+            // GRUPO 5 (Azul Medio) - Cadena con Bifurcación
+            1039: [1037],       // 1039 depende de 1037
+            1018: [1039],   // 1018 depende de 1039 (base)
+            2: [1018],      // 2 depende de 1018
+            1023: [1018],   // 1023 depende de 1018
+            1024: [1023],   // 1024 depende de 1023
+            1022: [1023],   // 1022 depende de 1023
+
+            // GRUPO 6 (Verde Claro) - Cadena Simple
+            1041: [1037],   // 1041 depende de 1037 (inter-grupo)
+            1028: [1041],   // 1028 depende de 1041
+
+            // GRUPO 7 (Azul Oscuro) - Cadenas con "CREAR PERMISO"
+            1043: [1042],   // 1043 depende de 1042 (base)
+            1044: [1042],   // 1044 depende de 1042
+
+            // GRUPO 8 (Gris) - Cadena Larga
+            1046: [1045],   // 1046 depende de 1045 (base)
+            1047: [1045],   // 1047 depende de 1045
+            1040: [1045],   // 1040 depende de 1045
+            10: [1046, 1047, 1040],    // 10 depende de 1046, 1047, 1040
+            1017: [1046, 1047, 1040],  // 1017 depende de 1046, 1047, 1040
+
+            // GRUPO 9 - Cadena Adicional
+            1052: [1051],   // 1052 depende de 1051 (base)
+            1053: [1051],   // 1053 depende de 1051
+
+            // GRUPO 10 (Azul Final) - Cadena Final
+            1049: [1048],   // 1049 depende de 1048 (base)
+            1050: [1048],   // 1050 depende de 1048
+            1072: [1049],   // 1072 depende de 1049
+            11: [1050]      // 11 depende de 1050
         };
 
-        // Función para activar las dependencias de un permiso
+        // Función para activar las dependencias de un permiso (en creación)
         function activarDependencias(permisoId, isChecked) {
-            console.log(`🔄 Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
+            console.log(`🔄 [CREAR] Procesando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
 
-            // CASO ESPECIAL: Gestión Completa (6) - Marcar/desmarcar TODOS los permisos
-            if (permisoId === 6) {
-                const todosLosCheckboxes = document.querySelectorAll('.permiso-checkbox');
-                todosLosCheckboxes.forEach(checkbox => {
-                    const checkboxPermisoId = parseInt(checkbox.getAttribute('data-permiso-id'));
-                    if (checkboxPermisoId !== 6) { // No marcarse a sí mismo
-                        checkbox.checked = isChecked;
-                        if (isChecked) {
-                            console.log(`✅ [GESTIÓN COMPLETA] Activando permiso: ${checkboxPermisoId}`);
-                        } else {
-                            console.log(`❌ [GESTIÓN COMPLETA] Desactivando permiso: ${checkboxPermisoId}`);
-                        }
-                    }
-                });
-                return; // Salir de la función para evitar procesamiento adicional
+            // ✅ PREVENIR RECURSIÓN INFINITA
+            if (window.procesandoDependenciasCrear) {
+                console.log(`⏸️ [CREAR] Ya procesando dependencias, saltando permiso ${permisoId}`);
+                return;
             }
 
-            if (isChecked && dependenciasPermisos[permisoId]) {
-                // Si se marca el permiso, marcar también sus dependencias
-                dependenciasPermisos[permisoId].forEach(dependenciaId => {
-                    const checkboxDependencia = document.getElementById(`permiso_${dependenciaId}`);
-                    if (checkboxDependencia && !checkboxDependencia.checked) {
-                        console.log(`✅ Activando dependencia: permiso ${dependenciaId}`);
-                        checkboxDependencia.checked = true;
-                    }
-                });
-            } else if (!isChecked) {
-                // Si se desmarca el permiso, desmarcar los que dependen de él
-                Object.keys(dependenciasPermisos).forEach(permisoIdStr => {
-                    const permisoIdNum = parseInt(permisoIdStr);
-                    if (dependenciasPermisos[permisoIdNum].includes(permisoId)) {
-                        const checkboxDependiente = document.getElementById(`permiso_${permisoIdNum}`);
-                        if (checkboxDependiente && checkboxDependiente.checked) {
-                            console.log(`❌ Desactivando permiso dependiente: ${permisoIdNum}`);
-                            checkboxDependiente.checked = false;
+            window.procesandoDependenciasCrear = true;
+
+            try {
+                if (isChecked && dependenciasPermisos[permisoId]) {
+                    // Si se marca el permiso, marcar también sus dependencias
+                    const dependencias = dependenciasPermisos[permisoId];
+                    const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
+
+                    dependenciasArray.forEach(dependenciaId => {
+                        const checkboxDependencia = document.querySelector(`#listaPermisos input[value="${dependenciaId}"]`);
+                        if (checkboxDependencia && !checkboxDependencia.checked) {
+                            console.log(`✅ [CREAR] Activando dependencia: permiso ${dependenciaId}`);
+                            checkboxDependencia.checked = true;
+                            // Efecto visual para mostrar que se activó automáticamente
+                            checkboxDependencia.classList.add('permiso-activado-automaticamente');
+                            setTimeout(() => checkboxDependencia.classList.remove('permiso-activado-automaticamente'), 1000);
                         }
-                    }
-                });
+                    });
+                } else if (!isChecked) {
+                    // Si se desmarca el permiso, desmarcar los que dependen de él
+                    Object.keys(dependenciasPermisos).forEach(permisoIdStr => {
+                        const permisoIdNum = parseInt(permisoIdStr);
+                        const dependencias = dependenciasPermisos[permisoIdNum];
+                        const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
+
+                        if (dependenciasArray.includes(permisoId)) {
+                            const checkboxDependiente = document.querySelector(`#listaPermisos input[value="${permisoIdNum}"]`);
+                            if (checkboxDependiente && checkboxDependiente.checked) {
+                                console.log(`❌ [CREAR] Desactivando permiso dependiente: ${permisoIdNum}`);
+                                checkboxDependiente.checked = false;
+                            }
+                        }
+                    });
+                }
+            } finally {
+                window.procesandoDependenciasCrear = false;
             }
         }
         // Generar HTML para acordeón de permisos categorizados por módulo
@@ -596,15 +654,15 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
             html += `
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="${headingId}">
-                        <button class="accordion-button collapsed" type="button" 
-                                data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}"
                                 aria-expanded="false" aria-controls="${collapseId}">
                             <i class="bi bi-layers me-2"></i>
                             <strong>${modulo}</strong>
                             <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                         </button>
                     </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse" 
+                    <div id="${collapseId}" class="accordion-collapse collapse"
                          aria-labelledby="${headingId}" data-bs-parent="#accordionPermisosModal">
                         <div class="accordion-body p-3">
                             <div class="row g-2">
@@ -625,9 +683,9 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
                                     return `
                                     <div class="col-12">
                                         <div class="form-check p-2 border rounded bg-light">
-                                            <input class="form-check-input permiso-checkbox" 
-                                                   type="checkbox" 
-                                                   value="${permiso.permisoId}" 
+                                            <input class="form-check-input"
+                                                   type="checkbox"
+                                                   value="${permiso.permisoId}"
                                                    id="permiso_${permiso.permisoId}"
                                                    data-permiso-id="${permiso.permisoId}">
                                             <label class="form-check-label fw-semibold" for="permiso_${permiso.permisoId}">
@@ -651,22 +709,30 @@ window.abrirModalNuevoRol = async function abrirModalNuevoRol() {
 
         listaPermisos.innerHTML = html;
 
-        // 🔄 CONFIGURAR EVENT LISTENERS PARA DEPENDENCIAS AUTOMÁTICAS
+        // ✅ CONFIGURAR EVENT LISTENERS PARA DEPENDENCIAS CON DELAY
         setTimeout(() => {
-            console.log('⚙️ Configurando event listeners para dependencias de permisos...');
-            document.querySelectorAll('.permiso-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const permisoId = parseInt(this.getAttribute('data-permiso-id'));
+            console.log('🔗 [CREAR] Configurando event listeners para dependencias...');
+
+            // Configurar listeners para todos los checkboxes de permisos
+            document.querySelectorAll('#listaPermisos input[type="checkbox"]').forEach(checkbox => {
+                // Remover listener anterior si existe
+                checkbox.removeEventListener('change', checkbox._dependenciaHandler);
+
+                // Crear nuevo handler y guardarlo en el elemento
+                checkbox._dependenciaHandler = function() {
+                    const permisoId = parseInt(this.value);
                     const isChecked = this.checked;
 
-                    console.log(`🔄 Cambio detectado en permiso ID: ${permisoId}, checked: ${isChecked}`);
+                    console.log(`📋 [CREAR] Permiso ${permisoId} ${isChecked ? 'marcado' : 'desmarcado'}`);
 
                     // Aplicar dependencias automáticas
                     activarDependencias(permisoId, isChecked);
-                });
+                };
+
+                checkbox.addEventListener('change', checkbox._dependenciaHandler);
             });
 
-            console.log('✅ Event listeners de dependencias configurados correctamente');
+            console.log('✅ [CREAR] Event listeners de dependencias configurados correctamente');
         }, 100);
 
         // 4. Resetear el formulario
@@ -786,7 +852,7 @@ async function cargarPermisosParaRol(rolId) {
             return grupos;
         }, {});
 
-        // Definir las dependencias entre permisos según estructura confirmada
+        // ✅ DEPENDENCIAS PARA MODO EDITAR (mismo mapeo que crear)
         const dependenciasPermisosEditar = {
             // GRUPO 1 (Amarillo) - Cadena Principal
             1033: [1032],   // 1033 depende de 1032 (base)
@@ -850,67 +916,50 @@ async function cargarPermisosParaRol(rolId) {
 
         // Función para activar las dependencias de un permiso (en edición)
         function activarDependenciasEditar(permisoId, isChecked) {
-            console.log(`🔄 [EDITAR] Activando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
+            console.log(`🔄 [EDITAR] Procesando dependencias para permiso ${permisoId}, checked: ${isChecked}`);
 
-            // CASO ESPECIAL: Gestión Completa (6) - Marcar/desmarcar TODOS los permisos
-            if (permisoId === 6) {
-                const todosLosCheckboxes = document.querySelectorAll('.permiso-checkbox-editar');
-                todosLosCheckboxes.forEach(checkbox => {
-                    const checkboxPermisoId = parseInt(checkbox.getAttribute('data-permiso-id'));
-                    if (checkboxPermisoId !== 6) { // No marcarse a sí mismo
-                        checkbox.checked = isChecked;
-                        if (isChecked) {
-                            console.log(`✅ [EDITAR - GESTIÓN COMPLETA] Activando permiso: ${checkboxPermisoId}`);
-                            // Efecto visual para mostrar que se activó automáticamente
-                            checkbox.classList.add('permiso-activado-automaticamente');
-                            setTimeout(() => {
-                                checkbox.classList.remove('permiso-activado-automaticamente');
-                            }, 1000);
-                        } else {
-                            console.log(`❌ [EDITAR - GESTIÓN COMPLETA] Desactivando permiso: ${checkboxPermisoId}`);
-                        }
-                    }
-                });
-                return; // Salir de la función para evitar procesamiento adicional
+            // ✅ PREVENIR RECURSIÓN INFINITA
+            if (window.procesandoDependenciasEditar) {
+                console.log(`⏸️ [EDITAR] Ya procesando dependencias, saltando permiso ${permisoId}`);
+                return;
             }
 
-            if (isChecked && dependenciasPermisosEditar[permisoId]) {
-                // Si se marca el permiso, marcar también sus dependencias
-                const dependencias = dependenciasPermisosEditar[permisoId];
-                const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
+            window.procesandoDependenciasEditar = true;
 
-                dependenciasArray.forEach(dependenciaId => {
-                    const checkboxDependencia = document.getElementById(`permiso_${dependenciaId}`);
-                    if (checkboxDependencia && !checkboxDependencia.checked) {
-                        console.log(`✅ [EDITAR] Activando dependencia: permiso ${dependenciaId}`);
-                        checkboxDependencia.checked = true;
-                        // Efecto visual para mostrar que se activó automáticamente
-                        checkboxDependencia.classList.add('permiso-activado-automaticamente');
-                        setTimeout(() => {
-                            checkboxDependencia.classList.remove('permiso-activado-automaticamente');
-                        }, 1000);
-
-                        // Recursivamente activar dependencias de la dependencia
-                        activarDependenciasEditar(dependenciaId, true);
-                    }
-                });
-            } else if (!isChecked) {
-                // Si se desmarca el permiso, desmarcar los que dependen de él
-                Object.keys(dependenciasPermisosEditar).forEach(permisoIdStr => {
-                    const permisoIdNum = parseInt(permisoIdStr);
-                    const dependencias = dependenciasPermisosEditar[permisoIdNum];
+            try {
+                if (isChecked && dependenciasPermisosEditar[permisoId]) {
+                    // Si se marca el permiso, marcar también sus dependencias
+                    const dependencias = dependenciasPermisosEditar[permisoId];
                     const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
 
-                    if (dependenciasArray.includes(permisoId)) {
-                        const checkboxDependiente = document.getElementById(`permiso_${permisoIdNum}`);
-                        if (checkboxDependiente && checkboxDependiente.checked) {
-                            console.log(`❌ [EDITAR] Desactivando permiso dependiente: ${permisoIdNum}`);
-                            checkboxDependiente.checked = false;
-                            // Recursivamente desactivar dependientes
-                            activarDependenciasEditar(permisoIdNum, false);
+                    dependenciasArray.forEach(dependenciaId => {
+                        const checkboxDependencia = document.querySelector(`#accordionPermisosModalEditar input[value="${dependenciaId}"]`);
+                        if (checkboxDependencia && !checkboxDependencia.checked) {
+                            console.log(`✅ [EDITAR] Activando dependencia: permiso ${dependenciaId}`);
+                            checkboxDependencia.checked = true;
+                            // Efecto visual para mostrar que se activó automáticamente
+                            checkboxDependencia.classList.add('permiso-activado-automaticamente');
+                            setTimeout(() => checkboxDependencia.classList.remove('permiso-activado-automaticamente'), 1000);
                         }
-                    }
-                });
+                    });
+                } else if (!isChecked) {
+                    // Si se desmarca el permiso, desmarcar los que dependen de él
+                    Object.keys(dependenciasPermisosEditar).forEach(permisoIdStr => {
+                        const permisoIdNum = parseInt(permisoIdStr);
+                        const dependencias = dependenciasPermisosEditar[permisoIdNum];
+                        const dependenciasArray = Array.isArray(dependencias) ? dependencias : [dependencias];
+
+                        if (dependenciasArray.includes(permisoId)) {
+                            const checkboxDependiente = document.querySelector(`#accordionPermisosModalEditar input[value="${permisoIdNum}"]`);
+                            if (checkboxDependiente && checkboxDependiente.checked) {
+                                console.log(`❌ [EDITAR] Desactivando permiso dependiente: ${permisoIdNum}`);
+                                checkboxDependiente.checked = false;
+                            }
+                        }
+                    });
+                }
+            } finally {
+                window.procesandoDependenciasEditar = false;
             }
         }
 
@@ -928,15 +977,15 @@ async function cargarPermisosParaRol(rolId) {
             html += `
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="${headingId}">
-                        <button class="accordion-button collapsed" type="button" 
-                                data-bs-toggle="collapse" data-bs-target="#${collapseId}" 
+                        <button class="accordion-button collapsed" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}"
                                 aria-expanded="false" aria-controls="${collapseId}">
                             <i class="bi bi-layers me-2"></i>
                             <strong>${modulo}</strong>
                             <span class="badge bg-primary ms-2">${permisosDelModulo.length}</span>
                         </button>
                     </h2>
-                    <div id="${collapseId}" class="accordion-collapse collapse" 
+                    <div id="${collapseId}" class="accordion-collapse collapse"
                          aria-labelledby="${headingId}" data-bs-parent="#accordionPermisosModalEditar">
                         <div class="accordion-body p-3">
                             <div class="row g-2">
@@ -957,9 +1006,9 @@ async function cargarPermisosParaRol(rolId) {
                                     return `
                                     <div class="col-12">
                                         <div class="form-check p-2 border rounded bg-light">
-                                            <input class="form-check-input permiso-checkbox-editar" 
-                                                   type="checkbox" 
-                                                   value="${permiso.permisoId}" 
+                                            <input class="form-check-input permiso-checkbox-editar"
+                                                   type="checkbox"
+                                                   value="${permiso.permisoId}"
                                                    id="permiso_${permiso.permisoId}"
                                                    data-permiso-id="${permiso.permisoId}">
                                             <label class="form-check-label fw-semibold" for="permiso_${permiso.permisoId}">
@@ -999,19 +1048,27 @@ async function cargarPermisosParaRol(rolId) {
             }
         });
 
-        // 🔄 CONFIGURAR EVENT LISTENERS PARA DEPENDENCIAS EN EDICIÓN
+        // ✅ CONFIGURAR EVENT LISTENERS PARA DEPENDENCIAS EN EDICIÓN CON DELAY
         setTimeout(() => {
-            console.log('⚙️ [EDITAR] Configurando event listeners para dependencias de permisos...');
-            document.querySelectorAll('.permiso-checkbox-editar').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const permisoId = parseInt(this.getAttribute('data-permiso-id'));
+            console.log('🔗 [EDITAR] Configurando event listeners para dependencias...');
+
+            // Configurar listeners para todos los checkboxes de permisos en edición
+            document.querySelectorAll('#accordionPermisosModalEditar input[type="checkbox"]').forEach(checkbox => {
+                // Remover listener anterior si existe
+                checkbox.removeEventListener('change', checkbox._dependenciaHandlerEditar);
+
+                // Crear nuevo handler y guardarlo en el elemento
+                checkbox._dependenciaHandlerEditar = function() {
+                    const permisoId = parseInt(this.value);
                     const isChecked = this.checked;
 
-                    console.log(`🔄 [EDITAR] Cambio detectado en permiso ID: ${permisoId}, checked: ${isChecked}`);
+                    console.log(`📋 [EDITAR] Permiso ${permisoId} ${isChecked ? 'marcado' : 'desmarcado'}`);
 
                     // Aplicar dependencias automáticas
                     activarDependenciasEditar(permisoId, isChecked);
-                });
+                };
+
+                checkbox.addEventListener('change', checkbox._dependenciaHandlerEditar);
             });
 
             console.log('✅ [EDITAR] Event listeners de dependencias configurados correctamente');
@@ -1030,11 +1087,11 @@ async function guardarRol() {
         console.log('Iniciando proceso de guardado de rol');
         ButtonUtils.startLoading(submitButton);
 
-        // Obtener los datos del formulario  
+        // Obtener los datos del formulario
         const nombreRol = document.getElementById('nombreRol').value.trim();
         const descripcionRol = document.getElementById('descripcionRol').value.trim();
 
-        // Validaciones  
+        // Validaciones
         if (!nombreRol) {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
@@ -1042,13 +1099,13 @@ async function guardarRol() {
             return;
         }
 
-        // Obtener permisos seleccionados  
+        // Obtener permisos seleccionados
         const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
         const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
         console.log('Permisos seleccionados:', permisoIds);
 
-        // Preparar los datos para la creación  
+        // Preparar los datos para la creación
         const dataRol = {
             nombreRol: nombreRol,
             descripcionRol: descripcionRol,
@@ -1120,25 +1177,25 @@ async function actualizarRol() {
         console.log('Iniciando proceso de actualización de rol');
         ButtonUtils.startLoading(submitButton);
 
-        // Obtener los datos del formulario  
+        // Obtener los datos del formulario
         const rolId = document.getElementById('rolId').value;
         const nombreRol = document.getElementById('nombreRol').value.trim();
         const descripcionRol = document.getElementById('descripcionRol').value.trim();
 
-        // Validaciones  
+        // Validaciones
         if (!nombreRol) {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
             ButtonUtils.stopLoading(submitButton);
             return;        }
 
-        // Obtener permisos seleccionados  
+        // Obtener permisos seleccionados
         const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
         const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
         console.log('Permisos seleccionados:', permisoIds);
 
-        // Preparar los datos para la actualización  
+        // Preparar los datos para la actualización
         const dataRol = {
             rolId: parseInt(rolId),
             nombreRol: nombreRol,

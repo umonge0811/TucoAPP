@@ -1,0 +1,176 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 🖨️ Módulo de impresión térmica cargado correctamente
+ ✅ Sistema de zoom simplificado cargado
+ 📋 Funciones de proformas y detalles exportadas globalmente
+ 📋 Funciones de facturas pendientes exportadas globalmente
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ ✅ verDetalleProducto disponible desde facturacion.js
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anónimo) @ Facturacion:2083
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 4,
+    "id": 4,
+    "nombre": "Julissa Mejias",
+    "nombreUsuario": "Julissa Mejias",
+    "email": "zlktmbs334@tormails.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": true
+  },
+  "fechaActual": "2025-08-13",
+  "horaActual": "14:40",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: true
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-outline-secondary
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Agrega productos y selecciona un cliente
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+facturacion.js:501 ✅ Se encontraron 4 productos disponibles
+facturacion.js:638 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:639 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:640 🔄 Productos recibidos: 4
+facturacion.js:675 🔄 Construyendo HTML para 4 productos
+facturacion.js:730 🖼️ Procesando imágenes para producto: Prueba de Stock 3 Despues de eliminar imagen
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/4522c1e8-cfd8-4d4c-8bfd-80f4390dffe7_GEO_L300_8000x3125px.webp
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Continental Urban
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/3946013e-62e0-4449-aa2e-f4fc251e91b3_OIP.webp
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Dunlop Direzza
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/1024_1_Llanta_Dunlop_Direzza.jpg
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:730 🖼️ Procesando imágenes para producto: Llanta Bridgeston Turanza 6
+facturacion.js:731 🖼️ Datos del producto: Object
+facturacion.js:744 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:749 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:768 🖼️ URL original: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+facturacion.js:780 🖼️ URL final construida: https://localhost:7273/uploads/productos/1025_1_Llanta_Bridgeston_Turanza_6_195_50R14.jpg
+facturacion.js:818 🔧 Debug llanta: Object
+facturacion.js:897 🔄 Actualizando DOM (longitud HTML: 19144 caracteres)
+facturacion.js:930 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:616 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:619 📦 Productos mostrados exitosamente
+facturacion.js:632 🔍 === FIN buscarProductos ===
+facturacion.js:5357 📦 Búsqueda inicial ejecutada
+facturacion.js:5359 📦 === FIN cargarProductosIniciales (exitosa) ===
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+facturacion.js:6689 📋 === ABRIENDO MODAL DE FACTURAS PENDIENTES ===
+facturacion.js:6695 📋 *** MODAL DE FACTURAS PENDIENTES COMPLETAMENTE VISIBLE ***
+facturacion.js:6696 📋 Elementos disponibles en el DOM:
+facturacion.js:6697 📋 - Input búsqueda: 1
+facturacion.js:6698 📋 - Select estado: 1
+facturacion.js:6699 📋 - Tabla body: 1
+facturacion.js:6700 📋 - Loading: 1
+facturacion.js:6701 📋 - Content: 1
+facturacion.js:6705 ✅ Inicializando filtros de facturas pendientes...
+facturasPendientesFilter.js:18 🔍 === INICIALIZANDO FILTROS DE FACTURAS PENDIENTES (FRONTEND) ===
+facturasPendientesFilter.js:39 🔍 Configurando eventos de filtrado para facturas pendientes...
+facturasPendientesFilter.js:107 ✅ Eventos de filtros de facturas configurados con delegación
+facturasPendientesFilter.js:115 📋 === CARGANDO TODAS LAS FACTURAS PENDIENTES ===
+facturasPendientesFilter.js:32 ✅ Filtros de facturas pendientes inicializados correctamente
+facturasPendientesFilter.js:138 📋 Respuesta del servidor facturas: Object
+facturasPendientesFilter.js:152 ✅ Facturas pendientes cargadas: 329
+facturasPendientesFilter.js:190 🔍 === APLICANDO FILTROS LOCALMENTE A FACTURAS ===
+facturasPendientesFilter.js:191 🔍 Total facturas disponibles: 329
+facturasPendientesFilter.js:192 🔍 Filtros aplicados: Object
+facturasPendientesFilter.js:251 🔍 Facturas filtradas: 329
+facturasPendientesFilter.js:264 📋 === MOSTRANDO FACTURAS PENDIENTES PAGINADAS ===
+facturasPendientesFilter.js:276 📋 Total facturas a paginar: 329
+facturasPendientesFilter.js:277 📋 Facturas por página: 20
+facturasPendientesFilter.js:278 📋 Página actual: 1
+facturasPendientesFilter.js:286 📋 Facturas en esta página: 20
+facturasPendientesFilter.js:1170 🔧 Configurando eventos de botones de facturas...
+facturasPendientesFilter.js:1222 ✅ Eventos de botones configurados correctamente
+facturasPendientesFilter.js:409 📄 === MOSTRANDO PAGINACIÓN DE FACTURAS ===
+facturasPendientesFilter.js:410 📄 Página actual: 1 Total páginas: 17
+facturasPendientesFilter.js:314 ✅ Facturas pendientes mostradas en tabla
+facturasPendientesFilter.js:1180 👁️ Ver detalles de factura: 1324
+facturasPendientesFilter.js:1337 👁️ === MOSTRANDO DETALLE DE FACTURA ===
+facturasPendientesFilter.js:1338 👁️ Factura ID: 1324
+Facturacion/ObtenerDetalleFactura?facturaId=1324:1  Failed to load resource: the server responded with a status of 500 ()
+facturasPendientesFilter.js:1417 ❌ Error obteniendo detalle de factura: Error: Error 500: 
+    at verDetalleFactura (facturasPendientesFilter.js:1403:19)
+verDetalleFactura @ facturasPendientesFilter.js:1417
+await in verDetalleFactura
+(anónimo) @ facturasPendientesFilter.js:1184
+dispatch @ jquery.min.js:2
+S.event.add.v.handle @ jquery.min.js:2
