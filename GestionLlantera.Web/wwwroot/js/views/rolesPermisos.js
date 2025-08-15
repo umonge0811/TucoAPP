@@ -373,40 +373,38 @@ function actualizarTablaPermisos(permisos) {
                     <div class="accordion-body">
                         <!-- Vista Desktop -->
                         <div class="d-none d-md-block">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="table-light">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th width="150">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${permisosDelModulo.map(permiso => `
                                         <tr>
-                                            <th>Nombre</th>
-                                            <th>Descripción</th>
-                                            <th width="150">Acciones</th>
+                                            <td class="fw-semibold">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="bi bi-key-fill text-primary"></i>
+                                                    ${permiso.nombrePermiso}
+                                                </div>
+                                            </td>
+                                            <td class="text-muted">${permiso.descripcionPermiso || '-'}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-outline-primary" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${permisosDelModulo.map(permiso => `
-                                            <tr>
-                                                <td class="fw-semibold">
-                                                    <div class="d-flex align-items-center gap-2">
-                                                        <i class="bi bi-key-fill text-primary"></i>
-                                                        ${permiso.nombrePermiso}
-                                                    </div>
-                                                </td>
-                                                <td class="text-muted">${permiso.descripcionPermiso || '-'}</td>
-                                                <td>
-                                                    <div class="btn-group">
-                                                        <button class="btn btn-sm btn-outline-primary" onclick="editarPermiso(${permiso.permisoId})" title="Editar">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-danger" onclick="eliminarPermiso(${permiso.permisoId})" title="Eliminar">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            </div>
+                                    `).join('')}
+                                </tbody>
+                            </table>
                         </div>
 
                         <!-- Vista Móvil -->
@@ -1099,8 +1097,12 @@ async function guardarRol() {
             return;
         }
 
-        // Obtener permisos seleccionados
-        const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
+        // Obtener permisos seleccionados - buscar en ambos contenedores posibles
+        let checkboxes = document.querySelectorAll('#accordionPermisosModal input[type="checkbox"]:checked');
+        if (checkboxes.length === 0) {
+            // Fallback para modo editar
+            checkboxes = document.querySelectorAll('#accordionPermisosModalEditar input[type="checkbox"]:checked');
+        }
         const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
         console.log('Permisos seleccionados:', permisoIds);
@@ -1187,10 +1189,15 @@ async function actualizarRol() {
             console.warn('Nombre de rol vacío');
             toastr.warning('El nombre del rol es requerido');
             ButtonUtils.stopLoading(submitButton);
-            return;        }
+            return;
+        }
 
-        // Obtener permisos seleccionados
-        const checkboxes = document.querySelectorAll('#listaPermisos input[type="checkbox"]:checked');
+        // Obtener permisos seleccionados - buscar en ambos contenedores posibles
+        let checkboxes = document.querySelectorAll('#accordionPermisosModalEditar input[type="checkbox"]:checked');
+        if (checkboxes.length === 0) {
+            // Fallback para modo crear
+            checkboxes = document.querySelectorAll('#accordionPermisosModal input[type="checkbox"]:checked');
+        }
         const permisoIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
 
         console.log('Permisos seleccionados:', permisoIds);

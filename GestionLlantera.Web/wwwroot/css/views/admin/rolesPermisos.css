@@ -203,6 +203,20 @@
     gap: 1.25rem;
 }
 
+/* Efecto visual para permisos activados automáticamente por dependencias */
+.permiso-activado-automaticamente {
+    background-color: #dbeafe !important;
+    border-color: #3b82f6 !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.permiso-activado-automaticamente + label {
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease;
+}
+
 /* Contenedor de permisos por módulos */
 .permisos-modulos-container {
     max-width: 100%;
