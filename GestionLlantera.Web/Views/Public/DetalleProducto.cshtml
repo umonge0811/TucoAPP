@@ -3,10 +3,10 @@
 @{
     ViewData["Title"] = Model?.NombreProducto ?? "Detalle del Producto";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
-        <link rel="stylesheet" href="~/css/views/public/detalleProducto.css">
-
 }
+
+<link rel="stylesheet" href="~/css/views/public/detalleProducto.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
 
 <div class="detalle-producto-publico-container">
     @if (Model != null)
@@ -22,36 +22,41 @@
             </nav>
         </div>
 
-        <div class="container py-4">
-            <div class="row">
+        <div class="container-fluid modern-container">
+            <div class="row g-0">
                 <!-- Galería de Imágenes -->
-                <div class="col-lg-6 mb-4">
-                    <div class="galeria-producto">
+                <div class="col-lg-7 col-xl-8">
+                    <div class="galeria-moderna" data-aos="fade-right">
                         @if (Model.Imagenes?.Any() == true)
                         {
                             <!-- Imagen Principal -->
-                            <div class="imagen-principal-container">
-                                <img id="imagenPrincipal" 
-                                     src="@Model.Imagenes.First().UrlImagen" 
-                                     alt="@Model.NombreProducto" 
-                                     class="imagen-principal"
-                                     data-bs-toggle="modal" 
-                                     data-bs-target="#modalImagenGrande">
-                                <div class="zoom-indicator">
-                                    <i class="fas fa-search-plus"></i>
+                            <div class="imagen-principal-moderna">
+                                <div class="imagen-wrapper">
+                                    <img id="imagenPrincipal" 
+                                         src="@Model.Imagenes.First().UrlImagen" 
+                                         alt="@Model.NombreProducto" 
+                                         class="imagen-principal"
+                                         data-bs-toggle="modal" 
+                                         data-bs-target="#modalImagenGrande">
+                                    <div class="overlay-zoom">
+                                        <div class="zoom-icon">
+                                            <i class="fas fa-expand-alt"></i>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             @if (Model.Imagenes.Count > 1)
                             {
-                                <!-- Miniaturas -->
-                                <div class="miniaturas-container">
+                                <!-- Miniaturas Modernas -->
+                                <div class="miniaturas-modernas">
                                     @for (int i = 0; i < Model.Imagenes.Count; i++)
                                     {
-                                        <div class="miniatura @(i == 0 ? "active" : "")"
+                                        <div class="miniatura-moderna @(i == 0 ? "active" : "")"
                                              data-imagen="@Model.Imagenes[i].UrlImagen"
                                              onclick="cambiarImagenPrincipal('@Model.Imagenes[i].UrlImagen', this)">
                                             <img src="@Model.Imagenes[i].UrlImagen" alt="Vista @(i + 1)">
+                                            <div class="miniatura-overlay"></div>
                                         </div>
                                     }
                                 </div>
@@ -59,48 +64,72 @@
                         }
                         else
                         {
-                            <div class="sin-imagen-detalle">
-                                <i class="fas fa-image"></i>
+                            <div class="sin-imagen-moderna">
+                                <div class="icono-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
                                 <p>Sin imagen disponible</p>
                             </div>
                         }
                     </div>
                 </div>
 
-                <!-- Información del Producto -->
-                <div class="col-lg-6">
-                    <div class="info-producto">
-                        <h1 class="titulo-producto">@Model.NombreProducto</h1>
-                        
-                        <!-- Precio -->
-                        <div class="precio-principal">
-                            <span class="precio-valor">₡@Model.Precio?.ToString("N0")</span>
+                <!-- Panel de Información -->
+                <div class="col-lg-5 col-xl-4">
+                    <div class="panel-informacion" data-aos="fade-left">
+                        <!-- Header del producto -->
+                        <div class="producto-header">
+                            <div class="categoria-badge">
+                                <i class="fas fa-tire"></i>
+                                <span>Llanta</span>
+                            </div>
+                            <h1 class="titulo-moderno">@Model.NombreProducto</h1>
+                        </div>
+
+                        <!-- Precio Destacado -->
+                        <div class="seccion-precio">
+                            <div class="precio-wrapper">
+                                <span class="moneda">₡</span>
+                                <span class="precio-principal">@Model.Precio?.ToString("N0")</span>
+                            </div>
                             @if (Model.Precio > 50000)
                             {
-                                <span class="precio-cuotas">o desde ₡@((Model.Precio / 6)?.ToString("N0")) en 6 cuotas</span>
+                                <div class="precio-financiamiento">
+                                    <i class="fas fa-credit-card me-2"></i>
+                                    <span>Desde ₡@((Model.Precio / 6)?.ToString("N0")) en 6 cuotas</span>
+                                </div>
                             }
                         </div>
 
-                        <!-- Stock -->
-                        <div class="stock-disponible">
-                            <i class="fas fa-check-circle text-success me-2"></i>
-                            <span class="fw-bold">@Model.CantidadEnInventario unidades disponibles</span>
+                        <!-- Stock Status -->
+                        <div class="stock-status">
+                            <div class="stock-icon @(Model.CantidadEnInventario > 5 ? "stock-alto" : "stock-bajo")">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="stock-info">
+                                <span class="stock-cantidad">@Model.CantidadEnInventario unidades</span>
+                                <span class="stock-texto">en stock</span>
+                            </div>
                         </div>
 
                         @if (Model.Llanta != null)
                         {
                             var llanta = Model.Llanta;
-                            <!-- Especificaciones de Llanta -->
-                            <div class="especificaciones-llanta">
-                                <h3 class="h5 mb-3">
-                                    <i class="fas fa-cog me-2"></i>Especificaciones
+                            <!-- Especificaciones Modernas -->
+                            <div class="especificaciones-modernas">
+                                <h3 class="seccion-titulo">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Especificaciones técnicas
                                 </h3>
-                                <div class="row g-3">
+                                <div class="specs-grid">
                                     @if (llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
                                     {
-                                        <div class="col-6">
-                                            <div class="spec-item">
-                                                <label>Medida:</label>
+                                        <div class="spec-card">
+                                            <div class="spec-icon">
+                                                <i class="fas fa-ruler-combined"></i>
+                                            </div>
+                                            <div class="spec-content">
+                                                <span class="spec-label">Medida</span>
                                                 <span class="spec-value">
                                                     @if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                                                     {
@@ -116,62 +145,88 @@
                                     }
                                     @if (!string.IsNullOrEmpty(llanta.Marca))
                                     {
-                                        <div class="col-6">
-                                            <div class="spec-item">
-                                                <label>Marca:</label>
+                                        <div class="spec-card">
+                                            <div class="spec-icon">
+                                                <i class="fas fa-tag"></i>
+                                            </div>
+                                            <div class="spec-content">
+                                                <span class="spec-label">Marca</span>
                                                 <span class="spec-value">@llanta.Marca</span>
                                             </div>
                                         </div>
                                     }
                                     @if (!string.IsNullOrEmpty(llanta.Modelo))
                                     {
-                                        <div class="col-6">
-                                            <div class="spec-item">
-                                                <label>Modelo:</label>
+                                        <div class="spec-card">
+                                            <div class="spec-icon">
+                                                <i class="fas fa-info"></i>
+                                            </div>
+                                            <div class="spec-content">
+                                                <span class="spec-label">Modelo</span>
                                                 <span class="spec-value">@llanta.Modelo</span>
                                             </div>
                                         </div>
                                     }
                                     @if (!string.IsNullOrEmpty(llanta.TipoTerreno))
                                     {
-                                        <div class="col-6">
-                                            <div class="spec-item">
-                                                <label>Tipo:</label>
+                                        <div class="spec-card">
+                                            <div class="spec-icon">
+                                                <i class="fas fa-road"></i>
+                                            </div>
+                                            <div class="spec-content">
+                                                <span class="spec-label">Tipo</span>
                                                 <span class="spec-value">@llanta.TipoTerreno</span>
                                             </div>
                                         </div>
                                     }
-                                    
                                 </div>
                             </div>
                         }
 
                         @if (!string.IsNullOrEmpty(Model.Descripcion))
                         {
-                            <!-- Descripción -->
-                            <div class="descripcion-producto">
-                                <h3 class="h5 mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>Descripción
+                            <!-- Descripción Moderna -->
+                            <div class="descripcion-moderna">
+                                <h3 class="seccion-titulo">
+                                    <i class="fas fa-align-left me-2"></i>
+                                    Descripción
                                 </h3>
                                 <p class="descripcion-texto">@Model.Descripcion</p>
                             </div>
                         }
 
-                        <!-- Acciones -->
-                        <div class="acciones-producto">
-                            <a href="tel:+50689166180" class="btn btn-success btn-lg w-100 mb-3">
-                                <i class="fas fa-phone me-2"></i>
-                                Llamar para Consultar
+                        <!-- Acciones Modernas -->
+                        <div class="acciones-modernas">
+                            <a href="tel:+50689166180" class="btn-moderno btn-primario">
+                                <div class="btn-icon">
+                                    <i class="fas fa-phone"></i>
+                                </div>
+                                <div class="btn-content">
+                                    <span class="btn-titulo">Llamar ahora</span>
+                                    <span class="btn-subtitulo">Consulta directa</span>
+                                </div>
                             </a>
+                            
                             <a href="https://wa.me/50689166180?text=Hola, me interesa el producto: @Uri.EscapeDataString(Model.NombreProducto)" 
                                target="_blank" 
-                               class="btn btn-outline-success w-100 mb-3">
-                                <i class="fab fa-whatsapp me-2"></i>
-                                Consultar por WhatsApp
+                               class="btn-moderno btn-whatsapp">
+                                <div class="btn-icon">
+                                    <i class="fab fa-whatsapp"></i>
+                                </div>
+                                <div class="btn-content">
+                                    <span class="btn-titulo">WhatsApp</span>
+                                    <span class="btn-subtitulo">Mensaje directo</span>
+                                </div>
                             </a>
-                            <a href="@Url.Action("Productos", "Public")" class="btn btn-outline-primary w-100">
-                                <i class="fas fa-arrow-left me-2"></i>
-                                Volver a Productos
+                            
+                            <a href="@Url.Action("Productos", "Public")" class="btn-moderno btn-secundario">
+                                <div class="btn-icon">
+                                    <i class="fas fa-arrow-left"></i>
+                                </div>
+                                <div class="btn-content">
+                                    <span class="btn-titulo">Volver</span>
+                                    <span class="btn-subtitulo">Ver más productos</span>
+                                </div>
                             </a>
                         </div>
                     </div>
@@ -215,5 +270,13 @@
 
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="~/js/views/public/detalleProducto.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+    </script>
 }
