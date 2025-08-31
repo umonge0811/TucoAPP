@@ -44,14 +44,13 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Vista de detalle de producto público
         /// </summary>
-        [HttpGet("DetalleProducto/{id}")]
         public async Task<IActionResult> DetalleProducto(int id)
         {
             try
             {
                 _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
                 
-                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+                var producto = await _inventarioService.ObtenerProductoPublicoPorIdAsync(id);
 
                 if (producto == null)
                 {
