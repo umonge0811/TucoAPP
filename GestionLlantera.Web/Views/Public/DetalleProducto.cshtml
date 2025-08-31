@@ -3,6 +3,9 @@
 @{
     ViewData["Title"] = Model?.NombreProducto ?? "Detalle del Producto";
     Layout = "~/Views/Shared/_Layout.cshtml";
+
+        <link rel="stylesheet" href="~/css/views/public/detalleProducto.css">
+
 }
 
 <div class="detalle-producto-publico-container">
@@ -210,9 +213,6 @@
     }
 </div>
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/views/public/detalleProducto.css">
-}
 
 @section Scripts {
     <script src="~/js/views/public/detalleProducto.js"></script>
