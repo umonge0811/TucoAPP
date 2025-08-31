@@ -1379,7 +1379,7 @@ namespace API.Controllers
                         CantidadEnInventario = p.CantidadEnInventario,
                         Llanta = p.Llanta != null ? new LlantaDTO
                         {
-                            LlantaId = p.Llanta.FirstOrDefault()?.LlantaId.GetValueOrDefault() ?? 0,
+                            LlantaId = p.Llanta.FirstOrDefault()?.LlantaId ?? 0,
                             Marca = p.Llanta.FirstOrDefault()?.Marca,
                             Modelo = p.Llanta.FirstOrDefault()?.Modelo,
                             Ancho = p.Llanta.FirstOrDefault()?.Ancho,
