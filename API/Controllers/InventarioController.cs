@@ -521,8 +521,7 @@ namespace API.Controllers
                         var imagenProducto = new ImagenesProducto
                         {
                             ProductoId = id,
-                            Urlimagen = $"/uploads/productos/{nombreArchivo}", // Esto es lo que se guarda en la DB
-                            NombreArchivo = $"/uploads/productos/{nombreArchivo}", // Guardar el nombre del archivo para referencia
+                            Urlimagen = $"/uploads/productos/{nombreArchivo}",
                             Descripcion = $"Imagen de {producto.NombreProducto}",
                             FechaCreacion = DateTime.Now
                         };
@@ -1392,8 +1391,9 @@ namespace API.Controllers
                         Imagenes = p.ImagenesProductos.Select(img => new ImagenProductoDTO
                         {
                             ImagenId = img.ImagenId,
-                            UrlImagen = Url.Content($"~/uploads/productos/{img.NombreArchivo}"),
-                            NombreArchivo = img.Urlimagen
+                            UrlImagen = img.Urlimagen,
+                            Descripcion = img.Descripcion,
+                            FechaCreacion = img.FechaCreacion ?? DateTime.Now
                         }).ToList()
                     })
                     .OrderBy(p => p.NombreProducto)
