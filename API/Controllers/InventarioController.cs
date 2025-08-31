@@ -1377,16 +1377,16 @@ namespace API.Controllers
                         Descripcion = p.Descripcion,
                         Precio = p.Precio,
                         CantidadEnInventario = p.CantidadEnInventario ?? 0,
-                        Llanta = p.Llanta != null ? new LlantaDTO
+                        Llanta = p.Llanta.Any() ? new LlantaDTO
                         {
-                            LlantaId = p.Llanta.FirstOrDefault()?.LlantaId ?? 0,
-                            Marca = p.Llanta.FirstOrDefault()?.Marca,
-                            Modelo = p.Llanta.FirstOrDefault()?.Modelo,
-                            Ancho = p.Llanta.FirstOrDefault()?.Ancho,
-                            Perfil = p.Llanta.FirstOrDefault()?.Perfil,
-                            Diametro = p.Llanta.FirstOrDefault()?.Diametro,
-                            IndiceVelocidad = p.Llanta.FirstOrDefault()?.IndiceVelocidad,
-                            TipoTerreno = p.Llanta.FirstOrDefault()?.TipoTerreno,
+                            LlantaId = p.Llanta.First().LlantaId,
+                            Marca = p.Llanta.First().Marca,
+                            Modelo = p.Llanta.First().Modelo,
+                            Ancho = p.Llanta.First().Ancho,
+                            Perfil = p.Llanta.First().Perfil,
+                            Diametro = p.Llanta.First().Diametro,
+                            IndiceVelocidad = p.Llanta.First().IndiceVelocidad,
+                            TipoTerreno = p.Llanta.First().TipoTerreno,
                         } : null,
                         Imagenes = p.ImagenesProductos.Select(img => new ImagenProductoDTO
                         {
