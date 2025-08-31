@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tuco.Clases.Models.Emails;
+using Microsoft.Extensions.FileProviders; // Se agregó esta línea
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -192,6 +193,14 @@ if (app.Environment.IsDevelopment())
 // Configurar middleware en el orden correcto
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Configurar servidor de archivos estáticos para uploads
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads")),
+    RequestPath = "/uploads"
+});
+
 app.UseRouting();
 
 // Usar la política de CORS
