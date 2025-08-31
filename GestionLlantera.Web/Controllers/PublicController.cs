@@ -44,8 +44,7 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Vista de detalle de producto público
         /// </summary>
-        [HttpGet]
-        [Route("Public/DetalleProducto/{id}")]
+        [HttpGet("DetalleProducto/{id}")]
         public async Task<IActionResult> DetalleProducto(int id)
         {
             try
