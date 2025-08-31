@@ -1372,62 +1372,91 @@ namespace API.Controllers
                     .Include(p => p.ImagenesProductos)
                     .Select(p => new
                     {
-                        ProductoId = p.ProductoId,
-                        NombreProducto = p.NombreProducto,
-                        Descripcion = p.Descripcion,
-                        Precio = p.Precio,
-                        CantidadEnInventario = p.CantidadEnInventario ?? 0,
-                        StockMinimo = p.StockMinimo ?? 0,
-                        FechaUltimaActualizacion = p.FechaUltimaActualizacion,
+                        // ✅ ESTRUCTURA IGUAL A FACTURACIÓN
+                        productoId = p.ProductoId,
+                        nombreProducto = p.NombreProducto,
+                        descripcion = p.Descripcion ?? "",
+                        precio = p.Precio ?? 0,
+                        cantidadEnInventario = p.CantidadEnInventario ?? 0,
+                        stockMinimo = p.StockMinimo ?? 0,
+                        fechaUltimaActualizacion = p.FechaUltimaActualizacion,
                         
-                        // URLs completas de imágenes
-                        ImagenesUrls = p.ImagenesProductos
+                        // ✅ URLS DE IMÁGENES - ESTRUCTURA IGUAL A FACTURACIÓN
+                        imagenesUrls = p.ImagenesProductos
                             .Where(img => !string.IsNullOrEmpty(img.Urlimagen))
                             .Select(img => img.Urlimagen.StartsWith("http") 
                                 ? img.Urlimagen 
                                 : $"https://localhost:7273{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}")
                             .ToList(),
                             
-                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        imagenesProductos = p.ImagenesProductos.Select(img => new
                         {
-                            ImagenId = img.ImagenId,
-                            Urlimagen = img.Urlimagen.StartsWith("http") 
+                            imagenId = img.ImagenId,
+                            urlimagen = img.Urlimagen.StartsWith("http") 
                                 ? img.Urlimagen 
                                 : $"https://localhost:7273{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}",
-                            Descripcion = img.Descripcion,
-                            FechaCreacion = img.FechaCreacion ?? DateTime.Now
+                            descripcion = img.Descripcion ?? "",
+                            fechaCreacion = img.FechaCreacion ?? DateTime.Now
                         }).ToList(),
                         
-                        Llanta = p.Llanta.Any() ? new
+                        // ✅ INFORMACIÓN DE LLANTA - ESTRUCTURA IGUAL A FACTURACIÓN
+                        esLlanta = p.Llanta.Any(),
+                        llanta = p.Llanta.Any() ? new
                         {
-                            LlantaId = p.Llanta.First().LlantaId,
-                            Marca = p.Llanta.First().Marca,
-                            Modelo = p.Llanta.First().Modelo,
-                            Ancho = p.Llanta.First().Ancho,
-                            Perfil = p.Llanta.First().Perfil,
-                            Diametro = p.Llanta.First().Diametro,
-                            IndiceVelocidad = p.Llanta.First().IndiceVelocidad,
-                            TipoTerreno = p.Llanta.First().TipoTerreno,
-                            Capas = p.Llanta.First().Capas
-                        } : null
+                            llantaId = p.Llanta.First().LlantaId,
+                            marca = p.Llanta.First().Marca ?? "",
+                            modelo = p.Llanta.First().Modelo ?? "",
+                            ancho = p.Llanta.First().Ancho,
+                            perfil = p.Llanta.First().Perfil,
+                            diametro = p.Llanta.First().Diametro ?? "",
+                            indiceVelocidad = p.Llanta.First().IndiceVelocidad ?? "",
+                            tipoTerreno = p.Llanta.First().TipoTerreno ?? "",
+                            capas = p.Llanta.First().Capas,
+                            medidaCompleta = p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
+                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}"
+                        } : null,
+                        
+                        // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
+                        marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
+                        modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
+                        medidaCompleta = p.Llanta.Any() 
+                            ? (p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
+                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}")
+                            : null
                     })
-                    .OrderBy(p => p.NombreProducto)
+                    .OrderBy(p => p.nombreProducto)
                     .ToListAsync();
 
                 _logger.LogInformation("✅ Productos públicos obtenidos: {Cantidad}", productos.Count);
                 
-                // Log de ejemplo de URLs generadas
-                if (productos.Any() && productos.First().ImagenesUrls.Any())
+                // Log de ejemplo de URLs generadas y estructura
+                if (productos.Any())
                 {
-                    _logger.LogInformation("🖼️ Ejemplo de URL de imagen generada: {Url}", productos.First().ImagenesUrls.First());
+                    var primer = productos.First();
+                    if (primer.imagenesUrls.Any())
+                    {
+                        _logger.LogInformation("🖼️ Ejemplo de URL de imagen generada: {Url}", primer.imagenesUrls.First());
+                    }
+                    _logger.LogInformation("📋 Estructura del primer producto: ProductoId={Id}, EsLlanta={EsLlanta}, Llanta={Llanta}",
+                        primer.productoId, primer.esLlanta, primer.llanta != null ? "SÍ" : "NO");
                 }
-                
-                return Ok(productos);
+
+                // ✅ DEVOLVER EN FORMATO COMPATIBLE CON FACTURACIÓN
+                return Ok(new { 
+                    success = true, 
+                    productos = productos 
+                });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al obtener productos públicos");
-                return StatusCode(500, new { message = "Error al obtener productos", timestamp = DateTime.Now });
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener productos", 
+                    timestamp = DateTime.Now 
+                });
             }
         }
 
