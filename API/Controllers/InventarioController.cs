@@ -1376,7 +1376,7 @@ namespace API.Controllers
                         NombreProducto = p.NombreProducto,
                         Descripcion = p.Descripcion,
                         Precio = p.Precio,
-                        CantidadEnInventario = p.CantidadEnInventario,
+                        CantidadEnInventario = p.CantidadEnInventario ?? 0,
                         Llanta = p.Llanta != null ? new LlantaDTO
                         {
                             LlantaId = p.Llanta.FirstOrDefault()?.LlantaId ?? 0,
