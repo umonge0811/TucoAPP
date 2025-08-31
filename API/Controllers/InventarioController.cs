@@ -869,8 +869,8 @@ namespace API.Controllers
                             UsuarioId = asignacion.UsuarioId,
                             PermisoConteo = asignacion.PermisoConteo,
                             PermisoAjuste = asignacion.PermisoAjuste,
-                            PermisoCompletar = asignacion.PermisoCompletar,
                             PermisoValidacion = asignacion.PermisoValidacion,
+                            PermisoCompletar = asignacion.PermisoCompletar,
                             FechaAsignacion = DateTime.Now
                         };
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
