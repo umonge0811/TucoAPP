@@ -68,74 +68,42 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Obtiene productos para la vista pública, replicando la lógica de facturación.
+        /// Obtiene productos para la vista pública, replicando exactamente la lógica de facturación.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "", int pagina = 1, int tamano = 20)
+        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "")
         {
             try
             {
                 _logger.LogInformation("🛒 === OBTENIENDO PRODUCTOS PARA VISTA PÚBLICA ===");
-                _logger.LogInformation("🛒 Parámetros: Término={Termino}, Página={Pagina}, Tamaño={Tamano}", termino, pagina, tamano);
+                _logger.LogInformation("🛒 Término de búsqueda: {Termino}", termino);
 
-                // ✅ USAR LA MISMA LÓGICA QUE EL ENDPOINT EXITOSO DE FACTURACIÓN
-                var todosLosProductos = await _inventarioService.ObtenerProductosAsync(null); // Sin JWT para vista pública
+                // ✅ LLAMAR DIRECTAMENTE AL API COMO LO HACE FACTURACIÓN
+                var requestUrl = $"{_apiBaseUrl}/api/Inventario/productos-publicos";
+                
+                _logger.LogInformation("🌐 Llamando al API: {Url}", requestUrl);
 
-                // Filtrar por término de búsqueda si se proporciona (igual que facturación)
-                if (!string.IsNullOrWhiteSpace(termino))
+                var response = await _httpClient.GetAsync(requestUrl);
+
+                if (response.IsSuccessStatusCode)
                 {
-                    todosLosProductos = todosLosProductos.Where(p =>
-                        p.NombreProducto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
-                        (p.Descripcion != null && p.Descripcion.Contains(termino, StringComparison.OrdinalIgnoreCase)) ||
-                        (p.Llanta != null && (
-                            (p.Llanta.Marca != null && p.Llanta.Marca.Contains(termino, StringComparison.OrdinalIgnoreCase)) ||
-                            (p.Llanta.Modelo != null && p.Llanta.Modelo.Contains(termino, StringComparison.OrdinalIgnoreCase))
-                        ))
-                    ).ToList();
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation("✅ Respuesta exitosa del API recibida");
+                    
+                    // Devolver la respuesta directamente del API (ya tiene el formato correcto)
+                    return Content(content, "application/json");
                 }
-
-                // Filtrar solo productos con stock disponible (igual que facturación)
-                var productosDisponibles = todosLosProductos
-                    .Where(p => p.CantidadEnInventario > 0)
-                    .Skip((pagina - 1) * tamano)
-                    .Take(tamano)
-                    .ToList();
-
-                // ✅ MISMA ESTRUCTURA DE RESPUESTA QUE EL ENDPOINT DE FACTURACIÓN
-                var productos = productosDisponibles.Select(p => new
+                else
                 {
-                    productoId = p.ProductoId,
-                    nombreProducto = p.NombreProducto,
-                    descripcion = p.Descripcion ?? "",
-                    precio = p.Precio.HasValue ? p.Precio.Value : 0,
-                    cantidadEnInventario = p.CantidadEnInventario,
-                    stockMinimo = p.StockMinimo,
-                    imagenesProductos = p.Imagenes?.Select(img => new
+                    _logger.LogError("❌ Error del API: {StatusCode}", response.StatusCode);
+                    return Json(new
                     {
-                        Urlimagen = ProcessImageUrl(img.UrlImagen)
-                    }).ToList() ?? new[] { new { Urlimagen = "/images/no-image.png" } }.ToList(),
-                    imagenesUrls = p.Imagenes?.Select(img => ProcessImageUrl(img.UrlImagen)).ToList() ?? new List<string> { "/images/no-image.png" },
-                    esLlanta = p.EsLlanta,
-                    llanta = p.EsLlanta && p.Llanta != null ? new
-                    {
-                        marca = p.Llanta.Marca ?? "",
-                        modelo = p.Llanta.Modelo ?? "",
-                        ancho = p.Llanta.Ancho,
-                        perfil = p.Llanta.Perfil,
-                        diametro = p.Llanta.Diametro,
-                        indiceVelocidad = p.Llanta.IndiceVelocidad ?? "",
-                        medidaCompleta = $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}"
-                    } : null
-                }).ToList();
-
-                _logger.LogInformation("✅ {Count} productos procesados para vista pública", productos.Count);
-
-                return Json(new
-                {
-                    success = true,
-                    productos = productos,
-                    total = productos.Count
-                });
+                        success = false,
+                        message = "Error al obtener productos del servidor",
+                        productos = new List<object>(),
+                        total = 0
+                    });
+                }
             }
             catch (Exception ex)
             {

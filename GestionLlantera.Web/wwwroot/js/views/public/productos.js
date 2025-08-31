@@ -1,3 +1,4 @@
+
 // ========================================
 // VISTA PÚBLICA DE PRODUCTOS - JAVASCRIPT
 // ========================================
@@ -9,9 +10,25 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarBusqueda();
     inicializarFiltros();
     inicializarAnimaciones();
+    
+    // Cargar productos iniciales
+    cargarProductosIniciales();
 
     console.log('✅ Vista pública de productos inicializada correctamente');
 });
+
+// ========================================
+// CARGAR PRODUCTOS INICIALES
+// ========================================
+async function cargarProductosIniciales() {
+    try {
+        console.log('🔄 Cargando productos iniciales...');
+        await buscarProductos('');
+    } catch (error) {
+        console.error('❌ Error cargando productos iniciales:', error);
+        mostrarError('Error al cargar los productos iniciales');
+    }
+}
 
 // ========================================
 // BÚSQUEDA DE PRODUCTOS
@@ -23,7 +40,9 @@ function inicializarBusqueda() {
 
     inputBusqueda.addEventListener('input', function() {
         const termino = this.value.toLowerCase().trim();
-        filtrarProductos();
+        if (termino.length >= 2 || termino.length === 0) {
+            buscarProductos(termino);
+        }
     });
 }
 
@@ -118,42 +137,17 @@ function inicializarAnimaciones() {
 }
 
 // ========================================
-// UTILIDADES
+// FUNCIÓN PRINCIPAL DE BÚSQUEDA - COPIA EXACTA DE FACTURACIÓN
 // ========================================
-function formatearPrecio(precio) {
-    return new Intl.NumberFormat('es-CR', {
-        style: 'currency',
-        currency: 'CRC',
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-    }).format(precio);
-}
-
-function limpiarFiltros() {
-    const inputBusqueda = document.getElementById('busquedaProductos');
-    const selectCategoria = document.getElementById('filtroCategoria');
-
-    if (inputBusqueda) inputBusqueda.value = '';
-    if (selectCategoria) selectCategoria.value = '';
-
-    filtrarProductos();
-}
-
-// ========================================
-// FUNCIONES GLOBALES
-// ========================================
-window.filtrarProductos = filtrarProductos;
-window.limpiarFiltros = limpiarFiltros;
-
-async function buscarProductos(termino) {
+async function buscarProductos(termino = '') {
     try {
         console.log('🔍 === INICIO buscarProductos (Vista Pública) ===');
         console.log('🔍 Término recibido:', `"${termino}"`);
 
-        // Mostrar loading solo si es necesario
+        // Mostrar loading
         mostrarLoading();
 
-        // ✅ USAR LA MISMA URL Y LÓGICA QUE EL ENDPOINT EXITOSO
+        // ✅ USAR LA MISMA URL Y LÓGICA QUE EL ENDPOINT EXITOSO DE FACTURACIÓN
         const response = await fetch('/Public/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
@@ -170,69 +164,11 @@ async function buscarProductos(termino) {
         }
 
         const data = await response.json();
-        console.log('📋 Respuesta del servidor recibida');
+        console.log('📋 Respuesta del servidor recibida:', data);
 
-        if (data && data.productos) {
+        if (data && data.success && data.productos) {
             console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
-
-            // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (igual que facturación)
-            let productosFiltrados = data.productos;
-            if (termino && termino.length >= 2) {
-                const terminoBusqueda = termino.toLowerCase();
-                productosFiltrados = data.productos.filter(producto => {
-                    const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
-                    const descripcion = (producto.descripcion || producto.Descripcion || '').toLowerCase();
-
-                    // ✅ BUSCAR EN NOMBRE Y DESCRIPCIÓN
-                    let cumpleBusqueda = nombre.includes(terminoBusqueda) || descripcion.includes(terminoBusqueda);
-
-                    // ✅ BUSCAR EN MEDIDAS DE LLANTAS (MISMA LÓGICA QUE FACTURACIÓN)
-                    if (!cumpleBusqueda && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
-                        try {
-                            const llantaInfo = producto.llanta || producto.Llanta[0];
-
-                            if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
-                                const ancho = llantaInfo.ancho;
-                                const perfil = llantaInfo.perfil || '';
-                                const diametro = llantaInfo.diametro;
-
-                                // Crear TODOS los formatos de medida para búsqueda
-                                const formatosBusqueda = [
-                                    `${ancho}/${perfil}/R${diametro}`,
-                                    `${ancho}/R${diametro}`,
-                                    `${ancho}/${perfil}/${diametro}`,
-                                    `${ancho}-${perfil}-${diametro}`,
-                                    `${ancho}-${perfil}/${diametro}`,
-                                    `${ancho}x${perfil}x${diametro}`,
-                                    `${ancho} ${perfil} ${diametro}`,
-                                    `${ancho}/${diametro}`,
-                                    `${ancho}-${diametro}`,
-                                    `${ancho}x${diametro}`,
-                                    `${ancho} ${diametro}`,
-                                    `${ancho}`,
-                                    `${perfil}`,
-                                    `${diametro}`,
-                                    `R${diametro}`
-                                ];
-
-                                const textoBusquedaLlanta = formatosBusqueda
-                                    .filter(formato => formato && formato.trim() !== '')
-                                    .join(' ')
-                                    .toLowerCase();
-
-                                cumpleBusqueda = textoBusquedaLlanta.includes(terminoBusqueda);
-                            }
-                        } catch (error) {
-                            console.warn('⚠️ Error procesando medida de llanta para búsqueda:', error);
-                        }
-                    }
-
-                    return cumpleBusqueda;
-                });
-                console.log(`🔍 Productos filtrados por término "${termino}": ${productosFiltrados.length}`);
-            }
-
-            mostrarResultados(productosFiltrados);
+            mostrarResultados(data.productos);
             console.log('📦 Productos mostrados exitosamente en vista pública');
         } else {
             const errorMessage = data.message || 'Error desconocido al obtener productos';
@@ -243,57 +179,281 @@ async function buscarProductos(termino) {
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
         mostrarError('Error al buscar productos: ' + error.message);
+    } finally {
+        ocultarLoading();
     }
     console.log('🔍 === FIN buscarProductos (Vista Pública) ===');
 }
 
-// Placeholder functions for missing dependencies (mostrarLoading, mostrarResultados, mostrarSinResultados, mostrarError)
-// These would typically be defined elsewhere or provided by a framework.
+// ========================================
+// FUNCIONES DE UI - IMPLEMENTACIÓN REAL
+// ========================================
 function mostrarLoading() {
-    console.log("Simulando mostrar loading...");
-    // Implement actual loading indicator logic here
-}
-
-function mostrarResultados(productos) {
-    console.log("Simulando mostrar resultados:", productos);
-    // Implement actual display logic for products here
-    // Example: Clear existing products, append new ones, update counts
-    const listaProductos = document.getElementById('listaProductos'); // Assuming an element with this ID exists
-    if (listaProductos) {
-        listaProductos.innerHTML = ''; // Clear current products
-        if (productos.length > 0) {
-            productos.forEach(producto => {
-                const productoDiv = document.createElement('div');
-                productoDiv.className = 'producto-item';
-                productoDiv.setAttribute('data-nombre', producto.nombreProducto || producto.nombre || '');
-                productoDiv.setAttribute('data-categoria', producto.categoria || '');
-                productoDiv.innerHTML = `
-                    <h3>${producto.nombreProducto || producto.nombre}</h3>
-                    <p>${producto.descripcion || ''}</p>
-                    <p>Precio: ${formatearPrecio(producto.precio || 0)}</p>
-                `;
-                listaProductos.appendChild(productoDiv);
-            });
-        } else {
-            const noResultadosDiv = document.getElementById('noResultados');
-            if (noResultadosDiv) noResultadosDiv.style.display = 'block';
-        }
+    const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
+    if (container) {
+        container.innerHTML = `
+            <div class="d-flex justify-content-center align-items-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span class="ms-3">Buscando productos...</span>
+            </div>
+        `;
     }
 }
 
+function ocultarLoading() {
+    // La función mostrarResultados ya se encarga de limpiar el loading
+}
+
+function mostrarResultados(productos) {
+    console.log('🔄 === INICIO mostrarResultados ===');
+    console.log('🔄 Productos recibidos:', productos ? productos.length : 'null/undefined');
+
+    const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
+    const noResultadosDiv = document.getElementById('noResultados');
+
+    if (!productos || productos.length === 0) {
+        console.log('🔄 No hay productos, mostrando sin resultados');
+        mostrarSinResultados();
+        return;
+    }
+
+    if (!container) {
+        console.error('❌ Container de productos no encontrado');
+        return;
+    }
+
+    // Limpiar container
+    container.innerHTML = '';
+
+    // Ocultar mensaje de sin resultados
+    if (noResultadosDiv) {
+        noResultadosDiv.style.display = 'none';
+    }
+
+    // Generar HTML para cada producto (igual que facturación)
+    productos.forEach((producto, index) => {
+        const card = crearCardProducto(producto);
+        container.appendChild(card);
+        
+        // Animación escalonada
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+
+    console.log(`✅ ${productos.length} productos mostrados en vista pública`);
+}
+
+function crearCardProducto(producto) {
+    // ✅ EXTRAER DATOS DEL PRODUCTO (MISMA LÓGICA QUE FACTURACIÓN)
+    const productoId = producto.productoId;
+    const nombreProducto = producto.nombreProducto || 'Sin nombre';
+    const descripcion = producto.descripcion || '';
+    const precio = producto.precio || 0;
+    const cantidadInventario = producto.cantidadEnInventario || 0;
+    const stockMinimo = producto.stockMinimo || 0;
+    const esLlanta = producto.esLlanta || false;
+
+    // ✅ PROCESAR IMAGEN (MISMA LÓGICA QUE FACTURACIÓN)
+    let imagenUrl = '/images/no-image.png';
+    try {
+        if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
+            imagenUrl = producto.imagenesUrls[0];
+        } else if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen && primeraImagen.Urlimagen) {
+                imagenUrl = primeraImagen.Urlimagen;
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Error procesando imágenes del producto:', error);
+        imagenUrl = '/images/no-image.png';
+    }
+
+    // ✅ PROCESAR INFORMACIÓN DE LLANTA (MISMA LÓGICA QUE FACTURACIÓN)
+    let medidaCompleta = '';
+    let infoLlanta = '';
+    
+    if (esLlanta && producto.llanta) {
+        try {
+            const llanta = producto.llanta;
+            if (llanta.medidaCompleta) {
+                medidaCompleta = llanta.medidaCompleta;
+            } else if (llanta.ancho && llanta.diametro) {
+                if (llanta.perfil && llanta.perfil > 0) {
+                    medidaCompleta = `${llanta.ancho}/${llanta.perfil}R${llanta.diametro}`;
+                } else {
+                    medidaCompleta = `${llanta.ancho}/R${llanta.diametro}`;
+                }
+            }
+            
+            if (medidaCompleta) {
+                infoLlanta = `
+                    <div class="medida-llanta mb-2">
+                        <span class="badge bg-info">${medidaCompleta}</span>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta:', error);
+        }
+    }
+
+    // ✅ CALCULAR PRECIOS (MISMA LÓGICA QUE FACTURACIÓN)
+    const CONFIGURACION_PRECIOS = {
+        efectivo: { multiplicador: 1.0 },
+        tarjeta: { multiplicador: 1.05 }
+    };
+
+    const precioBase = (typeof precio === 'number') ? precio : 0;
+    const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
+    const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
+
+    // ✅ CREAR CARD HTML (SIMILAR A FACTURACIÓN PERO ADAPTADO PARA VISTA PÚBLICA)
+    const card = document.createElement('div');
+    card.className = 'col-lg-4 col-md-6 mb-4';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = 'all 0.3s ease';
+
+    const stockClase = cantidadInventario <= 0 ? 'border-danger' : cantidadInventario <= stockMinimo ? 'border-warning' : '';
+
+    card.innerHTML = `
+        <div class="card h-100 producto-item ${stockClase}" data-nombre="${nombreProducto.toLowerCase()}" data-categoria="${esLlanta ? 'llanta' : 'accesorio'}">
+            <div class="card-img-container" style="height: 200px; overflow: hidden;">
+                <img src="${imagenUrl}" 
+                     class="card-img-top h-100 w-100" 
+                     style="object-fit: cover;" 
+                     alt="${nombreProducto}"
+                     onerror="this.src='/images/no-image.png'">
+            </div>
+            <div class="card-body d-flex flex-column">
+                <h6 class="card-title" title="${nombreProducto}">
+                    ${nombreProducto.length > 30 ? nombreProducto.substring(0, 30) + '...' : nombreProducto}
+                </h6>
+                
+                ${infoLlanta}
+                
+                <p class="card-text text-muted small mb-3">
+                    ${descripcion.length > 80 ? descripcion.substring(0, 80) + '...' : descripcion}
+                </p>
+                
+                <div class="mt-auto">
+                    <div class="precios-container mb-3">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Efectivo/SINPE</small>
+                                <span class="text-success fw-bold">₡${formatearMoneda(precioEfectivo)}</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Tarjeta</small>
+                                <span class="text-warning fw-bold">₡${formatearMoneda(precioTarjeta)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stock-info mb-3">
+                        <small class="text-muted">Stock disponible: </small>
+                        <span class="${cantidadInventario <= 0 ? 'text-danger' : cantidadInventario <= stockMinimo ? 'text-warning' : 'text-success'} fw-bold">
+                            ${cantidadInventario} ${cantidadInventario === 1 ? 'unidad' : 'unidades'}
+                        </span>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-sm" onclick="verDetalleProducto(${productoId})">
+                            <i class="bi bi-eye"></i> Ver detalles
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    return card;
+}
+
 function mostrarSinResultados() {
-    console.log("Simulando mostrar sin resultados...");
-    // Implement actual logic to display "no results" message
-    const listaProductos = document.getElementById('listaProductos');
-    if (listaProductos) {
-        listaProductos.innerHTML = ''; // Clear current products
-        const noResultadosDiv = document.getElementById('noResultados');
-        if (noResultadosDiv) noResultadosDiv.style.display = 'block';
+    console.log('🔄 Mostrando sin resultados...');
+    const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
+    const noResultadosDiv = document.getElementById('noResultados');
+    
+    if (container) {
+        container.innerHTML = ''; // Limpiar productos
+    }
+    
+    if (noResultadosDiv) {
+        noResultadosDiv.style.display = 'block';
+    } else if (container) {
+        // Si no existe el div de no resultados, crearlo
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div class="alert alert-info">
+                    <i class="bi bi-search fs-1 d-block mb-3"></i>
+                    <h5>No se encontraron productos</h5>
+                    <p class="mb-0">Intenta con otros términos de búsqueda</p>
+                </div>
+            </div>
+        `;
     }
 }
 
 function mostrarError(mensaje) {
-    console.error("Simulando mostrar error:", mensaje);
-    // Implement actual error display logic here
-    alert(`Error: ${mensaje}`); // Simple alert for demonstration
+    console.error('❌ Mostrando error:', mensaje);
+    const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
+    
+    if (container) {
+        container.innerHTML = `
+            <div class="col-12 text-center py-5">
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle fs-1 d-block mb-3"></i>
+                    <h5>Error al cargar productos</h5>
+                    <p class="mb-0">${mensaje}</p>
+                    <button class="btn btn-outline-danger mt-3" onclick="cargarProductosIniciales()">
+                        <i class="bi bi-arrow-clockwise"></i> Reintentar
+                    </button>
+                </div>
+            </div>
+        `;
+    }
 }
+
+// ========================================
+// UTILIDADES
+// ========================================
+function formatearMoneda(precio) {
+    return new Intl.NumberFormat('es-CR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(precio);
+}
+
+function formatearPrecio(precio) {
+    return formatearMoneda(precio);
+}
+
+function limpiarFiltros() {
+    const inputBusqueda = document.getElementById('busquedaProductos');
+    const selectCategoria = document.getElementById('filtroCategoria');
+
+    if (inputBusqueda) inputBusqueda.value = '';
+    if (selectCategoria) selectCategoria.value = '';
+
+    // Recargar todos los productos
+    cargarProductosIniciales();
+}
+
+function verDetalleProducto(productoId) {
+    // Redirigir a la página de detalle del producto
+    window.location.href = `/Public/DetalleProducto/${productoId}`;
+}
+
+// ========================================
+// FUNCIONES GLOBALES
+// ========================================
+window.filtrarProductos = filtrarProductos;
+window.limpiarFiltros = limpiarFiltros;
+window.buscarProductos = buscarProductos;
+window.verDetalleProducto = verDetalleProducto;
