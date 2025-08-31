@@ -1413,8 +1413,8 @@ namespace API.Controllers
                             tipoTerreno = p.Llanta.First().TipoTerreno ?? "",
                             capas = p.Llanta.First().Capas,
                             medidaCompleta = p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
-                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}R{p.Llanta.First().Diametro}"
-                                : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}"
+                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}/R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho}/R{p.Llanta.First().Diametro}"
                         } : null,
                         
                         // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
