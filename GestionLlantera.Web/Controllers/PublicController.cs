@@ -2,6 +2,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Tuco.Clases.DTOs.Inventario;
 using System.Text.Json;
+using System.Linq;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -92,6 +93,32 @@ namespace GestionLlantera.Web.Controllers
                             { 
                                 PropertyNameCaseInsensitive = true 
                             });
+
+                            // ✅ PROCESAR IMÁGENES COMO EN EL MÉTODO ObtenerProductosParaFacturacion
+                            if (producto != null && item.TryGetProperty("imagenesUrls", out var imagenesUrlsProp))
+                            {
+                                var imagenesUrls = new List<string>();
+                                foreach (var imgUrl in imagenesUrlsProp.EnumerateArray())
+                                {
+                                    var url = imgUrl.GetString();
+                                    if (!string.IsNullOrEmpty(url))
+                                    {
+                                        imagenesUrls.Add(ProcessImageUrl(url));
+                                    }
+                                }
+
+                                // Convertir URLs a ImagenProductoDTO para compatibilidad con la vista
+                                if (imagenesUrls.Any())
+                                {
+                                    producto.Imagenes = imagenesUrls.Select(url => new Tuco.Clases.DTOs.Inventario.ImagenProductoDTO
+                                    {
+                                        UrlImagen = url
+                                    }).ToList();
+
+                                    _logger.LogInformation("🖼️ Imágenes procesadas para producto {ProductoId}: {CantidadImagenes}", 
+                                        id, producto.Imagenes.Count);
+                                }
+                            }
                             break;
                         }
                     }
