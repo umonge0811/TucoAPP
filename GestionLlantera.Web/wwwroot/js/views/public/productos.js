@@ -447,8 +447,9 @@ function limpiarFiltros() {
 
 function verDetalleProducto(productoId) {
     console.log('🔍 Navegando a detalle del producto:', productoId);
-    // Redirigir a la página de detalle del producto
-    window.location.href = `/Public/DetalleProducto/${productoId}`;
+    // Redirigir a la página de detalle del producto usando ruta relativa
+    const baseUrl = window.location.origin;
+    window.location.href = `${baseUrl}/Public/DetalleProducto/${productoId}`;
 }
 
 // ========================================
