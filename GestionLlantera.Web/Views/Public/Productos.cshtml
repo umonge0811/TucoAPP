@@ -1,0 +1,143 @@
+
+@model List<Tuco.Clases.DTOs.Inventario.ProductoDTO>
+@{
+    ViewData["Title"] = "Nuestros Productos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="productos-publicos-container">
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container">
+            <div class="row justify-content-center text-center">
+                <div class="col-lg-8">
+                    <h1 class="display-4 fw-bold mb-3">Nuestros Productos</h1>
+                    <p class="lead mb-4">Encuentra las mejores llantas y productos para tu vehículo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" id="busquedaProductos" class="form-control" placeholder="Buscar productos...">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <select id="filtroCategoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    <option value="llanta">Llantas</option>
+                    <option value="accesorio">Accesorios</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Grid de Productos -->
+        <div class="row" id="productosGrid">
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var producto in Model)
+                {
+                    <div class="col-lg-3 col-md-4 col-sm-6 mb-4 producto-item" data-nombre="@producto.NombreProducto.ToLower()" data-categoria="@(producto.Llanta?.Any() == true ? "llanta" : "accesorio")">
+                        <div class="card producto-card h-100">
+                            <div class="card-image-container">
+                                @if (producto.Imagenes?.Any() == true)
+                                {
+                                    <img src="@producto.Imagenes.First().Urlimagen" class="card-img-top" alt="@producto.NombreProducto">
+                                }
+                                else
+                                {
+                                    <img src="/images/no-image.png" class="card-img-top" alt="Sin imagen">
+                                }
+                                <div class="card-overlay">
+                                    <a href="@Url.Action("DetalleProducto", "Public", new { id = producto.ProductoId })" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i> Ver Detalle
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">@producto.NombreProducto</h5>
+                                
+                                @if (producto.Llanta?.Any() == true)
+                                {
+                                    var llanta = producto.Llanta.First();
+                                    <div class="llanta-specs mb-2">
+                                        <small class="text-muted">
+                                            @if (llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+                                            {
+                                                @if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                                                {
+                                                    <span>@llanta.Ancho/@llanta.Perfil R@llanta.Diametro</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>@llanta.Ancho R@llanta.Diametro</span>
+                                                }
+                                            }
+                                            @if (!string.IsNullOrEmpty(llanta.Marca))
+                                            {
+                                                <br><strong>@llanta.Marca</strong>
+                                            }
+                                        </small>
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(producto.Descripcion))
+                                {
+                                    <p class="card-text text-muted small">
+                                        @(producto.Descripcion.Length > 100 ? producto.Descripcion.Substring(0, 100) + "..." : producto.Descripcion)
+                                    </p>
+                                }
+
+                                <div class="mt-auto">
+                                    <div class="precio-stock-info">
+                                        <div class="precio mb-2">
+                                            <span class="h5 text-primary mb-0">$@producto.Precio?.ToString("N2")</span>
+                                        </div>
+                                        <div class="stock-info">
+                                            <small class="text-success">
+                                                <i class="fas fa-check-circle me-1"></i>
+                                                @producto.CantidadEnInventario unidades disponibles
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                        <h4>No hay productos disponibles</h4>
+                        <p class="text-muted">Vuelve pronto para ver nuestros productos.</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Mensaje cuando no hay resultados de búsqueda -->
+        <div id="noResultados" class="col-12 text-center py-5" style="display: none;">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4>No se encontraron productos</h4>
+            <p class="text-muted">Intenta con otros términos de búsqueda.</p>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/views/public/productos.css">
+}
+
+@section Scripts {
+    <script src="~/js/views/public/productos.js"></script>
+}

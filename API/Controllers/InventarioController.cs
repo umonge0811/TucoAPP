@@ -1354,5 +1354,112 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al buscar tipos de terreno" });
             }
         }
+
+        // =====================================
+        // ENDPOINTS PÚBLICOS (SIN AUTENTICACIÓN)
+        // =====================================
+
+        [HttpGet("productos-publicos")]
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductosPublicos()
+        {
+            try
+            {
+                _logger.LogInformation("🌐 === OBTENIENDO PRODUCTOS PÚBLICOS ===");
+
+                var productos = await _context.Productos
+                    .Include(p => p.ImagenesProductos)
+                    .Include(p => p.Llanta)
+                    .Where(p => p.CantidadEnInventario > 0) // Solo productos con stock
+                    .Select(p => new
+                    {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.Descripcion,
+                        p.Precio,
+                        p.CantidadEnInventario,
+                        p.FechaUltimaActualizacion,
+                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        {
+                            img.ImagenId,
+                            img.Urlimagen,
+                            img.Descripcion,
+                            img.FechaCreacion
+                        }),
+                        Llanta = p.Llanta.Select(l => new
+                        {
+                            l.LlantaId,
+                            l.Ancho,
+                            l.Perfil,
+                            l.Diametro,
+                            l.Marca,
+                            l.Modelo,
+                            l.Capas,
+                            l.IndiceVelocidad,
+                            l.TipoTerreno
+                        }).FirstOrDefault()
+                    })
+                    .OrderBy(p => p.NombreProducto)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Productos públicos obtenidos: {Cantidad}", productos.Count);
+                return Ok(productos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener productos públicos");
+                return StatusCode(500, new { message = "Error al obtener productos", timestamp = DateTime.Now });
+            }
+        }
+
+        [HttpGet("productos-publicos/{id}")]
+        public async Task<ActionResult<object>> ObtenerProductoPublicoPorId(int id)
+        {
+            try
+            {
+                var producto = await _context.Productos
+                    .Include(p => p.ImagenesProductos)
+                    .Include(p => p.Llanta)
+                    .Where(p => p.ProductoId == id && p.CantidadEnInventario > 0)
+                    .Select(p => new
+                    {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.Descripcion,
+                        p.Precio,
+                        p.CantidadEnInventario,
+                        p.FechaUltimaActualizacion,
+                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        {
+                            img.ImagenId,
+                            img.Urlimagen,
+                            img.Descripcion,
+                            img.FechaCreacion
+                        }),
+                        Llanta = p.Llanta.Select(l => new
+                        {
+                            l.LlantaId,
+                            l.Ancho,
+                            l.Perfil,
+                            l.Diametro,
+                            l.Marca,
+                            l.Modelo,
+                            l.Capas,
+                            l.IndiceVelocidad,
+                            l.TipoTerreno
+                        }).FirstOrDefault()
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (producto == null)
+                    return NotFound(new { message = "Producto no encontrado o sin stock" });
+
+                return Ok(producto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener producto público por ID: {Id}", id);
+                return StatusCode(500, new { message = "Error al obtener producto" });
+            }
+        }
     }
 }

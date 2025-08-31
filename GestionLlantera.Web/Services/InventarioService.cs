@@ -1,5 +1,4 @@
-
-// Ubicación: GestionLlantera.Web/Services/InventarioService.cs
+// Se agregan métodos para la obtención de productos públicos para el sitio web.
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -7,6 +6,7 @@ using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
 using Tuco.Clases.DTOs.Inventario;
+using System.Text.Json; // Se necesita para JsonSerializerOptions
 
 namespace GestionLlantera.Web.Services
 {
@@ -26,6 +26,9 @@ namespace GestionLlantera.Web.Services
         /// y construir URLs completas para los endpoints del inventario
         private readonly ApiConfigurationService _apiConfig;
 
+        // Opciones para JsonSerializer para manejar la serialización de forma consistente
+        private readonly JsonSerializerOptions _jsonOptions;
+
         /// ✅ CONSTRUCTOR: CONFIGURACIÓN DE DEPENDENCIAS
         /// <summary>
         /// Inicializa el servicio de inventario con todas las dependencias necesarias
@@ -42,6 +45,13 @@ namespace GestionLlantera.Web.Services
 
             /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
             _apiConfig = apiConfig;
+
+            // Configuración de JsonSerializerOptions para consistencia
+            _jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true, // Ignora mayúsculas/minúsculas en los nombres de propiedad
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase // Convierte nombres de propiedad a camelCase si es necesario
+            };
 
             // Log de diagnóstico para verificar la configuración
             _logger.LogInformation("🔧 InventarioService inicializado. URL base API: {BaseUrl}", _apiConfig.BaseUrl);
@@ -148,13 +158,13 @@ namespace GestionLlantera.Web.Services
                                 {
                                     // Usar la URL base del servicio centralizado
                                     string apiBaseUrl = _apiConfig.BaseUrl.TrimEnd('/');
-                                    
+
                                     // Asegurar que la URL de imagen comience con "/"
                                     if (!imagenUrl.StartsWith("/"))
                                     {
                                         imagenUrl = "/" + imagenUrl;
                                     }
-                                    
+
                                     imagenUrl = $"{apiBaseUrl}{imagenUrl}";
                                 }
 
@@ -452,7 +462,7 @@ namespace GestionLlantera.Web.Services
                         indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
                         tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
                     } : null,
-                    imagenes = new List<object>()
+                    Imagenes = new List<object>()
                 };
 
                 var jsonContent = JsonConvert.SerializeObject(productoRequest,
@@ -1852,6 +1862,71 @@ namespace GestionLlantera.Web.Services
             }
             catch
             {
+                return null;
+            }
+        }
+
+        // Nuevos métodos para vistas públicas
+        public async Task<List<ProductoDTO>> ObtenerProductosPublicosAsync()
+        {
+            try
+            {
+                // Se utiliza el endpoint específico para productos públicos
+                var url = _apiConfig.GetApiUrl("Inventario/productos-publicos");
+                _logger.LogInformation($"🌐 URL construida para productos públicos: {url}");
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
+                    var productos = JsonSerializer.Deserialize<List<ProductoDTO>>(json, _jsonOptions);
+                    _logger.LogInformation($"✅ Se obtuvieron {productos?.Count ?? 0} productos públicos.");
+                    return productos ?? new List<ProductoDTO>();
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"❌ Error al obtener productos públicos: {response.StatusCode} - {errorContent}");
+                    return new List<ProductoDTO>();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error general al obtener productos públicos");
+                return new List<ProductoDTO>();
+            }
+        }
+
+        public async Task<ProductoDTO> ObtenerProductoPublicoPorIdAsync(int id)
+        {
+            try
+            {
+                // Se utiliza el endpoint específico para el detalle de productos públicos
+                var url = _apiConfig.GetApiUrl($"Inventario/productos-publicos/{id}");
+                _logger.LogInformation($"🌐 URL construida para producto público por ID: {url}");
+
+                var response = await _httpClient.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
+                    var producto = JsonSerializer.Deserialize<ProductoDTO>(json, _jsonOptions);
+                    _logger.LogInformation($"✅ Se obtuvo el producto público con ID: {id}.");
+                    return producto;
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError($"❌ Error al obtener producto público con ID {id}: {response.StatusCode} - {errorContent}");
+                    return null; // Retorna null si no se encuentra o hay un error
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener producto público con ID: {Id}", id);
                 return null;
             }
         }

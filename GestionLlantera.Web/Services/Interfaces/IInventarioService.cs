@@ -24,9 +24,9 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<List<string>> BuscarTiposTerrenoAsync(string filtro = "", string jwtToken = null);
         Task<List<InventarioProgramadoDTO>> ObtenerTodosLosInventariosAsync(string jwtToken = null);
         Task<List<dynamic>> ObtenerDiscrepanciasInventarioAsync(int inventarioId, string jwtToken = null);
-    
 
-        
+
+
         Task<bool> EliminarProductoAsync(int id, string jwtToken = null);
 
         Task<AjusteStockRapidoResponseDTO> AjustarStockRapidoAsync(int id, AjusteStockRapidoDTO ajusteDto, string jwtToken = null);
@@ -42,5 +42,9 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<bool> CompletarInventarioAsync(int id, string jwtToken = null);
         Task<Stream> ExportarResultadosInventarioExcelAsync(int id, string jwtToken = null);
         Task<Stream> ExportarResultadosInventarioPDFAsync(int id, string jwtToken = null);
+
+        // Métodos públicos para la web
+        Task<List<ProductoDTO>> ObtenerProductosPublicosAsync();
+        Task<ProductoDTO> ObtenerProductoPublicoPorIdAsync(int id);
     }
 }
