@@ -1882,6 +1882,26 @@ namespace GestionLlantera.Web.Services
                     var json = await response.Content.ReadAsStringAsync();
                     // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
                     var productos = System.Text.Json.JsonSerializer.Deserialize<List<ProductoDTO>>(json, _jsonOptions);
+
+                    // Procesar URLs de imágenes para productos públicos
+                    if (productos != null)
+                    {
+                        foreach (var producto in productos)
+                        {
+                            if (producto.Imagenes?.Any() == true)
+                            {
+                                foreach (var imagen in producto.Imagenes)
+                                {
+                                    if (!string.IsNullOrEmpty(imagen.UrlImagen) && !imagen.UrlImagen.StartsWith("http"))
+                                    {
+                                        // Asegurarse de que la URL base termina con '/' y la URL de la imagen no empieza con '/'
+                                        imagen.UrlImagen = $"{_httpClient.BaseAddress?.ToString().TrimEnd('/')}/{imagen.UrlImagen.TrimStart('/')}";
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     _logger.LogInformation($"✅ Se obtuvieron {productos?.Count ?? 0} productos públicos.");
                     return productos ?? new List<ProductoDTO>();
                 }
@@ -1914,6 +1934,20 @@ namespace GestionLlantera.Web.Services
                     var json = await response.Content.ReadAsStringAsync();
                     // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
                     var producto = System.Text.Json.JsonSerializer.Deserialize<ProductoDTO>(json, _jsonOptions);
+
+                    // Procesar URLs de imágenes
+                    if (producto?.Imagenes?.Any() == true)
+                    {
+                        foreach (var imagen in producto.Imagenes)
+                        {
+                            if (!string.IsNullOrEmpty(imagen.UrlImagen) && !imagen.UrlImagen.StartsWith("http"))
+                            {
+                                // Asegurarse de que la URL base termina con '/' y la URL de la imagen no empieza con '/'
+                                imagen.UrlImagen = $"{_httpClient.BaseAddress?.ToString().TrimEnd('/')}/{imagen.UrlImagen.TrimStart('/')}";
+                            }
+                        }
+                    }
+
                     _logger.LogInformation($"✅ Se obtuvo el producto público con ID: {id}.");
                     return producto;
                 }

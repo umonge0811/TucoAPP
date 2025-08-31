@@ -1,4 +1,3 @@
-
 using API.Data;
 using API.Extensions;
 using API.ServicesAPI;
@@ -36,7 +35,7 @@ namespace API.Controllers
             IWebHostEnvironment webHostEnvironment,
             ILogger<InventarioController> logger,
             INotificacionService notificacionService,
-            IPermisosService permisosService, 
+            IPermisosService permisosService,
             IAjustesInventarioPendientesService ajustesService)
         {
             _context = context;
@@ -85,10 +84,10 @@ namespace API.Controllers
                     .Take(5)
                     .Select(p => new { p.PedidoId, p.Estado, p.FechaPedido })
                     .ToListAsync();
-                
+
                 foreach (var ejemplo in ejemplosPedidosPendientes)
                 {
-                    _logger.LogInformation("🔗 Pedido pendiente ejemplo: ID={PedidoId}, Estado={Estado}, Fecha={Fecha}", 
+                    _logger.LogInformation("🔗 Pedido pendiente ejemplo: ID={PedidoId}, Estado={Estado}, Fecha={Fecha}",
                         ejemplo.PedidoId, ejemplo.Estado, ejemplo.FechaPedido);
                 }
 
@@ -114,8 +113,8 @@ namespace API.Controllers
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
                         TienePedidoPendiente = _context.DetallePedidos
-                            .Where(dp => dp.ProductoId == p.ProductoId && 
-                                        dp.Pedido != null && 
+                            .Where(dp => dp.ProductoId == p.ProductoId &&
+                                        dp.Pedido != null &&
                                         dp.Pedido.Estado == "Pendiente")
                             .Any(),
                         Permisos = new
@@ -153,22 +152,22 @@ namespace API.Controllers
 
                 foreach (var prod in productosConPedidoPendiente.Take(3))
                 {
-                    _logger.LogInformation("✅ Producto con pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}", 
+                    _logger.LogInformation("✅ Producto con pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}",
                         prod.ProductoId, prod.NombreProducto, prod.TienePedidoPendiente);
-                    
+
                     // Verificar manualmente los detalles de pedidos para este producto
                     var detallesParaEsteProducto = await _context.DetallePedidos
                         .Include(dp => dp.Pedido)
                         .Where(dp => dp.ProductoId == prod.ProductoId)
                         .Select(dp => new { dp.DetalleId, dp.ProductoId, PedidoId = dp.Pedido.PedidoId, Estado = dp.Pedido.Estado })
                         .ToListAsync();
-                    
-                    _logger.LogInformation("📋 Detalles encontrados para producto {ProductoId}: {Cantidad}", 
+
+                    _logger.LogInformation("📋 Detalles encontrados para producto {ProductoId}: {Cantidad}",
                         prod.ProductoId, detallesParaEsteProducto.Count);
-                    
+
                     foreach (var detalle in detallesParaEsteProducto)
                     {
-                        _logger.LogInformation("   - Detalle ID={DetalleId}, PedidoId={PedidoId}, Estado={Estado}", 
+                        _logger.LogInformation("   - Detalle ID={DetalleId}, PedidoId={PedidoId}, Estado={Estado}",
                             detalle.DetalleId, detalle.PedidoId, detalle.Estado);
                     }
                 }
@@ -177,7 +176,7 @@ namespace API.Controllers
                 var productosSinPedidoPendiente = productos.Where(p => !p.TienePedidoPendiente).Take(2).ToList();
                 foreach (var prod in productosSinPedidoPendiente)
                 {
-                    _logger.LogInformation("❌ Producto SIN pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}", 
+                    _logger.LogInformation("❌ Producto SIN pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}",
                         prod.ProductoId, prod.NombreProducto, prod.TienePedidoPendiente);
                 }
 
@@ -504,13 +503,13 @@ namespace API.Controllers
                     {
                         // Limpiar el nombre del producto para usarlo en el archivo (incluyendo medida si es llanta)
                         string nombreProductoLimpio = LimpiarNombreArchivo(producto.NombreProducto, id);
-                        
+
                         // Obtener la extensión del archivo original
                         string extension = Path.GetExtension(imagen.FileName);
-                        
+
                         // Crear nombre compuesto: ProductoID_Consecutivo_NombreProducto.extension
                         string nombreArchivo = $"{id}_{consecutivo}_{nombreProductoLimpio}{extension}";
-                        
+
                         string rutaArchivo = Path.Combine(uploadsFolder, nombreArchivo);
                         consecutivo++;
 
@@ -522,7 +521,8 @@ namespace API.Controllers
                         var imagenProducto = new ImagenesProducto
                         {
                             ProductoId = id,
-                            Urlimagen = $"/uploads/productos/{nombreArchivo}",
+                            Urlimagen = $"/uploads/productos/{nombreArchivo}", // Esto es lo que se guarda en la DB
+                            NombreArchivo = nombreArchivo, // Guardar el nombre del archivo para referencia
                             Descripcion = $"Imagen de {producto.NombreProducto}",
                             FechaCreacion = DateTime.Now
                         };
@@ -836,7 +836,7 @@ namespace API.Controllers
                 await _context.SaveChangesAsync();
 
                 // ✅ PRIMERO: Asignar automáticamente al creador con TODOS los permisos
-                _logger.LogInformation("📋 Asignando automáticamente al creador (Usuario ID: {CreadorId}) con todos los permisos", 
+                _logger.LogInformation("📋 Asignando automáticamente al creador (Usuario ID: {CreadorId}) con todos los permisos",
                     inventario.UsuarioCreadorId);
 
                 var asignacionCreador = new AsignacionUsuarioInventario
@@ -859,7 +859,7 @@ namespace API.Controllers
                         // ✅ EVITAR DUPLICAR AL CREADOR
                         if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
                         {
-                            _logger.LogInformation("⚠️ Saltando asignación duplicada del creador (Usuario ID: {CreadorId})", 
+                            _logger.LogInformation("⚠️ Saltando asignación duplicada del creador (Usuario ID: {CreadorId})",
                                 inventario.UsuarioCreadorId);
                             continue;
                         }
@@ -1157,7 +1157,7 @@ namespace API.Controllers
                             // Formato sin perfil: 215R16
                             medidaLlanta = $"{llanta.Ancho}R{llanta.Diametro}";
                         }
-                        
+
                         // Agregar medida al nombre: "NombreProducto_215-55R16"
                         nombreFinal = $"{nombreProducto}_{medidaLlanta}";
                     }
@@ -1172,24 +1172,24 @@ namespace API.Controllers
             // Reemplazar caracteres no válidos por guiones bajos
             char[] caracteresInvalidos = Path.GetInvalidFileNameChars();
             string nombreLimpio = nombreFinal;
-            
+
             foreach (char c in caracteresInvalidos)
             {
                 nombreLimpio = nombreLimpio.Replace(c, '_');
             }
-            
+
             // Reemplazar espacios y caracteres especiales por guiones bajos
             nombreLimpio = nombreLimpio.Replace(' ', '_')
                                      .Replace('-', '_')
                                      .Replace('/', '_')
                                      .Trim('_');
-            
+
             // Limitar a 70 caracteres para acomodar la medida adicional
             if (nombreLimpio.Length > 70)
             {
                 nombreLimpio = nombreLimpio.Substring(0, 70).TrimEnd('_');
             }
-            
+
             return nombreLimpio;
         }
 
@@ -1360,43 +1360,43 @@ namespace API.Controllers
         // =====================================
 
         [HttpGet("productos-publicos")]
-        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductosPublicos()
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<ProductoDTO>>> ObtenerProductosPublicos()
         {
             try
             {
                 _logger.LogInformation("🌐 === OBTENIENDO PRODUCTOS PÚBLICOS ===");
 
                 var productos = await _context.Productos
-                    .Include(p => p.ImagenesProductos)
+                    .Where(p => p.CantidadEnInventario > 0)
                     .Include(p => p.Llanta)
-                    .Where(p => p.CantidadEnInventario > 0) // Solo productos con stock
-                    .Select(p => new
+                    .Include(p => p.ImagenesProductos)
+                    .Select(p => new ProductoDTO
                     {
-                        p.ProductoId,
-                        p.NombreProducto,
-                        p.Descripcion,
-                        p.Precio,
-                        p.CantidadEnInventario,
-                        p.FechaUltimaActualizacion,
-                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        ProductoId = p.ProductoId,
+                        NombreProducto = p.NombreProducto,
+                        Descripcion = p.Descripcion,
+                        Precio = p.Precio,
+                        CantidadEnInventario = p.CantidadEnInventario,
+                        Llanta = p.Llanta != null ? new LlantaDTO
                         {
-                            img.ImagenId,
-                            img.Urlimagen,
-                            img.Descripcion,
-                            img.FechaCreacion
-                        }),
-                        Llanta = p.Llanta.Select(l => new
+                            LlantaId = p.Llanta.LlantaId,
+                            Marca = p.Llanta.Marca,
+                            Modelo = p.Llanta.Modelo,
+                            Ancho = p.Llanta.Ancho,
+                            Perfil = p.Llanta.Perfil,
+                            Diametro = p.Llanta.Diametro,
+                            IndiceVelocidad = p.Llanta.IndiceVelocidad,
+                            IndiceCarga = p.Llanta.IndiceCarga,
+                            TipoTerreno = p.Llanta.TipoTerreno,
+                            TipoLlanta = p.Llanta.TipoLlanta
+                        } : null,
+                        Imagenes = p.ImagenesProductos.Select(img => new ImagenProductoDTO
                         {
-                            l.LlantaId,
-                            l.Ancho,
-                            l.Perfil,
-                            l.Diametro,
-                            l.Marca,
-                            l.Modelo,
-                            l.Capas,
-                            l.IndiceVelocidad,
-                            l.TipoTerreno
-                        }).FirstOrDefault()
+                            ImagenId = img.ImagenId,
+                            UrlImagen = Url.Content($"~/uploads/productos/{img.NombreArchivo}"),
+                            EsPrincipal = img.EsPrincipal
+                        }).ToList()
                     })
                     .OrderBy(p => p.NombreProducto)
                     .ToListAsync();
