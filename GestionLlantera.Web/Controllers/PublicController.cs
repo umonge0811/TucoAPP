@@ -50,7 +50,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
                 
-                var producto = await _inventarioService.ObtenerProductoPublicoPorIdAsync(id);
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
 
                 if (producto == null)
                 {

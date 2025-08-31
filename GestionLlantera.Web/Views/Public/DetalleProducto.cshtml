@@ -27,12 +27,12 @@
                 <!-- Galería de Imágenes -->
                 <div class="col-lg-6 mb-4">
                     <div class="galeria-producto">
-                        @if (Model.Imagenes?.Any() == true)
+                        @if (Model.ImagenesProductos?.Any() == true)
                         {
                             <!-- Imagen Principal -->
                             <div class="imagen-principal-container">
                                 <img id="imagenPrincipal" 
-                                     src="@Model.Imagenes.First().UrlImagen" 
+                                     src="@Model.ImagenesProductos.First().Urlimagen" 
                                      alt="@Model.NombreProducto" 
                                      class="imagen-principal"
                                      data-bs-toggle="modal" 
@@ -42,16 +42,16 @@
                                 </div>
                             </div>
 
-                            @if (Model.Imagenes.Count > 1)
+                            @if (Model.ImagenesProductos.Count > 1)
                             {
                                 <!-- Miniaturas -->
                                 <div class="miniaturas-container">
-                                    @for (int i = 0; i < Model.Imagenes.Count; i++)
+                                    @for (int i = 0; i < Model.ImagenesProductos.Count; i++)
                                     {
                                         <div class="miniatura @(i == 0 ? "active" : "")" 
-                                             data-imagen="@Model.Imagenes[i].UrlImagen"
-                                             onclick="cambiarImagenPrincipal('@Model.Imagenes[i].UrlImagen', this)">
-                                            <img src="@Model.Imagenes[i].UrlImagen" alt="Vista @(i + 1)">
+                                             data-imagen="@Model.ImagenesProductos[i].Urlimagen"
+                                             onclick="cambiarImagenPrincipal('@Model.ImagenesProductos[i].Urlimagen', this)">
+                                            <img src="@Model.ImagenesProductos[i].Urlimagen" alt="Vista @(i + 1)">
                                         </div>
                                     }
                                 </div>
@@ -189,7 +189,7 @@
                     </div>
                     <div class="modal-body text-center p-0">
                         <img id="imagenModalGrande" 
-                             src="@(Model.Imagenes?.FirstOrDefault()?.UrlImagen ?? "/images/no-image.png")" 
+                             src="@(Model.ImagenesProductos?.FirstOrDefault()?.Urlimagen ?? "/images/no-image.png")" 
                              alt="@Model.NombreProducto" 
                              class="w-100">
                     </div>
