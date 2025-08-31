@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Inicio";
 }
 
@@ -15,10 +15,16 @@
             <div class="hero-content text-white">
                 <h1 class="display-4 fw-bold mb-4">Llantera Tuco</h1>
                 <p class="fs-4 mb-4">Tu mejor opción en llantas y servicios automotrices. Calidad y profesionalismo garantizado.</p>
-                <a href="#contacto" class="btn btn-primary-custom d-inline-flex align-items-center gap-2">
-                    Agendar Servicio
-                    <i class="bi bi-chevron-right"></i>
-                </a>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="@Url.Action("Productos", "Public")" class="btn btn-primary-custom d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-grid-3x3-gap"></i>
+                        Ver Productos
+                    </a>
+                    <a href="#contacto" class="btn btn-outline-light d-inline-flex align-items-center gap-2">
+                        Agendar Servicio
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -53,8 +59,59 @@
     </div>
 </div>
 
+@* Products Section *@
+<div id="productos" class="py-5 bg-white">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-6 d-flex align-items-center">
+                <div>
+                    <h2 class="display-6 fw-bold mb-4">Nuestros Productos</h2>
+                    <p class="fs-5 text-muted mb-4">
+                        Contamos con una amplia variedad de llantas y accesorios de las mejores marcas. 
+                        Encuentra el producto perfecto para tu vehículo con stock actualizado en tiempo real.
+                    </p>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="@Url.Action("Productos", "Public")" class="btn btn-primary btn-lg d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-grid-3x3-gap"></i>
+                            Ver Todos los Productos
+                        </a>
+                        <a href="@Url.Action("Productos", "Public")" class="btn btn-outline-primary d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-search"></i>
+                            Buscar Productos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="product-preview-card">
+                            <img src="https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&q=80&w=500" 
+                                 alt="Llantas Premium" class="w-100 rounded">
+                            <div class="product-preview-overlay">
+                                <h5 class="text-white fw-bold">Llantas Premium</h5>
+                                <p class="text-white-50 mb-0">Alta calidad y durabilidad</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="product-preview-card">
+                            <img src="https://images.unsplash.com/photo-1517524008921-d766d2eeb4a5?auto=format&fit=crop&q=80&w=500" 
+                                 alt="Accesorios" class="w-100 rounded">
+                            <div class="product-preview-overlay">
+                                <h5 class="text-white fw-bold">Accesorios</h5>
+                                <p class="text-white-50 mb-0">Todo para tu vehículo</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @* Services Section *@
-<div id="servicios" class="py-5">
+<div id="servicios" class="py-5 bg-light">
     <div class="container py-5">
         <h2 class="text-center display-6 fw-bold mb-5">Nuestros Servicios</h2>
         <div class="row g-4">

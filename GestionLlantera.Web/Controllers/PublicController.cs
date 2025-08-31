@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Tuco.Clases.DTOs.Inventario;
@@ -40,21 +39,26 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Vista de detalle de producto público
         /// </summary>
+        [HttpGet]
         public async Task<IActionResult> DetalleProducto(int id)
         {
             try
             {
-                var producto = await _inventarioService.ObtenerProductoPublicoPorIdAsync(id);
-                if (producto == null)
+                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
+
+                if (producto == null || producto.CantidadEnInventario <= 0)
                 {
-                    return NotFound();
+                    TempData["Error"] = "El producto no está disponible o no existe.";
+                    return RedirectToAction("Productos");
                 }
+
                 return View(producto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al cargar detalle del producto {ProductoId}", id);
-                return NotFound();
+                TempData["Error"] = "Error al cargar el detalle del producto.";
+                return RedirectToAction("Productos");
             }
         }
     }
