@@ -44,6 +44,7 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Vista de detalle de producto público
         /// </summary>
+        [Route("Public/DetalleProducto/{id:int}")]
         public async Task<IActionResult> DetalleProducto(int id)
         {
             try
