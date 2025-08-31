@@ -44,24 +44,35 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Vista de detalle de producto público
         /// </summary>
-        [HttpGet]
+        [HttpGet("DetalleProducto/{id}")]
         public async Task<IActionResult> DetalleProducto(int id)
         {
             try
             {
+                _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
+                
                 var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
 
-                if (producto == null || producto.CantidadEnInventario <= 0)
+                if (producto == null)
                 {
+                    _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado", id);
                     TempData["Error"] = "El producto no está disponible o no existe.";
                     return RedirectToAction("Productos");
                 }
 
+                if (producto.CantidadEnInventario <= 0)
+                {
+                    _logger.LogWarning("⚠️ Producto {ProductoId} sin stock disponible", id);
+                    TempData["Error"] = "El producto no tiene stock disponible.";
+                    return RedirectToAction("Productos");
+                }
+
+                _logger.LogInformation("✅ Producto {ProductoId} encontrado: {NombreProducto}", id, producto.NombreProducto);
                 return View(producto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al cargar detalle del producto {ProductoId}", id);
+                _logger.LogError(ex, "❌ Error al cargar detalle del producto {ProductoId}", id);
                 TempData["Error"] = "Error al cargar el detalle del producto.";
                 return RedirectToAction("Productos");
             }
