@@ -1409,7 +1409,7 @@ namespace API.Controllers
                             IndiceVelocidad = l.IndiceVelocidad,
                             TipoTerreno = l.TipoTerreno,
                             Capas = l.Capas
-                        }).ToList() : new List<object>()
+                        }).ToList() : null
                     })
                     .OrderBy(p => p.NombreProducto)
                     .ToListAsync();
