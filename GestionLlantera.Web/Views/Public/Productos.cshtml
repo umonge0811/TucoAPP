@@ -48,7 +48,7 @@
                             <div class="card-image-container">
                                 @if (producto.Imagenes?.Any() == true)
                                 {
-                                    var imagenPrincipal = producto.Imagenes.FirstOrDefault(i => i.EsPrincipal) ?? producto.Imagenes.First();
+                                    var imagenPrincipal = producto.Imagenes.First();
                                     <img src="@imagenPrincipal.UrlImagen" 
                                          alt="@producto.NombreProducto" 
                                          class="producto-imagen"

@@ -1145,20 +1145,20 @@ namespace API.Controllers
                     var llanta = _context.Llantas.FirstOrDefault(l => l.ProductoId == productoId.Value);
                     if (llanta != null && llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
                     {
-                        string medidaLlanta = "";
+                        string medidaCompleta = "";
                         if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                         {
                             // Formato completo: 215/55R16
-                            medidaLlanta = $"{llanta.Ancho}/{llanta.Perfil}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}/{llanta.Perfil}R{llanta.Diametro}";
                         }
                         else
                         {
                             // Formato sin perfil: 215R16
-                            medidaLlanta = $"{llanta.Ancho}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}R{llanta.Diametro}";
                         }
 
                         // Agregar medida al nombre: "NombreProducto_215-55R16"
-                        nombreFinal = $"{nombreProducto}_{medidaLlanta}";
+                        nombreFinal = $"{nombreProducto}_{medidaCompleta}";
                     }
                 }
                 catch (Exception ex)
