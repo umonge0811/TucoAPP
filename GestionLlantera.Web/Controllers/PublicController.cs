@@ -51,24 +51,68 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
                 
-                var producto = await _inventarioService.ObtenerProductoPorIdAsync(id);
-
-                if (producto == null)
+                // Obtener producto usando el endpoint público
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/Inventario/productos-publicos");
+                
+                if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado", id);
-                    TempData["Error"] = "El producto no está disponible o no existe.";
+                    _logger.LogError("❌ Error del API al obtener productos públicos: {StatusCode}", response.StatusCode);
+                    TempData["Error"] = "Error al obtener los productos del servidor.";
                     return RedirectToAction("Productos");
                 }
 
-                if (producto.CantidadEnInventario <= 0)
+                var content = await response.Content.ReadAsStringAsync();
+                var apiResponse = JsonSerializer.Deserialize<dynamic>(content);
+                
+                // Parsear la respuesta JSON manualmente para encontrar el producto específico
+                using (JsonDocument doc = JsonDocument.Parse(content))
                 {
-                    _logger.LogWarning("⚠️ Producto {ProductoId} sin stock disponible", id);
-                    TempData["Error"] = "El producto no tiene stock disponible.";
-                    return RedirectToAction("Productos");
-                }
+                    var root = doc.RootElement;
+                    if (!root.TryGetProperty("success", out var successProp) || !successProp.GetBoolean())
+                    {
+                        TempData["Error"] = "No se pudieron obtener los productos.";
+                        return RedirectToAction("Productos");
+                    }
 
-                _logger.LogInformation("✅ Producto {ProductoId} encontrado: {NombreProducto}", id, producto.NombreProducto);
-                return View(producto);
+                    if (!root.TryGetProperty("productos", out var productosProp))
+                    {
+                        TempData["Error"] = "No se encontraron productos.";
+                        return RedirectToAction("Productos");
+                    }
+
+                    ProductoDTO producto = null;
+                    
+                    foreach (var item in productosProp.EnumerateArray())
+                    {
+                        if (item.TryGetProperty("productoId", out var idProp) && idProp.GetInt32() == id)
+                        {
+                            // Convertir el JsonElement a ProductoDTO
+                            var jsonString = item.GetRawText();
+                            producto = JsonSerializer.Deserialize<ProductoDTO>(jsonString, new JsonSerializerOptions 
+                            { 
+                                PropertyNameCaseInsensitive = true 
+                            });
+                            break;
+                        }
+                    }
+
+                    if (producto == null)
+                    {
+                        _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado en productos públicos", id);
+                        TempData["Error"] = "El producto no está disponible o no existe.";
+                        return RedirectToAction("Productos");
+                    }
+
+                    if (producto.CantidadEnInventario <= 0)
+                    {
+                        _logger.LogWarning("⚠️ Producto {ProductoId} sin stock disponible", id);
+                        TempData["Error"] = "El producto no tiene stock disponible.";
+                        return RedirectToAction("Productos");
+                    }
+
+                    _logger.LogInformation("✅ Producto {ProductoId} encontrado: {NombreProducto}", id, producto.NombreProducto);
+                    return View(producto);
+                }
             }
             catch (Exception ex)
             {
