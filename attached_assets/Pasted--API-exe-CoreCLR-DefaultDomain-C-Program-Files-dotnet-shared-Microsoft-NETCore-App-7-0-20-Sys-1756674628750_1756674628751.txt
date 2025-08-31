@@ -1,0 +1,559 @@
+'API.exe' (CoreCLR: DefaultDomain): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.CoreLib.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\API.dll' cargado. Símbolos cargados.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'c:\program files\microsoft visual studio\2022\community\common7\ide\extensions\microsoft\web tools\projectsystem\net7.0\Microsoft.WebTools.ApiEndpointDiscovery.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Linq.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\SDK\9.0.302\DotnetTools\dotnet-watch\9.0.302-servicing.25319.7\tools\net9.0\any\middleware\Microsoft.AspNetCore.Watch.BrowserRefresh.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\Web Tools\Browser Link\Microsoft.WebTools.BrowserLink.Net.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Hosting.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Routing.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Features.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.DependencyInjection.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Tuco.Clases.dll' cargado. Símbolos cargados.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Options.ConfigurationExtensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Caching.Memory.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authorization.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Http.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Options.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Cors.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.EntityFrameworkCore.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Core.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.ApiExplorer.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Swashbuckle.AspNetCore.SwaggerGen.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Http.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authorization.Policy.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Hosting.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.HttpsPolicy.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.StaticFiles.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.Features.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Physical.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Swashbuckle.AspNetCore.Swagger.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Swashbuckle.AspNetCore.SwaggerUI.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Hosting.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Hosting.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.EnvironmentVariables.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.FileExtensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.Binder.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.Json.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.IO.FileSystem.Watcher.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.Concurrent.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Memory.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Overlapped.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.InteropServices.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: DefaultDomain): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.CoreLib.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\Microsoft.Win32.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Json.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Encoding.Extensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Numerics.Vectors.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.UserSecrets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Razor.Runtime.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.EventLog.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Configuration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Console.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Debug.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.EventSource.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.Tracing.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.DependencyInjection.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.Core.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.Transport.Quic.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Quic.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\bin\Release\net7.0\GestionLlantera.Web.dll' cargado. Símbolos cargados.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\Microsoft.Win32.Registry.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.IIS.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.IISIntegration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Composite.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Encodings.Web.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Intrinsics.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'c:\program files\microsoft visual studio\2022\community\common7\ide\extensions\microsoft\web tools\projectsystem\net7.0\Microsoft.WebTools.ApiEndpointDiscovery.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.DiagnosticSource.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Linq.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Connections.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\SDK\9.0.302\DotnetTools\dotnet-watch\9.0.302-servicing.25319.7\tools\net9.0\any\middleware\Microsoft.AspNetCore.Watch.BrowserRefresh.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.HostFiltering.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\Extensions\Microsoft\Web Tools\Browser Link\Microsoft.WebTools.BrowserLink.Net.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.HttpOverrides.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Hosting.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.ObjectPool.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Routing.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Routing.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ObjectModel.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Features.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Caching.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.DependencyInjection.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Core.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Razor.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Loader.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Caching.Memory.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.Core.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Claims.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Cors.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.DataAnnotations.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.RazorPages.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Razor.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.ViewFeatures.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Session.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Antiforgery.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.Cookies.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Http.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Components.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Options.ConfigurationExtensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Linq.Expressions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Http.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.JSInterop.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Components.Web.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authorization.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authorization.Policy.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Hosting.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.DataProtection.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.HttpsPolicy.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.DataProtection.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.StaticFiles.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Diagnostics.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Cryptography.Internal.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Antiforgery.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.WebEncoders.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.TagHelpers.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.OpenApi.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Hosting.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Hosting.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.EnvironmentVariables.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Localization.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Physical.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.Extensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.FileExtensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Options.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.Binder.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Console.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.Json.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Thread.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.IO.FileSystem.Watcher.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.Concurrent.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\System.Diagnostics.EventLog.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Memory.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.Specialized.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.TypeConverter.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Overlapped.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Sockets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.InteropServices.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.ThreadPool.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\Microsoft.Win32.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\System.IO.Pipelines.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Json.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Encoding.Extensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Numerics.Vectors.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Emit.Lightweight.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Emit.ILGeneration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Configuration.UserSecrets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Razor.Runtime.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\netstandard.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.EventLog.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Configuration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Console.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.Debug.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Net.Http.Headers.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Logging.EventSource.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.Tracing.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.Uri.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.DependencyInjection.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.Core.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Numerics.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.Transport.Quic.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Quic.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\Microsoft.Win32.Registry.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.IIS.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.EntityFrameworkCore.Relational.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.IISIntegration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Composite.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Encodings.Web.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Metadata.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Intrinsics.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.RegularExpressions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileSystemGlobbing.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Html.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.Annotations.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.DiagnosticSource.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.ApiExplorer.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Connections.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Hosting.Server.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.HostFiltering.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.HttpOverrides.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.ObjectPool.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Routing.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ObjectModel.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Razor.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Loader.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Authentication.Core.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Claims.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Xml.XDocument.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.Cors.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.Xml.Linq.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Cors.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.DataAnnotations.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.Xml.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.ViewFeatures.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Components.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Linq.Expressions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.JSInterop.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Components.Web.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.DataProtection.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.DataProtection.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Cryptography.Internal.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.WebEncoders.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Razor.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.IO.MemoryMappedFiles.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Caching.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Extensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Mvc.TagHelpers.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Diagnostics.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.Localization.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'Anonymously Hosted DynamicMethods Assembly' cargado. 
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.Extensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileProviders.Embedded.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Console.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Thread.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Diagnostics.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\System.Diagnostics.EventLog.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.Specialized.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Cryptography.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.TypeConverter.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.NonGeneric.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Security.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Sockets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.ThreadPool.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\System.IO.Pipelines.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Emit.Lightweight.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Emit.ILGeneration.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Net.Http.Headers.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Http.Features.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.Uri.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Numerics.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+Microsoft.Hosting.Lifetime: Information: Now listening on: https://localhost:7273
+Microsoft.Hosting.Lifetime: Information: Now listening on: http://localhost:5049
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\bin\Release\net7.0\Tuco.Clases.dll' cargado. Símbolos cargados.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Html.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\bin\Release\net7.0\itextsharp.dll' cargado. El módulo se compiló sin símbolos.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\mscorlib.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Metadata.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.Extensions.FileSystemGlobbing.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+Microsoft.Hosting.Lifetime: Information: Application started. Press Ctrl+C to shut down.
+Microsoft.Hosting.Lifetime: Information: Hosting environment: Development
+Microsoft.Hosting.Lifetime: Information: Content root path: C:\Users\UMA08\source\repos\Tuco\API
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.Annotations.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Xml.XDocument.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.Xml.Linq.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Private.Xml.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.IO.MemoryMappedFiles.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.Extensions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.Diagnostics.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Cryptography.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.NonGeneric.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.Security.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+Microsoft.Hosting.Lifetime: Information: Now listening on: https://localhost:7038
+Microsoft.Hosting.Lifetime: Information: Now listening on: http://localhost:5244
+Microsoft.Hosting.Lifetime: Information: Application started. Press Ctrl+C to shut down.
+Microsoft.Hosting.Lifetime: Information: Hosting environment: Development
+Microsoft.Hosting.Lifetime: Information: Content root path: C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web
+Excepción producida: 'System.IO.IOException' en System.Net.Security.dll
+Excepción producida: 'System.IO.IOException' en System.Net.Security.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Net.Security.dll
+Excepción producida: 'System.IO.IOException' en System.Net.Security.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Net.Security.dll
+Excepción producida: 'System.IO.IOException' en System.Net.Security.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Excepción producida: 'System.IO.IOException' en System.Private.CoreLib.dll
+Verbose logs are written to:
+C:\Users\UMA08\AppData\Local\Temp\visualstudio-js-debugger.txt
+Verbose logs are written to:
+C:\Users\UMA08\AppData\Local\Temp\visualstudio-js-debugger.txt
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Principal.Windows.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Channels.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.WebSockets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Principal.Windows.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Tasks.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.NameResolution.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Channels.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.WebSockets.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Threading.Tasks.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.NameResolution.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\bin\Release\net7.0\System.IdentityModel.Tokens.Jwt.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\bin\Release\net7.0\Microsoft.IdentityModel.Tokens.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Xml.ReaderWriter.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\bin\Release\net7.0\Microsoft.IdentityModel.Logging.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'Anonymously Hosted DynamicMethods Assembly' cargado. 
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.WebUtilities.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON {stack: `SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`, message: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`}
+
+CSS Hot Reload ignoring https://localhost:7273/swagger/swagger-ui.css because it was inaccessible or had more than 7000 rules.
+CSS Hot Reload ignoring https://localhost:7038/lib/bootstrap/dist/css/bootstrap.min.css because it was inaccessible or had more than 7000 rules.
+CSS Hot Reload ignoring https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css because it was inaccessible or had more than 7000 rules.
+CSS Hot Reload ignoring https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css because it was inaccessible or had more than 7000 rules.
+El subproceso '.NET ThreadPool Worker' (6188) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (38840) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (22468) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (35636) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (35928) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (31836) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (30580) terminó con código 0 (0x0).
+El subproceso '.NET ThreadPool Worker' (34192) terminó con código 0 (0x0).
+Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON {stack: `SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`, message: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`}
+
+GestionLlantera.Web.Services.InventarioService: Information: 🔧 InventarioService inicializado. URL base API: https://localhost:7273
+GestionLlantera.Web.Services.InventarioService: Information: 🌐 URL construida para productos públicos: https://localhost:7273/api/Inventario/productos-publicos
+System.Net.Http.HttpClient.Default.LogicalHandler: Information: Start processing HTTP request GET https://localhost:7273/api/Inventario/productos-publicos
+System.Net.Http.HttpClient.Default.ClientHandler: Information: Sending HTTP request GET https://localhost:7273/api/Inventario/productos-publicos
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\System.IdentityModel.Tokens.Jwt.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.IdentityModel.Tokens.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Xml.ReaderWriter.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.IdentityModel.Protocols.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.IdentityModel.JsonWebTokens.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.IdentityModel.Logging.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Cryptography.Primitives.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.Immutable.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.EntityFrameworkCore.SqlServer.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Data.Common.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.EntityFrameworkCore.Abstractions.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Transactions.Local.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Linq.Queryable.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+API.Controllers.InventarioController: Information: 🌐 === OBTENIENDO PRODUCTOS PÚBLICOS ===
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.NetworkInformation.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+Microsoft.EntityFrameworkCore.Model.Validation: Warning: The 'bool' property 'Activo' on entity type 'Anuncio' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+Microsoft.EntityFrameworkCore.Model.Validation: Warning: The 'bool' property 'EsVisible' on entity type 'Notificacion' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+Microsoft.EntityFrameworkCore.Model.Validation: Warning: The 'bool' property 'Activo' on entity type 'Proveedore' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+Microsoft.EntityFrameworkCore.Model.Validation: Warning: The 'bool' property 'EstaActiva' on entity type 'SesionUsuario' is configured with a database-generated default. This default will always be used for inserts when the property has the value 'false', since this is the CLR default for the 'bool' type. Consider using the nullable 'bool?' type instead, so that the default will only be used for inserts when the property value is 'null'.
+Microsoft.EntityFrameworkCore.Model.Validation: Warning: No store type was specified for the decimal property 'Total' on entity type 'Factura'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\runtimes\win\lib\net6.0\Microsoft.Data.SqlClient.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+Microsoft.EntityFrameworkCore.Query: Warning: Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.StackTrace.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\System.Configuration.ConfigurationManager.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.Process.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Runtime.InteropServices.RuntimeInformation.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Net.WebClient.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.ComponentModel.EventBasedAsync.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Security.Cryptography.Algorithms.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Users\UMA08\source\repos\Tuco\API\bin\Release\net7.0\Microsoft.Identity.Client.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Text.Encoding.CodePages.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.TraceSource.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+El subproceso 19308 terminó con código 0 (0x0).
+Microsoft.EntityFrameworkCore.Database.Command: Information: Executed DbCommand (40ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT [p].[ProductoID], [p].[NombreProducto], COALESCE([p].[Descripcion], ''), COALESCE([p].[Precio], 0.0), COALESCE([p].[CantidadEnInventario], 0), COALESCE([p].[StockMinimo], 0), [p].[FechaUltimaActualizacion], [t].[c], [t].[URLImagen], [t].[c0], [t].[ImagenID], [i0].[ImagenID], CASE
+    WHEN [i0].[URLImagen] LIKE 'http%' THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, [i0].[URLImagen], CASE
+    WHEN [i0].[URLImagen] LIKE '/%' THEN [i0].[URLImagen]
+    ELSE '/' + [i0].[URLImagen]
+END, COALESCE([i0].[Descripcion], ''), COALESCE([i0].[FechaCreacion], GETDATE()), CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Llantas] AS [l]
+        WHERE [p].[ProductoID] = [l].[ProductoID]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Llantas] AS [l0]
+        WHERE [p].[ProductoID] = [l0].[ProductoID]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, (
+    SELECT TOP(1) [l1].[LlantaID]
+    FROM [Llantas] AS [l1]
+    WHERE [p].[ProductoID] = [l1].[ProductoID]), COALESCE((
+    SELECT TOP(1) [l2].[Marca]
+    FROM [Llantas] AS [l2]
+    WHERE [p].[ProductoID] = [l2].[ProductoID]), ''), COALESCE((
+    SELECT TOP(1) [l3].[Modelo]
+    FROM [Llantas] AS [l3]
+    WHERE [p].[ProductoID] = [l3].[ProductoID]), ''), (
+    SELECT TOP(1) [l4].[Ancho]
+    FROM [Llantas] AS [l4]
+    WHERE [p].[ProductoID] = [l4].[ProductoID]), (
+    SELECT TOP(1) [l5].[Perfil]
+    FROM [Llantas] AS [l5]
+    WHERE [p].[ProductoID] = [l5].[ProductoID]), COALESCE((
+    SELECT TOP(1) [l6].[Diametro]
+    FROM [Llantas] AS [l6]
+    WHERE [p].[ProductoID] = [l6].[ProductoID]), ''), COALESCE((
+    SELECT TOP(1) [l7].[IndiceVelocidad]
+    FROM [Llantas] AS [l7]
+    WHERE [p].[ProductoID] = [l7].[ProductoID]), ''), COALESCE((
+    SELECT TOP(1) [l8].[TipoTerreno]
+    FROM [Llantas] AS [l8]
+    WHERE [p].[ProductoID] = [l8].[ProductoID]), ''), (
+    SELECT TOP(1) [l9].[Capas]
+    FROM [Llantas] AS [l9]
+    WHERE [p].[ProductoID] = [l9].[ProductoID]), CASE
+    WHEN (
+        SELECT TOP(1) CASE
+            WHEN [l10].[Perfil] IS NOT NULL THEN CAST(1 AS bit)
+            ELSE CAST(0 AS bit)
+        END
+        FROM [Llantas] AS [l10]
+        WHERE [p].[ProductoID] = [l10].[ProductoID]) = CAST(1 AS bit) AND (
+        SELECT TOP(1) [l11].[Perfil]
+        FROM [Llantas] AS [l11]
+        WHERE [p].[ProductoID] = [l11].[ProductoID]) > 0 THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, (
+    SELECT TOP(1) [l12].[Ancho]
+    FROM [Llantas] AS [l12]
+    WHERE [p].[ProductoID] = [l12].[ProductoID]), (
+    SELECT TOP(1) [l13].[Perfil]
+    FROM [Llantas] AS [l13]
+    WHERE [p].[ProductoID] = [l13].[ProductoID]), (
+    SELECT TOP(1) [l14].[Diametro]
+    FROM [Llantas] AS [l14]
+    WHERE [p].[ProductoID] = [l14].[ProductoID]), (
+    SELECT TOP(1) [l15].[Ancho]
+    FROM [Llantas] AS [l15]
+    WHERE [p].[ProductoID] = [l15].[ProductoID]), (
+    SELECT TOP(1) [l16].[Diametro]
+    FROM [Llantas] AS [l16]
+    WHERE [p].[ProductoID] = [l16].[ProductoID]), CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Llantas] AS [l17]
+        WHERE [p].[ProductoID] = [l17].[ProductoID]) THEN (
+        SELECT TOP(1) [l18].[Marca]
+        FROM [Llantas] AS [l18]
+        WHERE [p].[ProductoID] = [l18].[ProductoID])
+    ELSE NULL
+END, CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Llantas] AS [l19]
+        WHERE [p].[ProductoID] = [l19].[ProductoID]) THEN (
+        SELECT TOP(1) [l20].[Modelo]
+        FROM [Llantas] AS [l20]
+        WHERE [p].[ProductoID] = [l20].[ProductoID])
+    ELSE NULL
+END, CASE
+    WHEN EXISTS (
+        SELECT 1
+        FROM [Llantas] AS [l21]
+        WHERE [p].[ProductoID] = [l21].[ProductoID]) THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, CASE
+    WHEN (
+        SELECT TOP(1) CASE
+            WHEN [l22].[Perfil] IS NOT NULL THEN CAST(1 AS bit)
+            ELSE CAST(0 AS bit)
+        END
+        FROM [Llantas] AS [l22]
+        WHERE [p].[ProductoID] = [l22].[ProductoID]) = CAST(1 AS bit) AND (
+        SELECT TOP(1) [l23].[Perfil]
+        FROM [Llantas] AS [l23]
+        WHERE [p].[ProductoID] = [l23].[ProductoID]) > 0 THEN CAST(1 AS bit)
+    ELSE CAST(0 AS bit)
+END, (
+    SELECT TOP(1) [l24].[Ancho]
+    FROM [Llantas] AS [l24]
+    WHERE [p].[ProductoID] = [l24].[ProductoID]), (
+    SELECT TOP(1) [l25].[Perfil]
+    FROM [Llantas] AS [l25]
+    WHERE [p].[ProductoID] = [l25].[ProductoID]), (
+    SELECT TOP(1) [l26].[Diametro]
+    FROM [Llantas] AS [l26]
+    WHERE [p].[ProductoID] = [l26].[ProductoID]), (
+    SELECT TOP(1) [l27].[Ancho]
+    FROM [Llantas] AS [l27]
+    WHERE [p].[ProductoID] = [l27].[ProductoID]), (
+    SELECT TOP(1) [l28].[Diametro]
+    FROM [Llantas] AS [l28]
+    WHERE [p].[ProductoID] = [l28].[ProductoID])
+FROM [Productos] AS [p]
+LEFT JOIN (
+    SELECT CASE
+        WHEN [i].[URLImagen] LIKE 'http%' THEN CAST(1 AS bit)
+        ELSE CAST(0 AS bit)
+    END AS [c], [i].[URLImagen], CASE
+        WHEN [i].[URLImagen] LIKE '/%' THEN [i].[URLImagen]
+        ELSE '/' + [i].[URLImagen]
+    END AS [c0], [i].[ImagenID], [i].[ProductoID]
+    FROM [ImagenesProducto] AS [i]
+    WHERE NOT ([i].[URLImagen] LIKE '')
+) AS [t] ON [p].[ProductoID] = [t].[ProductoID]
+LEFT JOIN [ImagenesProducto] AS [i0] ON [p].[ProductoID] = [i0].[ProductoID]
+WHERE [p].[CantidadEnInventario] > 0
+ORDER BY [p].[NombreProducto], [p].[ProductoID], [t].[ImagenID]
+API.Controllers.InventarioController: Information: ✅ Productos públicos obtenidos: 1
+API.Controllers.InventarioController: Information: 🖼️ Ejemplo de URL de imagen generada: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+API.Controllers.InventarioController: Information: 📋 Estructura del primer producto: ProductoId=1, EsLlanta=True, Llanta=SÍ
+'API.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\7.0.20\Microsoft.AspNetCore.WebUtilities.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+System.Net.Http.HttpClient.Default.ClientHandler: Information: Received HTTP response headers after 994.182ms - 200
+System.Net.Http.HttpClient.Default.LogicalHandler: Information: End processing HTTP request after 1001.1509ms - 200
+Excepción producida: 'System.Text.Json.JsonException' en System.Text.Json.dll
+Excepción producida: 'System.Text.Json.JsonException' en System.Text.Json.dll
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Diagnostics.StackTrace.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Reflection.Metadata.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+'GestionLlantera.Web.exe' (CoreCLR: clrhost): 'C:\Program Files\dotnet\shared\Microsoft.NETCore.App\7.0.20\System.Collections.Immutable.dll' cargado. Carga de símbolos deshabilitada por el parámetro Incluir/Excluir.
+GestionLlantera.Web.Services.InventarioService: Error: 💥 Error general al obtener productos públicos
+
+System.Text.Json.JsonException: The JSON value could not be converted to System.Collections.Generic.List`1[Tuco.Clases.DTOs.Inventario.ProductoDTO]. Path: $ | LineNumber: 0 | BytePositionInLine: 1.
+   at System.Text.Json.ThrowHelper.ThrowJsonException_DeserializeUnableToConvertValue(Type propertyType)
+   at System.Text.Json.Serialization.JsonCollectionConverter`2.OnTryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, TCollection& value)
+   at System.Text.Json.Serialization.JsonConverter`1.TryRead(Utf8JsonReader& reader, Type typeToConvert, JsonSerializerOptions options, ReadStack& state, T& value)
+   at System.Text.Json.Serialization.JsonConverter`1.ReadCore(Utf8JsonReader& reader, JsonSerializerOptions options, ReadStack& state)
+   at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 utf8Json, JsonTypeInfo jsonTypeInfo, Nullable`1 actualByteCount)
+   at System.Text.Json.JsonSerializer.ReadFromSpan[TValue](ReadOnlySpan`1 json, JsonTypeInfo jsonTypeInfo)
+   at System.Text.Json.JsonSerializer.Deserialize[TValue](String json, JsonSerializerOptions options)
+   at GestionLlantera.Web.Services.InventarioService.ObtenerProductosPublicosAsync() in C:\Users\UMA08\source\repos\Tuco\GestionLlantera.Web\Services\InventarioService.cs:line 1884
+📦 Módulo de productos públicos cargado
+✅ Vista pública de productos inicializada correctamente
+Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON {stack: `SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`, message: `Unexpected token '<', "<!DOCTYPE "... is not valid JSON`}
+
+CSS Hot Reload ignoring https://localhost:7038/lib/bootstrap/dist/css/bootstrap.min.css because it was inaccessible or had more than 7000 rules.
+CSS Hot Reload ignoring https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css because it was inaccessible or had more than 7000 rules.
+CSS Hot Reload ignoring https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css because it was inaccessible or had more than 7000 rules.
