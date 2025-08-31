@@ -5,16 +5,16 @@
 
 .productos-publicos-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    background: #f8f9fa;
 }
 
 /* ========================================
    HERO SECTION
    ======================================== */
 .hero-section {
-    background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     color: white;
-    padding: 5rem 0;
+    padding: 4rem 0;
     margin-bottom: 3rem;
     position: relative;
     overflow: hidden;
@@ -37,49 +37,54 @@
 }
 
 .hero-section .display-4 {
-    font-weight: 700;
+    font-weight: 600;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .hero-section .lead {
-    font-size: 1.25rem;
-    opacity: 0.95;
+    font-size: 1.2rem;
+    opacity: 0.9;
 }
 
 /* ========================================
    FILTROS Y BÚSQUEDA
    ======================================== */
-.input-group {
-    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+.filters-section {
+    border: 1px solid #e9ecef;
     border-radius: 12px;
+    background: white;
+}
+
+.input-group {
+    border-radius: 8px;
     overflow: hidden;
 }
 
 .input-group-text {
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
-    border: none;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
     color: #6c757d;
 }
 
 .form-control, .form-select {
-    border: none;
+    border: 1px solid #dee2e6;
     padding: 0.75rem 1rem;
     font-size: 1rem;
     transition: all 0.3s ease;
 }
 
 .form-control:focus, .form-select:focus {
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-    border-color: transparent;
+    box-shadow: 0 0 0 0.25rem rgba(44, 62, 80, 0.15);
+    border-color: #2c3e50;
 }
 
 /* ========================================
-   CARDS DE PRODUCTOS
+   CARDS DE PRODUCTOS - DISEÑO PROFESIONAL
    ======================================== */
 .producto-card {
-    border: none;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    border-radius: 16px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border-radius: 12px;
     overflow: hidden;
     transition: all 0.3s ease;
     height: 100%;
@@ -88,19 +93,21 @@
 }
 
 .producto-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: #2c3e50;
 }
 
 /* Contenedor de imagen */
 .card-image-container {
     position: relative;
-    height: 250px;
+    height: 220px;
     overflow: hidden;
-    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    background: #fafafa;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-bottom: 1px solid #f1f3f4;
 }
 
 .card-img-top {
@@ -109,11 +116,11 @@
     object-fit: contain;
     object-position: center;
     transition: all 0.3s ease;
-    padding: 15px;
+    padding: 20px;
 }
 
 .producto-card:hover .card-img-top {
-    transform: scale(1.05);
+    transform: scale(1.02);
 }
 
 /* Overlay de acción */
@@ -123,7 +130,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(13, 110, 253, 0.9);
+    background: rgba(44, 62, 80, 0.95);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -137,13 +144,14 @@
 
 .card-overlay .btn {
     background: white;
-    color: #0d6efd;
+    color: #2c3e50;
     border: none;
-    border-radius: 25px;
+    border-radius: 8px;
     padding: 0.75rem 1.5rem;
-    font-weight: 600;
+    font-weight: 500;
     text-decoration: none;
     transition: all 0.3s ease;
+    font-size: 0.9rem;
 }
 
 .card-overlay .btn:hover {
@@ -154,102 +162,137 @@
 /* Cuerpo de la card */
 .card-body {
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 220px);
 }
 
 .card-title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
-    color: #212529;
+    color: #2c3e50;
     margin-bottom: 0.75rem;
-    line-height: 1.3;
-    height: 2.6em;
+    line-height: 1.4;
+    height: 2.8em;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 }
 
-/* Especificaciones de llantas */
-.llanta-specs {
-    background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
+/* Badge de medida de llantas */
+.medida-llanta {
     margin-bottom: 0.75rem;
 }
 
-.llanta-specs span {
-    font-weight: 600;
-    color: #1976d2;
-    font-size: 0.95rem;
-}
-
-.llanta-specs strong {
-    color: #7b1fa2;
+.medida-llanta .badge {
+    background: #f8f9fa;
+    color: #2c3e50;
+    border: 1px solid #e9ecef;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
 }
 
 /* Descripción */
 .card-text {
     font-size: 0.9rem;
-    line-height: 1.4;
+    line-height: 1.5;
+    color: #6c757d;
     margin-bottom: 1rem;
-    height: 3.5em;
+    height: 3.6em;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
 }
 
-/* Información de precio y stock */
-.precio-stock-info {
-    margin-top: auto;
-}
-
-.precio {
-    padding: 0.5rem 0;
-    background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+/* Contenedor de precios */
+.precios-container {
+    background: #f8f9fa;
     border-radius: 8px;
-    text-align: center;
-    margin-bottom: 0.75rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid #f1f3f4;
 }
 
-.precio .h5 {
-    font-weight: 700;
-    color: #198754;
-    margin-bottom: 0;
-    font-size: 1.3rem;
+.precios-container .row {
+    margin: 0;
 }
 
+.precios-container .col-6 {
+    padding: 0 0.5rem;
+}
+
+.precios-container small {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.text-success {
+    color: #27ae60 !important;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.text-warning {
+    color: #f39c12 !important;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Información de stock */
 .stock-info {
-    text-align: center;
+    padding: 0.5rem 0;
+    border-top: 1px solid #f1f3f4;
 }
 
 .stock-info small {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.text-danger {
+    color: #e74c3c !important;
+}
+
+.text-success {
+    color: #27ae60 !important;
+}
+
+/* Botón de detalles */
+.btn-primary {
+    background: #2c3e50;
+    border: 1px solid #2c3e50;
+    color: white;
     font-weight: 500;
-    padding: 0.25rem 0.5rem;
-    background: rgba(25, 135, 84, 0.1);
-    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.btn-primary:hover {
+    background: #34495e;
+    border-color: #34495e;
+    transform: translateY(-1px);
 }
 
 /* ========================================
    ESTADOS ESPECIALES
    ======================================== */
-.producto-agotado {
-    opacity: 0.7;
-    position: relative;
+.border-danger {
+    border-color: #f8d7da !important;
+    background: #fdf2f2;
 }
 
-.producto-agotado::after {
-    content: 'AGOTADO';
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: #dc3545;
-    color: white;
-    padding: 0.25rem 0.75rem;
-    border-radius: 15px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    z-index: 2;
+.border-warning {
+    border-color: #ffeaa7 !important;
+    background: #fffbf0;
 }
 
 /* ========================================
@@ -263,7 +306,7 @@
 }
 
 .spinner-border {
-    color: #0d6efd;
+    color: #2c3e50;
 }
 
 .empty-state {
@@ -277,8 +320,9 @@
 }
 
 .empty-state h4 {
-    color: #495057;
+    color: #2c3e50;
     margin-bottom: 0.5rem;
+    font-weight: 600;
 }
 
 .empty-state p {
@@ -287,23 +331,47 @@
 }
 
 /* ========================================
+   FOOTER INFO
+   ======================================== */
+.footer-info {
+    border: 1px solid #e9ecef;
+    background: white;
+}
+
+.footer-info h5 {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.contact-buttons .btn-success {
+    background: #27ae60;
+    border-color: #27ae60;
+    font-weight: 500;
+}
+
+.contact-buttons .btn-success:hover {
+    background: #219a52;
+    border-color: #219a52;
+}
+
+/* ========================================
    RESPONSIVE DESIGN
    ======================================== */
 @media (max-width: 768px) {
     .hero-section {
-        padding: 3rem 0;
+        padding: 2.5rem 0;
     }
     
     .hero-section .display-4 {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
     }
     
     .card-image-container {
-        height: 200px;
+        height: 180px;
     }
     
     .card-body {
-        padding: 1rem;
+        padding: 1.25rem;
     }
     
     .card-title {
@@ -312,8 +380,12 @@
         -webkit-line-clamp: 2;
     }
     
-    .precio .h5 {
-        font-size: 1.1rem;
+    .precios-container {
+        padding: 0.75rem;
+    }
+    
+    .text-success, .text-warning {
+        font-size: 1rem;
     }
 }
 
@@ -323,19 +395,27 @@
     }
     
     .hero-section .display-4 {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
     
     .hero-section .lead {
-        font-size: 1.1rem;
+        font-size: 1rem;
     }
     
     .card-image-container {
-        height: 180px;
+        height: 160px;
     }
     
     .card-img-top {
-        padding: 10px;
+        padding: 15px;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .precios-container .col-6 {
+        padding: 0 0.25rem;
     }
 }
 
@@ -343,13 +423,13 @@
    ANIMACIONES
    ======================================== */
 .producto-item {
-    animation: fadeInUp 0.6s ease-out;
+    animation: fadeInUp 0.5s ease-out;
 }
 
 @keyframes fadeInUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(15px);
     }
     to {
         opacity: 1;
@@ -358,11 +438,11 @@
 }
 
 /* Efecto de carga escalonada */
-.producto-item:nth-child(1) { animation-delay: 0.1s; }
-.producto-item:nth-child(2) { animation-delay: 0.2s; }
-.producto-item:nth-child(3) { animation-delay: 0.3s; }
-.producto-item:nth-child(4) { animation-delay: 0.4s; }
-.producto-item:nth-child(5) { animation-delay: 0.5s; }
-.producto-item:nth-child(6) { animation-delay: 0.6s; }
-.producto-item:nth-child(7) { animation-delay: 0.7s; }
-.producto-item:nth-child(8) { animation-delay: 0.8s; }
+.producto-item:nth-child(1) { animation-delay: 0.05s; }
+.producto-item:nth-child(2) { animation-delay: 0.1s; }
+.producto-item:nth-child(3) { animation-delay: 0.15s; }
+.producto-item:nth-child(4) { animation-delay: 0.2s; }
+.producto-item:nth-child(5) { animation-delay: 0.25s; }
+.producto-item:nth-child(6) { animation-delay: 0.3s; }
+.producto-item:nth-child(7) { animation-delay: 0.35s; }
+.producto-item:nth-child(8) { animation-delay: 0.4s; }
