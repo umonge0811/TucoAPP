@@ -1360,7 +1360,7 @@ namespace API.Controllers
 
         [HttpGet("productos-publicos")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<ProductoDTO>>> ObtenerProductosPublicos()
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductosPublicos()
         {
             try
             {
@@ -1370,36 +1370,58 @@ namespace API.Controllers
                     .Where(p => p.CantidadEnInventario > 0)
                     .Include(p => p.Llanta)
                     .Include(p => p.ImagenesProductos)
-                    .Select(p => new ProductoDTO
+                    .Select(p => new
                     {
                         ProductoId = p.ProductoId,
                         NombreProducto = p.NombreProducto,
                         Descripcion = p.Descripcion,
                         Precio = p.Precio,
                         CantidadEnInventario = p.CantidadEnInventario ?? 0,
-                        Llanta = p.Llanta.Any() ? new LlantaDTO
-                        {
-                            LlantaId = p.Llanta.First().LlantaId,
-                            Marca = p.Llanta.First().Marca,
-                            Modelo = p.Llanta.First().Modelo,
-                            Ancho = p.Llanta.First().Ancho,
-                            Perfil = p.Llanta.First().Perfil,
-                            Diametro = p.Llanta.First().Diametro,
-                            IndiceVelocidad = p.Llanta.First().IndiceVelocidad,
-                            TipoTerreno = p.Llanta.First().TipoTerreno,
-                        } : null,
-                        Imagenes = p.ImagenesProductos.Select(img => new ImagenProductoDTO
+                        StockMinimo = p.StockMinimo ?? 0,
+                        FechaUltimaActualizacion = p.FechaUltimaActualizacion,
+                        
+                        // URLs completas de imágenes
+                        ImagenesUrls = p.ImagenesProductos
+                            .Where(img => !string.IsNullOrEmpty(img.Urlimagen))
+                            .Select(img => img.Urlimagen.StartsWith("http") 
+                                ? img.Urlimagen 
+                                : $"https://localhost:7273{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}")
+                            .ToList(),
+                            
+                        ImagenesProductos = p.ImagenesProductos.Select(img => new
                         {
                             ImagenId = img.ImagenId,
-                            UrlImagen = img.Urlimagen,
+                            Urlimagen = img.Urlimagen.StartsWith("http") 
+                                ? img.Urlimagen 
+                                : $"https://localhost:7273{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}",
                             Descripcion = img.Descripcion,
                             FechaCreacion = img.FechaCreacion ?? DateTime.Now
-                        }).ToList()
+                        }).ToList(),
+                        
+                        Llanta = p.Llanta.Any() ? p.Llanta.Select(l => new
+                        {
+                            LlantaId = l.LlantaId,
+                            Marca = l.Marca,
+                            Modelo = l.Modelo,
+                            Ancho = l.Ancho,
+                            Perfil = l.Perfil,
+                            Diametro = l.Diametro,
+                            IndiceVelocidad = l.IndiceVelocidad,
+                            TipoTerreno = l.TipoTerreno,
+                            Capas = l.Capas
+                        }).ToList() : new List<object>()
                     })
                     .OrderBy(p => p.NombreProducto)
                     .ToListAsync();
 
                 _logger.LogInformation("✅ Productos públicos obtenidos: {Cantidad}", productos.Count);
+                
+                // Log de ejemplo de URLs generadas
+                if (productos.Any() && productos.First().ImagenesUrls.Any())
+                {
+                    _logger.LogInformation("🖼️ Ejemplo de URL de imagen generada: {Url}", productos.First().ImagenesUrls.First());
+                }
+                
                 return Ok(productos);
             }
             catch (Exception ex)
