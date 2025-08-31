@@ -44,7 +44,7 @@
         <div class="row" id="productosGrid">
             @if (Model != null && Model.Any())
             {
-                @foreach (var producto in Model)
+                foreach (var producto in Model)
                 {
                     <div class="col-lg-3 col-md-4 col-sm-6 mb-4 producto-item" data-nombre="@producto.NombreProducto.ToLower()" data-categoria="@(producto.Llanta != null ? "llanta" : "accesorio")">
                         <div class="card producto-card h-100">
@@ -102,7 +102,7 @@
                                     </div>
                                 }
 
-                                @if (!string.IsNullOrEmpty(producto.Descripcion))
+                                if (!string.IsNullOrEmpty(producto.Descripcion))
                                 {
                                     <p class="card-text text-muted small">
                                         @(producto.Descripcion.Length > 100 ? producto.Descripcion.Substring(0, 100) + "..." : producto.Descripcion)
