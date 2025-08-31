@@ -1,4 +1,3 @@
-
 // ========================================
 // VISTA PÚBLICA DE PRODUCTOS - JAVASCRIPT
 // ========================================
@@ -10,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarBusqueda();
     inicializarFiltros();
     inicializarAnimaciones();
-    
+
     // Cargar productos iniciales
     cargarProductosIniciales();
 
@@ -236,7 +235,7 @@ function mostrarResultados(productos) {
     productos.forEach((producto, index) => {
         const card = crearCardProducto(producto);
         container.appendChild(card);
-        
+
         // Animación escalonada
         setTimeout(() => {
             card.style.opacity = '1';
@@ -276,20 +275,22 @@ function crearCardProducto(producto) {
     // ✅ PROCESAR INFORMACIÓN DE LLANTA (MISMA LÓGICA QUE FACTURACIÓN)
     let medidaCompleta = '';
     let infoLlanta = '';
-    
+
     if (esLlanta && producto.llanta) {
         try {
-            const llanta = producto.llanta;
-            if (llanta.medidaCompleta) {
-                medidaCompleta = llanta.medidaCompleta;
-            } else if (llanta.ancho && llanta.diametro) {
-                if (llanta.perfil && llanta.perfil > 0) {
-                    medidaCompleta = `${llanta.ancho}/${llanta.perfil}R${llanta.diametro}`;
+            const llantaInfo = producto.llanta;
+            if (llantaInfo.medidaCompleta) {
+                medidaCompleta = llantaInfo.medidaCompleta;
+            } else if (llantaInfo.ancho && llantaInfo.diametro) {
+                if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                    // Formato completo con perfil: 225/50/R15
+                    medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
                 } else {
-                    medidaCompleta = `${llanta.ancho}/R${llanta.diametro}`;
+                    // Formato sin perfil: 225/R15
+                    medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
                 }
             }
-            
+
             if (medidaCompleta) {
                 infoLlanta = `
                     <div class="medida-llanta mb-2">
@@ -334,13 +335,13 @@ function crearCardProducto(producto) {
                 <h6 class="card-title" title="${nombreProducto}">
                     ${nombreProducto.length > 30 ? nombreProducto.substring(0, 30) + '...' : nombreProducto}
                 </h6>
-                
+
                 ${infoLlanta}
-                
+
                 <p class="card-text text-muted small mb-3">
                     ${descripcion.length > 80 ? descripcion.substring(0, 80) + '...' : descripcion}
                 </p>
-                
+
                 <div class="mt-auto">
                     <div class="precios-container mb-3">
                         <div class="row text-center">
@@ -354,14 +355,14 @@ function crearCardProducto(producto) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="stock-info mb-3">
                         <small class="text-muted">Stock disponible: </small>
                         <span class="${cantidadInventario <= 0 ? 'text-danger' : cantidadInventario <= stockMinimo ? 'text-warning' : 'text-success'} fw-bold">
                             ${cantidadInventario} ${cantidadInventario === 1 ? 'unidad' : 'unidades'}
                         </span>
                     </div>
-                    
+
                     <div class="d-grid">
                         <button class="btn btn-primary btn-sm" onclick="verDetalleProducto(${productoId})">
                             <i class="bi bi-eye"></i> Ver detalles
@@ -379,11 +380,11 @@ function mostrarSinResultados() {
     console.log('🔄 Mostrando sin resultados...');
     const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
     const noResultadosDiv = document.getElementById('noResultados');
-    
+
     if (container) {
         container.innerHTML = ''; // Limpiar productos
     }
-    
+
     if (noResultadosDiv) {
         noResultadosDiv.style.display = 'block';
     } else if (container) {
@@ -403,7 +404,7 @@ function mostrarSinResultados() {
 function mostrarError(mensaje) {
     console.error('❌ Mostrando error:', mensaje);
     const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
-    
+
     if (container) {
         container.innerHTML = `
             <div class="col-12 text-center py-5">
