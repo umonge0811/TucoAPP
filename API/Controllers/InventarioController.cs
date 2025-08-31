@@ -1398,18 +1398,18 @@ namespace API.Controllers
                             FechaCreacion = img.FechaCreacion ?? DateTime.Now
                         }).ToList(),
                         
-                        Llanta = p.Llanta.Any() ? p.Llanta.Select(l => new
+                        Llanta = p.Llanta.Any() ? new
                         {
-                            LlantaId = l.LlantaId,
-                            Marca = l.Marca,
-                            Modelo = l.Modelo,
-                            Ancho = l.Ancho,
-                            Perfil = l.Perfil,
-                            Diametro = l.Diametro,
-                            IndiceVelocidad = l.IndiceVelocidad,
-                            TipoTerreno = l.TipoTerreno,
-                            Capas = l.Capas
-                        }).ToList() : null
+                            LlantaId = p.Llanta.First().LlantaId,
+                            Marca = p.Llanta.First().Marca,
+                            Modelo = p.Llanta.First().Modelo,
+                            Ancho = p.Llanta.First().Ancho,
+                            Perfil = p.Llanta.First().Perfil,
+                            Diametro = p.Llanta.First().Diametro,
+                            IndiceVelocidad = p.Llanta.First().IndiceVelocidad,
+                            TipoTerreno = p.Llanta.First().TipoTerreno,
+                            Capas = p.Llanta.First().Capas
+                        } : null
                     })
                     .OrderBy(p => p.NombreProducto)
                     .ToListAsync();
