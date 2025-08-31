@@ -635,7 +635,7 @@ namespace API.Controllers
 
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
-        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaWebRequest? request = null)
+        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaRequest? request = null)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
                 "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
@@ -1211,7 +1211,7 @@ namespace API.Controllers
 
                     if (detalleAEliminar != null)
                     {
-                        productosEliminados.Add(new {
+                        productosEliminados.Add(new{
                             productoId = detalleAEliminar.ProductoId,
                             nombreProducto = detalleAEliminar.NombreProducto,
                             cantidad = detalleAEliminar.Cantidad,
