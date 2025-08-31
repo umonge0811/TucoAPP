@@ -1871,17 +1871,25 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
-                // Se utiliza el endpoint específico para productos públicos
-                var url = _apiConfig.GetApiUrl("Inventario/productos-publicos");
-                _logger.LogInformation($"🌐 URL construida para productos públicos: {url}");
+                _logger.LogInformation("🔧 InventarioService inicializado. URL base API: {BaseUrl}", _httpClient.BaseAddress);
+
+                var url = "api/Inventario/productos-publicos";
+                _logger.LogInformation("🌐 URL construida para productos públicos: {Url}", $"{_httpClient.BaseAddress}{url}");
 
                 var response = await _httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode();
 
-                if (response.IsSuccessStatusCode)
+                var json = await response.Content.ReadAsStringAsync();
+
+                // ✅ El API devuelve: { success: true, productos: [...] }
+                // Necesitamos extraer solo el array de productos
+                using var document = System.Text.Json.JsonDocument.Parse(json);
+                var root = document.RootElement;
+
+                if (root.TryGetProperty("productos", out var productosElement))
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
-                    var productos = System.Text.Json.JsonSerializer.Deserialize<List<ProductoDTO>>(json, _jsonOptions);
+                    var productosJson = productosElement.GetRawText();
+                    var productos = System.Text.Json.JsonSerializer.Deserialize<List<ProductoDTO>>(productosJson, _jsonOptions);
 
                     // Procesar URLs de imágenes para productos públicos
                     if (productos != null)
@@ -1902,13 +1910,12 @@ namespace GestionLlantera.Web.Services
                         }
                     }
 
-                    _logger.LogInformation($"✅ Se obtuvieron {productos?.Count ?? 0} productos públicos.");
+                    _logger.LogInformation($"✅ Se obtuvieron {productos?.Count ?? 0} productos públicos");
                     return productos ?? new List<ProductoDTO>();
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogError($"❌ Error al obtener productos públicos: {response.StatusCode} - {errorContent}");
+                    _logger.LogWarning("⚠️ No se encontró la propiedad 'productos' en la respuesta del API");
                     return new List<ProductoDTO>();
                 }
             }
