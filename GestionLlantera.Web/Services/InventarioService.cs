@@ -1881,7 +1881,7 @@ namespace GestionLlantera.Web.Services
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
-                    var productos = JsonSerializer.Deserialize<List<ProductoDTO>>(json, _jsonOptions);
+                    var productos = System.Text.Json.JsonSerializer.Deserialize<List<ProductoDTO>>(json, _jsonOptions);
                     _logger.LogInformation($"✅ Se obtuvieron {productos?.Count ?? 0} productos públicos.");
                     return productos ?? new List<ProductoDTO>();
                 }
@@ -1913,7 +1913,7 @@ namespace GestionLlantera.Web.Services
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     // Usamos JsonSerializer de System.Text.Json con las opciones configuradas
-                    var producto = JsonSerializer.Deserialize<ProductoDTO>(json, _jsonOptions);
+                    var producto = System.Text.Json.JsonSerializer.Deserialize<ProductoDTO>(json, _jsonOptions);
                     _logger.LogInformation($"✅ Se obtuvo el producto público con ID: {id}.");
                     return producto;
                 }
