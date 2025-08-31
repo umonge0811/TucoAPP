@@ -522,7 +522,7 @@ namespace API.Controllers
                         {
                             ProductoId = id,
                             Urlimagen = $"/uploads/productos/{nombreArchivo}", // Esto es lo que se guarda en la DB
-                            NombreArchivo = nombreArchivo, // Guardar el nombre del archivo para referencia
+                            NombreArchivo = $"/uploads/productos/{nombreArchivo}", // Guardar el nombre del archivo para referencia
                             Descripcion = $"Imagen de {producto.NombreProducto}",
                             FechaCreacion = DateTime.Now
                         };
@@ -1380,22 +1380,20 @@ namespace API.Controllers
                         CantidadEnInventario = p.CantidadEnInventario,
                         Llanta = p.Llanta != null ? new LlantaDTO
                         {
-                            LlantaId = p.Llanta.LlantaId,
-                            Marca = p.Llanta.Marca,
-                            Modelo = p.Llanta.Modelo,
-                            Ancho = p.Llanta.Ancho,
-                            Perfil = p.Llanta.Perfil,
-                            Diametro = p.Llanta.Diametro,
-                            IndiceVelocidad = p.Llanta.IndiceVelocidad,
-                            IndiceCarga = p.Llanta.IndiceCarga,
-                            TipoTerreno = p.Llanta.TipoTerreno,
-                            TipoLlanta = p.Llanta.TipoLlanta
+                            LlantaId = p.Llanta.FirstOrDefault()?.LlantaId ?? 0,
+                            Marca = p.Llanta.FirstOrDefault()?.Marca,
+                            Modelo = p.Llanta.FirstOrDefault()?.Modelo,
+                            Ancho = p.Llanta.FirstOrDefault()?.Ancho,
+                            Perfil = p.Llanta.FirstOrDefault()?.Perfil,
+                            Diametro = p.Llanta.FirstOrDefault()?.Diametro,
+                            IndiceVelocidad = p.Llanta.FirstOrDefault()?.IndiceVelocidad,
+                            TipoTerreno = p.Llanta.FirstOrDefault()?.TipoTerreno,
                         } : null,
                         Imagenes = p.ImagenesProductos.Select(img => new ImagenProductoDTO
                         {
                             ImagenId = img.ImagenId,
                             UrlImagen = Url.Content($"~/uploads/productos/{img.NombreArchivo}"),
-                            EsPrincipal = img.EsPrincipal
+                            NombreArchivo = img.Urlimagen
                         }).ToList()
                     })
                     .OrderBy(p => p.NombreProducto)
