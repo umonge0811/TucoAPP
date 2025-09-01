@@ -1,8 +1,11 @@
+using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Tuco.Clases.DTOs.Inventario;
-using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using System.Linq;
+using System.Text.Json;
+using Tuco.Clases.DTOs.Inventario;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -11,17 +14,23 @@ namespace GestionLlantera.Web.Controllers
     /// </summary>
     public class PublicController : Controller
     {
-        private readonly IInventarioService _inventarioService;
-        private readonly ILogger<PublicController> _logger;
         private readonly HttpClient _httpClient; // Asumiendo que HttpClient está disponible
+        private readonly ILogger<PublicController> _logger;
+        private readonly ApiConfigurationService _apiConfig;
+        private readonly IInventarioService _inventarioService;
+        private readonly IConfiguration _configuration;
         private readonly string _apiBaseUrl; // Asumiendo que _apiBaseUrl se configura en algún lugar
 
-        public PublicController(IInventarioService inventarioService, ILogger<PublicController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+
+        public PublicController(IConfiguration config,IInventarioService inventarioService, ILogger<PublicController> logger, IHttpClientFactory httpClientFactory, IConfiguration configuration, ApiConfigurationService apiConfig)
         {
             _inventarioService = inventarioService;
+            _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
-            _httpClient = httpClientFactory.CreateClient();
-            _apiBaseUrl = configuration["ApiBaseUrl"] ?? "https://localhost:7273"; // Asegúrate de que esto coincida con tu configuración
+            _configuration = config;
+            _apiBaseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
+            /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
+            _apiConfig = apiConfig;
         }
 
         /// <summary>
