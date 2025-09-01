@@ -5,12 +5,21 @@ body {
     margin: 0;
 }
 
-/* Layout general */
+/* Container principal centrado */
+.detalle-producto-publico-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Layout general centrado */
 .producto-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3rem;
+    gap: 4rem;
     padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* Galería */
@@ -18,35 +27,56 @@ body {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    width: 100%;
 }
 
+/* Contenedor de imagen principal con tamaño fijo */
 .imagen-principal-container {
+    width: 100%;
+    height: 500px; /* Altura fija */
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background-color: #f8f9fa;
+    position: relative;
+    margin: 0 auto;
 }
 
+/* Imagen principal ajustada al contenedor */
 .imagen-principal {
     width: 100%;
-    object-fit: cover;
+    height: 100%;
+    object-fit: contain; /* Cambiado a contain para mostrar la imagen completa */
+    object-position: center;
     transition: transform .3s ease;
+    cursor: pointer;
+    background-color: #fff; /* Fondo blanco para las imágenes */
 }
 
     .imagen-principal:hover {
         transform: scale(1.02);
     }
 
+/* Contenedor de miniaturas centrado */
 .miniaturas-container {
     display: flex;
     gap: 0.8rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    justify-content: flex-start; /* Alinear miniaturas al inicio */
 }
 
+/* Miniaturas con tamaño fijo */
 .miniatura {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
     border: 2px solid transparent;
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
     transition: border .3s;
+    background-color: #fff;
 }
 
     .miniatura.active,
@@ -54,19 +84,67 @@ body {
         border-color: #e60000;
     }
 
+    /* Imágenes dentro de las miniaturas */
+    .miniatura img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Mostrar imagen completa en miniaturas */
+        object-position: center;
+        background-color: #fff;
+    }
+
+/* Contenedor sin imagen */
+.sin-imagen-principal {
+    width: 100%;
+    height: 500px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    color: #6c757d;
+}
+
+    .sin-imagen-principal i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
 /* Info producto */
 .info-container {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    width: 100%;
+}
+
+.categoria-tag {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    background: #e6f3ff;
+    color: #0066cc;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .producto-titulo {
     font-size: 2rem;
     font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
 }
 
 .producto-precio {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.precio-valor {
     font-size: 1.8rem;
     font-weight: bold;
     color: #e60000;
@@ -96,6 +174,22 @@ body {
     color: #c62828;
 }
 
+.stock-info h5 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.stock-info small {
+    font-size: 0.85rem;
+}
+
+/* Especificaciones */
+.especificaciones {
+    background: #fafafa;
+    padding: 1.5rem;
+    border-radius: 12px;
+}
+
 /* Secciones */
 .seccion-titulo {
     font-size: 1.2rem;
@@ -103,28 +197,31 @@ body {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    font-weight: 600;
 }
 
 .specs-grid {
     display: grid;
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
 }
 
 .spec-item {
-    background: #fafafa;
+    background: #fff;
     padding: 1rem;
     border-radius: 8px;
+    border: 1px solid #eee;
 }
 
 .spec-label {
     font-size: 0.85rem;
     color: #888;
+    margin-bottom: 0.2rem;
 }
 
 .spec-value {
     font-weight: 600;
-    margin-top: 0.2rem;
+    color: #333;
 }
 
 /* Descripción */
@@ -132,6 +229,9 @@ body {
     background: #fafafa;
     padding: 1.5rem;
     border-radius: 12px;
+}
+
+.descripcion-texto {
     line-height: 1.6;
     color: #444;
 }
@@ -141,17 +241,22 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
+    margin-top: 1rem;
 }
 
 .btn-accion {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
     padding: 0.8rem 1.5rem;
     border-radius: 8px;
     font-weight: 600;
     text-decoration: none;
-    transition: background .3s, transform .2s;
+    transition: all .3s ease;
+    border: none;
+    min-width: 200px;
+    text-align: center;
 }
 
 .btn-llamar {
@@ -167,9 +272,101 @@ body {
 .btn-volver {
     background: #f5f5f5;
     color: #333;
+    border: 1px solid #ddd;
 }
 
 .btn-accion:hover {
     transform: translateY(-2px);
-    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    text-decoration: none;
+}
+
+.btn-llamar:hover {
+    color: #fff;
+}
+
+.btn-whatsapp:hover {
+    color: #fff;
+}
+
+.btn-volver:hover {
+    color: #333;
+}
+
+/* Modal */
+#imagenModalGrande {
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+    background: transparent;
+    padding: 0;
+    margin: 1rem 0;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .producto-layout {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 1.5rem;
+    }
+
+    .imagen-principal-container {
+        height: 400px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .sin-imagen-principal {
+        height: 400px;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .miniaturas-container {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .detalle-producto-publico-container {
+        padding: 0 0.5rem;
+    }
+
+    .producto-layout {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+
+    .imagen-principal-container {
+        height: 350px;
+    }
+
+    .sin-imagen-principal {
+        height: 350px;
+    }
+
+    .specs-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .producto-titulo {
+        font-size: 1.5rem;
+    }
+
+    .precio-valor {
+        font-size: 1.5rem;
+    }
+
+    .acciones-container {
+        flex-direction: column;
+    }
+
+    .btn-accion {
+        min-width: auto;
+        width: 100%;
+    }
 }

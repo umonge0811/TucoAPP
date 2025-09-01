@@ -283,20 +283,14 @@ function crearCardProducto(producto) {
                 medidaCompleta = llantaInfo.medidaCompleta;
             } else if (llantaInfo.ancho && llantaInfo.diametro) {
                 if (llantaInfo.perfil && llantaInfo.perfil > 0) {
-                    // Formato completo con perfil: 225/50/R15
                     medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
                 } else {
-                    // Formato sin perfil: 225/R15
                     medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
                 }
             }
 
             if (medidaCompleta) {
-                infoLlanta = `
-                    <div class="medida-llanta mb-2">
-                        <span class="badge bg-info">${medidaCompleta}</span>
-                    </div>
-                `;
+                infoLlanta = `<div class="medida-tag">${medidaCompleta}</div>`;
             }
         } catch (error) {
             console.warn('⚠️ Error procesando información de llanta:', error);
@@ -313,65 +307,73 @@ function crearCardProducto(producto) {
     const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
     const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
 
-    // ✅ CREAR CARD HTML (SIMILAR A FACTURACIÓN PERO ADAPTADO PARA VISTA PÚBLICA)
+    // ✅ DETERMINAR ESTADO DEL STOCK
+    const stockEstado = cantidadInventario <= 0 ? 'sin-stock' :
+        cantidadInventario <= stockMinimo ? 'stock-bajo' : 'stock-normal';
+
+    // ✅ CREAR CARD HTML MINIMALISTA
     const card = document.createElement('div');
     card.className = 'col-lg-4 col-md-6 mb-4';
     card.style.opacity = '0';
     card.style.transform = 'translateY(20px)';
     card.style.transition = 'all 0.3s ease';
 
-    const stockClase = cantidadInventario <= 0 ? 'border-danger' : cantidadInventario <= stockMinimo ? 'border-warning' : '';
-
     card.innerHTML = `
-        <div class="card h-100 producto-item ${stockClase}" data-nombre="${nombreProducto.toLowerCase()}" data-categoria="${esLlanta ? 'llanta' : 'accesorio'}">
-            <div class="card-img-container" style="height: 200px; overflow: hidden;">
+        <div class="producto-card ${stockEstado}" data-nombre="${nombreProducto.toLowerCase()}" data-categoria="${esLlanta ? 'llanta' : 'accesorio'}">
+            <!-- Imagen del Producto -->
+            <div class="producto-imagen-container">
                 <img src="${imagenUrl}" 
-                     class="card-img-top h-100 w-100" 
-                     style="object-fit: cover;" 
+                     class="producto-imagen" 
                      alt="${nombreProducto}"
                      onerror="this.src='/images/no-image.png'">
-            </div>
-            <div class="card-body d-flex flex-column">
-                <h6 class="card-title" title="${nombreProducto}">
-                    ${nombreProducto.length > 30 ? nombreProducto.substring(0, 30) + '...' : nombreProducto}
-                </h6>
-
                 ${infoLlanta}
+                
+                <!-- Overlay con botón -->
+                <div class="producto-overlay">
+                    <button class="btn-ver-detalle" onclick="verDetalleProducto(${productoId})">
+                        <i class="bi bi-eye"></i>
+                        Ver detalles
+                    </button>
+                </div>
+            </div>
 
-                <p class="card-text text-muted small mb-3">
-                    ${descripcion.length > 80 ? descripcion.substring(0, 80) + '...' : descripcion}
+            <!-- Información del Producto -->
+            <div class="producto-info">
+                <h3 class="producto-titulo" title="${nombreProducto}">
+                    ${nombreProducto}
+                </h3>
+
+                <p class="producto-descripcion">
+                    ${descripcion}
                 </p>
 
-                <div class="mt-auto">
-                    <div class="precios-container mb-3">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <small class="text-muted d-block">Efectivo/SINPE</small>
-                                <span class="text-success fw-bold">₡${formatearMoneda(precioEfectivo)}</span>
-                            </div>
-                            <div class="col-6">
-                                <small class="text-muted d-block">Tarjeta</small>
-                                <span class="text-warning fw-bold">₡${formatearMoneda(precioTarjeta)}</span>
-                            </div>
-                        </div>
+                <!-- Precios -->
+                <div class="producto-precios">
+                    <div class="precio-item">
+                        <span class="precio-label">Efectivo/SINPE</span>
+                        <span class="precio-valor efectivo">₡${formatearMoneda(precioEfectivo)}</span>
                     </div>
+                    <div class="precio-item">
+                        <span class="precio-label">Tarjeta</span>
+                        <span class="precio-valor tarjeta">₡${formatearMoneda(precioTarjeta)}</span>
+                    </div>
+                </div>
 
-                    <div class="stock-info mb-3">
-                        <small class="text-muted">Stock disponible: </small>
-                        <span class="${cantidadInventario <= 0 ? 'text-danger' : cantidadInventario <= stockMinimo ? 'text-warning' : 'text-success'} fw-bold">
-                            ${cantidadInventario} ${cantidadInventario === 1 ? 'unidad' : 'unidades'}
-                        </span>
-                    </div>
-
-                    <div class="d-grid">
-                        <button class="btn btn-primary btn-sm" onclick="verDetalleProducto(${productoId})">
-                            <i class="bi bi-eye"></i> Ver detalles
-                        </button>
-                    </div>
+                <!-- Stock -->
+                <div class="producto-stock">
+                    <span class="stock-texto">
+                        ${cantidadInventario} ${cantidadInventario === 1 ? 'unidad' : 'unidades'} disponible${cantidadInventario === 1 ? '' : 's'}
+                    </span>
                 </div>
             </div>
         </div>
     `;
+
+    // Animación de entrada
+    setTimeout(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
+    }, 100);
 
     return card;
 }
