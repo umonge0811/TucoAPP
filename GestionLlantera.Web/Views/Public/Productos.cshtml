@@ -6,110 +6,6 @@
 
 }
 
-<style>
-        .filtro-llantas-container {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            border: 1px solid #e9ecef;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: box-shadow 0.3s ease;
-        }
-
-        .filtro-llantas-container:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-        }
-
-        .filtro-header h3 {
-            color: #495057;
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .filtros-activos-counter .badge {
-            font-size: 0.8rem;
-            padding: 6px 12px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .btn-clear-filter {
-            position: absolute;
-            right: 8px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            color: #6c757d;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s ease;
-            z-index: 10;
-        }
-
-        .btn-clear-filter:hover {
-            background: #dc3545;
-            color: white;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        .position-relative .form-select {
-            padding-right: 40px;
-        }
-
-        .filtros-resumen {
-            display: flex;
-            align-items: center;
-            min-height: 38px;
-            padding: 8px 12px;
-            background: rgba(13, 110, 253, 0.05);
-            border-radius: 6px;
-            border-left: 3px solid #0d6efd;
-        }
-
-        .form-label {
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .form-select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-        }
-
-        .btn-outline-danger.btn-sm {
-            font-size: 0.85rem;
-            padding: 6px 16px;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-
-        .btn-outline-danger.btn-sm:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
-        }
-
-        /* Animación para mostrar/ocultar elementos */
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
 
 <div class="productos-publicos-container">
     <!-- Hero Section -->
@@ -143,18 +39,13 @@
 
     <!-- Filtro Simple de Llantas -->
     <div class="container mb-4">
-        <div class="card shadow-sm filtro-llantas-container">
+        <div class="card shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-funnel me-2"></i>
-                        Filtrar Llantas
-                    </h5>
-                    <div class="filtros-activos-counter">
-                        <span class="badge bg-primary">0</span> Filtros activos
-                    </div>
-                </div>
-                <div class="row g-3 position-relative">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-funnel me-2"></i>
+                    Filtrar Llantas
+                </h5>
+                <div class="row g-3">
                     <div class="col-md-3">
                         <label for="filtroMarca" class="form-label">Marca</label>
                         <select id="filtroMarca" class="form-select">
@@ -179,15 +70,12 @@
                             <option value="">Todos</option>
                         </select>
                     </div>
-                    <div class="col-md-3 d-flex align-items-end justify-content-end">
-                        <button id="btnLimpiarFiltros" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash-fill me-2"></i>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button id="btnLimpiarFiltros" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
                             Limpiar Filtros
                         </button>
                     </div>
-                </div>
-                <div class="filtros-resumen mt-3 px-3 py-2" style="display: none;">
-                    Resumen de filtros aplicados:
                 </div>
             </div>
         </div>
