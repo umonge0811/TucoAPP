@@ -65,61 +65,34 @@ document.addEventListener('DOMContentLoaded', function () {
     // FUNCIONES AUXILIARES
     // ========================================
 
-    // Función para normalizar texto a PascalCase
-    function normalizarAPascalCase(texto) {
+    // Función para normalizar texto a MAYÚSCULAS
+    function normalizarAMayusculas(texto) {
         if (!texto || typeof texto !== 'string') return '';
 
-        return texto
-            .toLowerCase()
-            .split(' ')
-            .map(palabra => {
-                if (palabra.length === 0) return '';
-                return palabra.charAt(0).toUpperCase() + palabra.slice(1);
-            })
-            .join(' ')
-            .trim();
+        return texto.toUpperCase().trim();
     }
 
-    // Función para normalizar texto preservando acrónimos comunes
+    // Función para normalizar texto a MAYÚSCULAS (alias para compatibilidad)
     function normalizarTextoInteligente(texto) {
-        if (!texto || typeof texto !== 'string') return '';
+        return normalizarAMayusculas(texto);
+    }
 
-        // Lista de acrónimos que deben mantenerse en mayúsculas
-        const acronimos = ['SUV', 'GPS', 'ABS', 'LED', 'BMW', 'USA', 'EU', 'OEM', 'UV'];
-
-        let textoNormalizado = normalizarAPascalCase(texto);
-
-        // Restaurar acrónimos
-        acronimos.forEach(acronimo => {
-            const regex = new RegExp(`\\b${acronimo.toLowerCase()}\\b`, 'gi');
-            textoNormalizado = textoNormalizado.replace(regex, acronimo);
-        });
-
-        return textoNormalizado;
+    // Función para normalizar texto a MAYÚSCULAS (alias para compatibilidad)
+    function normalizarAPascalCase(texto) {
+        return normalizarAMayusculas(texto);
     }
 
     // Función para aplicar normalización a un input
-    function aplicarNormalizacionAInput(input, tipoNormalizacion = 'inteligente') {
+    function aplicarNormalizacionAInput(input, tipoNormalizacion = 'mayuscula') {
         if (!input) return;
 
         const aplicarNormalizacion = () => {
             const valorActual = input.value;
-            let valorNormalizado;
-
-            switch (tipoNormalizacion) {
-                case 'pascalCase':
-                    valorNormalizado = normalizarAPascalCase(valorActual);
-                    break;
-                case 'inteligente':
-                    valorNormalizado = normalizarTextoInteligente(valorActual);
-                    break;
-                default:
-                    valorNormalizado = normalizarTextoInteligente(valorActual);
-            }
+            const valorNormalizado = normalizarAMayusculas(valorActual);
 
             if (valorActual !== valorNormalizado) {
                 input.value = valorNormalizado;
-                console.log(`📝 Texto normalizado: "${valorActual}" → "${valorNormalizado}"`);
+                console.log(`📝 Texto normalizado a MAYÚSCULAS: "${valorActual}" → "${valorNormalizado}"`);
             }
         };
 
@@ -132,71 +105,53 @@ document.addEventListener('DOMContentLoaded', function () {
                 aplicarNormalizacion();
             }
         });
+
+        // NUEVO: Aplicar normalización en tiempo real mientras escribe
+        input.addEventListener('input', function () {
+            const valorActual = this.value;
+            const valorNormalizado = normalizarAMayusculas(valorActual);
+            if (valorActual !== valorNormalizado) {
+                // Guardar posición del cursor
+                const cursorPos = this.selectionStart;
+                this.value = valorNormalizado;
+                // Restaurar posición del cursor
+                this.setSelectionRange(cursorPos, cursorPos);
+            }
+        });
     }
 
     // Función para configurar normalización en todos los inputs de texto relevantes
     function configurarNormalizacionInputs() {
-        console.log('🔤 Configurando normalización de texto en inputs...');
+        console.log('🔤 Configurando normalización MAYÚSCULAS en todos los inputs...');
 
-        // Inputs que necesitan normalización inteligente (preservando acrónimos)
-        const inputsTexto = [
+        // TODOS los inputs de texto se normalizarán a MAYÚSCULAS
+        const todosLosInputsTexto = [
             // Información básica
-            { selector: '[name="NombreProducto"]', tipo: 'inteligente' },
-            { selector: '[name="Descripcion"]', tipo: 'inteligente' },
-            { selector: '#descripcionLlanta', tipo: 'inteligente' },
+            '[name="NombreProducto"]',
+            '[name="Descripcion"]',
+            '#descripcionLlanta',
 
             // Campos de llanta
-            { selector: '[name="Llanta.Marca"]', tipo: 'inteligente' },
-            { selector: '#marcaInput', tipo: 'inteligente' },
-            { selector: '[name="Llanta.Modelo"]', tipo: 'inteligente' },
-            { selector: '#modeloInput', tipo: 'inteligente' },
-            { selector: '[name="Llanta.TipoTerreno"]', tipo: 'pascalCase' },
-            { selector: '#tipoTerrenoInput', tipo: 'pascalCase' }
+            '[name="Llanta.Marca"]',
+            '#marcaInput',
+            '[name="Llanta.Modelo"]',
+            '#modeloInput',
+            '[name="Llanta.TipoTerreno"]',
+            '#tipoTerrenoInput',
+            '[name="Llanta.IndiceVelocidad"]',
+            '#indiceVelocidadInput'
         ];
 
-        // Inputs que necesitan normalización a mayúsculas (códigos/índices)
-        const inputsMayusculas = [
-            { selector: '[name="Llanta.IndiceVelocidad"]', tipo: 'mayuscula' },
-            { selector: '#indiceVelocidadInput', tipo: 'mayuscula' }
-        ];
-
-        // Aplicar normalización inteligente
-        inputsTexto.forEach(config => {
-            const input = document.querySelector(config.selector);
+        // Aplicar normalización a MAYÚSCULAS a todos los inputs de texto
+        todosLosInputsTexto.forEach(selector => {
+            const input = document.querySelector(selector);
             if (input) {
-                aplicarNormalizacionAInput(input, config.tipo);
-                console.log(`✅ Normalización configurada para: ${config.selector}`);
+                aplicarNormalizacionAInput(input, 'mayuscula');
+                console.log(`✅ Normalización MAYÚSCULAS configurada para: ${selector}`);
             }
         });
 
-        // Aplicar normalización a mayúsculas para índices de velocidad
-        inputsMayusculas.forEach(config => {
-            const input = document.querySelector(config.selector);
-            if (input) {
-                input.addEventListener('blur', function () {
-                    if (this.value) {
-                        const valorNormalizado = this.value.toUpperCase().trim();
-                        if (this.value !== valorNormalizado) {
-                            this.value = valorNormalizado;
-                            console.log(`📝 Índice normalizado a mayúsculas: ${valorNormalizado}`);
-                        }
-                    }
-                });
-
-                input.addEventListener('input', function () {
-                    // Convertir a mayúsculas en tiempo real para índices
-                    const valorActual = this.value;
-                    const valorMayuscula = valorActual.toUpperCase();
-                    if (valorActual !== valorMayuscula) {
-                        this.value = valorMayuscula;
-                    }
-                });
-
-                console.log(`✅ Normalización a mayúsculas configurada para: ${config.selector}`);
-            }
-        });
-
-        console.log('✅ Normalización de texto configurada en todos los inputs relevantes');
+        console.log('✅ Normalización MAYÚSCULAS configurada en todos los inputs de texto');
     }
 
     function marcarCamposObligatorios() {
@@ -1348,8 +1303,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function seleccionarMarca(marca, input, container, esNueva) {
         console.log(`✅ Marca seleccionada: "${marca}" (Nueva: ${esNueva})`);
 
-        // Normalizar la marca antes de asignarla
-        const marcaNormalizada = normalizarTextoInteligente(marca);
+        // Normalizar la marca a MAYÚSCULAS antes de asignarla
+        const marcaNormalizada = normalizarAMayusculas(marca);
         input.value = marcaNormalizada;
         ocultarSugerencias(container);
 
@@ -1361,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Mostrar notificación
         if (esNueva && typeof toastr !== 'undefined') {
-            toastr.info(`Nueva marca "${marca}" será agregada al guardar el producto`);
+            toastr.info(`Nueva marca "${marcaNormalizada}" será agregada al guardar el producto`);
         }
 
         // Trigger evento para que otros sistemas sepan que cambió
@@ -1721,18 +1676,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function seleccionarValorGenerico(valor, input, container, esNuevo, nombreCampo) {
         console.log(`✅ ${nombreCampo} seleccionado: "${valor}" (Nuevo: ${esNuevo})`);
 
-        // Aplicar normalización según el tipo de campo
-        let valorNormalizado = valor;
-
-        if (nombreCampo === 'indices de velocidad') {
-            valorNormalizado = valor.toUpperCase().trim();
-        } else if (nombreCampo === 'modelo') {
-            valorNormalizado = normalizarTextoInteligente(valor);
-        } else if (nombreCampo === 'tipos de terreno') {
-            valorNormalizado = normalizarAPascalCase(valor);
-        } else {
-            valorNormalizado = normalizarTextoInteligente(valor);
-        }
+        // TODOS los valores se normalizan a MAYÚSCULAS
+        const valorNormalizado = normalizarAMayusculas(valor);
 
         input.value = valorNormalizado;
         ocultarSugerencias(container);
@@ -1745,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Mostrar notificación
         if (esNuevo && typeof toastr !== 'undefined') {
-            toastr.info(`Nuevo ${nombreCampo} "${valor}" será agregado al guardar el producto`);
+            toastr.info(`Nuevo ${nombreCampo} "${valorNormalizado}" será agregado al guardar el producto`);
         }
 
         // Trigger evento
