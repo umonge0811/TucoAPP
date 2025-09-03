@@ -572,60 +572,70 @@ function actualizarFiltrosDependientes() {
     const marcaSeleccionada = document.getElementById('filtroMarca').value;
     const anchoSeleccionado = document.getElementById('filtroAncho').value;
     const perfilSeleccionado = document.getElementById('filtroPerfil').value;
+    const diametroSeleccionado = document.getElementById('filtroDiametro').value;
     
-    // Filtrar llantas según selecciones previas
-    let llantasFiltradas = productosLlantas;
+    // Filtrar llantas disponibles según las selecciones actuales
+    let llantasParaAncho = productosLlantas;
+    let llantasParaPerfil = productosLlantas;
+    let llantasParaDiametro = productosLlantas;
     
+    // Para ancho: solo filtrar por marca si está seleccionada
     if (marcaSeleccionada) {
-        llantasFiltradas = llantasFiltradas.filter(p => p.llanta.marca === marcaSeleccionada);
+        llantasParaAncho = llantasParaAncho.filter(p => p.llanta.marca === marcaSeleccionada);
     }
     
+    // Para perfil: filtrar por marca y ancho si están seleccionados
+    if (marcaSeleccionada) {
+        llantasParaPerfil = llantasParaPerfil.filter(p => p.llanta.marca === marcaSeleccionada);
+    }
     if (anchoSeleccionado) {
-        llantasFiltradas = llantasFiltradas.filter(p => p.llanta.ancho == anchoSeleccionado);
+        llantasParaPerfil = llantasParaPerfil.filter(p => p.llanta.ancho == anchoSeleccionado);
     }
     
+    // Para diámetro: filtrar por marca, ancho y perfil si están seleccionados
+    if (marcaSeleccionada) {
+        llantasParaDiametro = llantasParaDiametro.filter(p => p.llanta.marca === marcaSeleccionada);
+    }
+    if (anchoSeleccionado) {
+        llantasParaDiametro = llantasParaDiametro.filter(p => p.llanta.ancho == anchoSeleccionado);
+    }
     if (perfilSeleccionado) {
-        llantasFiltradas = llantasFiltradas.filter(p => p.llanta.perfil == perfilSeleccionado);
+        llantasParaDiametro = llantasParaDiametro.filter(p => p.llanta.perfil == perfilSeleccionado);
     }
 
-    // Actualizar opciones de ancho basadas en marca seleccionada
-    const anchosDisponibles = [...new Set(llantasFiltradas
-        .filter(p => !anchoSeleccionado) // Si no hay ancho seleccionado, mostrar todas las opciones
+    // Actualizar opciones de ancho
+    const anchosDisponibles = [...new Set(llantasParaAncho
         .map(p => p.llanta.ancho)
         .filter(ancho => ancho != null))].sort((a, b) => a - b);
     
     const selectAncho = document.getElementById('filtroAncho');
-    const anchoActual = selectAncho.value;
     selectAncho.innerHTML = '<option value="">Todos los anchos</option>';
     anchosDisponibles.forEach(ancho => {
-        const selected = ancho == anchoActual ? 'selected' : '';
+        const selected = ancho == anchoSeleccionado ? 'selected' : '';
         selectAncho.innerHTML += `<option value="${ancho}" ${selected}>${ancho}</option>`;
     });
 
-    // Actualizar opciones de perfil basadas en marca y ancho seleccionados
-    const perfilesDisponibles = [...new Set(llantasFiltradas
-        .filter(p => !perfilSeleccionado) // Si no hay perfil seleccionado, mostrar todas las opciones
+    // Actualizar opciones de perfil
+    const perfilesDisponibles = [...new Set(llantasParaPerfil
         .map(p => p.llanta.perfil)
         .filter(perfil => perfil != null && perfil > 0))].sort((a, b) => a - b);
     
     const selectPerfil = document.getElementById('filtroPerfil');
-    const perfilActual = selectPerfil.value;
     selectPerfil.innerHTML = '<option value="">Todos los perfiles</option>';
     perfilesDisponibles.forEach(perfil => {
-        const selected = perfil == perfilActual ? 'selected' : '';
+        const selected = perfil == perfilSeleccionado ? 'selected' : '';
         selectPerfil.innerHTML += `<option value="${perfil}" ${selected}>${perfil}</option>`;
     });
 
-    // Actualizar opciones de diámetro basadas en todas las selecciones previas
-    const diametrosDisponibles = [...new Set(llantasFiltradas
+    // Actualizar opciones de diámetro
+    const diametrosDisponibles = [...new Set(llantasParaDiametro
         .map(p => p.llanta.diametro)
         .filter(diametro => diametro && diametro.trim() !== ''))].sort();
     
     const selectDiametro = document.getElementById('filtroDiametro');
-    const diametroActual = selectDiametro.value;
     selectDiametro.innerHTML = '<option value="">Todos los diámetros</option>';
     diametrosDisponibles.forEach(diametro => {
-        const selected = diametro === diametroActual ? 'selected' : '';
+        const selected = diametro === diametroSeleccionado ? 'selected' : '';
         selectDiametro.innerHTML += `<option value="${diametro}" ${selected}>R${diametro}</option>`;
     });
 
