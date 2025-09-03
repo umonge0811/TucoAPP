@@ -279,7 +279,27 @@ function mostrarResultados(productos) {
         noResultadosDiv.style.display = 'none';
     }
 
-    // Generar HTML para cada producto (igual que facturación)
+    // DIAGNÓSTICO DETALLADO DE IMÁGENES
+    console.log('🖼️ === DIAGNÓSTICO DE IMÁGENES ===');
+    productos.forEach((producto, index) => {
+        console.log(`🖼️ Producto ${index + 1}: ${producto.nombreProducto}`);
+        console.log(`🖼️   - imagenesUrls:`, producto.imagenesUrls);
+        console.log(`🖼️   - imagenesProductos:`, producto.imagenesProductos);
+        
+        if (producto.imagenesProductos && producto.imagenesProductos.length > 0) {
+            producto.imagenesProductos.forEach((img, imgIndex) => {
+                console.log(`🖼️   - Imagen ${imgIndex + 1}:`, {
+                    Urlimagen: img.Urlimagen,
+                    urlimagen: img.urlimagen,
+                    UrlImagen: img.UrlImagen,
+                    urlImagen: img.urlImagen
+                });
+            });
+        }
+    });
+    console.log('🖼️ === FIN DIAGNÓSTICO ===');
+
+    // Generar HTML para cada producto
     productos.forEach((producto, index) => {
         const card = crearCardProducto(producto);
         container.appendChild(card);
@@ -304,20 +324,79 @@ function crearCardProducto(producto) {
     const stockMinimo = producto.stockMinimo || 0;
     const esLlanta = producto.esLlanta || false;
 
-    // ✅ PROCESAR IMAGEN (MISMA LÓGICA QUE FACTURACIÓN)
+    // ✅ PROCESAR IMAGEN - LÓGICA MEJORADA Y CONSISTENTE
     let imagenUrl = '/images/no-image.png';
     try {
+        console.log(`🖼️ Procesando imágenes para: ${nombreProducto}`, {
+            imagenesUrls: producto.imagenesUrls,
+            imagenesProductos: producto.imagenesProductos
+        });
+
+        let imagenEncontrada = false;
+
+        // 1. Verificar imagenesUrls (formato directo)
         if (producto.imagenesUrls && Array.isArray(producto.imagenesUrls) && producto.imagenesUrls.length > 0) {
-            imagenUrl = producto.imagenesUrls[0];
-        } else if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
-            const primeraImagen = producto.imagenesProductos[0];
-            if (primeraImagen && primeraImagen.Urlimagen) {
-                imagenUrl = primeraImagen.Urlimagen;
+            const urlDirecta = producto.imagenesUrls[0];
+            if (urlDirecta && urlDirecta.trim() !== '') {
+                imagenUrl = construirUrlImagen(urlDirecta);
+                imagenEncontrada = true;
+                console.log(`🖼️ ✅ Imagen desde imagenesUrls: ${imagenUrl}`);
             }
         }
+
+        // 2. Si no se encontró, verificar imagenesProductos (formato con objetos)
+        if (!imagenEncontrada && producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen) {
+                // Intentar diferentes propiedades de URL (case-insensitive)
+                const urlImagen = primeraImagen.Urlimagen || primeraImagen.urlimagen || 
+                                 primeraImagen.UrlImagen || primeraImagen.urlImagen;
+                
+                if (urlImagen && urlImagen.trim() !== '') {
+                    imagenUrl = construirUrlImagen(urlImagen);
+                    imagenEncontrada = true;
+                    console.log(`🖼️ ✅ Imagen desde imagenesProductos: ${imagenUrl}`);
+                }
+            }
+        }
+
+        if (!imagenEncontrada) {
+            console.warn(`🖼️ ⚠️ No se encontró imagen válida para: ${nombreProducto}`);
+        }
+
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes del producto:', error);
         imagenUrl = '/images/no-image.png';
+    }
+
+    // ✅ FUNCIÓN AUXILIAR PARA CONSTRUIR URL COMPLETA DE IMAGEN
+    function construirUrlImagen(url) {
+        if (!url || url.trim() === '') {
+            return '/images/no-image.png';
+        }
+
+        // Si ya es una URL completa, devolverla tal como está
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        }
+
+        // Si es una URL relativa que empieza con /uploads/, construir URL completa
+        if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+            // Asegurar que la URL empiece con /
+            const urlLimpia = url.startsWith('/') ? url : `/${url}`;
+            
+            // Para desarrollo local, usar localhost (el API está en puerto 5049)
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                return `http://localhost:5049${urlLimpia}`;
+            }
+            // Para producción, usar el dominio de Somee
+            else {
+                return `http://apillantasymast.somee.com${urlLimpia}`;
+            }
+        }
+
+        // Si es otro tipo de URL relativa, usar imagen por defecto
+        return '/images/no-image.png';
     }
 
     // ✅ PROCESAR INFORMACIÓN DE LLANTA (MISMA LÓGICA QUE FACTURACIÓN)
