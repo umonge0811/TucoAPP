@@ -39,23 +39,41 @@ async function cargarProductosIniciales() {
 }
 
 // ========================================
-// BÚSQUEDA DE PRODUCTOS
+// BÚSQUEDA EN TIEMPO REAL
 // ========================================
 function inicializarBusqueda() {
     const inputBusqueda = document.getElementById('busquedaProductos');
 
-    if (!inputBusqueda) return;
+    if (!inputBusqueda) {
+        console.warn('⚠️ Input de búsqueda no encontrado');
+        return;
+    }
 
+    console.log('✅ Inicializando búsqueda en tiempo real');
+
+    // Filtrado en tiempo real con debounce
+    let timeoutId;
     inputBusqueda.addEventListener('input', function () {
-        const termino = this.value.toLowerCase().trim();
-        if (termino.length >= 2 || termino.length === 0) {
-            buscarProductos(termino);
+        clearTimeout(timeoutId);
+        
+        // Debounce de 300ms para mejor rendimiento
+        timeoutId = setTimeout(() => {
+            filtrarProductos();
+        }, 300);
+    });
+
+    // También filtrar al presionar Enter
+    inputBusqueda.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            clearTimeout(timeoutId);
+            filtrarProductos();
         }
     });
 }
 
 // ========================================
-// FILTROS POR CATEGORÍA
+// FILTROS POR CATEGORÍA EN TIEMPO REAL
 // ========================================
 function inicializarFiltros() {
     const selectCategoria = document.getElementById('filtroCategoria');
@@ -65,60 +83,71 @@ function inicializarFiltros() {
         return;
     }
 
-    console.log('✅ Inicializando filtros - elemento encontrado');
+    console.log('✅ Inicializando filtros de categoría en tiempo real');
 
     selectCategoria.addEventListener('change', function () {
         const valor = this.value;
         console.log('🔄 Categoría seleccionada:', valor);
 
-        // El buscador inteligente SIEMPRE debe estar visible
-        // Solo habilitamos/deshabilitamos funcionalidades según la categoría
+        // Gestión del buscador de llantas
         const buscadorLlantas = document.getElementById('buscadorLlantas');
         if (buscadorLlantas) {
-            // Siempre visible, pero podemos añadir clases para indicar estado
             if (valor === 'llanta') {
                 buscadorLlantas.classList.add('categoria-activa');
-                console.log('🎯 Buscador de llantas en modo activo');
+                buscadorLlantas.style.display = 'block';
+                console.log('🎯 Buscador de llantas activado');
             } else {
                 buscadorLlantas.classList.remove('categoria-activa');
+                // Mantener visible pero con estilo diferente
                 console.log('🎯 Buscador de llantas en modo general');
             }
         }
 
+        // Aplicar filtros inmediatamente
         filtrarProductos();
     });
 
-    // Verificar si el buscador existe al inicializar
+    // Configurar buscador de llantas
     const buscadorLlantas = document.getElementById('buscadorLlantas');
     if (buscadorLlantas) {
-        console.log('✅ Buscador de llantas encontrado en el DOM y siempre visible');
-        // Asegurar que esté visible desde el inicio
+        console.log('✅ Buscador de llantas configurado');
         buscadorLlantas.style.display = 'block';
     } else {
-        console.warn('⚠️ Buscador de llantas NO encontrado en el DOM');
+        console.warn('⚠️ Buscador de llantas NO encontrado');
     }
 }
 
 // ========================================
-// FUNCIÓN PRINCIPAL DE FILTRADO
+// FUNCIÓN PRINCIPAL DE FILTRADO EN TIEMPO REAL
 // ========================================
 function filtrarProductos() {
     const termino = document.getElementById('busquedaProductos')?.value.toLowerCase().trim() || '';
     const categoria = document.getElementById('filtroCategoria')?.value || '';
 
-    const productos = document.querySelectorAll('.producto-item');
+    // Usar el selector correcto para las cards de productos
+    const productos = document.querySelectorAll('.producto-card');
     const noResultados = document.getElementById('noResultados');
     let productosVisibles = 0;
 
-    productos.forEach(function (producto) {
-        const nombre = producto.getAttribute('data-nombre') || '';
+    console.log(`🔍 Filtrando ${productos.length} productos con término: "${termino}" y categoría: "${categoria}"`);
+
+    productos.forEach(function (producto, index) {
+        // Obtener datos del producto desde atributos data-*
+        const nombre = (producto.getAttribute('data-nombre') || '').toLowerCase();
         const categoriaProducto = producto.getAttribute('data-categoria') || '';
+        
+        // También buscar en el contenido visible del producto
+        const textoCompleto = producto.textContent.toLowerCase();
 
         let mostrar = true;
 
-        // Filtro por término de búsqueda
-        if (termino && !nombre.includes(termino)) {
-            mostrar = false;
+        // Filtro por término de búsqueda (buscar en nombre y contenido completo)
+        if (termino) {
+            const coincideNombre = nombre.includes(termino);
+            const coincideTexto = textoCompleto.includes(termino);
+            if (!coincideNombre && !coincideTexto) {
+                mostrar = false;
+            }
         }
 
         // Filtro por categoría
@@ -126,18 +155,26 @@ function filtrarProductos() {
             mostrar = false;
         }
 
+        // Aplicar filtro con animación suave
         if (mostrar) {
             producto.style.display = 'block';
+            producto.style.opacity = '1';
+            producto.style.transform = 'translateY(0) scale(1)';
             productosVisibles++;
 
-            // Agregar animación escalonada
+            // Animación escalonada más sutil
             setTimeout(() => {
-                producto.style.opacity = '1';
-                producto.style.transform = 'translateY(0)';
-            }, productosVisibles * 50);
+                producto.style.transition = 'all 0.3s ease';
+            }, index * 30);
 
         } else {
-            producto.style.display = 'none';
+            producto.style.opacity = '0';
+            producto.style.transform = 'translateY(10px) scale(0.95)';
+            
+            // Ocultar después de la animación
+            setTimeout(() => {
+                producto.style.display = 'none';
+            }, 200);
         }
     });
 
@@ -145,12 +182,14 @@ function filtrarProductos() {
     if (noResultados) {
         if (productosVisibles === 0) {
             noResultados.style.display = 'block';
+            noResultados.style.opacity = '1';
         } else {
             noResultados.style.display = 'none';
+            noResultados.style.opacity = '0';
         }
     }
 
-    console.log(`🔍 Filtros aplicados: ${productosVisibles} productos visibles`);
+    console.log(`✅ Filtrado completado: ${productosVisibles} productos visibles de ${productos.length} totales`);
 }
 
 // ========================================
@@ -489,8 +528,12 @@ function crearCardProducto(producto) {
     card.style.transform = 'translateY(20px)';
     card.style.transition = 'all 0.3s ease';
 
+    // Agregar atributos data- al contenedor principal para filtrado
+    card.setAttribute('data-nombre', nombreProducto.toLowerCase());
+    card.setAttribute('data-categoria', esLlanta ? 'llanta' : 'accesorio');
+
     card.innerHTML = `
-        <div class="producto-card ${stockEstado}" data-nombre="${nombreProducto.toLowerCase()}" data-categoria="${esLlanta ? 'llanta' : 'accesorio'}">
+        <div class="producto-card ${stockEstado}">
             <!-- Imagen del Producto -->
             <div class="producto-imagen-container">
                 <img src="${imagenUrl}" 

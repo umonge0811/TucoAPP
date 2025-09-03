@@ -39,34 +39,35 @@
 
     <!-- Filtros y Búsqueda -->
     <div class="container mb-4">
-        <!-- Búsqueda General -->
-        <div class="filters-section bg-white rounded shadow-sm p-4 mb-3">
-            <div class="row g-3 align-items-end">
+        <!-- Búsqueda Minimalista -->
+        <div class="filters-section bg-white rounded p-3 mb-3">
+            <div class="row g-2 align-items-end">
                 <div class="col-lg-6">
-                    <label for="busquedaProductos" class="form-label fw-bold">
-                        <i class="bi bi-search me-2"></i>Buscar productos
+                    <label for="busquedaProductos" class="form-label text-muted mb-1" style="font-size: 0.9rem;">
+                        <i class="bi bi-search me-1"></i>Buscar productos
                     </label>
                     <input type="text"
-                           class="form-control form-control-lg"
+                           class="form-control"
                            id="busquedaProductos"
-                           placeholder="Buscar por nombre, marca, modelo..."
+                           placeholder="Nombre, marca, modelo..."
                            autocomplete="off">
                 </div>
                 <div class="col-lg-4">
-                    <label for="filtroCategoria" class="form-label fw-bold">
-                        <i class="bi bi-funnel me-2"></i>Categoría
+                    <label for="filtroCategoria" class="form-label text-muted mb-1" style="font-size: 0.9rem;">
+                        <i class="bi bi-funnel me-1"></i>Categoría
                     </label>
-                    <select class="form-select form-select-lg" id="filtroCategoria">
-                        <option value="">Todas las categorías</option>
+                    <select class="form-select" id="filtroCategoria">
+                        <option value="">Todas</option>
                         <option value="llanta">Llantas</option>
                         <option value="accesorio">Accesorios</option>
                     </select>
                 </div>
                 <div class="col-lg-2">
                     <button type="button"
-                            class="btn btn-outline-secondary btn-lg w-100"
-                            onclick="limpiarTodosFiltros()">
-                        <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
+                            class="btn btn-outline-secondary w-100"
+                            onclick="limpiarTodosFiltros()"
+                            style="font-size: 0.9rem;">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Limpiar
                     </button>
                 </div>
             </div>
