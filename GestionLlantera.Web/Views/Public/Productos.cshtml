@@ -37,6 +37,44 @@
         </div>
     </div>
 
+    <!-- Filtro Simple de Llantas -->
+    <div class="container mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-funnel me-2"></i>
+                    Filtrar Llantas
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filtroMarca" class="form-label">Marca</label>
+                        <select id="filtroMarca" class="form-select">
+                            <option value="">Todas las marcas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtroAncho" class="form-label">Ancho</label>
+                        <select id="filtroAncho" class="form-select">
+                            <option value="">Todos los anchos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtroDiametro" class="form-label">Diámetro</label>
+                        <select id="filtroDiametro" class="form-select">
+                            <option value="">Todos los diámetros</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button id="btnLimpiarFiltros" class="btn btn-outline-secondary w-100">
+                            <i class="bi bi-arrow-clockwise me-2"></i>
+                            Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Contenedor Principal de Productos -->
     <div class="container">
         <div class="row" id="productosContainer">

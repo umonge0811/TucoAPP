@@ -2,11 +2,16 @@
 // VISTA PÚBLICA DE PRODUCTOS - JAVASCRIPT
 // ========================================
 
+// Variables globales
+let todosLosProductos = [];
+let productosLlantas = [];
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('📦 Módulo de productos públicos cargado');
 
     // Inicializar funcionalidades
     inicializarAnimaciones();
+    configurarFiltrosLlantas();
 
     // Cargar productos iniciales
     cargarProductosIniciales();
@@ -154,6 +159,13 @@ function mostrarResultados(productos) {
         console.error('❌ Container de productos no encontrado');
         return;
     }
+
+    // ✅ GUARDAR PRODUCTOS GLOBALMENTE
+    todosLosProductos = productos;
+    productosLlantas = productos.filter(p => p.esLlanta && p.llanta);
+    
+    // ✅ POBLAR FILTROS CON DATOS REALES
+    poblarFiltrosLlantas();
 
     // Limpiar container
     container.innerHTML = '';
@@ -505,7 +517,165 @@ function verDetalleProducto(productoId) {
 
 
 // ========================================
+// FILTRADO DE LLANTAS
+// ========================================
+
+function configurarFiltrosLlantas() {
+    console.log('🔧 Configurando filtros de llantas...');
+    
+    // Event listeners para los filtros
+    document.getElementById('filtroMarca').addEventListener('change', aplicarFiltrosLlantas);
+    document.getElementById('filtroAncho').addEventListener('change', aplicarFiltrosLlantas);
+    document.getElementById('filtroDiametro').addEventListener('change', aplicarFiltrosLlantas);
+    document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltrosLlantas);
+}
+
+function poblarFiltrosLlantas() {
+    console.log('📋 Poblando filtros con llantas disponibles...');
+    
+    if (!productosLlantas || productosLlantas.length === 0) {
+        console.log('⚠️ No hay llantas disponibles para filtrar');
+        return;
+    }
+
+    // Extraer valores únicos
+    const marcas = [...new Set(productosLlantas
+        .map(p => p.llanta.marca)
+        .filter(marca => marca && marca.trim() !== ''))].sort();
+    
+    const anchos = [...new Set(productosLlantas
+        .map(p => p.llanta.ancho)
+        .filter(ancho => ancho != null))].sort((a, b) => a - b);
+    
+    const diametros = [...new Set(productosLlantas
+        .map(p => p.llanta.diametro)
+        .filter(diametro => diametro && diametro.trim() !== ''))].sort();
+
+    // Poblar select de marcas
+    const selectMarca = document.getElementById('filtroMarca');
+    selectMarca.innerHTML = '<option value="">Todas las marcas</option>';
+    marcas.forEach(marca => {
+        selectMarca.innerHTML += `<option value="${marca}">${marca}</option>`;
+    });
+
+    // Poblar select de anchos
+    const selectAncho = document.getElementById('filtroAncho');
+    selectAncho.innerHTML = '<option value="">Todos los anchos</option>';
+    anchos.forEach(ancho => {
+        selectAncho.innerHTML += `<option value="${ancho}">${ancho}</option>`;
+    });
+
+    // Poblar select de diámetros
+    const selectDiametro = document.getElementById('filtroDiametro');
+    selectDiametro.innerHTML = '<option value="">Todos los diámetros</option>';
+    diametros.forEach(diametro => {
+        selectDiametro.innerHTML += `<option value="${diametro}">R${diametro}</option>`;
+    });
+
+    console.log(`✅ Filtros poblados: ${marcas.length} marcas, ${anchos.length} anchos, ${diametros.length} diámetros`);
+}
+
+function aplicarFiltrosLlantas() {
+    console.log('🔍 Aplicando filtros de llantas...');
+    
+    const marcaSeleccionada = document.getElementById('filtroMarca').value;
+    const anchoSeleccionado = document.getElementById('filtroAncho').value;
+    const diametroSeleccionado = document.getElementById('filtroDiametro').value;
+
+    console.log('🔍 Filtros aplicados:', {
+        marca: marcaSeleccionada,
+        ancho: anchoSeleccionado,
+        diametro: diametroSeleccionado
+    });
+
+    // Filtrar productos
+    let productosFiltrados = todosLosProductos;
+
+    // Si hay algún filtro activo, aplicar filtrado
+    if (marcaSeleccionada || anchoSeleccionado || diametroSeleccionado) {
+        productosFiltrados = todosLosProductos.filter(producto => {
+            // Solo filtrar llantas
+            if (!producto.esLlanta || !producto.llanta) {
+                return false; // Ocultar accesorios cuando hay filtros activos
+            }
+
+            const llanta = producto.llanta;
+            
+            // Verificar marca
+            if (marcaSeleccionada && llanta.marca !== marcaSeleccionada) {
+                return false;
+            }
+
+            // Verificar ancho
+            if (anchoSeleccionado && llanta.ancho != anchoSeleccionado) {
+                return false;
+            }
+
+            // Verificar diámetro
+            if (diametroSeleccionado && llanta.diametro !== diametroSeleccionado) {
+                return false;
+            }
+
+            return true;
+        });
+    }
+
+    console.log(`🔍 Productos después del filtro: ${productosFiltrados.length} de ${todosLosProductos.length}`);
+
+    // Mostrar productos filtrados
+    mostrarProductosFiltrados(productosFiltrados);
+}
+
+function mostrarProductosFiltrados(productos) {
+    const container = document.getElementById('productosContainer');
+    const noResultadosDiv = document.getElementById('noResultados');
+
+    if (!productos || productos.length === 0) {
+        // Mostrar mensaje de sin resultados
+        container.innerHTML = '';
+        if (noResultadosDiv) {
+            noResultadosDiv.style.display = 'block';
+        }
+        return;
+    }
+
+    // Ocultar mensaje de sin resultados
+    if (noResultadosDiv) {
+        noResultadosDiv.style.display = 'none';
+    }
+
+    // Limpiar container
+    container.innerHTML = '';
+
+    // Mostrar productos
+    productos.forEach((producto, index) => {
+        const card = crearCardProducto(producto);
+        container.appendChild(card);
+
+        // Animación escalonada
+        setTimeout(() => {
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+}
+
+function limpiarFiltrosLlantas() {
+    console.log('🧹 Limpiando filtros de llantas...');
+    
+    // Limpiar selects
+    document.getElementById('filtroMarca').value = '';
+    document.getElementById('filtroAncho').value = '';
+    document.getElementById('filtroDiametro').value = '';
+
+    // Mostrar todos los productos
+    mostrarProductosFiltrados(todosLosProductos);
+}
+
+// ========================================
 // FUNCIONES GLOBALES
 // ========================================
 window.buscarProductos = buscarProductos;
 window.verDetalleProducto = verDetalleProducto;
+window.aplicarFiltrosLlantas = aplicarFiltrosLlantas;
+window.limpiarFiltrosLlantas = limpiarFiltrosLlantas;
