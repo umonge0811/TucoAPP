@@ -1,0 +1,51 @@
+productos.js:6 📦 Módulo de productos públicos cargado
+productos.js:68 ✅ Inicializando filtros - elemento encontrado
+productos.js:94 ✅ Buscador de llantas encontrado en el DOM y siempre visible
+productos.js:596 🔧 Inicializando buscador inteligente de llantas
+productos.js:633 📊 Cargando medidas disponibles...
+productos.js:25 🔄 Cargando productos iniciales para vista pública...
+productos.js:184 🔍 === INICIO buscarProductos (Vista Pública) ===
+productos.js:185 🔍 Término recibido: ""
+productos.js:17 ✅ Vista pública de productos inicializada correctamente
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+productos.js:207 📋 Respuesta del servidor recibida: Object
+productos.js:210 ✅ Se encontraron 3 productos disponibles
+productos.js:211 📋 Estructura de datos recibida: Object
+productos.js:257 🔄 === INICIO mostrarResultados ===
+productos.js:258 🔄 Productos recibidos: 3
+productos.js:283 🖼️ === DIAGNÓSTICO DE IMÁGENES ===
+productos.js:285 🖼️ Producto 1: Llanta DUNLOP
+productos.js:286 🖼️   - imagenesUrls: Array(1)
+productos.js:287 🖼️   - imagenesProductos: Array(1)
+productos.js:291 🖼️   - Imagen 1: Object
+productos.js:285 🖼️ Producto 2: Llanta DUNLOP
+productos.js:286 🖼️   - imagenesUrls: Array(1)
+productos.js:287 🖼️   - imagenesProductos: Array(1)
+productos.js:291 🖼️   - Imagen 1: Object
+productos.js:285 🖼️ Producto 3: Llanta Pirelli Confort 2
+productos.js:286 🖼️   - imagenesUrls: Array(3)
+productos.js:287 🖼️   - imagenesProductos: Array(3)
+productos.js:291 🖼️   - Imagen 1: Object
+productos.js:291 🖼️   - Imagen 2: Object
+productos.js:291 🖼️   - Imagen 3: Object
+productos.js:300 🖼️ === FIN DIAGNÓSTICO ===
+productos.js:330 🖼️ Procesando imágenes para: Llanta DUNLOP Object
+productos.js:343 🖼️ ✅ Imagen desde imagenesUrls: http://apillantasymast.somee.com/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+productos.js:330 🖼️ Procesando imágenes para: Llanta DUNLOP Object
+productos.js:343 🖼️ ✅ Imagen desde imagenesUrls: http://apillantasymast.somee.com/uploads/productos/3_1_Llanta_DUNLOP_100R18.jpg
+productos.js:330 🖼️ Procesando imágenes para: Llanta Pirelli Confort 2 Object
+productos.js:343 🖼️ ✅ Imagen desde imagenesUrls: http://apillantasymast.somee.com/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+productos.js:314 ✅ 3 productos mostrados en vista pública
+productos.js:218 📦 Productos mostrados exitosamente en vista pública
+productos.js:232 🔍 === FIN buscarProductos (Vista Pública) ===
+Productos:1 Mixed Content: The page at 'https://localhost:7038/Public/Productos' was loaded over HTTPS, but requested an insecure element 'http://apillantasymast.somee.com/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg'. This request was automatically upgraded to HTTPS, For more information see https://blog.chromium.org/2019/10/no-more-mixed-messages-about-https.html
+Productos:1 Mixed Content: The page at 'https://localhost:7038/Public/Productos' was loaded over HTTPS, but requested an insecure element 'http://apillantasymast.somee.com/uploads/productos/3_1_Llanta_DUNLOP_100R18.jpg'. This request was automatically upgraded to HTTPS, For more information see https://blog.chromium.org/2019/10/no-more-mixed-messages-about-https.html
+Productos:1 Mixed Content: The page at 'https://localhost:7038/Public/Productos' was loaded over HTTPS, but requested an insecure element 'http://apillantasymast.somee.com/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp'. This request was automatically upgraded to HTTPS, For more information see https://blog.chromium.org/2019/10/no-more-mixed-messages-about-https.html
+productos.js:33 ✅ Productos iniciales cargados exitosamente
+productos.js:670 📐 Medidas procesadas: Object
+productos.js:649 ✅ Cargadas 3 llantas para filtros inteligentes
+apillantasymast.somee.com/uploads/productos/3_1_Llanta_DUNLOP_100R18.jpg:1  Failed to load resource: the server responded with a status of 404 ()
+apillantasymast.somee.com/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg:1  Failed to load resource: the server responded with a status of 404 ()
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
