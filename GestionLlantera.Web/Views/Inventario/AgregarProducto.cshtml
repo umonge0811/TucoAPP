@@ -178,10 +178,9 @@
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Ancho" class="form-label">Ancho</label>
                                     <div class="input-group">
-                                        <input asp-for="Llanta.Ancho" type="number" min="100" max="400" step="5" class="form-control" placeholder="225" />
+                                        <input asp-for="Llanta.Ancho" type="number" step="5" class="form-control" placeholder="225" />
                                         <span class="input-group-text">mm</span>
                                     </div>
-                                    <div class="form-text">Rango: 100-400mm</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -190,20 +189,18 @@
                                         Perfil <small class="text-muted">(opcional)</small>
                                     </label>
                                     <div class="input-group">
-                                        <input asp-for="Llanta.Perfil" type="number" min="25" max="90" step="5" class="form-control" placeholder="60" />
+                                        <input asp-for="Llanta.Perfil" type="number" step="5" class="form-control" placeholder="60" />
                                         <span class="input-group-text">%</span>
                                     </div>
-                                    <div class="form-text">Deje vacío para formatos como 225/R16</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label asp-for="Llanta.Diametro" class="form-label">Diámetro</label>
                                     <div class="input-group">
-                                        <input asp-for="Llanta.Diametro" type="number" min="12" max="30" step="1" class="form-control" placeholder="16" />
+                                        <input asp-for="Llanta.Diametro" type="number" step="1" class="form-control" placeholder="16" />
                                         <span class="input-group-text">pulgadas</span>
                                     </div>
-                                    <div class="form-text">Ejemplo: 225/60/R16 (Rango: 12-30")</div>
                                 </div>
                             </div>
 
