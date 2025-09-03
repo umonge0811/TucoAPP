@@ -20,20 +20,25 @@
     overflow: hidden;
 }
 
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
-    animation: float 20s ease-in-out infinite;
-}
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+        animation: float 20s ease-in-out infinite;
+    }
 
 @keyframes float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-10px) rotate(5deg); }
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-10px) rotate(5deg);
+    }
 }
 
 .hero-section .display-4 {
@@ -73,10 +78,10 @@
     transition: all 0.3s ease;
 }
 
-.form-control:focus, .form-select:focus {
-    box-shadow: 0 0 0 0.25rem rgba(44, 62, 80, 0.15);
-    border-color: #2c3e50;
-}
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 0.25rem rgba(44, 62, 80, 0.15);
+        border-color: #2c3e50;
+    }
 
 /* ========================================
    CARDS DE PRODUCTOS - DISEÑO PROFESIONAL
@@ -92,11 +97,11 @@
     position: relative;
 }
 
-.producto-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    border-color: #2c3e50;
-}
+    .producto-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        border-color: #2c3e50;
+    }
 
 /* Contenedor de imagen */
 .card-image-container {
@@ -154,10 +159,10 @@
     font-size: 0.9rem;
 }
 
-.card-overlay .btn:hover {
-    background: #f8f9fa;
-    transform: scale(1.05);
-}
+    .card-overlay .btn:hover {
+        background: #f8f9fa;
+        transform: scale(1.05);
+    }
 
 /* Cuerpo de la card */
 .card-body {
@@ -185,15 +190,15 @@
     margin-bottom: 0.75rem;
 }
 
-.medida-llanta .badge {
-    background: #f8f9fa;
-    color: #2c3e50;
-    border: 1px solid #e9ecef;
-    font-size: 0.85rem;
-    font-weight: 500;
-    padding: 0.5rem 0.75rem;
-    border-radius: 6px;
-}
+    .medida-llanta .badge {
+        background: #f8f9fa;
+        color: #2c3e50;
+        border: 1px solid #e9ecef;
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+    }
 
 /* Descripción */
 .card-text {
@@ -217,21 +222,21 @@
     border: 1px solid #f1f3f4;
 }
 
-.precios-container .row {
-    margin: 0;
-}
+    .precios-container .row {
+        margin: 0;
+    }
 
-.precios-container .col-6 {
-    padding: 0 0.5rem;
-}
+    .precios-container .col-6 {
+        padding: 0 0.5rem;
+    }
 
-.precios-container small {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #6c757d;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
+    .precios-container small {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
 .text-success {
     color: #27ae60 !important;
@@ -251,10 +256,10 @@
     border-top: 1px solid #f1f3f4;
 }
 
-.stock-info small {
-    font-size: 0.8rem;
-    color: #6c757d;
-}
+    .stock-info small {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
 
 .text-danger {
     color: #e74c3c !important;
@@ -276,11 +281,11 @@
     font-size: 0.9rem;
 }
 
-.btn-primary:hover {
-    background: #34495e;
-    border-color: #34495e;
-    transform: translateY(-1px);
-}
+    .btn-primary:hover {
+        background: #34495e;
+        border-color: #34495e;
+        transform: translateY(-1px);
+    }
 
 /* ========================================
    ESTADOS ESPECIALES
@@ -314,21 +319,21 @@
     padding: 3rem 1rem;
 }
 
-.empty-state i {
-    color: #6c757d;
-    margin-bottom: 1rem;
-}
+    .empty-state i {
+        color: #6c757d;
+        margin-bottom: 1rem;
+    }
 
-.empty-state h4 {
-    color: #2c3e50;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-}
+    .empty-state h4 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
 
-.empty-state p {
-    color: #6c757d;
-    font-size: 1.1rem;
-}
+    .empty-state p {
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
 
 /* ========================================
    FOOTER INFO
@@ -338,10 +343,10 @@
     background: white;
 }
 
-.footer-info h5 {
-    color: #2c3e50;
-    font-weight: 600;
-}
+    .footer-info h5 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
 
 .contact-buttons .btn-success {
     background: #27ae60;
@@ -349,10 +354,10 @@
     font-weight: 500;
 }
 
-.contact-buttons .btn-success:hover {
-    background: #219a52;
-    border-color: #219a52;
-}
+    .contact-buttons .btn-success:hover {
+        background: #219a52;
+        border-color: #219a52;
+    }
 
 /* ========================================
    RESPONSIVE DESIGN
@@ -361,29 +366,29 @@
     .hero-section {
         padding: 2.5rem 0;
     }
-    
-    .hero-section .display-4 {
-        font-size: 2.2rem;
-    }
-    
+
+        .hero-section .display-4 {
+            font-size: 2.2rem;
+        }
+
     .card-image-container {
         height: 180px;
     }
-    
+
     .card-body {
         padding: 1.25rem;
     }
-    
+
     .card-title {
         font-size: 1rem;
         height: auto;
         -webkit-line-clamp: 2;
     }
-    
+
     .precios-container {
         padding: 0.75rem;
     }
-    
+
     .text-success, .text-warning {
         font-size: 1rem;
     }
@@ -393,27 +398,27 @@
     .hero-section {
         padding: 2rem 0;
     }
-    
-    .hero-section .display-4 {
-        font-size: 1.8rem;
-    }
-    
-    .hero-section .lead {
-        font-size: 1rem;
-    }
-    
+
+        .hero-section .display-4 {
+            font-size: 1.8rem;
+        }
+
+        .hero-section .lead {
+            font-size: 1rem;
+        }
+
     .card-image-container {
         height: 160px;
     }
-    
+
     .card-img-top {
         padding: 15px;
     }
-    
+
     .card-body {
         padding: 1rem;
     }
-    
+
     .precios-container .col-6 {
         padding: 0 0.25rem;
     }
@@ -431,6 +436,7 @@
         opacity: 0;
         transform: translateY(15px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -438,14 +444,37 @@
 }
 
 /* Efecto de carga escalonada */
-.producto-item:nth-child(1) { animation-delay: 0.05s; }
-.producto-item:nth-child(2) { animation-delay: 0.1s; }
-.producto-item:nth-child(3) { animation-delay: 0.15s; }
-.producto-item:nth-child(4) { animation-delay: 0.2s; }
-.producto-item:nth-child(5) { animation-delay: 0.25s; }
-.producto-item:nth-child(6) { animation-delay: 0.3s; }
-.producto-item:nth-child(7) { animation-delay: 0.35s; }
-.producto-item:nth-child(8) { animation-delay: 0.4s; }
+.producto-item:nth-child(1) {
+    animation-delay: 0.05s;
+}
+
+.producto-item:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.producto-item:nth-child(3) {
+    animation-delay: 0.15s;
+}
+
+.producto-item:nth-child(4) {
+    animation-delay: 0.2s;
+}
+
+.producto-item:nth-child(5) {
+    animation-delay: 0.25s;
+}
+
+.producto-item:nth-child(6) {
+    animation-delay: 0.3s;
+}
+
+.producto-item:nth-child(7) {
+    animation-delay: 0.35s;
+}
+
+.producto-item:nth-child(8) {
+    animation-delay: 0.4s;
+}
 
 
 /* ========================================
@@ -732,3 +761,110 @@
         font-size: 0.85rem;
     }
 }
+/* ========================================
+   BUSCADOR INTELIGENTE DE LLANTAS
+   ======================================== */
+
+.smart-tire-search {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-left: 4px solid #0d6efd;
+    animation: slideDown 0.3s ease-out;
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+    .smart-tire-search.categoria-activa {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        border-left: 4px solid #1976d2;
+        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15);
+    }
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.btn-check:checked + .btn-outline-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+
+.suggestions-dropdown {
+    position: relative;
+    margin-top: 5px;
+}
+
+.suggestion-item {
+    background: #d1edff;
+    border: 1px solid #b3d7ff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.875rem;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.search-results {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 15px;
+    border-left: 3px solid #28a745;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .smart-tire-search .row {
+        margin-bottom: 1rem;
+    }
+
+    .smart-tire-search .btn-group {
+        flex-direction: column;
+    }
+
+        .smart-tire-search .btn-group .btn {
+            border-radius: 0.375rem !important;
+            margin-bottom: 0.25rem;
+        }
+}
+
+/* Estados de inputs */
+.form-control:focus,
+.form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-select:disabled {
+    background-color: #f8f9fa;
+    opacity: 0.7;
+}
+
+/* Animaciones de transición */
+.smart-tire-search input,
+.smart-tire-search select {
+    transition: all 0.2s ease;
+}
+
+    .smart-tire-search input:focus,
+    .smart-tire-search select:focus {
+        transform: translateY(-1px);
+    }

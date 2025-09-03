@@ -39,15 +39,16 @@
 
     <!-- Filtros y Búsqueda -->
     <div class="container mb-4">
-        <div class="filters-section bg-white rounded shadow-sm p-4">
+        <!-- Búsqueda General -->
+        <div class="filters-section bg-white rounded shadow-sm p-4 mb-3">
             <div class="row g-3 align-items-end">
                 <div class="col-lg-6">
                     <label for="busquedaProductos" class="form-label fw-bold">
                         <i class="bi bi-search me-2"></i>Buscar productos
                     </label>
-                    <input type="text" 
-                           class="form-control form-control-lg" 
-                           id="busquedaProductos" 
+                    <input type="text"
+                           class="form-control form-control-lg"
+                           id="busquedaProductos"
                            placeholder="Buscar por nombre, marca, modelo..."
                            autocomplete="off">
                 </div>
@@ -62,10 +63,93 @@
                     </select>
                 </div>
                 <div class="col-lg-2">
-                    <button type="button" 
-                            class="btn btn-outline-secondary btn-lg w-100" 
-                            onclick="limpiarFiltros()">
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-lg w-100"
+                            onclick="limpiarTodosFiltros()">
                         <i class="bi bi-arrow-clockwise me-2"></i>Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buscador Inteligente de Llantas -->
+        <div class="smart-tire-search bg-gradient rounded shadow-sm p-4" id="buscadorLlantas">
+            <h5 class="mb-3">
+                <i class="bi bi-gear-fill me-2 text-primary"></i>
+                Búsqueda Inteligente de Llantas
+            </h5>
+
+            <!-- Tipo de Vehículo -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Tipo de Vehículo</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="tipoVehiculo" id="tipoAuto" value="auto" checked>
+                        <label class="btn btn-outline-primary" for="tipoAuto">
+                            <i class="bi bi-car-front me-2"></i>Auto/Camioneta
+                        </label>
+                        <input type="radio" class="btn-check" name="tipoVehiculo" id="tipoMoto" value="moto">
+                        <label class="btn btn-outline-primary" for="tipoMoto">
+                            <i class="bi bi-bicycle me-2"></i>Moto
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-warning w-100" onclick="limpiarBuscadorLlantas()">
+                        <i class="bi bi-eraser me-2"></i>Limpiar Búsqueda
+                    </button>
+                </div>
+            </div>
+
+            <!-- Medidas de Llantas -->
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="anchoLlanta" class="form-label fw-bold">
+                        <i class="bi bi-arrows-expand me-1"></i>Ancho
+                    </label>
+                    <div class="input-group">
+                        <input type="number"
+                               class="form-control form-control-lg"
+                               id="anchoLlanta"
+                               placeholder="Ej: 205"
+                               min="100"
+                               max="999"
+                               autocomplete="off">
+                        <span class="input-group-text">mm</span>
+                    </div>
+                    <div id="sugerenciasAncho" class="suggestions-dropdown"></div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="perfilLlanta" class="form-label fw-bold">
+                        <i class="bi bi-aspect-ratio me-1"></i>Perfil
+                    </label>
+                    <select class="form-select form-select-lg" id="perfilLlanta" disabled>
+                        <option value="">Selecciona perfil...</option>
+                    </select>
+                    <div id="sugerenciasPerfil" class="suggestions-dropdown"></div>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="diametroLlanta" class="form-label fw-bold">
+                        <i class="bi bi-circle me-1"></i>Diámetro
+                    </label>
+                    <select class="form-select form-select-lg" id="diametroLlanta" disabled>
+                        <option value="">Selecciona diámetro...</option>
+                    </select>
+                    <div id="sugerenciasDiametro" class="suggestions-dropdown"></div>
+                </div>
+            </div>
+
+            <!-- Resultados de Búsqueda -->
+            <div class="search-results mt-3" id="resultadosBusquedaLlantas" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">
+                        <i class="bi bi-funnel me-1"></i>
+                        <span id="contadorResultados">0 llantas encontradas</span>
+                    </span>
+                    <button type="button" class="btn btn-sm btn-success" onclick="aplicarFiltroLlantas()">
+                        <i class="bi bi-check2 me-1"></i>Aplicar Filtro
                     </button>
                 </div>
             </div>

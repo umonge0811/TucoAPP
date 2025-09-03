@@ -2,13 +2,14 @@
 // VISTA PÚBLICA DE PRODUCTOS - JAVASCRIPT
 // ========================================
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('📦 Módulo de productos públicos cargado');
 
     // Inicializar funcionalidades
     inicializarBusqueda();
     inicializarFiltros();
     inicializarAnimaciones();
+    inicializarBuscadorLlantas();
 
     // Cargar productos iniciales
     cargarProductosIniciales();
@@ -21,11 +22,19 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========================================
 async function cargarProductosIniciales() {
     try {
-        console.log('🔄 Cargando productos iniciales...');
+        console.log('🔄 Cargando productos iniciales para vista pública...');
+
+        // Mostrar loading mientras se cargan los productos
+        mostrarLoading();
+
+        // Cargar productos usando el endpoint que sabemos que funciona
         await buscarProductos('');
+
+        console.log('✅ Productos iniciales cargados exitosamente');
+
     } catch (error) {
         console.error('❌ Error cargando productos iniciales:', error);
-        mostrarError('Error al cargar los productos iniciales');
+        mostrarError('Error al cargar los productos iniciales: ' + error.message);
     }
 }
 
@@ -37,7 +46,7 @@ function inicializarBusqueda() {
 
     if (!inputBusqueda) return;
 
-    inputBusqueda.addEventListener('input', function() {
+    inputBusqueda.addEventListener('input', function () {
         const termino = this.value.toLowerCase().trim();
         if (termino.length >= 2 || termino.length === 0) {
             buscarProductos(termino);
@@ -51,11 +60,43 @@ function inicializarBusqueda() {
 function inicializarFiltros() {
     const selectCategoria = document.getElementById('filtroCategoria');
 
-    if (!selectCategoria) return;
+    if (!selectCategoria) {
+        console.warn('⚠️ Elemento filtroCategoria no encontrado');
+        return;
+    }
 
-    selectCategoria.addEventListener('change', function() {
+    console.log('✅ Inicializando filtros - elemento encontrado');
+
+    selectCategoria.addEventListener('change', function () {
+        const valor = this.value;
+        console.log('🔄 Categoría seleccionada:', valor);
+
+        // El buscador inteligente SIEMPRE debe estar visible
+        // Solo habilitamos/deshabilitamos funcionalidades según la categoría
+        const buscadorLlantas = document.getElementById('buscadorLlantas');
+        if (buscadorLlantas) {
+            // Siempre visible, pero podemos añadir clases para indicar estado
+            if (valor === 'llanta') {
+                buscadorLlantas.classList.add('categoria-activa');
+                console.log('🎯 Buscador de llantas en modo activo');
+            } else {
+                buscadorLlantas.classList.remove('categoria-activa');
+                console.log('🎯 Buscador de llantas en modo general');
+            }
+        }
+
         filtrarProductos();
     });
+
+    // Verificar si el buscador existe al inicializar
+    const buscadorLlantas = document.getElementById('buscadorLlantas');
+    if (buscadorLlantas) {
+        console.log('✅ Buscador de llantas encontrado en el DOM y siempre visible');
+        // Asegurar que esté visible desde el inicio
+        buscadorLlantas.style.display = 'block';
+    } else {
+        console.warn('⚠️ Buscador de llantas NO encontrado en el DOM');
+    }
 }
 
 // ========================================
@@ -69,7 +110,7 @@ function filtrarProductos() {
     const noResultados = document.getElementById('noResultados');
     let productosVisibles = 0;
 
-    productos.forEach(function(producto) {
+    productos.forEach(function (producto) {
         const nombre = producto.getAttribute('data-nombre') || '';
         const categoriaProducto = producto.getAttribute('data-categoria') || '';
 
@@ -117,8 +158,8 @@ function filtrarProductos() {
 // ========================================
 function inicializarAnimaciones() {
     // Animar elementos al hacer scroll
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
+    const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate-in');
             }
@@ -130,7 +171,7 @@ function inicializarAnimaciones() {
 
     // Observar todas las cards de productos
     const productos = document.querySelectorAll('.producto-item');
-    productos.forEach(function(producto) {
+    productos.forEach(function (producto) {
         observer.observe(producto);
     });
 }
@@ -167,11 +208,18 @@ async function buscarProductos(termino = '') {
 
         if (data && data.success && data.productos) {
             console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
+            console.log('📋 Estructura de datos recibida:', {
+                total: data.productos.length,
+                llantas: data.productos.filter(p => p.esLlanta).length,
+                accesorios: data.productos.filter(p => !p.esLlanta).length,
+                conImagenes: data.productos.filter(p => p.imagenesUrls && p.imagenesUrls.length > 0).length
+            });
             mostrarResultados(data.productos);
             console.log('📦 Productos mostrados exitosamente en vista pública');
         } else {
             const errorMessage = data.message || 'Error desconocido al obtener productos';
             console.error('❌ Error en la respuesta:', errorMessage);
+            console.error('❌ Datos recibidos:', data);
             mostrarSinResultados();
         }
 
@@ -455,9 +503,423 @@ function verDetalleProducto(productoId) {
 }
 
 // ========================================
+// BUSCADOR INTELIGENTE DE LLANTAS
+// ========================================
+let medidas = {
+    anchos: [],
+    perfiles: [],
+    diametros: []
+};
+
+let llantasDisponibles = [];
+
+function inicializarBuscadorLlantas() {
+    console.log('🔧 Inicializando buscador inteligente de llantas');
+
+    // Cargar medidas disponibles
+    cargarMedidasDisponibles();
+
+    // Event listeners para los inputs
+    const anchoInput = document.getElementById('anchoLlanta');
+    const perfilSelect = document.getElementById('perfilLlanta');
+    const diametroSelect = document.getElementById('diametroLlanta');
+
+    if (anchoInput) {
+        anchoInput.addEventListener('input', filtrarPorAncho);
+    }
+
+    if (perfilSelect) {
+        perfilSelect.addEventListener('change', filtrarPorPerfil);
+    }
+
+    if (diametroSelect) {
+        diametroSelect.addEventListener('change', actualizarContadorResultados);
+    }
+
+    // Event listeners para tipo de vehículo
+    const radioAuto = document.getElementById('tipoAuto');
+    const radioMoto = document.getElementById('tipoMoto');
+
+    if (radioAuto) {
+        radioAuto.addEventListener('change', filtrarPorTipoVehiculo);
+    }
+
+    if (radioMoto) {
+        radioMoto.addEventListener('change', filtrarPorTipoVehiculo);
+    }
+}
+
+async function cargarMedidasDisponibles() {
+    try {
+        console.log('📊 Cargando medidas disponibles...');
+
+        // Usar el mismo endpoint que ya funciona
+        const response = await fetch('/Public/ObtenerProductosParaFacturacion', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.productos) {
+                llantasDisponibles = data.productos.filter(p => p.esLlanta && p.llanta);
+                procesarMedidasDisponibles();
+                console.log(`✅ Cargadas ${llantasDisponibles.length} llantas para filtros inteligentes`);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error cargando medidas:', error);
+    }
+}
+
+function procesarMedidasDisponibles() {
+    medidas.anchos = [...new Set(llantasDisponibles
+        .filter(l => l.llanta && l.llanta.ancho)
+        .map(l => l.llanta.ancho))].sort((a, b) => a - b);
+
+    medidas.perfiles = [...new Set(llantasDisponibles
+        .filter(l => l.llanta && l.llanta.perfil)
+        .map(l => l.llanta.perfil))].sort((a, b) => a - b);
+
+    medidas.diametros = [...new Set(llantasDisponibles
+        .filter(l => l.llanta && l.llanta.diametro)
+        .map(l => l.llanta.diametro))].sort();
+
+    console.log('📐 Medidas procesadas:', {
+        anchos: medidas.anchos.length,
+        perfiles: medidas.perfiles.length,
+        diametros: medidas.diametros.length
+    });
+}
+
+function filtrarPorAncho() {
+    const anchoInput = document.getElementById('anchoLlanta');
+    const perfilSelect = document.getElementById('perfilLlanta');
+    const diametroSelect = document.getElementById('diametroLlanta');
+
+    const anchoValor = parseInt(anchoInput.value);
+
+    // Limpiar selects dependientes
+    perfilSelect.innerHTML = '<option value="">Selecciona perfil...</option>';
+    diametroSelect.innerHTML = '<option value="">Selecciona diámetro...</option>';
+    perfilSelect.disabled = true;
+    diametroSelect.disabled = true;
+
+    if (anchoValor && anchoValor >= 100) {
+        // Filtrar llantas por ancho seleccionado
+        const llantasFiltradas = llantasDisponibles.filter(l =>
+            l.llanta && l.llanta.ancho === anchoValor
+        );
+
+        // Obtener perfiles disponibles para este ancho
+        const perfilesDisponibles = [...new Set(llantasFiltradas
+            .filter(l => l.llanta.perfil)
+            .map(l => l.llanta.perfil))].sort((a, b) => a - b);
+
+        if (perfilesDisponibles.length > 0) {
+            perfilesDisponibles.forEach(perfil => {
+                const option = document.createElement('option');
+                option.value = perfil;
+                option.textContent = perfil;
+                perfilSelect.appendChild(option);
+            });
+            perfilSelect.disabled = false;
+
+            mostrarSugerencias('ancho', `${perfilesDisponibles.length} perfiles disponibles`);
+        }
+
+        actualizarContadorResultados();
+    } else {
+        ocultarSugerencias();
+    }
+}
+
+function filtrarPorPerfil() {
+    const anchoInput = document.getElementById('anchoLlanta');
+    const perfilSelect = document.getElementById('perfilLlanta');
+    const diametroSelect = document.getElementById('diametroLlanta');
+
+    const anchoValor = parseInt(anchoInput.value);
+    const perfilValor = parseInt(perfilSelect.value);
+
+    // Limpiar select de diámetro
+    diametroSelect.innerHTML = '<option value="">Selecciona diámetro...</option>';
+    diametroSelect.disabled = true;
+
+    if (anchoValor && perfilValor) {
+        // Filtrar llantas por ancho y perfil
+        const llantasFiltradas = llantasDisponibles.filter(l =>
+            l.llanta &&
+            l.llanta.ancho === anchoValor &&
+            l.llanta.perfil === perfilValor
+        );
+
+        // Obtener diámetros disponibles
+        const diametrosDisponibles = [...new Set(llantasFiltradas
+            .filter(l => l.llanta.diametro)
+            .map(l => l.llanta.diametro))].sort();
+
+        if (diametrosDisponibles.length > 0) {
+            diametrosDisponibles.forEach(diametro => {
+                const option = document.createElement('option');
+                option.value = diametro;
+                option.textContent = `R${diametro}"`;
+                diametroSelect.appendChild(option);
+            });
+            diametroSelect.disabled = false;
+
+            mostrarSugerencias('perfil', `${diametrosDisponibles.length} diámetros disponibles`);
+        }
+
+        actualizarContadorResultados();
+    }
+}
+
+function filtrarPorTipoVehiculo() {
+    // Por ahora, solo limpiar y recargar medidas
+    // En el futuro se puede implementar lógica específica para motos
+    limpiarBuscadorLlantas();
+    const tipoSeleccionado = document.querySelector('input[name="tipoVehiculo"]:checked').value;
+    console.log('🏍️ Tipo de vehículo seleccionado:', tipoSeleccionado);
+}
+
+function actualizarContadorResultados() {
+    const anchoInput = document.getElementById('anchoLlanta');
+    const perfilSelect = document.getElementById('perfilLlanta');
+    const diametroSelect = document.getElementById('diametroLlanta');
+    const contadorResultados = document.getElementById('contadorResultados');
+    const resultadosDiv = document.getElementById('resultadosBusquedaLlantas');
+
+    const anchoValor = parseInt(anchoInput.value);
+    const perfilValor = parseInt(perfilSelect.value);
+    const diametroValor = diametroSelect.value;
+
+    let llantasFiltradas = llantasDisponibles;
+
+    if (anchoValor && anchoValor >= 100) {
+        llantasFiltradas = llantasFiltradas.filter(l => l.llanta && l.llanta.ancho === anchoValor);
+    }
+
+    if (perfilValor) {
+        llantasFiltradas = llantasFiltradas.filter(l => l.llanta && l.llanta.perfil === perfilValor);
+    }
+
+    if (diametroValor) {
+        llantasFiltradas = llantasFiltradas.filter(l => l.llanta && l.llanta.diametro === diametroValor);
+    }
+
+    const cantidad = llantasFiltradas.length;
+
+    if (contadorResultados) {
+        contadorResultados.textContent = `${cantidad} ${cantidad === 1 ? 'llanta encontrada' : 'llantas encontradas'}`;
+    }
+
+    if (resultadosDiv) {
+        if (anchoValor && anchoValor >= 100) {
+            resultadosDiv.style.display = 'block';
+        } else {
+            resultadosDiv.style.display = 'none';
+        }
+    }
+}
+
+function aplicarFiltroLlantas() {
+    const anchoInput = document.getElementById('anchoLlanta');
+    const perfilSelect = document.getElementById('perfilLlanta');
+    const diametroSelect = document.getElementById('diametroLlanta');
+
+    const anchoValor = parseInt(anchoInput.value);
+    const perfilValor = parseInt(perfilSelect.value);
+    const diametroValor = diametroSelect.value;
+
+    // Construir término de búsqueda basado en la medida
+    let terminoBusqueda = '';
+
+    if (anchoValor) {
+        terminoBusqueda += anchoValor;
+        if (perfilValor) {
+            terminoBusqueda += `/${perfilValor}`;
+            if (diametroValor) {
+                terminoBusqueda += `/R${diametroValor}`;
+            }
+        } else if (diametroValor) {
+            terminoBusqueda += `/R${diametroValor}`;
+        }
+    }
+
+    console.log('🎯 Aplicando filtro de llantas:', terminoBusqueda);
+
+    // Aplicar filtro a los productos mostrados
+    filtrarProductosPorMedida(anchoValor, perfilValor, diametroValor);
+
+    // Scroll a los resultados
+    document.getElementById('productosContainer').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+function filtrarProductosPorMedida(ancho, perfil, diametro) {
+    const productos = document.querySelectorAll('.producto-item');
+    const noResultados = document.getElementById('noResultados');
+    let productosVisibles = 0;
+
+    productos.forEach(function (producto) {
+        const esLlanta = producto.getAttribute('data-categoria') === 'llanta';
+        let mostrar = true;
+
+        if (esLlanta && ancho) {
+            // Buscar en el contenido del producto la medida
+            const contenidoProducto = producto.textContent.toLowerCase();
+            const nombre = producto.getAttribute('data-nombre') || '';
+
+            let cumpleFiltro = false;
+
+            // Buscar patrones de medida en el nombre o contenido
+            if (ancho) {
+                const patronAncho = new RegExp(`\\b${ancho}\\b`, 'i');
+                if (patronAncho.test(contenidoProducto) || patronAncho.test(nombre)) {
+                    cumpleFiltro = true;
+
+                    if (perfil) {
+                        const patronPerfil = new RegExp(`\\b${perfil}\\b`, 'i');
+                        if (!patronPerfil.test(contenidoProducto) && !patronPerfil.test(nombre)) {
+                            cumpleFiltro = false;
+                        }
+                    }
+
+                    if (diametro && cumpleFiltro) {
+                        const patronDiametro = new RegExp(`\\bR?${diametro}\\b`, 'i');
+                        if (!patronDiametro.test(contenidoProducto) && !patronDiametro.test(nombre)) {
+                            cumpleFiltro = false;
+                        }
+                    }
+                }
+            }
+
+            if (!cumpleFiltro) {
+                mostrar = false;
+            }
+        }
+
+        if (mostrar) {
+            producto.style.display = 'block';
+            producto.style.opacity = '1';
+            producto.style.transform = 'translateY(0)';
+            productosVisibles++;
+        } else {
+            producto.style.display = 'none';
+        }
+    });
+
+    // Mostrar/ocultar mensaje de no resultados
+    if (noResultados) {
+        if (productosVisibles === 0) {
+            noResultados.style.display = 'block';
+        } else {
+            noResultados.style.display = 'none';
+        }
+    }
+
+    console.log(`🎯 Filtro de medidas aplicado: ${productosVisibles} productos visibles`);
+}
+
+function mostrarSugerencias(campo, mensaje) {
+    const sugerenciasDiv = document.getElementById(`sugerencias${campo.charAt(0).toUpperCase() + campo.slice(1)}`);
+    if (sugerenciasDiv) {
+        sugerenciasDiv.innerHTML = `
+            <div class="suggestion-item">
+                <small class="text-success">
+                    <i class="bi bi-check-circle me-1"></i>${mensaje}
+                </small>
+            </div>
+        `;
+        sugerenciasDiv.style.display = 'block';
+
+        setTimeout(() => {
+            sugerenciasDiv.style.display = 'none';
+        }, 3000);
+    }
+}
+
+function ocultarSugerencias() {
+    ['ancho', 'perfil', 'diametro'].forEach(campo => {
+        const sugerenciasDiv = document.getElementById(`sugerencias${campo.charAt(0).toUpperCase() + campo.slice(1)}`);
+        if (sugerenciasDiv) {
+            sugerenciasDiv.style.display = 'none';
+        }
+    });
+}
+
+function limpiarBuscadorLlantas() {
+    console.log('🧹 Limpiando buscador de llantas');
+
+    // Limpiar inputs
+    const anchoInput = document.getElementById('anchoLlanta');
+    const perfilSelect = document.getElementById('perfilLlanta');
+    const diametroSelect = document.getElementById('diametroLlanta');
+    const resultadosDiv = document.getElementById('resultadosBusquedaLlantas');
+
+    if (anchoInput) anchoInput.value = '';
+    if (perfilSelect) {
+        perfilSelect.innerHTML = '<option value="">Selecciona perfil...</option>';
+        perfilSelect.disabled = true;
+    }
+    if (diametroSelect) {
+        diametroSelect.innerHTML = '<option value="">Selecciona diámetro...</option>';
+        diametroSelect.disabled = true;
+    }
+    if (resultadosDiv) {
+        resultadosDiv.style.display = 'none';
+    }
+
+    ocultarSugerencias();
+
+    // Mostrar todos los productos de llantas
+    const productos = document.querySelectorAll('.producto-item');
+    productos.forEach(producto => {
+        producto.style.display = 'block';
+        producto.style.opacity = '1';
+        producto.style.transform = 'translateY(0)';
+    });
+
+    const noResultados = document.getElementById('noResultados');
+    if (noResultados) {
+        noResultados.style.display = 'none';
+    }
+}
+
+function limpiarTodosFiltros() {
+    // Limpiar filtros normales
+    limpiarFiltros();
+
+    // Limpiar buscador de llantas
+    limpiarBuscadorLlantas();
+
+    // EL BUSCADOR NUNCA SE OCULTA - solo se limpia
+    const buscadorLlantas = document.getElementById('buscadorLlantas');
+    if (buscadorLlantas) {
+        buscadorLlantas.classList.remove('categoria-activa');
+        console.log('🧹 Buscador limpiado pero permanece visible');
+    }
+
+    // Resetear categoría
+    const selectCategoria = document.getElementById('filtroCategoria');
+    if (selectCategoria) {
+        selectCategoria.value = '';
+    }
+}
+
+// ========================================
 // FUNCIONES GLOBALES
 // ========================================
 window.filtrarProductos = filtrarProductos;
 window.limpiarFiltros = limpiarFiltros;
+window.limpiarTodosFiltros = limpiarTodosFiltros;
 window.buscarProductos = buscarProductos;
 window.verDetalleProducto = verDetalleProducto;
+window.limpiarBuscadorLlantas = limpiarBuscadorLlantas;
+window.aplicarFiltroLlantas = aplicarFiltroLlantas;
