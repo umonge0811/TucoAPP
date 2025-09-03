@@ -65,6 +65,95 @@ document.addEventListener('DOMContentLoaded', function () {
     // FUNCIONES AUXILIARES
     // ========================================
 
+    // Función para normalizar texto a MAYÚSCULAS
+    function normalizarAMayusculas(texto) {
+        if (!texto || typeof texto !== 'string') return '';
+        
+        return texto.toUpperCase().trim();
+    }
+
+    // Función para normalizar texto a MAYÚSCULAS (alias para compatibilidad)
+    function normalizarTextoInteligente(texto) {
+        return normalizarAMayusculas(texto);
+    }
+
+    // Función para normalizar texto a MAYÚSCULAS (alias para compatibilidad)
+    function normalizarAPascalCase(texto) {
+        return normalizarAMayusculas(texto);
+    }
+
+    // Función para aplicar normalización a un input
+    function aplicarNormalizacionAInput(input, tipoNormalizacion = 'mayuscula') {
+        if (!input) return;
+        
+        const aplicarNormalizacion = () => {
+            const valorActual = input.value;
+            const valorNormalizado = normalizarAMayusculas(valorActual);
+            
+            if (valorActual !== valorNormalizado) {
+                input.value = valorNormalizado;
+                console.log(`📝 Texto normalizado a MAYÚSCULAS: "${valorActual}" → "${valorNormalizado}"`);
+            }
+        };
+
+        // Aplicar normalización al salir del campo (blur)
+        input.addEventListener('blur', aplicarNormalizacion);
+        
+        // Opcional: También al presionar Enter
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                aplicarNormalizacion();
+            }
+        });
+
+        // NUEVO: Aplicar normalización en tiempo real mientras escribe
+        input.addEventListener('input', function() {
+            const valorActual = this.value;
+            const valorNormalizado = normalizarAMayusculas(valorActual);
+            if (valorActual !== valorNormalizado) {
+                // Guardar posición del cursor
+                const cursorPos = this.selectionStart;
+                this.value = valorNormalizado;
+                // Restaurar posición del cursor
+                this.setSelectionRange(cursorPos, cursorPos);
+            }
+        });
+    }
+
+    // Función para configurar normalización en todos los inputs de texto relevantes
+    function configurarNormalizacionInputs() {
+        console.log('🔤 Configurando normalización MAYÚSCULAS en todos los inputs...');
+        
+        // TODOS los inputs de texto se normalizarán a MAYÚSCULAS
+        const todosLosInputsTexto = [
+            // Información básica
+            '[name="NombreProducto"]',
+            '[name="Descripcion"]',
+            '#descripcionLlanta',
+            
+            // Campos de llanta
+            '[name="Llanta.Marca"]',
+            '#marcaInput',
+            '[name="Llanta.Modelo"]',
+            '#modeloInput',
+            '[name="Llanta.TipoTerreno"]',
+            '#tipoTerrenoInput',
+            '[name="Llanta.IndiceVelocidad"]',
+            '#indiceVelocidadInput'
+        ];
+        
+        // Aplicar normalización a MAYÚSCULAS a todos los inputs de texto
+        todosLosInputsTexto.forEach(selector => {
+            const input = document.querySelector(selector);
+            if (input) {
+                aplicarNormalizacionAInput(input, 'mayuscula');
+                console.log(`✅ Normalización MAYÚSCULAS configurada para: ${selector}`);
+            }
+        });
+        
+        console.log('✅ Normalización MAYÚSCULAS configurada en todos los inputs de texto');
+    }
+
     function marcarCamposObligatorios() {
         const camposRequeridos = document.querySelectorAll('[required]');
         camposRequeridos.forEach(campo => {
@@ -119,6 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
 
     marcarCamposObligatorios();
+    configurarNormalizacionInputs();
 
     // ========================================
     // GESTIÓN DE TIPO DE PRODUCTO (LLANTA)
@@ -1213,7 +1303,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function seleccionarMarca(marca, input, container, esNueva) {
         console.log(`✅ Marca seleccionada: "${marca}" (Nueva: ${esNueva})`);
 
-        input.value = marca;
+        // Normalizar la marca a MAYÚSCULAS antes de asignarla
+        const marcaNormalizada = normalizarAMayusculas(marca);
+        input.value = marcaNormalizada;
         ocultarSugerencias(container);
 
         // Mostrar feedback visual
@@ -1224,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Mostrar notificación
         if (esNueva && typeof toastr !== 'undefined') {
-            toastr.info(`Nueva marca "${marca}" será agregada al guardar el producto`);
+            toastr.info(`Nueva marca "${marcaNormalizada}" será agregada al guardar el producto`);
         }
 
         // Trigger evento para que otros sistemas sepan que cambió
@@ -1584,7 +1676,10 @@ document.addEventListener('DOMContentLoaded', function () {
     function seleccionarValorGenerico(valor, input, container, esNuevo, nombreCampo) {
         console.log(`✅ ${nombreCampo} seleccionado: "${valor}" (Nuevo: ${esNuevo})`);
 
-        input.value = valor;
+        // TODOS los valores se normalizan a MAYÚSCULAS
+        const valorNormalizado = normalizarAMayusculas(valor);
+        
+        input.value = valorNormalizado;
         ocultarSugerencias(container);
 
         // Mostrar feedback visual
@@ -1595,7 +1690,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Mostrar notificación
         if (esNuevo && typeof toastr !== 'undefined') {
-            toastr.info(`Nuevo ${nombreCampo} "${valor}" será agregado al guardar el producto`);
+            toastr.info(`Nuevo ${nombreCampo} "${valorNormalizado}" será agregado al guardar el producto`);
         }
 
         // Trigger evento
