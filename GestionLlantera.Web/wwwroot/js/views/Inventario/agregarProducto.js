@@ -703,6 +703,57 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // ========================================
+        // BOTÓN PARA LIMPIAR CAMPOS DE PRECIO
+        // ========================================
+        
+        const btnLimpiarPrecios = document.getElementById('btnLimpiarPrecios');
+        if (btnLimpiarPrecios) {
+            btnLimpiarPrecios.addEventListener('click', function() {
+                console.log('🧹 Limpiando campos de precio...');
+                
+                // Limpiar los 3 inputs principales
+                if (inputCosto) {
+                    inputCosto.value = '';
+                    inputCosto.classList.remove('is-valid', 'is-invalid');
+                }
+                
+                if (inputPrecioVenta) {
+                    inputPrecioVenta.value = '';
+                    inputPrecioVenta.classList.remove('is-valid', 'is-invalid');
+                }
+                
+                if (inputMargenPorcentaje) {
+                    inputMargenPorcentaje.value = '';
+                    inputMargenPorcentaje.classList.remove('is-valid', 'is-invalid');
+                }
+                
+                // Limpiar campos ocultos y legacy
+                if (hiddenPorcentajeUtilidad) hiddenPorcentajeUtilidad.value = '';
+                if (hiddenPrecio) hiddenPrecio.value = '';
+                if (inputUtilidad) {
+                    inputUtilidad.value = '';
+                    inputUtilidad.classList.remove('is-valid', 'is-invalid');
+                }
+                if (inputPrecioManual) {
+                    inputPrecioManual.value = '';
+                    inputPrecioManual.classList.remove('is-valid', 'is-invalid');
+                }
+                
+                // Limpiar visualización
+                limpiarCalculos();
+                
+                // Mostrar feedback visual
+                if (typeof toastr !== 'undefined') {
+                    toastr.info('Campos de precio limpiados');
+                }
+                
+                console.log('✅ Campos de precio limpiados correctamente');
+            });
+            
+            console.log('✅ Botón limpiar precios configurado');
+        }
+
         // Inicializar estilos y cálculo
         actualizarEstilosTarjetas();
         calcularPrecio();
