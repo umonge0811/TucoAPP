@@ -526,6 +526,7 @@ function configurarFiltrosLlantas() {
     // Event listeners para los filtros
     document.getElementById('filtroMarca').addEventListener('change', aplicarFiltrosLlantas);
     document.getElementById('filtroAncho').addEventListener('change', aplicarFiltrosLlantas);
+    document.getElementById('filtroPerfil').addEventListener('change', aplicarFiltrosLlantas);
     document.getElementById('filtroDiametro').addEventListener('change', aplicarFiltrosLlantas);
     document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltrosLlantas);
 }
@@ -547,6 +548,10 @@ function poblarFiltrosLlantas() {
         .map(p => p.llanta.ancho)
         .filter(ancho => ancho != null))].sort((a, b) => a - b);
     
+    const perfiles = [...new Set(productosLlantas
+        .map(p => p.llanta.perfil)
+        .filter(perfil => perfil != null && perfil > 0))].sort((a, b) => a - b);
+    
     const diametros = [...new Set(productosLlantas
         .map(p => p.llanta.diametro)
         .filter(diametro => diametro && diametro.trim() !== ''))].sort();
@@ -565,6 +570,13 @@ function poblarFiltrosLlantas() {
         selectAncho.innerHTML += `<option value="${ancho}">${ancho}</option>`;
     });
 
+    // Poblar select de perfiles
+    const selectPerfil = document.getElementById('filtroPerfil');
+    selectPerfil.innerHTML = '<option value="">Todos los perfiles</option>';
+    perfiles.forEach(perfil => {
+        selectPerfil.innerHTML += `<option value="${perfil}">${perfil}</option>`;
+    });
+
     // Poblar select de diámetros
     const selectDiametro = document.getElementById('filtroDiametro');
     selectDiametro.innerHTML = '<option value="">Todos los diámetros</option>';
@@ -572,7 +584,7 @@ function poblarFiltrosLlantas() {
         selectDiametro.innerHTML += `<option value="${diametro}">R${diametro}</option>`;
     });
 
-    console.log(`✅ Filtros poblados: ${marcas.length} marcas, ${anchos.length} anchos, ${diametros.length} diámetros`);
+    console.log(`✅ Filtros poblados: ${marcas.length} marcas, ${anchos.length} anchos, ${perfiles.length} perfiles, ${diametros.length} diámetros`);
 }
 
 function aplicarFiltrosLlantas() {
@@ -580,11 +592,13 @@ function aplicarFiltrosLlantas() {
     
     const marcaSeleccionada = document.getElementById('filtroMarca').value;
     const anchoSeleccionado = document.getElementById('filtroAncho').value;
+    const perfilSeleccionado = document.getElementById('filtroPerfil').value;
     const diametroSeleccionado = document.getElementById('filtroDiametro').value;
 
     console.log('🔍 Filtros aplicados:', {
         marca: marcaSeleccionada,
         ancho: anchoSeleccionado,
+        perfil: perfilSeleccionado,
         diametro: diametroSeleccionado
     });
 
@@ -592,7 +606,7 @@ function aplicarFiltrosLlantas() {
     let productosFiltrados = todosLosProductos;
 
     // Si hay algún filtro activo, aplicar filtrado
-    if (marcaSeleccionada || anchoSeleccionado || diametroSeleccionado) {
+    if (marcaSeleccionada || anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
         productosFiltrados = todosLosProductos.filter(producto => {
             // Solo filtrar llantas
             if (!producto.esLlanta || !producto.llanta) {
@@ -608,6 +622,11 @@ function aplicarFiltrosLlantas() {
 
             // Verificar ancho
             if (anchoSeleccionado && llanta.ancho != anchoSeleccionado) {
+                return false;
+            }
+
+            // Verificar perfil
+            if (perfilSeleccionado && llanta.perfil != perfilSeleccionado) {
                 return false;
             }
 
@@ -666,6 +685,7 @@ function limpiarFiltrosLlantas() {
     // Limpiar selects
     document.getElementById('filtroMarca').value = '';
     document.getElementById('filtroAncho').value = '';
+    document.getElementById('filtroPerfil').value = '';
     document.getElementById('filtroDiametro').value = '';
 
     // Mostrar todos los productos
