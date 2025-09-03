@@ -10,10 +10,8 @@ namespace Tuco.Clases.DTOs.Inventario
 
         public int ProductoId { get; set; }
 
-        [Range(0, 999, ErrorMessage = "El ancho debe estar entre 0 y 999")]
         public int? Ancho { get; set; }
 
-        [Range(0, 99, ErrorMessage = "El perfil debe estar entre 0 y 99")]
         public int? Perfil { get; set; }
 
         [StringLength(10, ErrorMessage = "El diámetro no puede tener más de 10 caracteres")]
