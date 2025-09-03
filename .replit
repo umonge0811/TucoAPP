@@ -27,3 +27,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd GestionLlantera.Web && dotnet run --urls=http://0.0.0.0:5000"
+
+[agent]
+expertMode = true
