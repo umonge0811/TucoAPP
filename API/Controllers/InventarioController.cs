@@ -1386,7 +1386,7 @@ namespace API.Controllers
                             .Where(img => !string.IsNullOrEmpty(img.Urlimagen))
                             .Select(img => img.Urlimagen.StartsWith("http") 
                                 ? img.Urlimagen 
-                                : $"https://localhost:7273{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}")
+                                : $"http://apillantasymast.somee.com{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}")
                             .ToList(),
                             
                         imagenesProductos = p.ImagenesProductos.Select(img => new
@@ -1394,7 +1394,7 @@ namespace API.Controllers
                             imagenId = img.ImagenId,
                             urlimagen = img.Urlimagen.StartsWith("http") 
                                 ? img.Urlimagen 
-                                : $"https://localhost:7273{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}",
+                                : $"http://apillantasymast.somee.com{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}",
                             descripcion = img.Descripcion ?? "",
                             fechaCreacion = img.FechaCreacion ?? DateTime.Now
                         }).ToList(),
