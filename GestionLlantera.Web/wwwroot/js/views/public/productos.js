@@ -168,13 +168,10 @@ function filtrarProductos() {
             }, index * 30);
 
         } else {
+            // Ocultar inmediatamente sin animación para filtrado en tiempo real
+            producto.style.display = 'none';
             producto.style.opacity = '0';
             producto.style.transform = 'translateY(10px) scale(0.95)';
-            
-            // Ocultar después de la animación
-            setTimeout(() => {
-                producto.style.display = 'none';
-            }, 200);
         }
     });
 
