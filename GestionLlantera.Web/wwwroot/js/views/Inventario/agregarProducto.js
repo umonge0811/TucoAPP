@@ -65,6 +65,140 @@ document.addEventListener('DOMContentLoaded', function () {
     // FUNCIONES AUXILIARES
     // ========================================
 
+    // Función para normalizar texto a PascalCase
+    function normalizarAPascalCase(texto) {
+        if (!texto || typeof texto !== 'string') return '';
+
+        return texto
+            .toLowerCase()
+            .split(' ')
+            .map(palabra => {
+                if (palabra.length === 0) return '';
+                return palabra.charAt(0).toUpperCase() + palabra.slice(1);
+            })
+            .join(' ')
+            .trim();
+    }
+
+    // Función para normalizar texto preservando acrónimos comunes
+    function normalizarTextoInteligente(texto) {
+        if (!texto || typeof texto !== 'string') return '';
+
+        // Lista de acrónimos que deben mantenerse en mayúsculas
+        const acronimos = ['SUV', 'GPS', 'ABS', 'LED', 'BMW', 'USA', 'EU', 'OEM', 'UV'];
+
+        let textoNormalizado = normalizarAPascalCase(texto);
+
+        // Restaurar acrónimos
+        acronimos.forEach(acronimo => {
+            const regex = new RegExp(`\\b${acronimo.toLowerCase()}\\b`, 'gi');
+            textoNormalizado = textoNormalizado.replace(regex, acronimo);
+        });
+
+        return textoNormalizado;
+    }
+
+    // Función para aplicar normalización a un input
+    function aplicarNormalizacionAInput(input, tipoNormalizacion = 'inteligente') {
+        if (!input) return;
+
+        const aplicarNormalizacion = () => {
+            const valorActual = input.value;
+            let valorNormalizado;
+
+            switch (tipoNormalizacion) {
+                case 'pascalCase':
+                    valorNormalizado = normalizarAPascalCase(valorActual);
+                    break;
+                case 'inteligente':
+                    valorNormalizado = normalizarTextoInteligente(valorActual);
+                    break;
+                default:
+                    valorNormalizado = normalizarTextoInteligente(valorActual);
+            }
+
+            if (valorActual !== valorNormalizado) {
+                input.value = valorNormalizado;
+                console.log(`📝 Texto normalizado: "${valorActual}" → "${valorNormalizado}"`);
+            }
+        };
+
+        // Aplicar normalización al salir del campo (blur)
+        input.addEventListener('blur', aplicarNormalizacion);
+
+        // Opcional: También al presionar Enter
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                aplicarNormalizacion();
+            }
+        });
+    }
+
+    // Función para configurar normalización en todos los inputs de texto relevantes
+    function configurarNormalizacionInputs() {
+        console.log('🔤 Configurando normalización de texto en inputs...');
+
+        // Inputs que necesitan normalización inteligente (preservando acrónimos)
+        const inputsTexto = [
+            // Información básica
+            { selector: '[name="NombreProducto"]', tipo: 'inteligente' },
+            { selector: '[name="Descripcion"]', tipo: 'inteligente' },
+            { selector: '#descripcionLlanta', tipo: 'inteligente' },
+
+            // Campos de llanta
+            { selector: '[name="Llanta.Marca"]', tipo: 'inteligente' },
+            { selector: '#marcaInput', tipo: 'inteligente' },
+            { selector: '[name="Llanta.Modelo"]', tipo: 'inteligente' },
+            { selector: '#modeloInput', tipo: 'inteligente' },
+            { selector: '[name="Llanta.TipoTerreno"]', tipo: 'pascalCase' },
+            { selector: '#tipoTerrenoInput', tipo: 'pascalCase' }
+        ];
+
+        // Inputs que necesitan normalización a mayúsculas (códigos/índices)
+        const inputsMayusculas = [
+            { selector: '[name="Llanta.IndiceVelocidad"]', tipo: 'mayuscula' },
+            { selector: '#indiceVelocidadInput', tipo: 'mayuscula' }
+        ];
+
+        // Aplicar normalización inteligente
+        inputsTexto.forEach(config => {
+            const input = document.querySelector(config.selector);
+            if (input) {
+                aplicarNormalizacionAInput(input, config.tipo);
+                console.log(`✅ Normalización configurada para: ${config.selector}`);
+            }
+        });
+
+        // Aplicar normalización a mayúsculas para índices de velocidad
+        inputsMayusculas.forEach(config => {
+            const input = document.querySelector(config.selector);
+            if (input) {
+                input.addEventListener('blur', function () {
+                    if (this.value) {
+                        const valorNormalizado = this.value.toUpperCase().trim();
+                        if (this.value !== valorNormalizado) {
+                            this.value = valorNormalizado;
+                            console.log(`📝 Índice normalizado a mayúsculas: ${valorNormalizado}`);
+                        }
+                    }
+                });
+
+                input.addEventListener('input', function () {
+                    // Convertir a mayúsculas en tiempo real para índices
+                    const valorActual = this.value;
+                    const valorMayuscula = valorActual.toUpperCase();
+                    if (valorActual !== valorMayuscula) {
+                        this.value = valorMayuscula;
+                    }
+                });
+
+                console.log(`✅ Normalización a mayúsculas configurada para: ${config.selector}`);
+            }
+        });
+
+        console.log('✅ Normalización de texto configurada en todos los inputs relevantes');
+    }
+
     function marcarCamposObligatorios() {
         const camposRequeridos = document.querySelectorAll('[required]');
         camposRequeridos.forEach(campo => {
@@ -119,6 +253,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ========================================
 
     marcarCamposObligatorios();
+    configurarNormalizacionInputs();
 
     // ========================================
     // GESTIÓN DE TIPO DE PRODUCTO (LLANTA)
@@ -379,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // ✅ ESTABLECER EL TOGGLE COMO ACTIVADO POR DEFECTO
         esLlantaCheckbox.checked = true;
-        
+
         esLlantaCheckbox.addEventListener('change', actualizarTipoProducto);
         actualizarTipoProducto(); // Inicializar estado
     }
@@ -613,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Eventos para cálculo en tiempo real - MEJORADOS
         if (inputCosto) {
-            inputCosto.addEventListener('input', function() {
+            inputCosto.addEventListener('input', function () {
                 // Cuando cambia el costo, recalcular todo
                 const precioVentaActual = parseFloat(inputPrecioVenta?.value) || 0;
                 const margenActual = parseFloat(inputMargenPorcentaje?.value) || 0;
@@ -632,7 +767,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Eventos para Precio de Venta
         if (inputPrecioVenta) {
-            inputPrecioVenta.addEventListener('input', function() {
+            inputPrecioVenta.addEventListener('input', function () {
                 // Limpiar campo de margen para evitar conflictos
                 if (inputMargenPorcentaje && !calculandoPrecio) {
                     inputMargenPorcentaje.value = '';
@@ -645,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Eventos para Margen %
         if (inputMargenPorcentaje) {
-            inputMargenPorcentaje.addEventListener('input', function() {
+            inputMargenPorcentaje.addEventListener('input', function () {
                 // Limpiar campo de precio de venta para evitar conflictos
                 if (inputPrecioVenta && !calculandoPrecio) {
                     inputPrecioVenta.value = '';
@@ -658,7 +793,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Mantener compatibilidad con campo legacy de utilidad
         if (inputUtilidad) {
-            inputUtilidad.addEventListener('input', function() {
+            inputUtilidad.addEventListener('input', function () {
                 // Cuando se usa el campo legacy, limpiar los nuevos campos
                 if (inputPrecioVenta && !calculandoPrecio) inputPrecioVenta.value = '';
                 if (inputMargenPorcentaje && !calculandoPrecio) inputMargenPorcentaje.value = '';
@@ -709,28 +844,28 @@ document.addEventListener('DOMContentLoaded', function () {
         // ========================================
         // BOTÓN PARA LIMPIAR CAMPOS DE PRECIO
         // ========================================
-        
+
         const btnLimpiarPrecios = document.getElementById('btnLimpiarPrecios');
         if (btnLimpiarPrecios) {
-            btnLimpiarPrecios.addEventListener('click', function() {
+            btnLimpiarPrecios.addEventListener('click', function () {
                 console.log('🧹 Limpiando campos de precio...');
-                
+
                 // Limpiar los 3 inputs principales
                 if (inputCosto) {
                     inputCosto.value = '';
                     inputCosto.classList.remove('is-valid', 'is-invalid');
                 }
-                
+
                 if (inputPrecioVenta) {
                     inputPrecioVenta.value = '';
                     inputPrecioVenta.classList.remove('is-valid', 'is-invalid');
                 }
-                
+
                 if (inputMargenPorcentaje) {
                     inputMargenPorcentaje.value = '';
                     inputMargenPorcentaje.classList.remove('is-valid', 'is-invalid');
                 }
-                
+
                 // Limpiar campos ocultos y legacy
                 if (hiddenPorcentajeUtilidad) hiddenPorcentajeUtilidad.value = '';
                 if (hiddenPrecio) hiddenPrecio.value = '';
@@ -742,18 +877,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     inputPrecioManual.value = '';
                     inputPrecioManual.classList.remove('is-valid', 'is-invalid');
                 }
-                
+
                 // Limpiar visualización
                 limpiarCalculos();
-                
+
                 // Mostrar feedback visual
                 if (typeof toastr !== 'undefined') {
                     toastr.info('Campos de precio limpiados');
                 }
-                
+
                 console.log('✅ Campos de precio limpiados correctamente');
             });
-            
+
             console.log('✅ Botón limpiar precios configurado');
         }
 
@@ -1213,7 +1348,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function seleccionarMarca(marca, input, container, esNueva) {
         console.log(`✅ Marca seleccionada: "${marca}" (Nueva: ${esNueva})`);
 
-        input.value = marca;
+        // Normalizar la marca antes de asignarla
+        const marcaNormalizada = normalizarTextoInteligente(marca);
+        input.value = marcaNormalizada;
         ocultarSugerencias(container);
 
         // Mostrar feedback visual
@@ -1584,7 +1721,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function seleccionarValorGenerico(valor, input, container, esNuevo, nombreCampo) {
         console.log(`✅ ${nombreCampo} seleccionado: "${valor}" (Nuevo: ${esNuevo})`);
 
-        input.value = valor;
+        // Aplicar normalización según el tipo de campo
+        let valorNormalizado = valor;
+
+        if (nombreCampo === 'indices de velocidad') {
+            valorNormalizado = valor.toUpperCase().trim();
+        } else if (nombreCampo === 'modelo') {
+            valorNormalizado = normalizarTextoInteligente(valor);
+        } else if (nombreCampo === 'tipos de terreno') {
+            valorNormalizado = normalizarAPascalCase(valor);
+        } else {
+            valorNormalizado = normalizarTextoInteligente(valor);
+        }
+
+        input.value = valorNormalizado;
         ocultarSugerencias(container);
 
         // Mostrar feedback visual
