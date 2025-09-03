@@ -1,5 +1,9 @@
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
+
+// Variable global para marcar reimpresiones
+let esReimpresionActual = false;
+
 let productosEnVenta = [];
 let clienteSeleccionado = null;
 let modalInventario = null;
@@ -77,7 +81,7 @@ function cargarPermisosUsuario() {
         }
 
         const permisos = window.facturaConfig.permisos;
-        
+
         // ✅ MAPEO DIRECTO DE PERMISOS (sin complicaciones)
         permisosUsuario = {
             puedeCrearFacturas: permisos.puedeCrearFacturas === true,
@@ -99,7 +103,7 @@ function cargarPermisosUsuario() {
 
     } catch (error) {
         console.error('❌ Error cargando permisos:', error);
-        
+
         // Permisos por defecto en caso de error
         permisosUsuario = {
             puedeCrearFacturas: false,
@@ -108,7 +112,7 @@ function cargarPermisosUsuario() {
             puedeAnularFacturas: false,
             esAdmin: false
         };
-        
+
         console.log('🔧 Permisos de emergencia aplicados:', permisosUsuario);
         configurarInterfazSegunPermisos();
     }
@@ -129,9 +133,9 @@ function configurarInterfazSegunPermisos() {
 
     // Resetear completamente el botón
     $btnFinalizar.prop('disabled', false)
-                 .removeClass('btn-secondary btn-success btn-primary btn-warning btn-outline-secondary')
-                 .addClass('btn-primary')
-                 .removeAttr('title');
+        .removeClass('btn-secondary btn-success btn-primary btn-warning btn-outline-secondary')
+        .addClass('btn-primary')
+        .removeAttr('title');
 
     // ✅ VERIFICACIÓN EXPLÍCITA DE PERMISOS CON LOGGING DETALLADO
     const puedeCompletar = permisosUsuario.puedeCompletarFacturas === true;
@@ -144,10 +148,10 @@ function configurarInterfazSegunPermisos() {
     if (puedeCompletar) {
         // ✅ USUARIO PUEDE COMPLETAR FACTURAS (CON PERMISO ESPECÍFICO)
         $btnFinalizar.removeClass('btn-primary btn-secondary btn-warning')
-                    .addClass('btn-success')
-                    .prop('disabled', false)
-                    .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
-                    .attr('title', 'Procesar venta completa, ajustar stock e imprimir factura');
+            .addClass('btn-success')
+            .prop('disabled', false)
+            .html(`<i class="bi bi-check-circle me-2"></i>Completar Venta`)
+            .attr('title', 'Procesar venta completa, ajustar stock e imprimir factura');
 
         console.log('👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===');
         console.log('👑 Botón: Verde - "Completar Venta"');
@@ -156,10 +160,10 @@ function configurarInterfazSegunPermisos() {
     } else if (puedeCrear && !puedeCompletar) {
         // ✅ USUARIO SOLO PUEDE CREAR FACTURAS (COLABORADOR)
         $btnFinalizar.removeClass('btn-success btn-secondary btn-primary')
-                    .addClass('btn-warning')
-                    .prop('disabled', false)
-                    .html(`<i class="bi bi-send me-2"></i>Enviar Factura`)
-                    .attr('title', 'Crear factura pendiente y enviar a caja (sin ajuste de stock)');
+            .addClass('btn-warning')
+            .prop('disabled', false)
+            .html(`<i class="bi bi-send me-2"></i>Enviar Factura`)
+            .attr('title', 'Crear factura pendiente y enviar a caja (sin ajuste de stock)');
 
         console.log('📝 === INTERFAZ CONFIGURADA: COLABORADOR ===');
         console.log('📝 Botón: Amarillo - "Enviar Factura"');
@@ -168,10 +172,10 @@ function configurarInterfazSegunPermisos() {
     } else {
         // ❌ SIN PERMISOS
         $btnFinalizar.removeClass('btn-primary btn-success btn-warning')
-                    .addClass('btn-secondary')
-                    .prop('disabled', true)
-                    .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
-                    .attr('title', 'No tienes permisos para procesar ventas');
+            .addClass('btn-secondary')
+            .prop('disabled', true)
+            .html(`<i class="bi bi-lock me-2"></i>Sin Permisos`)
+            .attr('title', 'No tienes permisos para procesar ventas');
 
         console.log('🔒 === INTERFAZ CONFIGURADA: SIN PERMISOS ===');
         console.log('🔒 Botón: Gris - Deshabilitado');
@@ -218,12 +222,12 @@ if (typeof window !== 'undefined') {
     window.convertirProformaAFactura = convertirProformaAFactura;
     window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
     window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
-    
+
     console.log('📋 Funciones de proformas y detalles exportadas globalmente');
 }
 
 // ===== INICIALIZACIÓN =====
-$(document).ready(function() {
+$(document).ready(function () {
     console.log('🚀 Inicializando módulo de facturación');
     inicializarFacturacion();
     inicializarModalInventario();
@@ -286,7 +290,7 @@ function configurarEventos() {
     // ===== BÚSQUEDA DE PRODUCTOS =====
     let ultimoEventoInput = 0; // Para throttling adicional
 
-    $('#busquedaProducto').on('input keyup paste', function() {
+    $('#busquedaProducto').on('input keyup paste', function () {
         contadorEventosInput++;
         const termino = $(this).val().trim();
         const ahora = Date.now();
@@ -314,17 +318,17 @@ function configurarEventos() {
         // ✅ PROCESAR INMEDIATAMENTE SI EL CAMPO ESTÁ VACÍO
         if (termino.length === 0) {
             console.log('🎯 Campo vacío detectado - procesando inmediatamente');
-            
+
             // Forzar actualización inmediata
             window.lastProductsHash = null;
             ultimaBusqueda = '';
-            
+
             // Si hay búsqueda en proceso, forzar parada y ejecutar
             if (busquedaEnProceso) {
                 console.log('🎯 Interrumpiendo búsqueda en proceso para campo vacío');
                 busquedaEnProceso = false;
             }
-            
+
             buscarProductos('');
             return;
         }
@@ -358,15 +362,15 @@ function configurarEventos() {
             // ✅ SIEMPRE EJECUTAR BÚSQUEDA PARA TÉRMINOS VÁLIDOS
             if (termino.length >= 2) {
                 console.log('🎯 Iniciando búsqueda con término:', termino);
-                
+
                 // Forzar actualización si es necesario
                 if (termino !== ultimaBusqueda) {
                     window.lastProductsHash = null;
                 }
-                
+
                 buscarProductos(termino);
             }
-            
+
             timeoutBusquedaActivo = null;
             console.log('🎯 === FIN TIMEOUT DE BÚSQUEDA ===');
         }, 150); // Timeout más corto para mayor responsividad
@@ -374,7 +378,7 @@ function configurarEventos() {
 
     // ===== BÚSQUEDA DE CLIENTES =====
     let timeoutCliente = null;
-    $('#clienteBusqueda').on('input', function() {
+    $('#clienteBusqueda').on('input', function () {
         const termino = $(this).val().trim();
 
         // ✅ LIMPIAR CLIENTE SELECCIONADO CUANDO SE CAMBIA EL TEXTO
@@ -399,35 +403,35 @@ function configurarEventos() {
     });
 
     // ===== BOTONES PRINCIPALES =====
-    $('#btnAbrirInventario').on('click', function() {
+    $('#btnAbrirInventario').on('click', function () {
         console.log('🔍 Botón inventario clickeado - llamando consultarInventario()');
         consultarInventario();
     });
 
-    $('#btnLimpiarVenta').on('click', function() {
+    $('#btnLimpiarVenta').on('click', function () {
         limpiarVenta();
     });
 
-    $('#btnFinalizarVenta').on('click', function() {
+    $('#btnFinalizarVenta').on('click', function () {
         mostrarModalFinalizarVenta();
     });
 
-    $('#btnNuevoCliente').on('click', function() {
+    $('#btnNuevoCliente').on('click', function () {
         abrirModalNuevoCliente();
     });
 
     // ===== BOTÓN FACTURAS PENDIENTES =====
-    $('#btnFacturasPendientes').on('click', function() {
+    $('#btnFacturasPendientes').on('click', function () {
         abrirFacturasPendientes();
     });
 
     // ===== BOTÓN PROFORMAS =====
-    $('#btnProformas').on('click', function() {
+    $('#btnProformas').on('click', function () {
         abrirProformas();
     });
 
     // ===== MODAL FINALIZAR VENTA =====
-    $('#metodoPago').on('change', function() {
+    $('#metodoPago').on('change', function () {
         const metodo = $(this).val();
         if (metodo === 'efectivo') {
             $('#pagoEfectivo').show();
@@ -438,15 +442,15 @@ function configurarEventos() {
         }
     });
 
-    $('#montoRecibido').on('input', function() {
+    $('#montoRecibido').on('input', function () {
         calcularCambio();
     });
 
-    $('#btnConfirmarVenta').on('click', function() {
+    $('#btnConfirmarVenta').on('click', function () {
         procesarVentaFinal();
     });
 
-    $('#btnGuardarProforma').on('click', function() {
+    $('#btnGuardarProforma').on('click', function () {
         procesarProforma();
     });
 }
@@ -507,102 +511,102 @@ async function buscarProductos(termino) {
                 productosFiltrados = data.productos.filter(producto => {
                     const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
                     const descripcion = (producto.descripcion || producto.Descripcion || '').toLowerCase();
-                    
+
                     // ✅ BUSCAR EN NOMBRE Y DESCRIPCIÓN
                     let cumpleBusqueda = nombre.includes(terminoBusqueda) || descripcion.includes(terminoBusqueda);
-                    
+
                     // ✅ BUSCAR EN MEDIDAS DE LLANTAS (TODOS LOS FORMATOS SIN REQUERIR R)
                     if (!cumpleBusqueda && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
                         try {
                             const llantaInfo = producto.llanta || producto.Llanta[0];
-                            
+
                             if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                                 const ancho = llantaInfo.ancho;
                                 const perfil = llantaInfo.perfil || '';
                                 const diametro = llantaInfo.diametro;
-                                
+
                                 // Crear TODOS los formatos de medida para búsqueda
                                 const formatosBusqueda = [
                                     // Formato original con R
                                     `${ancho}/${perfil}/R${diametro}`,
                                     `${ancho}/R${diametro}`,
-                                    
+
                                     // Formatos sin R - ESTOS SON LOS PRINCIPALES
                                     `${ancho}/${perfil}/${diametro}`,  // 225/50/15
                                     `${ancho}-${perfil}-${diametro}`,  // 225-50-15
                                     `${ancho}-${perfil}/${diametro}`,  // 225-50/15
                                     `${ancho}x${perfil}x${diametro}`,  // 225x50x15
                                     `${ancho} ${perfil} ${diametro}`,  // 225 50 15
-                                    
+
                                     // Formatos adicionales sin perfil
                                     `${ancho}/${diametro}`,
                                     `${ancho}-${diametro}`,
                                     `${ancho}x${diametro}`,
                                     `${ancho} ${diametro}`,
-                                    
+
                                     // Componentes individuales
                                     `${ancho}`,
                                     `${perfil}`,
                                     `${diametro}`,
-                                    
+
                                     // Solo el diametro con R para compatibilidad
                                     `R${diametro}`
                                 ];
-                                
+
                                 // Crear texto de búsqueda unificado
                                 const textoBusquedaLlanta = formatosBusqueda
                                     .filter(formato => formato && formato.trim() !== '')
                                     .join(' ')
                                     .toLowerCase();
-                                
+
                                 cumpleBusqueda = textoBusquedaLlanta.includes(terminoBusqueda);
                             }
                         } catch (error) {
                             console.warn('⚠️ Error procesando medida de llanta para búsqueda:', error);
                         }
                     }
-                    
+
                     // ✅ BUSCAR EN PROPIEDADES ALTERNATIVAS DE MEDIDAS
                     if (!cumpleBusqueda && (producto.Ancho || producto.Diametro || producto.Perfil)) {
                         try {
                             const ancho = producto.Ancho || '';
                             const perfil = producto.Perfil || '';
                             const diametro = producto.Diametro || '';
-                            
+
                             // Todos los formatos alternativos sin requerir R
                             const formatosAlternativos = [
                                 // Con R (compatibilidad)
                                 `${ancho}/${perfil}/R${diametro}`,
                                 `${ancho}/R${diametro}`,
-                                
+
                                 // Sin R - FORMATOS PRINCIPALES
                                 `${ancho}/${perfil}/${diametro}`,  // 225/50/15
                                 `${ancho}-${perfil}-${diametro}`,  // 225-50-15
                                 `${ancho}-${perfil}/${diametro}`,  // 225-50/15
                                 `${ancho}x${perfil}x${diametro}`,  // 225x50x15
                                 `${ancho} ${perfil} ${diametro}`,  // 225 50 15
-                                
+
                                 // Sin perfil
                                 `${ancho}/${diametro}`,
                                 `${ancho}-${diametro}`,
                                 `${ancho}x${diametro}`,
                                 `${ancho} ${diametro}`,
-                                
+
                                 // Individuales
                                 `${ancho}`, `${perfil}`, `${diametro}`, `R${diametro}`
                             ];
-                            
+
                             const medidaAlternativa = formatosAlternativos
                                 .filter(formato => formato && formato.trim() !== '')
                                 .join(' ')
                                 .toLowerCase();
-                                
+
                             cumpleBusqueda = medidaAlternativa.includes(terminoBusqueda);
                         } catch (error) {
                             console.warn('⚠️ Error procesando medidas alternativas:', error);
                         }
                     }
-                    
+
                     return cumpleBusqueda;
                 });
                 console.log(`🔍 Productos filtrados por término "${termino}" (incluyendo medidas): ${productosFiltrados.length}`);
@@ -681,20 +685,20 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
-        
+
         // ✅ MAPEO MEJORADO DE MEDIDA DE LLANTA
         let medidaCompleta = null;
         let esLlanta = producto.esLlanta || producto.EsLlanta || false;
-        
+
         try {
             // Primero verificar si ya viene la medida completa
             medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta;
-            
+
             // Si no tiene medida completa pero es llanta, construirla desde los datos de llanta
             if (!medidaCompleta && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
                 esLlanta = true;
                 const llantaInfo = producto.llanta || producto.Llanta[0];
-                
+
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                         // Formato completo con perfil: 215/55/R16
@@ -705,7 +709,7 @@ function mostrarResultadosProductos(productos) {
                     }
                 }
             }
-            
+
             // Si aún no tenemos medida, verificar propiedades alternativas del backend
             if (!medidaCompleta) {
                 // Verificar formatos alternativos que puedan venir del backend
@@ -814,7 +818,7 @@ function mostrarResultadosProductos(productos) {
 
         // ✅ AGREGAR MEDIDA DE LLANTA SI EXISTE
         let infoLlanta = '';
-        
+
         console.log('🔧 Debug llanta:', {
             esLlanta: productoLimpio.esLlanta,
             medidaOriginal: producto.MedidaCompleta,
@@ -822,7 +826,7 @@ function mostrarResultadosProductos(productos) {
             medidaFinal: medidaCompleta,
             nombreProducto: producto.nombreProducto
         });
-        
+
         if (productoLimpio.esLlanta && medidaCompleta) {
             infoLlanta = `
                 <div class="info-llanta mb-2">
@@ -981,14 +985,14 @@ function mostrarResultadosClientes(clientes) {
     $('#clienteBusqueda').parent().append(html);
 
     // Configurar eventos
-    $('.dropdown-item-cliente').on('click', function() {
+    $('.dropdown-item-cliente').on('click', function () {
         const cliente = JSON.parse($(this).attr('data-cliente'));
         seleccionarCliente(cliente);
         $('.dropdown-clientes').remove();
     });
 
     // Cerrar dropdown al hacer click fuera
-    $(document).on('click', function(e) {
+    $(document).on('click', function (e) {
         if (!$(e.target).closest('#clienteBusqueda').length) {
             $('.dropdown-clientes').remove();
         }
@@ -1029,7 +1033,8 @@ function mostrarModalSeleccionProducto(producto) {
         } else if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
             imagenesArray = producto.imagenes
                 .map(img => img.Urlimagen || img.urlImagen || img.UrlImagen)
-                .filter(url => url && url.trim() !== '');        }
+                .filter(url => url && url.trim() !== '');
+        }
 
         if (imagenesArray.length > 0) {
             let urlImagen = imagenesArray[0];
@@ -1090,8 +1095,8 @@ function mostrarModalSeleccionProducto(producto) {
                                         <table class="table table-sm table-striped">
                                             <tbody>
                                                 ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                                                    const precio = precioBase * config.multiplicador;
-                                                    return `
+        const precio = precioBase * config.multiplicador;
+        return `
                                                         <tr>
                                                             <td>
                                                                 <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : metodo === 'sinpe' ? 'phone' : 'cash'} me-2"></i>
@@ -1101,7 +1106,7 @@ function mostrarModalSeleccionProducto(producto) {
                                                             </td>
                                                         </tr>
                                                     `;
-                                                }).join('')}
+    }).join('')}
                                             </tbody>
                                         </table>
                                     </div>
@@ -1173,7 +1178,7 @@ function configurarEventosModalProducto(producto, modal) {
     $('#modalSeleccionProducto #btnConfirmarAgregarProducto').off('.modalProducto');
 
     // Eventos de cantidad - CORREGIDOS con namespace específico
-    $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function(e) {
+    $('#modalSeleccionProducto #btnMenosCantidad').on('click.modalProducto', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -1187,7 +1192,7 @@ function configurarEventosModalProducto(producto, modal) {
         }
     });
 
-    $('#modalSeleccionProducto #btnMasCantidad').on('click.modalProducto', function(e) {
+    $('#modalSeleccionProducto #btnMasCantidad').on('click.modalProducto', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -1204,7 +1209,7 @@ function configurarEventosModalProducto(producto, modal) {
     });
 
     // Validación del input con selector específico
-    $('#modalSeleccionProducto #cantidadProducto').on('input.modalProducto', function() {
+    $('#modalSeleccionProducto #cantidadProducto').on('input.modalProducto', function () {
         const valor = parseInt($(this).val()) || 1;
         const min = parseInt($(this).attr('min')) || 1;
         const max = parseInt($(this).attr('max')) || producto.cantidadEnInventario;
@@ -1215,7 +1220,7 @@ function configurarEventosModalProducto(producto, modal) {
             $(this).val(max);
             mostrarToast('Stock limitado', `Solo hay ${max} unidades disponibles`, 'warning');
         }
-    }).on('keydown.modalProducto', function(e) {
+    }).on('keydown.modalProducto', function (e) {
         // Prevenir las teclas de flecha arriba/abajo para evitar conflicto con botones
         if (e.which === 38 || e.which === 40) {
             e.preventDefault();
@@ -1238,7 +1243,7 @@ function configurarEventosModalProducto(producto, modal) {
     });
 
     // ✅ CONFIRMAR AGREGAR PRODUCTO - PREVENIR MÚLTIPLES EJECUCIONES
-    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').one('click.modalProducto', function(e) {
+    $('#modalSeleccionProducto #btnConfirmarAgregarProducto').one('click.modalProducto', function (e) {
         e.preventDefault();
         e.stopPropagation();
 
@@ -1296,7 +1301,7 @@ function configurarEventosModalProducto(producto, modal) {
     });
 
     // Limpiar eventos cuando se cierre el modal
-    $('#modalSeleccionProducto').on('hidden.bs.modal.modalProducto', function() {
+    $('#modalSeleccionProducto').on('hidden.bs.modal.modalProducto', function () {
         console.log('🧹 Limpiando eventos del modal de producto');
         $('#modalSeleccionProducto #btnMenosCantidad, #modalSeleccionProducto #btnMasCantidad, #modalSeleccionProducto #cantidadProducto, #modalSeleccionProducto #btnConfirmarAgregarProducto').off('.modalProducto');
         $(this).off('hidden.bs.modal.modalProducto');
@@ -1327,14 +1332,55 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
         // Agregar nuevo producto
         // Validación robusta para imagen URL
         let imagenUrl = null;
-        if (producto.imagenesProductos && 
-            Array.isArray(producto.imagenesProductos) && 
+        if (producto.imagenesProductos &&
+            Array.isArray(producto.imagenesProductos) &&
             producto.imagenesProductos.length > 0) {
 
             const primeraImagen = producto.imagenesProductos[0];
             if (primeraImagen && primeraImagen.Urlimagen) {
                 imagenUrl = primeraImagen.Urlimagen;
             }
+        }
+
+        // ✅ CAPTURAR INFORMACIÓN DE LLANTA
+        let esLlanta = producto.esLlanta || producto.EsLlanta || false;
+        let medidaCompleta = null;
+
+        try {
+            // Primero verificar si ya viene la medida completa
+            medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta;
+
+            // Si no tiene medida completa pero es llanta, construirla desde los datos de llanta
+            if (!medidaCompleta && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                esLlanta = true;
+                const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                    if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                        // Formato completo con perfil: 215/55/R16
+                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                    } else {
+                        // Formato sin perfil: 215/R16
+                        medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+                    }
+                }
+            }
+
+            // Si aún no tenemos medida, verificar propiedades alternativas del backend
+            if (!medidaCompleta) {
+                // Verificar formatos alternativos que puedan venir del backend
+                if (producto.Ancho && producto.Diametro) {
+                    if (producto.Perfil && producto.Perfil > 0) {
+                        medidaCompleta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                    } else {
+                        medidaCompleta = `${producto.Ancho}/R${producto.Diametro}`;
+                    }
+                    esLlanta = true;
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ Error procesando información de llanta en agregarProductoAVenta:', error);
+            medidaCompleta = null;
         }
 
         productosEnVenta.push({
@@ -1344,10 +1390,12 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             cantidad: cantidad,
             stockDisponible: producto.cantidadEnInventario,
             metodoPago: metodoPago,
-            imagenUrl: imagenUrl
+            imagenUrl: imagenUrl,
+            esLlanta: esLlanta,
+            medidaCompleta: medidaCompleta
         });
 
-       /* mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');*/
+        /* mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');*/
     }
 
     actualizarVistaCarrito();
@@ -1376,11 +1424,27 @@ function actualizarVistaCarrito() {
         const metodoPago = producto.metodoPago || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA
+        let nombreCompletoProducto = producto.nombreProducto;
+        let infoLlantaCarrito = '';
+
+        if (producto.esLlanta && producto.medidaCompleta) {
+            // Mostrar medida como información adicional debajo del nombre
+            infoLlantaCarrito = `
+                <div class="info-llanta-carrito mb-1">
+                    <small class="text-primary fw-bold">
+                        <i class="bi bi-tire me-1"></i>${producto.medidaCompleta}
+                    </small>
+                </div>
+            `;
+        }
+
         html += `
             <div class="producto-venta-item border rounded p-2 mb-2">
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
-                        <h6 class="mb-1">${producto.nombreProducto}</h6>
+                        <h6 class="mb-1">${nombreCompletoProducto}</h6>
+                        ${infoLlantaCarrito}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
                             <small class="badge bg-info">${configMetodo.nombre}</small>
@@ -1427,8 +1491,9 @@ function actualizarVistaCarrito() {
     configurarEventosCantidad();
 }
 
+
 function configurarEventosCantidad() {
-    $('.btn-cantidad-menos').on('click', function() {
+    $('.btn-cantidad-menos').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
         if (productosEnVenta[index].cantidad > 1) {
             productosEnVenta[index].cantidad--;
@@ -1437,7 +1502,7 @@ function configurarEventosCantidad() {
         }
     });
 
-    $('.btn-cantidad-mas').on('click', function() {
+    $('.btn-cantidad-mas').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
         if (productosEnVenta[index].cantidad < productosEnVenta[index].stockDisponible) {
             productosEnVenta[index].cantidad++;
@@ -1448,7 +1513,7 @@ function configurarEventosCantidad() {
         }
     });
 
-    $('.input-cantidad').on('change', function() {
+    $('.input-cantidad').on('change', function () {
         const index = parseInt($(this).attr('data-index'));
         const nuevaCantidad = parseInt($(this).val());
         const stockDisponible = productosEnVenta[index].stockDisponible;
@@ -1464,7 +1529,7 @@ function configurarEventosCantidad() {
         }
     });
 
-    $('.btn-eliminar-producto').on('click', function() {
+    $('.btn-eliminar-producto').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
         productosEnVenta.splice(index, 1);
         actualizarVistaCarrito();
@@ -1474,7 +1539,7 @@ function configurarEventosCantidad() {
 }
 
 function actualizarTotales() {
-    const subtotal = productosEnVenta.reduce((sum, producto) => 
+    const subtotal = productosEnVenta.reduce((sum, producto) =>
         sum + (producto.precioUnitario * producto.cantidad), 0);
 
     const iva = subtotal * 0.13; // 13% IVA
@@ -1486,11 +1551,28 @@ function actualizarTotales() {
 }
 
 async function limpiarVenta() {
-    if (productosEnVenta.length === 0) return;
+    // ✅ VERIFICAR SI HAY ALGO QUE LIMPIAR (PRODUCTOS O CLIENTE)
+    const tieneProductos = productosEnVenta.length > 0;
+    const tieneCliente = clienteSeleccionado !== null;
+
+    if (!tieneProductos && !tieneCliente) {
+        console.log('🧹 No hay nada que limpiar');
+        return;
+    }
+
+    // ✅ DETERMINAR MENSAJE SEGÚN LO QUE HAY QUE LIMPIAR
+    let textoConfirmacion = '¿Estás seguro de que deseas limpiar ';
+    if (tieneProductos && tieneCliente) {
+        textoConfirmacion += 'toda la venta (productos y cliente)?';
+    } else if (tieneProductos) {
+        textoConfirmacion += 'todos los productos del carrito?';
+    } else {
+        textoConfirmacion += 'el cliente seleccionado?';
+    }
 
     const confirmacion = await Swal.fire({
         title: '¿Limpiar carrito?',
-        text: '¿Estás seguro de que deseas limpiar toda la venta?',
+        text: textoConfirmacion,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -1500,12 +1582,13 @@ async function limpiarVenta() {
     });
 
     if (confirmacion.isConfirmed) {
+        // ✅ LIMPIAR SIEMPRE TODO INDEPENDIENTEMENTE DE QUE HAYA O NO
         productosEnVenta = [];
         clienteSeleccionado = null;
         facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
         $('#clienteBusqueda').val('');
         $('#clienteSeleccionado').addClass('d-none');
-        
+
         // ✅ LIMPIAR CÓDIGOS DE SEGUIMIENTO Y PRODUCTOS PENDIENTES
         if (window.codigosSeguimientoPendientes) {
             delete window.codigosSeguimientoPendientes;
@@ -1516,14 +1599,25 @@ async function limpiarVenta() {
         if (window.facturaConPendientes) {
             delete window.facturaConPendientes;
         }
-        
+
         actualizarVistaCarrito();
         actualizarTotales();
 
         // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
         $('#btnGuardarProforma').show();
-        mostrarToast('Venta limpiada', 'Se han removido todos los productos', 'info');
+
+        // ✅ MENSAJE DINÁMICO SEGÚN LO QUE SE LIMPIÓ
+        let mensajeLimpieza = 'Venta limpiada';
+        if (tieneProductos && tieneCliente) {
+            mensajeLimpieza = 'Se han removido todos los productos y el cliente seleccionado';
+        } else if (tieneProductos) {
+            mensajeLimpieza = 'Se han removido todos los productos';
+        } else {
+            mensajeLimpieza = 'Se ha removido el cliente seleccionado';
+        }
+
+        mostrarToast('Venta limpiada', mensajeLimpieza, 'info');
     }
 }
 
@@ -1695,10 +1789,22 @@ function actualizarResumenVentaModal() {
         const subtotalProducto = precioAjustado * producto.cantidad;
         subtotal += subtotalProducto;
 
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL (evitar duplicación)
+        let infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+        if (producto.esLlanta && producto.medidaCompleta) {
+            // Verificar si la medida ya está incluida en el nombre del producto
+            if (!producto.nombreProducto.includes(producto.medidaCompleta)) {
+                infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+            } else {
+                // Si ya está incluida, solo mostrar el nombre tal como está
+                infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+            }
+        }
+
         htmlResumen += `
             <tr>
                 <td>
-                    <strong>${producto.nombreProducto}</strong>
+                    ${infoProductoCompleta}
                 </td>
                 <td class="text-center">${producto.cantidad}</td>
                 <td class="text-end">₡${formatearMoneda(precioAjustado)}</td>
@@ -1744,6 +1850,7 @@ function actualizarResumenVentaModal() {
         $('#campoCambio').hide();
     }
 }
+
 
 function configurarModalSegunPermisos() {
     const $btnConfirmar = $('#btnConfirmarVenta');
@@ -1898,23 +2005,23 @@ function configurarEventosModalFinalizar() {
     $('#btnPagoSimple').off('click.modalFinalizar');
 
     // Configurar eventos de método de pago
-    $('input[name="metodoPago"]').on('change.modalFinalizar', function() {
+    $('input[name="metodoPago"]').on('change.modalFinalizar', function () {
         if (!esPagoMultiple) {
             actualizarResumenVentaModal();
         }
     });
 
     // Configurar evento de cambio en efectivo recibido
-    $('#efectivoRecibido').on('input.modalFinalizar', function() {
+    $('#efectivoRecibido').on('input.modalFinalizar', function () {
         calcularCambioModal();
     });
-    
+
     // Configurar botones de pago múltiple/simple
-    $('#btnPagoMultiple').on('click.modalFinalizar', function() {
+    $('#btnPagoMultiple').on('click.modalFinalizar', function () {
         activarPagoMultiple();
     });
-    
-    $('#btnPagoSimple').on('click.modalFinalizar', function() {
+
+    $('#btnPagoSimple').on('click.modalFinalizar', function () {
         activarPagoSimple();
     });
 }
@@ -1926,13 +2033,13 @@ function activarPagoMultiple() {
     $('#pagoMultipleContainer').show();
     $('#btnPagoMultiple').addClass('active');
     $('#btnPagoSimple').removeClass('active');
-    
+
     // Inicializar con el total completo si no hay pagos
     if (detallesPagoActuales.length === 0) {
         const total = calcularTotalFactura();
         inicializarPagoMultiple(total);
     }
-    
+
     actualizarVistaPagosMultiples();
 }
 
@@ -1943,7 +2050,7 @@ function activarPagoSimple() {
     $('#pagoSimpleContainer').show();
     $('#btnPagoSimple').addClass('active');
     $('#btnPagoMultiple').removeClass('active');
-    
+
     actualizarResumenVentaModal();
 }
 
@@ -1962,14 +2069,14 @@ function agregarNuevoPago() {
         mostrarToast('Pago completo', 'El total de la factura ya está cubierto', 'warning');
         return;
     }
-    
+
     detallesPagoActuales.push({
         metodoPago: 'efectivo',
         monto: montoRestante,
         referencia: '',
         observaciones: ''
     });
-    
+
     actualizarVistaPagosMultiples();
 }
 
@@ -1978,7 +2085,7 @@ function eliminarPago(index) {
         mostrarToast('Error', 'Debe haber al menos un método de pago', 'warning');
         return;
     }
-    
+
     detallesPagoActuales.splice(index, 1);
     actualizarVistaPagosMultiples();
 }
@@ -1986,7 +2093,7 @@ function eliminarPago(index) {
 function actualizarVistaPagosMultiples() {
     const container = $('#pagoMultiplesList');
     const totalFactura = calcularTotalFactura();
-    
+
     let html = '';
     detallesPagoActuales.forEach((pago, index) => {
         const config = CONFIGURACION_PRECIOS[pago.metodoPago] || CONFIGURACION_PRECIOS.efectivo;
@@ -1997,8 +2104,8 @@ function actualizarVistaPagosMultiples() {
                         <h6 class="card-title mb-0">
                             <i class="${config.icono} me-2"></i>Pago ${index + 1}
                         </h6>
-                        ${detallesPagoActuales.length > 1 ? 
-                            `<button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarPago(${index})">
+                        ${detallesPagoActuales.length > 1 ?
+                `<button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarPago(${index})">
                                 <i class="bi bi-trash"></i>
                             </button>` : ''}
                     </div>
@@ -2007,11 +2114,11 @@ function actualizarVistaPagosMultiples() {
                         <div class="col-md-6">
                             <label class="form-label">Método de Pago</label>
                             <select class="form-select metodo-pago-multiple" data-index="${index}">
-                                ${Object.entries(CONFIGURACION_PRECIOS).map(([key, value]) => 
-                                    `<option value="${key}" ${pago.metodoPago === key ? 'selected' : ''}>
+                                ${Object.entries(CONFIGURACION_PRECIOS).map(([key, value]) =>
+                    `<option value="${key}" ${pago.metodoPago === key ? 'selected' : ''}>
                                         ${value.nombre}
                                     </option>`
-                                ).join('')}
+                ).join('')}
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -2051,32 +2158,32 @@ function actualizarVistaPagosMultiples() {
             </div>
         `;
     });
-    
+
     container.html(html);
-    
+
     // Configurar eventos para los nuevos elementos
-    $('.metodo-pago-multiple').on('change', function() {
+    $('.metodo-pago-multiple').on('change', function () {
         const index = $(this).data('index');
         detallesPagoActuales[index].metodoPago = $(this).val();
         actualizarResumenPagosMultiples();
     });
-    
-    $('.monto-pago-multiple').on('input', function() {
+
+    $('.monto-pago-multiple').on('input', function () {
         const index = $(this).data('index');
         detallesPagoActuales[index].monto = parseFloat($(this).val()) || 0;
         actualizarResumenPagosMultiples();
     });
-    
-    $('.referencia-pago-multiple').on('input', function() {
+
+    $('.referencia-pago-multiple').on('input', function () {
         const index = $(this).data('index');
         detallesPagoActuales[index].referencia = $(this).val();
     });
-    
-    $('.observaciones-pago-multiple').on('input', function() {
+
+    $('.observaciones-pago-multiple').on('input', function () {
         const index = $(this).data('index');
         detallesPagoActuales[index].observaciones = $(this).val();
     });
-    
+
     actualizarResumenPagosMultiples();
 }
 
@@ -2084,11 +2191,11 @@ function actualizarResumenPagosMultiples() {
     const totalFactura = calcularTotalFactura();
     const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
     const montoRestante = totalFactura - totalPagado;
-    
+
     $('#totalFacturaMultiple').text(`₡${formatearMoneda(totalFactura)}`);
     $('#totalPagadoMultiple').text(`₡${formatearMoneda(totalPagado)}`);
     $('#montoRestanteMultiple').text(`₡${formatearMoneda(montoRestante)}`);
-    
+
     // Cambiar color según si está completo o no
     if (montoRestante < 0) {
         $('#montoRestanteMultiple').removeClass('text-success text-warning').addClass('text-danger');
@@ -2100,10 +2207,10 @@ function actualizarResumenPagosMultiples() {
         $('#montoRestanteMultiple').removeClass('text-danger text-success').addClass('text-warning');
         $('#estadoPagoMultiple').html('<span class="badge bg-warning">Pago pendiente</span>');
     }
-    
+
     // Habilitar/deshabilitar botón de agregar pago
     $('#btnAgregarPago').prop('disabled', montoRestante <= 0);
-    
+
     // Habilitar/deshabilitar botón de confirmar
     $('#btnConfirmarVenta').prop('disabled', montoRestante !== 0);
 }
@@ -2111,13 +2218,13 @@ function actualizarResumenPagosMultiples() {
 function calcularTotalFactura() {
     const metodoBase = esPagoMultiple ? 'efectivo' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
     const configMetodo = CONFIGURACION_PRECIOS[metodoBase];
-    
+
     let subtotal = 0;
     productosEnVenta.forEach(producto => {
         const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
         subtotal += precioAjustado * producto.cantidad;
     });
-    
+
     const iva = subtotal * 0.13;
     return subtotal + iva;
 }
@@ -2130,15 +2237,15 @@ function calcularMontoRestante() {
 
 function validarPagosMultiples() {
     if (!esPagoMultiple) return true;
-    
+
     const totalFactura = calcularTotalFactura();
     const totalPagado = detallesPagoActuales.reduce((sum, pago) => sum + pago.monto, 0);
-    
+
     if (Math.abs(totalFactura - totalPagado) > 0.01) {
         mostrarToast('Error de pago', 'El total de los pagos no coincide con el total de la factura', 'danger');
         return false;
     }
-    
+
     for (let i = 0; i < detallesPagoActuales.length; i++) {
         const pago = detallesPagoActuales[i];
         if (pago.monto <= 0) {
@@ -2146,7 +2253,7 @@ function validarPagosMultiples() {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -2157,6 +2264,14 @@ async function procesarVentaFinal() {
         $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
 
         console.log('🔍 === PROCESANDO VENTA FINAL ===');
+        console.log('🔍 Es pago múltiple:', esPagoMultiple);
+        console.log('🔍 Detalles de pago actuales:', detallesPagoActuales);
+
+        // ✅ VALIDAR PAGOS MÚLTIPLES SI ES NECESARIO
+        if (esPagoMultiple && !validarPagosMultiples()) {
+            $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+            return;
+        }
 
         const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
         const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
@@ -2192,6 +2307,7 @@ async function procesarVentaFinal() {
     }
 }
 
+
 /**
  * ✅ NUEVA FUNCIÓN: Completar factura existente
  */
@@ -2199,21 +2315,15 @@ async function completarFacturaExistente(facturaId) {
     try {
         console.log('💰 === COMPLETANDO FACTURA EXISTENTE ===');
         console.log('💰 Factura ID:', facturaId);
+        console.log('💰 Es pago múltiple:', esPagoMultiple);
+        console.log('💰 Detalles de pago:', detallesPagoActuales);
 
-        // ✅ VALIDACIÓN INICIAL
-        //if (!facturaId) {
-        //    console.error('❌ FacturaId es requerido');
-        //    mostrarToast('Error', 'ID de factura no válido', 'danger');
-        //    return;
-        //}
+        const metodoPagoSeleccionado = esPagoMultiple ? 'Multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
 
-
-        const metodoPagoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
-        
         // ✅ DATOS COMPLETOS Y VALIDADOS PARA EL CONTROLADOR (SOLO FACTURAS PENDIENTES)
         const datosCompletamiento = {
             facturaId: parseInt(facturaId), // Asegurar que sea número
-            metodoPago: esPagoMultiple ? 'Multiple' : metodoPagoSeleccionado,
+            metodoPago: metodoPagoSeleccionado,
             observaciones: $('#observacionesVenta').val() || '',
             forzarVerificacionStock: false,
             esProforma: false // Esta función solo maneja facturas pendientes
@@ -2228,11 +2338,10 @@ async function completarFacturaExistente(facturaId) {
                 observaciones: pago.observaciones || '',
                 fechaPago: new Date().toISOString()
             }));
+            console.log('💰 Detalles de pago múltiple agregados:', datosCompletamiento.detallesPago);
         }
 
         console.log('📋 Datos de completamiento para factura pendiente:', datosCompletamiento);
-
-        console.log('📋 Datos de completamiento:', datosCompletamiento);
 
         const response = await fetch('/Facturacion/CompletarFactura', {
             method: 'POST',
@@ -2248,50 +2357,52 @@ async function completarFacturaExistente(facturaId) {
 
         if (result.success) {
             console.log('✅ Factura completada exitosamente:', result);
-            
+
             // ✅ PRESERVAR INFORMACIÓN COMPLETA DE FACTURA ANTES DE PROCESAR
             console.log('📋 === PRESERVANDO INFORMACIÓN DE FACTURA PARA RECIBO ===');
             if (facturaPendienteActual) {
                 window.facturaParaRecibo = {
                     numeroFactura: facturaPendienteActual.numeroFactura || `FAC-${facturaId}`,
-                    nombreCliente: facturaPendienteActual.nombreCliente || 
-                                  facturaPendienteActual.NombreCliente ||
-                                  clienteSeleccionado?.nombre || 
-                                  clienteSeleccionado?.nombreCliente ||
-                                  'Cliente General',
+                    nombreCliente: facturaPendienteActual.nombreCliente ||
+                        facturaPendienteActual.NombreCliente ||
+                        clienteSeleccionado?.nombre ||
+                        clienteSeleccionado?.nombreCliente ||
+                        'Cliente General',
                     usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre ||
-                                         facturaPendienteActual.UsuarioCreadorNombre ||
-                                         obtenerUsuarioActual()?.nombre ||
-                                         'Sistema'
+                        facturaPendienteActual.UsuarioCreadorNombre ||
+                        obtenerUsuarioActual()?.nombre ||
+                        'Sistema'
                 };
                 console.log('📋 Información preservada:', window.facturaParaRecibo);
             }
-            
+
             // ✅ REGISTRAR PRODUCTOS PENDIENTES SI EXISTEN
             if (window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
                 console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DESPUÉS DE COMPLETAR FACTURA ===');
                 console.log('📦 Productos pendientes:', window.productosPendientesEntrega);
                 console.log('📦 Factura completada ID:', facturaId);
-                
+
                 await registrarProductosPendientesEntrega(facturaId, window.productosPendientesEntrega);
             }
-            
+
             // ✅ GUARDAR PRODUCTOS ACTUALES ANTES DE LIMPIAR PARA EL RECIBO
             const productosParaRecibo = [...productosEnVenta];
-            
+
             // ✅ CERRAR MODAL INMEDIATAMENTE
             modalFinalizarVenta.hide();
-            
+
             // ✅ GENERAR E IMPRIMIR RECIBO ANTES DE LIMPIAR CON DATOS COMPLETOS
             console.log('🖨️ Llamando a generarReciboFacturaCompletada con:', {
                 result: result,
                 productos: productosParaRecibo.length,
                 metodoPago: metodoPagoSeleccionado,
-                facturaPendiente: facturaPendienteActual
+                facturaPendiente: facturaPendienteActual,
+                esPagoMultiple: esPagoMultiple,
+                detallesPago: detallesPagoActuales
             });
-            
+
             generarReciboFacturaCompletada(result, productosParaRecibo, metodoPagoSeleccionado);
-            
+
             // ✅ LIMPIAR CARRITO COMPLETAMENTE
             productosEnVenta = [];
             clienteSeleccionado = null;
@@ -2301,7 +2412,7 @@ async function completarFacturaExistente(facturaId) {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
-            
+
             // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES
             if (window.productosPendientesEntrega) {
                 delete window.productosPendientesEntrega;
@@ -2341,12 +2452,13 @@ async function completarFacturaExistente(facturaId) {
     }
 }
 
+
 async function crearNuevaFactura(tipoDocumento = 'Factura') {
     try {
         console.log('🆕 === CREANDO NUEVO DOCUMENTO ===');
         console.log('🆕 Tipo de documento:', tipoDocumento);
         console.log('🆕 Es conversión de proforma:', !!window.proformaOriginalParaConversion);
-        
+
         // ✅ NOTA: Esta función maneja:
         // - Creación de facturas normales
         // - Creación de proformas 
@@ -2480,9 +2592,16 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             })) : [],
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+
+                // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA
+                let nombreCompletoProducto = producto.nombreProducto;
+                if (producto.esLlanta && producto.medidaCompleta) {
+                    nombreCompletoProducto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
+                }
+
                 return {
                     productoId: producto.productoId,
-                    nombreProducto: producto.nombreProducto,
+                    nombreProducto: nombreCompletoProducto,
                     descripcionProducto: producto.descripcion || '',
                     cantidad: producto.cantidad,
                     precioUnitario: precioAjustado,
@@ -2514,11 +2633,11 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             if (window.proformaOriginalParaConversion) {
                 console.log('🔄 === MARCANDO PROFORMA COMO FACTURADA ===');
                 console.log('🔄 Proforma original:', window.proformaOriginalParaConversion);
-                
+
                 // ✅ VALIDAR QUE TENEMOS EL ID DE LA PROFORMA
                 const proformaId = window.proformaOriginalParaConversion.proformaId || window.proformaOriginalParaConversion.facturaId;
                 console.log('🔄 ID de proforma a marcar:', proformaId);
-                
+
                 if (!proformaId) {
                     console.error('❌ No se pudo obtener el ID de la proforma para marcar como facturada');
                 } else {
@@ -2530,10 +2649,10 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                             },
                             body: JSON.stringify({})
                         });
-                        
+
                         const responseText = await responseConversion.text();
                         console.log('🔄 Respuesta del servidor:', responseText);
-                        
+
                         if (responseConversion.ok) {
                             const resultadoConversion = JSON.parse(responseText);
                             console.log('✅ Proforma marcada como facturada exitosamente:', resultadoConversion);
@@ -2544,7 +2663,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                         console.warn('⚠️ Error en conversión de proforma, pero la factura se creó:', error);
                     }
                 }
-                
+
                 // Limpiar referencia
                 delete window.proformaOriginalParaConversion;
             }
@@ -2745,7 +2864,7 @@ async function procesarProforma() {
         $btnProforma.find('.btn-loading-state').removeClass('d-none');
 
         console.log('📋 === PROCESANDO PROFORMA DESDE MODAL ===');
-        
+
         // Validar que hay productos en la venta
         if (productosEnVenta.length === 0) {
             mostrarToast('Venta vacía', 'Agrega productos antes de crear la proforma', 'warning');
@@ -2763,7 +2882,7 @@ async function procesarProforma() {
 
     } catch (error) {
         console.error('❌ Error procesando proforma:', error);
-        
+
         // ✅ MOSTRAR ERROR CON SWEETALERT
         if (typeof Swal !== 'undefined') {
             Swal.fire({
@@ -2794,9 +2913,9 @@ async function abrirProformas() {
         console.log('📋 === ABRIENDO MODAL DE PROFORMAS ===');
 
         const modal = new bootstrap.Modal(document.getElementById('proformasModal'));
-        
+
         // Configurar evento para cuando el modal sea completamente visible
-        $('#proformasModal').on('shown.bs.modal', async function() {
+        $('#proformasModal').on('shown.bs.modal', async function () {
             console.log('📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***');
             console.log('📋 Elementos disponibles en el DOM:');
             console.log('📋 - Input búsqueda:', $('#busquedaProformas').length);
@@ -2804,7 +2923,7 @@ async function abrirProformas() {
             console.log('📋 - Tabla body:', $('#proformasTableBody').length);
             console.log('📋 - Loading:', $('#proformasLoading').length);
             console.log('📋 - Content:', $('#proformasContent').length);
-            
+
             // Ejecutar verificación de vencimiento automáticamente al abrir el modal
             console.log('📅 Ejecutando verificación automática de vencimiento...');
             try {
@@ -2812,7 +2931,7 @@ async function abrirProformas() {
             } catch (error) {
                 console.error('❌ Error en verificación automática:', error);
             }
-            
+
             // Inicializar filtros usando el módulo dedicado
             if (typeof inicializarFiltrosProformas === 'function') {
                 console.log('✅ Inicializando filtros de proformas...');
@@ -2823,7 +2942,7 @@ async function abrirProformas() {
                 cargarProformasBasico();
             }
         });
-        
+
         modal.show();
 
     } catch (error) {
@@ -2993,22 +3112,22 @@ function configurarEventosProformas() {
     $('.btn-imprimir-proforma').off('click.proforma');
 
     // Ver proforma
-    $('.btn-ver-proforma').on('click.proforma', function() {
+    $('.btn-ver-proforma').on('click.proforma', function () {
         const proformaId = $(this).data('proforma-id');
         verDetalleProforma(proformaId);
     });
 
     // Imprimir proforma
-    $('.btn-imprimir-proforma').on('click.proforma', function() {
+    $('.btn-imprimir-proforma').on('click.proforma', function () {
         const proformaId = $(this).data('proforma-id');
         imprimirProforma(proformaId);
     });
 
     // Convertir proforma - IGUAL QUE FACTURAS PENDIENTES
-    $('.btn-convertir-proforma').on('click.proforma', function(e) {
+    $('.btn-convertir-proforma').on('click.proforma', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        
+
         const proformaEscapada = $(this).data('proforma-escapada');
         if (proformaEscapada) {
             console.log('🔄 Convirtiendo proforma con datos:', proformaEscapada);
@@ -3075,11 +3194,11 @@ function mostrarPaginacionProformas(paginaActual, totalPaginas) {
     `);
 
     // Configurar eventos de paginación
-    $('#paginacionProformas .page-link').on('click', function(e) {
+    $('#paginacionProformas .page-link').on('click', function (e) {
         e.preventDefault();
         if (!$(this).parent().hasClass('disabled') && !$(this).parent().hasClass('active')) {
             const pagina = parseInt($(this).data('pagina'));
-            
+
             // Usar función de filtros si está disponible, sino usar función básica
             if (typeof cambiarPaginaProformas === 'function') {
                 cambiarPaginaProformas(pagina);
@@ -3153,7 +3272,7 @@ function mostrarDetalleProformaModal(proforma) {
     console.log('📋 Mostrando modal de detalles:', proforma);
 
     const fecha = new Date(proforma.fechaFactura).toLocaleDateString('es-CR');
-    const fechaVencimiento = proforma.fechaVencimiento ? 
+    const fechaVencimiento = proforma.fechaVencimiento ?
         new Date(proforma.fechaVencimiento).toLocaleDateString('es-CR') : 'N/A';
 
     // Generar HTML de productos
@@ -3345,9 +3464,9 @@ async function imprimirProforma(proformaId) {
 
     } catch (error) {
         console.error('❌ Error imprimiendo proforma:', error);
-        
+
         Swal.close();
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error de impresión',
@@ -3545,6 +3664,124 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
     convertirProformaAFactura(proformaId);
 };
 
+/**
+ * ✅ FUNCIÓN: Re-imprimir factura existente desde modal de detalles
+ */
+async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFacturaExistentes = null) {
+    try {
+        console.log('🖨️ === INICIANDO RE-IMPRESIÓN DE FACTURA DESDE MODAL ===');
+        console.log('🖨️ Factura ID:', facturaId);
+        console.log('🖨️ Número de factura:', numeroFactura);
+
+        // Verificar si el botón existe antes de manipularlo
+        const $btn = $('#btnImprimirFacturaModal');
+        const textoOriginal = $btn.length > 0 ? $btn.html() : '<i class="bi bi-printer me-1"></i>Imprimir';
+
+        if ($btn.length > 0) {
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Imprimiendo...');
+        }
+
+        let factura;
+        // Si ya tenemos los datos, usarlos; si no, obtenerlos
+        if (datosFacturaExistentes) {
+            console.log('🖨️ Usando datos de factura ya obtenidos');
+            factura = datosFacturaExistentes;
+        } else {
+            console.log('🖨️ Obteniendo detalles de factura...');
+            // Obtener detalles completos de la factura
+            const response = await fetch(`/Facturacion/ObtenerDetalleFactura/${facturaId}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+
+            const resultado = await response.json();
+            console.log('🖨️ Detalles de factura obtenidos:', resultado);
+
+            if (resultado.success && resultado.factura) {
+                factura = resultado.factura;
+            } else {
+                throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
+            }
+        }
+
+        if (factura) {
+            // Preparar datos para el recibo
+            const datosFactura = {
+                numeroFactura: factura.numeroFactura || numeroFactura,
+                nombreCliente: factura.nombreCliente || 'Cliente General',
+                usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema',
+                esReimpresion: true // ✅ MARCAR COMO REIMPRESIÓN
+            };
+
+            // Preparar productos para el recibo
+            const productosParaRecibo = factura.detallesFactura ? factura.detallesFactura.map(detalle => ({
+                nombreProducto: detalle.nombreProducto || 'Producto',
+                cantidad: detalle.cantidad || 1,
+                precioUnitario: detalle.precioUnitario || 0,
+                esLlanta: detalle.esLlanta || false,
+                medidaCompleta: detalle.medidaCompleta || null
+            })) : [];
+
+            // Preparar totales
+            const totalesRecibo = {
+                subtotal: factura.subtotal || 0,
+                iva: factura.montoImpuesto || 0,
+                total: factura.total || 0,
+                metodoPago: factura.metodoPago || 'Efectivo',
+                cliente: {
+                    nombre: factura.nombreCliente || 'Cliente General'
+                },
+                usuario: {
+                    nombre: factura.usuarioCreadorNombre || 'Sistema'
+                }
+            };
+
+            // Verificar si tiene detalles de pago múltiple
+            if (factura.detallesPago && factura.detallesPago.length > 1) {
+                totalesRecibo.detallesPago = factura.detallesPago;
+                totalesRecibo.metodoPago = 'Multiple';
+                console.log('🖨️ Factura con pago múltiple detectado');
+            }
+
+            console.log('🖨️ Generando recibo para re-impresión...');
+
+            // Generar el recibo usando la función existente
+            if (typeof generarRecibo === 'function') {
+                generarRecibo(datosFactura, productosParaRecibo, totalesRecibo);
+                mostrarToast('Impresión', `Factura ${numeroFactura} enviada a impresión`, 'success');
+            } else {
+                console.error('❌ Función generarRecibo no está disponible');
+                mostrarToast('Error', 'Función de impresión no disponible', 'danger');
+            }
+
+        } else {
+            throw new Error(resultado.message || 'No se pudieron obtener los detalles de la factura');
+        }
+
+    } catch (error) {
+        console.error('❌ Error re-imprimiendo factura:', error);
+        mostrarToast('Error', 'No se pudo re-imprimir la factura: ' + error.message, 'danger');
+    } finally {
+        // Restaurar botón solo si existe
+        const $btn = $('#btnImprimirFacturaModal');
+        if ($btn.length > 0) {
+            $btn.prop('disabled', false).html(textoOriginal || '<i class="bi bi-printer me-1"></i>Imprimir');
+        }
+    }
+}
+/**
+ * ✅ FUNCIÓN GLOBAL: Exportar función de re-impresión
+ */
+window.reimprimirFacturaDesdeModal = reimprimirFacturaDesdeModal;
+
 
 
 
@@ -3554,7 +3791,7 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
 async function verificarVencimientoProformas() {
     try {
         console.log('📅 === VERIFICANDO VENCIMIENTO DE PROFORMAS ===');
-        
+
         const confirmacion = await Swal.fire({
             title: '¿Verificar vencimiento?',
             html: `
@@ -3610,17 +3847,17 @@ async function verificarVencimientoProformas() {
 
         if (resultado.success) {
             const proformasExpiradas = resultado.proformasExpiradas || 0;
-            
+
             Swal.fire({
                 icon: 'success',
                 title: '¡Verificación Completada!',
                 html: `
                     <div class="text-center">
                         <p><strong>${proformasExpiradas}</strong> proformas han sido marcadas como expiradas</p>
-                        ${proformasExpiradas > 0 ? 
-                            '<p class="text-muted">Los estados han sido actualizados automáticamente</p>' : 
-                            '<p class="text-success">Todas las proformas están dentro de su período de validez</p>'
-                        }
+                        ${proformasExpiradas > 0 ?
+                        '<p class="text-muted">Los estados han sido actualizados automáticamente</p>' :
+                        '<p class="text-success">Todas las proformas están dentro de su período de validez</p>'
+                    }
                     </div>
                 `,
                 confirmButtonText: 'Entendido',
@@ -3639,7 +3876,7 @@ async function verificarVencimientoProformas() {
 
     } catch (error) {
         console.error('❌ Error verificando vencimiento:', error);
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error en verificación',
@@ -3675,12 +3912,12 @@ async function verificarVencimientoProformasAutomatico() {
         if (resultado.success) {
             const proformasExpiradas = resultado.proformasExpiradas || 0;
             console.log(`📅 Verificación automática completada: ${proformasExpiradas} proformas expiradas`);
-            
+
             // Solo mostrar notificación si se encontraron proformas expiradas
             if (proformasExpiradas > 0) {
-                mostrarToast('Verificación completada', 
-                           `${proformasExpiradas} proformas han sido marcadas como expiradas`, 
-                           'info');
+                mostrarToast('Verificación completada',
+                    `${proformasExpiradas} proformas han sido marcadas como expiradas`,
+                    'info');
             }
         } else {
             console.warn('⚠️ Error en verificación automática:', resultado.message);
@@ -3694,769 +3931,88 @@ async function verificarVencimientoProformasAutomatico() {
 
 
 /**
- * Generar e imprimir recibo de venta optimizado para mini impresoras térmicas
+ * Generar e imprimir recibo usando el módulo térmico
  */
 function generarRecibo(factura, productos, totales) {
-    const fecha = new Date().toLocaleDateString('es-CR', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-    });
-    const hora = new Date().toLocaleTimeString('es-CR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-    });
+    console.log('🖨️ === GENERANDO RECIBO (usando módulo térmico) ===');
+    console.log('🖨️ Datos recibidos:', { factura, productos: productos.length, totales });
+    console.log('🖨️ Información de pago múltiple:', totales.infoPagoMultiple);
 
-    console.log('🖨️ === GENERANDO RECIBO ===');
-    console.log('🖨️ Factura recibida:', factura);
-    console.log('🖨️ Productos recibidos:', productos);
-    console.log('🖨️ Totales recibidos:', totales);
+    // Verificar que el módulo térmico esté disponible
+    if (typeof window.generarReciboTermico !== 'function') {
+        console.error('❌ Módulo de impresión térmica no está disponible');
+        mostrarToast('Error', 'Módulo de impresión no disponible', 'danger');
+        return;
+    }
 
-    // ✅ DETERMINAR NÚMERO DE FACTURA CORRECTAMENTE CON LOGS DETALLADOS
-    let numeroFactura = 'N/A';
-    
+    // Preparar datos para el módulo térmico
+    const datosFactura = {
+        numeroFactura: determinarNumeroFactura(factura, productos),
+        nombreCliente: totales.cliente?.nombre ||
+            totales.cliente?.nombreCliente ||
+            factura?.nombreCliente ||
+            'Cliente General',
+        usuarioCreadorNombre: totales.usuario?.nombre ||
+            totales.usuario?.nombreUsuario ||
+            factura?.usuarioCreadorNombre ||
+            'Sistema',
+        esReimpresion: factura?.esReimpresion || window.esReimpresionActual || false // ✅ AGREGAR FLAG DE REIMPRESIÓN
+    };
+
+    // ✅ OPCIONES DE CONFIGURACIÓN CON INFORMACIÓN DE PAGO MÚLTIPLE
+    const opciones = {
+        ancho: 80, // 80mm por defecto
+        tipo: datosFactura.numeroFactura && datosFactura.numeroFactura.startsWith('PROF') ? 'proforma' : 'factura',
+        pagoMultiple: totales.infoPagoMultiple, // ✅ AGREGAR INFORMACIÓN DE PAGO MÚLTIPLE
+        esReimpresion: datosFactura.esReimpresion || false // ✅ AGREGAR FLAG DE REIMPRESIÓN
+    };
+
+    console.log('🖨️ Opciones del recibo:', opciones);
+
+    // Llamar al módulo térmico
+    try {
+        window.generarReciboTermico(datosFactura, productos, totales, opciones);
+        console.log('✅ Recibo térmico generado exitosamente');
+
+        if (totales.infoPagoMultiple) {
+            console.log('✅ Recibo incluye desglose de pago múltiple');
+        }
+
+        if (datosFactura.esReimpresion) {
+            console.log('✅ Recibo marcado como REIMPRESIÓN');
+        }
+    } catch (error) {
+        console.error('❌ Error generando recibo térmico:', error);
+        mostrarToast('Error', 'No se pudo generar el recibo', 'danger');
+    }
+}
+
+
+/**
+ * Determinar número de factura con prioridades
+ */
+function determinarNumeroFactura(factura, productos) {
     // Prioridad 1: Desde la factura pasada como parámetro
     if (factura && factura.numeroFactura) {
-        numeroFactura = factura.numeroFactura;
-        console.log('🖨️ Número desde factura.numeroFactura:', numeroFactura);
+        return factura.numeroFactura;
     }
+
     // Prioridad 2: Desde factura pendiente global si existe
-    else if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
-        numeroFactura = facturaPendienteActual.numeroFactura;
-        console.log('🖨️ Número desde facturaPendienteActual:', numeroFactura);
+    if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
+        return facturaPendienteActual.numeroFactura;
     }
-    // Prioridad 3: Verificar si los productos tienen facturaId (factura existente)
-    else if (productos && productos.length > 0 && productos[0].facturaId) {
-        numeroFactura = `FAC-${productos[0].facturaId}`;
-        console.log('🖨️ Número generado desde facturaId:', numeroFactura);
+
+    // Prioridad 3: Verificar si los productos tienen facturaId
+    if (productos && productos.length > 0 && productos[0].facturaId) {
+        return `FAC-${productos[0].facturaId}`;
     }
+
     // Prioridad 4: Buscar en otras propiedades de factura
-    else if (factura) {
-        console.log('🖨️ Buscando número en otras propiedades de factura:', Object.keys(factura));
-        if (factura.data && factura.data.numeroFactura) {
-            numeroFactura = factura.data.numeroFactura;
-            console.log('🖨️ Número desde factura.data.numeroFactura:', numeroFactura);
-        }
+    if (factura && factura.data && factura.data.numeroFactura) {
+        return factura.data.numeroFactura;
     }
 
-    console.log('🖨️ Número de factura final determinado:', numeroFactura);
-    console.log('🖨️ Método de pago:', totales.metodoPago);
-    console.log('🖨️ Es pago múltiple:', esPagoMultiple);
-    console.log('🖨️ Detalles de pago actuales:', detallesPagoActuales);
-
-    // Función para truncar texto según el ancho de la impresora
-    function truncarTexto(texto, maxCaracteres) {
-        if (!texto) return '';
-        return texto.length > maxCaracteres ? texto.substring(0, maxCaracteres - 3) + '...' : texto;
-    }
-
-    // Función para formatear línea con espacios para mini impresora
-    function formatearLinea(izquierda, derecha, anchoTotal = 32) {
-        const espacios = anchoTotal - izquierda.length - derecha.length;
-        return izquierda + ' '.repeat(Math.max(0, espacios)) + derecha;
-    }
-
-    // ===== SECCIÓN PRODUCTOS PENDIENTES =====
-    let seccionProductosPendientes = '';
-    
-    // Verificar si hay productos pendientes (desde variables globales o datos de factura)
-    const tieneProductosPendientes = window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0;
-    const tieneCodigosSeguimiento = window.codigosSeguimientoPendientes && window.codigosSeguimientoPendientes.length > 0;
-    const facturaConPendientes = window.facturaConPendientes || facturaPendienteActual?.tieneProductosPendientes;
-    
-    console.log('🎫 === DEBUG PRODUCTOS PENDIENTES EN RECIBO ===');
-    console.log('🎫 tieneProductosPendientes:', tieneProductosPendientes);
-    console.log('🎫 tieneCodigosSeguimiento:', tieneCodigosSeguimiento);
-    console.log('🎫 facturaConPendientes:', facturaConPendientes);
-    console.log('🎫 window.codigosSeguimientoPendientes:', window.codigosSeguimientoPendientes);
-    console.log('🎫 window.productosPendientesEntrega:', window.productosPendientesEntrega);
-    
-    if (tieneProductosPendientes || facturaConPendientes || tieneCodigosSeguimiento) {
-        console.log('🎫 Agregando sección de productos pendientes al recibo');
-        
-        seccionProductosPendientes = `
-            <div class="separador"></div>
-            <div class="seccion-pendientes">
-                <div class="titulo-seccion">⏳ PRODUCTOS PENDIENTES</div>
-                <div class="info-pendientes">
-                    <div>IMPORTANTE: Algunos productos</div>
-                    <div>quedan pendientes de entrega</div>
-                    <div>por falta de stock.</div>
-                </div>
-                <div class="separador-pendientes"></div>
-                ${tieneCodigosSeguimiento ? 
-                    window.codigosSeguimientoPendientes.map(pendiente => {
-                        const cantidadPendiente = pendiente.cantidadPendiente || 0;
-                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 22);
-                        const codigoSeguimiento = pendiente.codigoSeguimiento || `${numeroFactura}-${pendiente.productoId}`;
-                        console.log(`🎫 Procesando pendiente: ${nombreProducto} - ${codigoSeguimiento}`);
-                        return `
-                            <div class="producto-pendiente">
-                                <div class="pendiente-nombre">${nombreProducto}</div>
-                                <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
-                                <div class="pendiente-codigo">Código: ${codigoSeguimiento}</div>
-                            </div>
-                        `;
-                    }).join('') :
-                    tieneProductosPendientes ? 
-                    window.productosPendientesEntrega.map(pendiente => {
-                        const cantidadPendiente = pendiente.cantidadPendiente || pendiente.cantidad || 0;
-                        const nombreProducto = truncarTexto(pendiente.nombreProducto || 'Producto', 25);
-                        console.log(`🎫 Procesando pendiente sin código: ${nombreProducto}`);
-                        return `
-                            <div class="producto-pendiente">
-                                <div class="pendiente-nombre">${nombreProducto}</div>
-                                <div class="pendiente-cantidad">Pendiente: ${cantidadPendiente} unidad(es)</div>
-                                <div class="pendiente-codigo">Código: ${numeroFactura}-${pendiente.productoId || 'PEND'}</div>
-                            </div>
-                        `;
-                    }).join('') :
-                    `<div class="producto-pendiente">
-                        <div class="pendiente-nombre">Consulte detalles en caja</div>
-                        <div class="pendiente-codigo">Código: ${numeroFactura}-PEND</div>
-                    </div>`
-                }
-                <div class="separador-pendientes"></div>
-                <div class="instrucciones-pendientes">
-                    <div>📞 Le notificaremos cuando</div>
-                    <div>llegue el stock faltante</div>
-                    <div>🎫 CONSERVE ESTE RECIBO</div>
-                    <div>como respaldo de entrega</div>
-                </div>
-                ${tieneCodigosSeguimiento ? 
-                    `<div class="codigos-seguimiento">
-                        <div>📋 Códigos de seguimiento:</div>
-                        ${window.codigosSeguimientoPendientes.map(p => 
-                            `<div class="codigo-recuadro">${p.codigoSeguimiento}</div>`
-                        ).join('')}
-                    </div>` :
-                    `<div class="codigo-seguimiento">
-                        <div>📋 Código de seguimiento:</div>
-                        <div class="codigo-recuadro">${numeroFactura}-PEND</div>
-                    </div>`
-                }
-            </div>
-        `;
-        
-        console.log('🎫 Sección de productos pendientes generada:', seccionProductosPendientes.length, 'caracteres');
-    } else {
-        console.log('🎫 No se agregará sección de productos pendientes - no hay datos');
-    }
-
-    // ===== SECCIÓN MÉTODO DE PAGO =====
-    let seccionMetodoPago = '';
-    
-    // Verificar si es pago múltiple
-    if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 1) {
-        seccionMetodoPago = `
-            <div class="seccion-pago">
-                <div class="titulo-seccion">DETALLE DE PAGOS MÚLTIPLES</div>
-                ${detallesPagoActuales.map((pago, index) => {
-                    const metodoPagoNombre = CONFIGURACION_PRECIOS[pago.metodoPago]?.nombre || pago.metodoPago;
-                    return `
-                        <div class="linea-pago">
-                            <div class="metodo-monto">${formatearLinea(metodoPagoNombre + ':', '₡' + pago.monto.toFixed(0))}</div>
-                            ${pago.referencia ? `<div class="referencia">Ref: ${truncarTexto(pago.referencia, 28)}</div>` : ''}
-                        </div>
-                    `;
-                }).join('')}
-                <div class="separador-pago"></div>
-                <div class="total-pagado">${formatearLinea('Total Pagado:', '₡' + detallesPagoActuales.reduce((sum, p) => sum + p.monto, 0).toFixed(0))}</div>
-            </div>
-        `;
-    } else if (totales.metodoPago && totales.metodoPago.toLowerCase() === 'multiple') {
-        // Fallback para pagos múltiples sin detalles
-        seccionMetodoPago = `
-            <div class="seccion-pago">
-                <div class="titulo-seccion">MÉTODO DE PAGO: MÚLTIPLE</div>
-            </div>
-        `;
-    } else {
-        // Pago simple
-        const metodoPagoTexto = totales.metodoPago || 'Efectivo';
-        seccionMetodoPago = `
-            <div class="seccion-pago">
-                <div class="titulo-seccion">MÉTODO DE PAGO: ${metodoPagoTexto.toUpperCase()}</div>
-            </div>
-        `;
-    }
-
-    // ✅ RECIBO OPTIMIZADO PARA MINI IMPRESORAS TÉRMICAS
-    const reciboHTML = `
-        <div class="recibo-container">
-            <!-- ENCABEZADO -->
-            <div class="encabezado">
-                <div class="nombre-empresa">GESTIÓN LLANTERA</div>
-                <div class="info-empresa">Sistema de Facturación</div>
-                <div class="telefono">Tel: (506) 0000-0000</div>
-                <div class="tipo-documento">${numeroFactura && numeroFactura.startsWith('PROF') ? 'PROFORMA' : 'FACTURA DE VENTA'}</div>
-                <div class="numero-factura">No. ${numeroFactura}</div>
-            </div>
-
-            <!-- INFORMACIÓN DE TRANSACCIÓN -->
-            <div class="info-transaccion">
-                <div>Fecha: ${fecha}</div>
-                <div>Hora: ${hora}</div>
-                <div>Cliente: ${truncarTexto(totales.cliente?.nombre || totales.cliente?.nombreCliente || factura?.nombreCliente || 'Cliente General', 25)}</div>
-                <div>Cajero: ${totales.usuario?.nombre || totales.usuario?.nombreUsuario || factura?.usuarioCreadorNombre || 'Sistema'}</div>
-            </div>
-
-            <div class="separador"></div>
-
-            <!-- PRODUCTOS -->
-            <div class="seccion-productos">
-                <div class="titulo-seccion">DETALLE DE PRODUCTOS</div>
-                ${productos.map(p => {
-                    const nombreTruncado = truncarTexto(p.nombreProducto, 28);
-                    const subtotalProducto = p.precioUnitario * p.cantidad;
-                    return `
-                        <div class="producto-item">
-                            <div class="producto-nombre">${nombreTruncado}</div>
-                            <div class="producto-detalle">${formatearLinea(p.cantidad + ' x ₡' + p.precioUnitario.toFixed(0), '₡' + subtotalProducto.toFixed(0))}</div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-
-            <div class="separador"></div>
-
-            <!-- TOTALES -->
-            <div class="seccion-totales">
-                <div class="linea-total">${formatearLinea('Subtotal:', '₡' + totales.subtotal.toFixed(0))}</div>
-                <div class="linea-total">${formatearLinea('IVA (13%):', '₡' + totales.iva.toFixed(0))}</div>
-                <div class="separador-total"></div>
-                <div class="total-final">${formatearLinea('TOTAL:', '₡' + totales.total.toFixed(0))}</div>
-            </div>
-
-            <div class="separador"></div>
-
-            <!-- MÉTODO DE PAGO -->
-            ${seccionMetodoPago}
-
-            <!-- PRODUCTOS PENDIENTES DE ENTREGA -->
-            ${seccionProductosPendientes}
-
-            <!-- ADVERTENCIA PARA PROFORMAS -->
-            ${numeroFactura && numeroFactura.startsWith('PROF') ? `
-            <div class="separador"></div>
-            <div class="seccion-proforma">
-                <div class="titulo-seccion">⚠️ IMPORTANTE - PROFORMA</div>
-                <div class="advertencia-proforma">
-                    <div class="info-proforma">
-                        <div><strong>VALIDEZ:</strong> Esta proforma tiene</div>
-                        <div>validez por 30 días calendario</div>
-                        <div>desde su fecha de emisión.</div>
-                    </div>
-                    <div class="separador-proforma"></div>
-                    <div class="info-proforma">
-                        <div><strong>CONDICIONES:</strong></div>
-                        <div>• Los precios están sujetos a</div>
-                        <div>  cambios sin previo aviso</div>
-                        <div>• La disponibilidad de productos</div>
-                        <div>  está sujeta al stock actual</div>
-                        <div>• Para facturación presente</div>
-                        <div>  este documento</div>
-                    </div>
-                    <div class="separador-proforma"></div>
-                    <div class="info-proforma">
-                        <div><strong>NOTA LEGAL:</strong></div>
-                        <div>Este documento NO constituye</div>
-                        <div>una factura fiscal. Es una</div>
-                        <div>cotización formal que requiere</div>
-                        <div>confirmación para proceder con</div>
-                        <div>la facturación oficial.</div>
-                    </div>
-                    <div class="separador-proforma"></div>
-                    <div class="codigo-proforma">
-                        <div>📋 Código de Proforma:</div>
-                        <div class="codigo-recuadro">${numeroFactura}</div>
-                        <div class="conservar-documento">🎫 CONSERVE ESTE DOCUMENTO</div>
-                    </div>
-                </div>
-            </div>
-            ` : ''}
-
-            <!-- PIE DE PÁGINA -->
-            <div class="pie-pagina">
-                <div>¡Gracias por su compra!</div>
-                <div>Vuelva pronto</div>
-                <div>www.gestionllantera.com</div>
-                <div class="fecha-generacion">Recibo: ${fecha} ${hora}</div>
-            </div>
-
-            <!-- ESPACIADO FINAL -->
-            <div class="espaciado-final"></div>
-        </div>
-    `;
-
-    // ✅ CONFIGURACIÓN ESPECÍFICA PARA MINI IMPRESORAS TÉRMICAS
-    try {
-        console.log('🖨️ Iniciando impresión de recibo térmico...');
-
-        // Crear ventana de impresión con configuración optimizada
-        const ventanaImpresion = window.open('', '_blank', 'width=320,height=600,scrollbars=yes,resizable=yes');
-
-        if (!ventanaImpresion) {
-            console.warn('⚠️ No se pudo abrir ventana emergente para impresión automática');
-            imprimirReciboDirecto(reciboHTML, numeroFactura);
-            return;
-        }
-
-        const documentoCompleto = `
-            <!DOCTYPE html>
-            <html lang="es">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>${numeroFactura && numeroFactura.startsWith('PROF') ? 'Proforma' : 'Recibo Térmico'} - ${numeroFactura}</title>
-                    <style>
-                        /* ===== ESTILOS PARA MINI IMPRESORAS TÉRMICAS ===== */
-                        
-                        /* Configuración de página para impresión */
-                        @page {
-                            size: 58mm auto;
-                            margin: 2mm;
-                            padding: 0;
-                        }
-
-                        /* Estilos generales */
-                        * {
-                            margin: 0;
-                            padding: 0;
-                            box-sizing: border-box;
-                        }
-
-                        body {
-                            font-family: 'Courier New', 'Monaco', 'Consolas', monospace;
-                            font-size: 8px;
-                            line-height: 1.2;
-                            color: #000;
-                            background: #fff;
-                            width: 100%;
-                            max-width: 58mm;
-                        }
-
-                        .recibo-container {
-                            width: 100%;
-                            max-width: 58mm;
-                            padding: 2mm;
-                        }
-
-                        /* Encabezado */
-                        .encabezado {
-                            text-align: center;
-                            margin-bottom: 4mm;
-                            border-bottom: 1px dashed #000;
-                            padding-bottom: 3mm;
-                        }
-
-                        .nombre-empresa {
-                            font-size: 10px;
-                            font-weight: bold;
-                            margin-bottom: 1mm;
-                        }
-
-                        .info-empresa, .telefono {
-                            font-size: 7px;
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .tipo-documento {
-                            font-size: 9px;
-                            font-weight: bold;
-                            margin: 1mm 0;
-                        }
-
-                        .numero-factura {
-                            font-size: 8px;
-                            font-weight: bold;
-                        }
-
-                        /* Información de transacción */
-                        .info-transaccion {
-                            font-size: 7px;
-                            margin-bottom: 3mm;
-                        }
-
-                        .info-transaccion div {
-                            margin-bottom: 0.5mm;
-                        }
-
-                        /* Separadores */
-                        .separador {
-                            border-top: 1px dashed #000;
-                            margin: 3mm 0;
-                            height: 0;
-                        }
-
-                        .separador-pago {
-                            border-top: 1px dashed #000;
-                            margin: 1mm 0;
-                            padding-top: 1mm;
-                        }
-
-                        .separador-total {
-                            border-top: 1px solid #000;
-                            margin: 1mm 0;
-                        }
-
-                        /* Secciones */
-                        .titulo-seccion {
-                            font-weight: bold;
-                            text-align: center;
-                            margin-bottom: 2mm;
-                            font-size: 8px;
-                        }
-
-                        .seccion-productos {
-                            margin-bottom: 3mm;
-                        }
-
-                        .producto-item {
-                            margin-bottom: 1mm;
-                        }
-
-                        .producto-nombre {
-                            font-size: 7px;
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .producto-detalle {
-                            font-size: 7px;
-                            font-family: 'Courier New', monospace;
-                        }
-
-                        /* Totales */
-                        .seccion-totales {
-                            margin-bottom: 3mm;
-                        }
-
-                        .linea-total {
-                            font-size: 7px;
-                            font-family: 'Courier New', monospace;
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .total-final {
-                            font-size: 8px;
-                            font-weight: bold;
-                            font-family: 'Courier New', monospace;
-                            padding-top: 1mm;
-                        }
-
-                        /* Método de pago */
-                        .seccion-pago {
-                            margin-bottom: 3mm;
-                        }
-
-                        .linea-pago {
-                            margin-bottom: 1mm;
-                        }
-
-                        .metodo-monto {
-                            font-size: 7px;
-                            font-family: 'Courier New', monospace;
-                        }
-
-                        .referencia {
-                            font-size: 6px;
-                            color: #666;
-                            margin-top: 0.5mm;
-                        }
-
-                        .total-pagado {
-                            font-size: 7px;
-                            font-weight: bold;
-                            font-family: 'Courier New', monospace;
-                        }
-
-                        /* Pie de página */
-                        .pie-pagina {
-                            text-align: center;
-                            font-size: 7px;
-                            border-top: 1px dashed #000;
-                            padding-top: 3mm;
-                            margin-top: 3mm;
-                        }
-
-                        .pie-pagina div {
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .fecha-generacion {
-                            font-size: 6px;
-                            color: #666;
-                            margin-top: 2mm;
-                        }
-
-                        .espaciado-final {
-                            height: 5mm;
-                        }
-
-                        /* Estilos para productos pendientes */
-                        .seccion-pendientes {
-                            margin-bottom: 3mm;
-                            border: 1px solid #000;
-                            padding: 2mm;
-                        }
-
-                        /* Estilos para proformas */
-                        .seccion-proforma {
-                            margin-bottom: 3mm;
-                            border: 2px solid #000;
-                            padding: 2mm;
-                            background: #f9f9f9;
-                        }
-
-                        .advertencia-proforma {
-                            font-size: 6px;
-                            text-align: center;
-                        }
-
-                        .info-proforma {
-                            margin-bottom: 1mm;
-                        }
-
-                        .info-proforma div {
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .separador-proforma {
-                            border-top: 1px dashed #000;
-                            margin: 1mm 0;
-                        }
-
-                        .codigo-proforma {
-                            text-align: center;
-                            margin-top: 2mm;
-                        }
-
-                        .codigo-proforma div:first-child {
-                            font-size: 6px;
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .conservar-documento {
-                            font-size: 7px;
-                            font-weight: bold;
-                            margin-top: 1mm;
-                            color: #d63384;
-                        }
-
-                        .info-pendientes {
-                            text-align: center;
-                            font-size: 7px;
-                            margin-bottom: 2mm;
-                        }
-
-                        .info-pendientes div {
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .separador-pendientes {
-                            border-top: 1px dashed #000;
-                            margin: 1mm 0;
-                        }
-
-                        .producto-pendiente {
-                            margin-bottom: 1mm;
-                            font-size: 7px;
-                        }
-
-                        .pendiente-nombre {
-                            font-weight: bold;
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .pendiente-cantidad {
-                            font-size: 6px;
-                            color: #666;
-                        }
-
-                        .instrucciones-pendientes {
-                            text-align: center;
-                            font-size: 6px;
-                            margin: 2mm 0;
-                        }
-
-                        .instrucciones-pendientes div {
-                            margin-bottom: 0.5mm;
-                        }
-
-                        .codigo-seguimiento, .codigos-seguimiento {
-                            text-align: center;
-                            margin-top: 2mm;
-                            width: 100%;
-                        }
-
-                        .codigo-seguimiento div:first-child, .codigos-seguimiento div:first-child {
-                            font-size: 6px;
-                            margin-bottom: 0.5mm;
-                            text-align: center;
-                        }
-
-                        .codigo-recuadro {
-                            font-size: 8px;
-                            font-weight: bold;
-                            font-family: 'Courier New', monospace;
-                            border: 2px solid #000;
-                            padding: 2mm;
-                            margin: 1mm auto;
-                            display: block;
-                            background: #f9f9f9;
-                            text-align: center;
-                            width: 80%;
-                            max-width: 40mm;
-                        }
-
-                        /* Estilos específicos para vista previa en pantalla */
-                        @media screen {
-                            body {
-                                background: #f5f5f5;
-                                padding: 10px;
-                                display: flex;
-                                justify-content: center;
-                                min-height: 100vh;
-                            }
-
-                            .recibo-container {
-                                background: white;
-                                box-shadow: 0 0 15px rgba(0,0,0,0.2);
-                                border: 1px solid #ddd;
-                                border-radius: 3px;
-                                max-width: 300px;
-                                padding: 15px;
-                            }
-                        }
-
-                        /* Estilos para impresión */
-                        @media print {
-                            body {
-                                background: none !important;
-                                padding: 0 !important;
-                                margin: 0 !important;
-                            }
-
-                            .recibo-container {
-                                box-shadow: none !important;
-                                border: none !important;
-                                border-radius: 0 !important;
-                                padding: 2mm !important;
-                                margin: 0 !important;
-                                background: none !important;
-                            }
-
-                            .seccion-proforma {
-                                background: #f0f0f0 !important;
-                                border: 2px solid #000 !important;
-                            }
-
-                            .conservar-documento {
-                                color: #000 !important;
-                                font-weight: bold !important;
-                            }
-
-                            /* Asegurar que todo se imprima en negro */
-                            * {
-                                -webkit-print-color-adjust: exact !important;
-                                color-adjust: exact !important;
-                                print-color-adjust: exact !important;
-                            }
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${reciboHTML}
-
-                    <script>
-                        console.log('📄 Documento de recibo cargado');
-                        
-                        let impresionRealizada = false;
-                        
-                        function ejecutarImpresion() {
-                            if (impresionRealizada) {
-                                console.log('🖨️ Impresión ya ejecutada');
-                                return;
-                            }
-                            
-                            impresionRealizada = true;
-                            console.log('🖨️ Ejecutando impresión automática...');
-                            
-                            // Esperar un momento para asegurar que todo esté renderizado
-                            setTimeout(() => {
-                                try {
-                                    window.print();
-                                    console.log('✅ Comando de impresión enviado');
-                                } catch (error) {
-                                    console.error('❌ Error al imprimir:', error);
-                                }
-                            }, 500);
-                        }
-
-                        // Detectar cuando el documento esté completamente cargado
-                        if (document.readyState === 'complete') {
-                            ejecutarImpresion();
-                        } else {
-                            window.addEventListener('load', ejecutarImpresion);
-                            document.addEventListener('DOMContentLoaded', ejecutarImpresion);
-                        }
-
-                        // Cerrar ventana después de imprimir
-                        window.addEventListener('afterprint', function() {
-                            console.log('🖨️ Evento afterprint detectado');
-                            setTimeout(() => {
-                                try {
-                                    window.close();
-                                } catch (e) {
-                                    console.log('⚠️ No se pudo cerrar la ventana automáticamente');
-                                }
-                            }, 1000);
-                        });
-
-                        // Cerrar ventana por timeout (fallback)
-                        setTimeout(() => {
-                            if (!window.closed) {
-                                console.log('🖨️ Cerrando ventana por timeout');
-                                try {
-                                    window.close();
-                                } catch (e) {
-                                    console.log('⚠️ No se pudo cerrar por timeout');
-                                }
-                            }
-                        }, 15000);
-
-                        // Agregar información de debug al documento
-                        console.log('🔍 Información del recibo:', {
-                            numeroFactura: '${numeroFactura}',
-                            productos: ${productos.length},
-                            total: '${totales.total}',
-                            metodoPago: '${totales.metodoPago}'
-                        });
-                    </script>
-                </body>
-            </html>
-        `;
-
-        // Escribir el documento completo
-        ventanaImpresion.document.open();
-        ventanaImpresion.document.write(documentoCompleto);
-        ventanaImpresion.document.close();
-        
-        console.log('✅ Ventana de impresión creada exitosamente');
-
-        // Enfocar la ventana para asegurar que sea visible
-        setTimeout(() => {
-            try {
-                ventanaImpresion.focus();
-            } catch (e) {
-                console.log('⚠️ No se pudo enfocar la ventana');
-            }
-        }, 100);
-
-    } catch (error) {
-        console.error('❌ Error al crear ventana de impresión:', error);
-        imprimirReciboDirecto(reciboHTML, numeroFactura);
-    }
+    return 'N/A';
 }
 
 /**
@@ -4470,12 +4026,14 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('🖨️ Método de pago:', metodoPago);
         console.log('🖨️ Factura pendiente actual:', facturaPendienteActual);
         console.log('🖨️ Factura preservada para recibo:', window.facturaParaRecibo);
+        console.log('🖨️ Es pago múltiple:', esPagoMultiple);
+        console.log('🖨️ Detalles de pago:', detallesPagoActuales);
 
         // ✅ EXTRACCIÓN MEJORADA DEL NÚMERO DE FACTURA CON MÚLTIPLES FUENTES
         let numeroFactura = 'N/A';
         let nombreCliente = 'Cliente General';
         let usuarioCreadorNombre = 'Sistema';
-        
+
         // ✅ PRIORIZAR INFORMACIÓN DE FACTURA PENDIENTE ACTUAL
         if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
             numeroFactura = facturaPendienteActual.numeroFactura;
@@ -4512,28 +4070,37 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
 
         // ✅ COMPLETAR INFORMACIÓN FALTANTE CON CLIENTE SELECCIONADO Y USUARIO ACTUAL
         if (nombreCliente === 'Cliente General' && clienteSeleccionado) {
-            nombreCliente = clienteSeleccionado.nombre || 
-                           clienteSeleccionado.nombreCliente || 
-                           clienteSeleccionado.NombreCliente || 
-                           'Cliente General';
+            nombreCliente = clienteSeleccionado.nombre ||
+                clienteSeleccionado.nombreCliente ||
+                clienteSeleccionado.NombreCliente ||
+                'Cliente General';
             console.log('🖨️ Nombre cliente completado desde clienteSeleccionado:', nombreCliente);
         }
 
         if (usuarioCreadorNombre === 'Sistema') {
             const usuarioActual = obtenerUsuarioActual();
-            usuarioCreadorNombre = usuarioActual?.nombre || 
-                                  usuarioActual?.nombreUsuario || 
-                                  usuarioActual?.NombreUsuario || 
-                                  'Sistema';
+            usuarioCreadorNombre = usuarioActual?.nombre ||
+                usuarioActual?.nombreUsuario ||
+                usuarioActual?.NombreUsuario ||
+                'Sistema';
             console.log('🖨️ Usuario creador completado desde usuarioActual:', usuarioCreadorNombre);
         }
 
         console.log('🖨️ Información final determinada:', { numeroFactura, nombreCliente, usuarioCreadorNombre });
 
-        // Calcular totales basándose en los productos del carrito
-        const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
-        
+        // ✅ CALCULAR TOTALES SEGÚN EL TIPO DE PAGO
         let subtotal = 0;
+        let configMetodo;
+
+        if (esPagoMultiple) {
+            // Para pago múltiple, usar método base (efectivo)
+            configMetodo = CONFIGURACION_PRECIOS['efectivo'];
+            console.log('🖨️ Usando configuración de efectivo para pago múltiple');
+        } else {
+            configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
+            console.log('🖨️ Usando configuración para método:', metodoPago);
+        }
+
         productos.forEach(producto => {
             const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
             subtotal += precioAjustado * producto.cantidad;
@@ -4546,14 +4113,37 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         const datosRecibo = {
             numeroFactura: numeroFactura,
             nombreCliente: nombreCliente,
-            usuarioCreadorNombre: usuarioCreadorNombre
+            usuarioCreadorNombre: usuarioCreadorNombre,
+            esReimpresion: window.esReimpresionActual || false // ✅ AGREGAR FLAG GLOBAL DE REIMPRESIÓN
         };
+
+        // ✅ PREPARAR INFORMACIÓN DE PAGO MÚLTIPLE PARA EL RECIBO
+        let infoPagoMultiple = null;
+        let detallesPagoParaRecibo = null;
+
+        if (esPagoMultiple && detallesPagoActuales && detallesPagoActuales.length > 0) {
+            detallesPagoParaRecibo = detallesPagoActuales.map(pago => ({
+                metodoPago: pago.metodoPago,
+                monto: pago.monto,
+                referencia: pago.referencia || '',
+                observaciones: pago.observaciones || ''
+            }));
+
+            infoPagoMultiple = {
+                metodoPago: 'Multiple',
+                detallesPago: detallesPagoParaRecibo
+            };
+            console.log('🖨️ Información de pago múltiple preparada:', infoPagoMultiple);
+            console.log('🖨️ Detalles de pago para recibo:', detallesPagoParaRecibo);
+        }
 
         const totalesRecibo = {
             subtotal: subtotal,
             iva: iva,
             total: total,
-            metodoPago: metodoPago,
+            metodoPago: esPagoMultiple ? 'Multiple' : metodoPago,
+            detallesPago: detallesPagoParaRecibo, // ✅ AGREGAR DETALLES DE PAGO MÚLTIPLE DIRECTAMENTE
+            infoPagoMultiple: infoPagoMultiple, // ✅ MANTENER COMPATIBILIDAD
             cliente: {
                 nombre: nombreCliente,
                 nombreCliente: nombreCliente
@@ -4570,7 +4160,10 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             totalCalculado: total,
             numeroFactura: numeroFactura,
             cliente: nombreCliente,
-            usuario: usuarioCreadorNombre
+            usuario: usuarioCreadorNombre,
+            esPagoMultiple: esPagoMultiple,
+            detallesPago: infoPagoMultiple,
+            esReimpresion: datosRecibo.esReimpresion
         });
 
         // ✅ LLAMAR A LA FUNCIÓN DE GENERACIÓN DE RECIBOS CON DATOS COMPLETOS
@@ -4586,6 +4179,8 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
         console.log('✅ Número:', numeroFactura);
         console.log('✅ Cliente:', nombreCliente);
         console.log('✅ Cajero:', usuarioCreadorNombre);
+        console.log('✅ Pago múltiple:', esPagoMultiple ? 'Sí' : 'No');
+        console.log('✅ Es reimpresión:', datosRecibo.esReimpresion ? 'Sí' : 'No');
 
     } catch (error) {
         console.error('❌ Error generando recibo para factura completada:', error);
@@ -4601,12 +4196,13 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
     }
 }
 
+
 /**
  * Función de impresión directa cuando falla la ventana emergente
  */
 function imprimirReciboDirecto(reciboHTML, numeroFactura) {
     console.log('🖨️ === IMPRESIÓN DIRECTA DE RECIBO ===');
-    
+
     try {
         // Crear un div temporal invisible para la impresión
         const printDiv = document.createElement('div');
@@ -4616,10 +4212,10 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
         printDiv.style.top = '-9999px';
         printDiv.style.visibility = 'hidden';
         printDiv.innerHTML = reciboHTML;
-        
+
         // Agregar al DOM temporalmente
         document.body.appendChild(printDiv);
-        
+
         // Crear estilos específicos para impresión
         const printStyles = document.createElement('style');
         printStyles.id = 'recibo-print-styles';
@@ -4647,12 +4243,12 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
                 }
             }
         `;
-        
+
         document.head.appendChild(printStyles);
-        
+
         // Imprimir
         window.print();
-        
+
         // Limpiar después de imprimir
         setTimeout(() => {
             if (printDiv.parentNode) {
@@ -4662,13 +4258,13 @@ function imprimirReciboDirecto(reciboHTML, numeroFactura) {
                 printStyles.parentNode.removeChild(printStyles);
             }
         }, 1000);
-        
+
         console.log('✅ Impresión directa iniciada');
         mostrarToast('Impresión', 'Recibo enviado a impresión', 'success');
-        
+
     } catch (error) {
         console.error('❌ Error en impresión directa:', error);
-        
+
         // Último recurso: mostrar notificación simple
         Swal.fire({
             icon: 'info',
@@ -4922,7 +4518,7 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
             }, delay);
 
             // Agregar evento de click para cerrar
-            toastElement.addEventListener('click', function(e) {
+            toastElement.addEventListener('click', function (e) {
                 if (e.target === toastElement || e.target.closest('.toast-moderno-content')) {
                     // Solo cerrar si se hace click fuera del botón close
                     if (!e.target.closest('.toast-moderno-close')) {
@@ -5103,98 +4699,156 @@ function abrirModalNuevoCliente() {
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
+                        <!-- Información adicional -->
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
+                            <ul class="mb-0 small">
+                                <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
+                                <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos con guiones)</li>
+                                <li><strong>DIMEX/NITE:</strong> Formato XXXXXXXXXXXX (12 dígitos sin guiones)</li>
+                                <li><strong>Pasaporte:</strong> Formato libre alfanumérico</li>
+                                <li><strong>Teléfono Costa Rica:</strong> 8 dígitos (ej: 88888888)</li>
+                            </ul>
+                        </div>
+
                         <form id="formNuevoClienteFacturacion">
-                            <!-- Información básica -->
+                            <input type="hidden" id="clienteId" value="0">
+
+                            <!-- Nombre -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
+                                <div class="col-12">
                                     <label for="nombreClienteFacturacion" class="form-label">
                                         <i class="bi bi-person me-1"></i>Nombre Completo *
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
                                            id="nombreClienteFacturacion" 
-                                           name="nombre" 
+                                           name="nombre"
                                            placeholder="Juan Pérez González"
                                            required>
                                     <div class="invalid-feedback"></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="emailClienteFacturacion" class="form-label">
-                                        <i class="bi bi-envelope me-1"></i>Email
-                                    </label>
-                                    <input type="email" 
-                                           class="form-control" 
-                                           id="emailClienteFacturacion" 
-                                           name="email"
-                                           placeholder="cliente@ejemplo.com">
-                                    <div class="invalid-feedback"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Nombre válido
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Nombre completo del cliente (mínimo 2 caracteres)
+                                    </small>
                                 </div>
                             </div>
 
-                            <!-- Tipo de identificación -->
+                            <!-- Tipo de Identificación -->
                             <div class="row mb-3">
                                 <div class="col-12">
                                     <label class="form-label">
-                                        <i class="bi bi-person-badge me-1"></i>Tipo de Identificación
+                                        <i class="bi bi-card-text me-1"></i>Tipo de Identificación
                                     </label>
-                                    <div class="btn-group w-100" role="group" id="tipoIdentificacion">
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
-                                        <label class="btn btn-outline-primary" for="tipoNacional">
-                                            <i class="bi bi-flag me-1"></i>Cédula Nacional (CR)
-                                        </label>
-                                        
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
-                                        <label class="btn btn-outline-info" for="tipoJuridica">
-                                            <i class="bi bi-building me-1"></i>Cédula Jurídica
-                                        </label>
-                                        
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoExtranjera" value="extranjera">
-                                        <label class="btn btn-outline-success" for="tipoExtranjera">
-                                            <i class="bi bi-globe me-1"></i>Extranjera
-                                        </label>
-                                        
-                                        <input type="radio" class="btn-check" name="tipoIdentificacion" id="tipoOtro" value="otro">
-                                        <label class="btn btn-outline-secondary" for="tipoOtro">
-                                            <i class="bi bi-card-text me-1"></i>Otro Documento
-                                        </label>
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoNacional" value="nacional" checked>
+                                                <label class="form-check-label" for="tipoNacional">
+                                                    <i class="bi bi-flag me-1"></i>Nacional
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoJuridica" value="juridica">
+                                                <label class="form-check-label" for="tipoJuridica">
+                                                    <i class="bi bi-building me-1"></i>Jurídica
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoDimex" value="dimex">
+                                                <label class="form-check-label" for="tipoDimex">
+                                                    <i class="bi bi-globe me-1"></i>DIMEX/NITE
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="tipoIdentificacion" id="tipoPasaporte" value="pasaporte">
+                                                <label class="form-check-label" for="tipoPasaporte">
+                                                    <i class="bi bi-passport me-1"></i>Pasaporte
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Campo de identificación con validación dinámica -->
+                            <!-- Identificación -->
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label for="contactoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-person-vcard me-1"></i>
-                                        <span id="labelIdentificacion">Cédula Nacional</span>
+                                <div class="col-12">
+                                    <label for="contactoClienteFacturacion" class="form-label" id="labelIdentificacion">
+                                        <i class="bi bi-flag me-1"></i>Cédula Nacional
                                     </label>
                                     <input type="text" 
                                            class="form-control" 
-                                           id="contactoClienteFacturacion" 
-                                           name="contacto"
+                                           id="contactoClienteFacturacion"
+                                           name="identificacion"
                                            placeholder="1-2345-6789"
                                            maxlength="12">
-                                    <div class="invalid-feedback" id="feedbackIdentificacion"></div>
+                                    <div class="invalid-feedback"></div>
                                     <div class="valid-feedback">
-                                        <i class="bi bi-check-circle me-1"></i>Formato correcto
+                                        <i class="bi bi-check-circle me-1"></i>Identificación válida
                                     </div>
-                                    <small class="form-text" id="helpIdentificacion">
-                                        <span class="text-info">
-                                            <i class="bi bi-info-circle me-1"></i>
-                                            Formato requerido: X-XXXX-XXXX (9 dígitos)
-                                        </span>
+                                    <small class="form-text text-muted" id="helpIdentificacion">
+                                        <span class="text-info"><i class="bi bi-info-circle me-1"></i>Formato: X-XXXX-XXXX (9 dígitos)</span>
                                     </small>
                                 </div>
-                                <div class="col-md-6">
-                                    <label for="telefonoClienteFacturacion" class="form-label">
-                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                            </div>
+
+                            <!-- Email -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="emailClienteFacturacion" class="form-label">
+                                        <i class="bi bi-envelope me-1"></i>Correo Electrónico
                                     </label>
-                                    <input type="tel" 
+                                    <input type="email" 
                                            class="form-control" 
-                                           id="telefonoClienteFacturacion" 
-                                           name="telefono"
-                                           placeholder="8888-8888"
-                                           maxlength="9">
+                                           id="emailClienteFacturacion"
+                                           name="email"
+                                           placeholder="cliente@ejemplo.com">
+                                    <div class="invalid-feedback"></div>
+                                    <div class="valid-feedback">
+                                        <i class="bi bi-check-circle me-1"></i>Email válido
+                                    </div>
+                                    <small class="form-text text-muted">
+                                        Correo electrónico válido (opcional)
+                                    </small>
+                                </div>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="telefonoClienteFacturacion" class="form-label">
+                                        <i class="bi bi-telephone me-1"></i>Teléfono / WhatsApp
+                                    </label>
+                                    <div class="input-group">
+                                        <select class="form-select" id="codigoPaisCliente" style="max-width: 120px;">
+                                            <option value="+506" data-pais="CR" selected>🇨🇷 +506</option>
+                                            <option value="+1" data-pais="US">🇺🇸 +1</option>
+                                            <option value="+52" data-pais="MX">🇲🇽 +52</option>
+                                            <option value="+57" data-pais="CO">🇨🇴 +57</option>
+                                            <option value="+58" data-pais="VE">🇻🇪 +58</option>
+                                            <option value="+507" data-pais="PA">🇵🇦 +507</option>
+                                            <option value="+503" data-pais="SV">🇸🇻 +503</option>
+                                            <option value="+502" data-pais="GT">🇬🇹 +502</option>
+                                            <option value="+504" data-pais="HN">🇭🇳 +504</option>
+                                            <option value="+505" data-pais="NI">🇳🇮 +505</option>
+                                            <option value="+34" data-pais="ES">🇪🇸 +34</option>
+                                        </select>
+                                        <input type="tel" 
+                                               class="form-control" 
+                                               id="telefonoClienteFacturacion" 
+                                               name="telefono"
+                                               placeholder="8888-8888"
+                                               maxlength="9">
+                                    </div>
                                     <div class="invalid-feedback"></div>
                                     <div class="valid-feedback">
                                         <i class="bi bi-check-circle me-1"></i>Formato correcto
@@ -5214,25 +4868,14 @@ function abrirModalNuevoCliente() {
                                     <textarea class="form-control" 
                                               id="direccionClienteFacturacion" 
                                               name="direccion"
-                                              rows="2"
-                                              placeholder="Dirección completa del cliente"
-                                              maxlength="200"></textarea>
+                                              rows="3"
+                                              placeholder="San José, Costa Rica. Del Parque Central 200m norte..."
+                                              maxlength="500"></textarea>
                                     <div class="invalid-feedback"></div>
                                     <small class="form-text text-muted">
                                         Dirección física o postal del cliente
                                     </small>
                                 </div>
-                            </div>
-
-                            <!-- Información adicional -->
-                            <div class="alert alert-info">
-                                <h6><i class="bi bi-lightbulb me-2"></i>Información importante:</h6>
-                                <ul class="mb-0 small">
-                                    <li><strong>Cédula Nacional:</strong> Formato X-XXXX-XXXX (9 dígitos con guiones)</li>
-                                    <li><strong>Cédula Jurídica:</strong> Formato X-XXX-XXXXXX (10 dígitos, debe iniciar con 3)</li>
-                                    <li><strong>Extranjera/Otro:</strong> Formato libre (mínimo 3 caracteres)</li>
-                                    <li><strong>Email:</strong> Se verificará que no esté registrado previamente</li>
-                                </ul>
                             </div>
                         </form>
                     </div>
@@ -5265,7 +4908,6 @@ function abrirModalNuevoCliente() {
 
     modal.show();
 }
-
 function configurarEventosModalNuevoCliente() {
     // Cambio de tipo de identificación
     $('input[name="tipoIdentificacion"]').on('change', function () {
@@ -5659,7 +5301,7 @@ async function guardarNuevoCliente() {
             // Cerrar modal
             $('#modalNuevoClienteFacturacion').modal('hide');
 
-            // Seleccionar el cliente creado automáticamente
+            // Seleccionar el cliente creado automáticamente1
             seleccionarCliente({
                 id: resultado.clienteId,
                 nombre: clienteData.nombreCliente,
@@ -5920,7 +5562,7 @@ function obtenerUsuarioActual() {
     try {
         console.log('👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===');
         console.log('👤 facturaConfig disponible:', !!window.facturaConfig);
-        
+
         // ✅ PRIMERA OPCIÓN: Desde configuración de facturación (método principal)
         if (window.facturaConfig && window.facturaConfig.usuario) {
             console.log('👤 Usuario encontrado en facturaConfig:', window.facturaConfig.usuario);
@@ -5980,10 +5622,10 @@ function obtenerUsuarioActual() {
 // ===== FUNCIÓN PARA OBTENER TOKEN JWT =====
 function obtenerTokenJWT() {
     // Intentar obtener el token desde localStorage, sessionStorage o cookies
-    let token = localStorage.getItem('jwt_token') || 
-                sessionStorage.getItem('jwt_token') ||
-                localStorage.getItem('authToken') ||
-                sessionStorage.getItem('authToken');
+    let token = localStorage.getItem('jwt_token') ||
+        sessionStorage.getItem('jwt_token') ||
+        localStorage.getItem('authToken') ||
+        sessionStorage.getItem('authToken');
 
     // Si no está en storage, intentar desde cookie
     if (!token) {
@@ -5998,7 +5640,8 @@ function obtenerTokenJWT() {
     }
 
     // Si aún no tenemos token, intentar desde meta tag
-    if (!token) {        const metaToken = document.querySelector('meta[name="auth-token"]');
+    if (!token) {
+        const metaToken = document.querySelector('meta[name="auth-token"]');
         if (metaToken) {
             token = metaToken.getAttribute('content');
         }
@@ -6015,16 +5658,24 @@ function actualizarEstadoBotonFinalizar() {
     const puedeFinalizarVenta = tieneProductos && tieneCliente;
 
     const $btnFinalizar = $('#btnFinalizarVenta');
+    const $btnLimpiar = $('#btnLimpiarVenta'); // ✅ AGREGAR REFERENCIA AL BOTÓN LIMPIAR
+
+    // ✅ HABILITAR BOTÓN LIMPIAR SI HAY PRODUCTOS O CLIENTE SELECCIONADO
+    if (tieneProductos || tieneCliente) {
+        $btnLimpiar.prop('disabled', false);
+    } else {
+        $btnLimpiar.prop('disabled', true);
+    }
 
     if (puedeFinalizarVenta) {
         $btnFinalizar.prop('disabled', false)
-                    .removeClass('btn-outline-secondary')
-                    .addClass('btn-success')
-                    .attr('title', 'Finalizar venta');
+            .removeClass('btn-outline-secondary')
+            .addClass('btn-success')
+            .attr('title', 'Finalizar venta');
     } else {
         $btnFinalizar.prop('disabled', true)
-                    .removeClass('btn-success')
-                    .addClass('btn-outline-secondary');
+            .removeClass('btn-success')
+            .addClass('btn-outline-secondary');
 
         if (!tieneProductos && !tieneCliente) {
             $btnFinalizar.attr('title', 'Agrega productos y selecciona un cliente');
@@ -6039,7 +5690,8 @@ function actualizarEstadoBotonFinalizar() {
         tieneProductos,
         tieneCliente,
         puedeFinalizarVenta,
-        disabled: $btnFinalizar.prop('disabled')
+        disabled: $btnFinalizar.prop('disabled'),
+        limpiarDisabled: $btnLimpiar.prop('disabled') // ✅ AGREGAR LOG DEL BOTÓN LIMPIAR
     });
 }
 
@@ -6047,10 +5699,10 @@ function actualizarEstadoBotonFinalizar() {
 function mostrarModalFacturaPendiente(resultadoFactura) {
     console.log('📋 === MODAL FACTURA PENDIENTE ===');
     console.log('📋 Datos recibidos:', resultadoFactura);
-    
+
     // ✅ EXTRACCIÓN DIRECTA Y SIMPLIFICADA DEL NÚMERO DE FACTURA
     const numeroFactura = resultadoFactura?.numeroFactura || 'N/A';
-    
+
     console.log('🔢 Número de factura extraído:', numeroFactura);
 
     // Determinar título y mensaje según permisos
@@ -6155,7 +5807,7 @@ async function verificarStockFacturaPendiente(facturaId) {
     try {
         console.log('📦 === VERIFICANDO STOCK PARA FACTURA ===');
         console.log('📦 Factura ID:', facturaId);
-        
+
         const response = await fetch('/Facturacion/VerificarStockFactura', {
             method: 'POST',
             headers: {
@@ -6177,7 +5829,7 @@ async function verificarStockFacturaPendiente(facturaId) {
         console.log('📦 Resultado completo:', JSON.stringify(resultado, null, 2));
         console.log('📦 Tipo:', typeof resultado);
         console.log('📦 Propiedades:', Object.keys(resultado || {}));
-        
+
         // ✅ PROCESAMIENTO SIMPLIFICADO Y ROBUSTO
         let tieneProblemas = false;
         let productosConProblemas = [];
@@ -6192,9 +5844,9 @@ async function verificarStockFacturaPendiente(facturaId) {
             }
 
             // 2. Detectar problemas de stock
-            tieneProblemas = resultado.hayProblemasStock === true || 
-                           resultado.tieneProblemas === true ||
-                           (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas) && resultado.productosConProblemas.length > 0);
+            tieneProblemas = resultado.hayProblemasStock === true ||
+                resultado.tieneProblemas === true ||
+                (resultado.productosConProblemas && Array.isArray(resultado.productosConProblemas) && resultado.productosConProblemas.length > 0);
 
             // 3. Extraer productos con problemas
             if (resultado.productosConProblemas) {
@@ -6228,25 +5880,25 @@ async function verificarStockFacturaPendiente(facturaId) {
                 message = `Se encontraron ${productosConProblemas.length} productos con problemas de stock`;
             }
         }
-        
+
         console.log('📦 === RESULTADO FINAL ===');
         console.log('📦 Success:', success);
         console.log('📦 Tiene problemas:', tieneProblemas);
         console.log('📦 Productos con problemas:', productosConProblemas.length);
         console.log('📦 Productos normalizados:', productosConProblemas);
-        
+
         return {
             success: success,
             tieneProblemas: tieneProblemas,
             productosConProblemas: productosConProblemas,
             message: message
         };
-        
+
     } catch (error) {
         console.error('❌ Error verificando stock:', error);
-        return { 
-            success: false, 
-            tieneProblemas: false, 
+        return {
+            success: false,
+            tieneProblemas: false,
             productosConProblemas: [],
             message: error.message || 'Error de conexión'
         };
@@ -6260,7 +5912,7 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
     console.log('⚠️ === MOSTRANDO MODAL PROBLEMAS DE STOCK ===');
     console.log('⚠️ Productos recibidos:', productosConProblemas);
     console.log('⚠️ Factura:', factura);
-    
+
     // Validar entrada
     if (!Array.isArray(productosConProblemas) || productosConProblemas.length === 0) {
         console.error('❌ Array de productos inválido o vacío');
@@ -6272,10 +5924,10 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
         });
         return;
     }
-    
+
     try {
         console.log('⚠️ Inicializando modal de problemas de stock...');
-        
+
         // Verificar que el modal existe en el DOM
         const modalElement = document.getElementById('problemasStockModal');
         if (!modalElement) {
@@ -6288,65 +5940,65 @@ function mostrarModalProblemasStock(productosConProblemas, factura) {
             });
             return;
         }
-        
+
         // ✅ VARIABLE PARA CONTROLAR SI EL MODAL SE CERRÓ POR UNA ACCIÓN VÁLIDA
         let modalCerradoPorAccion = false;
-        
+
         // ✅ LIMPIAR EVENTOS ANTERIORES Y CONFIGURAR NUEVO COMPORTAMIENTO
-        $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function() {
+        $(modalElement).off('hidden.bs.modal.problemasStock').on('hidden.bs.modal.problemasStock', function () {
             console.log('🔍 === MODAL PROBLEMAS STOCK CERRADO ===');
             console.log('🔍 Modal cerrado por acción válida:', modalCerradoPorAccion);
-            
+
             // Solo limpiar carrito si NO fue cerrado por una acción válida
             if (!modalCerradoPorAccion) {
                 console.log('❌ === MODAL CERRADO SIN ACCIÓN VÁLIDA ===');
                 console.log('❌ Limpiando carrito por cancelación del usuario');
-                
+
                 // Limpiar carrito completamente
                 productosEnVenta = [];
                 clienteSeleccionado = null;
                 facturaPendienteActual = null;
-                
+
                 // Limpiar interfaz
                 $('#clienteBusqueda').val('');
                 $('#clienteSeleccionado').addClass('d-none');
                 actualizarVistaCarrito();
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
-                
+
                 // Mostrar notificación
                 mostrarToast('Operación cancelada', 'El carrito ha sido limpiado', 'info');
-                
+
                 console.log('✅ Carrito limpiado por cancelación');
             } else {
                 console.log('✅ Modal cerrado por acción válida - carrito mantenido');
             }
-            
+
             // Resetear la variable para futuros usos
             modalCerradoPorAccion = false;
         });
-        
+
         // ✅ FUNCIÓN HELPER PARA MARCAR CIERRE VÁLIDO
-        window.marcarCierreValidoProblemasStock = function() {
+        window.marcarCierreValidoProblemasStock = function () {
             modalCerradoPorAccion = true;
         };
-        
+
         // ✅ CONFIGURAR EVENTOS DE LOS BOTONES DEL MODAL
         configurarEventosModalProblemasStock();
-        
+
         // Mostrar modal
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
-        
+
         // Estado inicial: mostrar loading
         $('#problemasStockLoading').show();
         $('#problemasStockContent').hide();
-        
+
         // Procesar y mostrar productos después de un breve delay
         setTimeout(() => {
             mostrarProductosConProblemas(productosConProblemas, factura);
         }, 300);
-        
+
     } catch (error) {
         console.error('❌ Error mostrando modal de problemas:', error);
         Swal.fire({
@@ -6363,7 +6015,7 @@ function mostrarProductosConProblemas(productos, factura) {
     console.log('⚠️ Cantidad de productos:', productos?.length || 0);
     console.log('⚠️ Productos detallados:', productos);
     console.log('⚠️ Factura:', factura);
-    
+
     try {
         // Validar productos
         if (!Array.isArray(productos) || productos.length === 0) {
@@ -6377,20 +6029,20 @@ function mostrarProductosConProblemas(productos, factura) {
             `).show();
             return;
         }
-        
+
         // Extraer información de la factura
         const numeroFactura = factura?.numeroFactura || facturaPendienteActual?.numeroFactura || 'N/A';
         const nombreCliente = factura?.nombreCliente || clienteSeleccionado?.nombre || 'Cliente General';
-        
+
         console.log('⚠️ Información de la factura extraída:', {
             numeroFactura,
             nombreCliente
         });
-        
+
         // Generar HTML de la tabla
         let html = '';
         let productosValidos = 0;
-        
+
         productos.forEach((producto, index) => {
             try {
                 // Validar estructura del producto
@@ -6399,7 +6051,7 @@ function mostrarProductosConProblemas(productos, factura) {
                 const cantidadRequerida = parseInt(producto.cantidadRequerida || producto.CantidadRequerida || 0);
                 const stockDisponible = parseInt(producto.stockDisponible || producto.StockDisponible || 0);
                 const faltante = Math.max(0, cantidadRequerida - stockDisponible);
-                
+
                 console.log(`⚠️ Procesando producto ${index + 1}:`, {
                     productoId,
                     nombreProducto,
@@ -6407,7 +6059,7 @@ function mostrarProductosConProblemas(productos, factura) {
                     stockDisponible,
                     faltante
                 });
-                
+
                 // Solo mostrar si realmente hay problema
                 if (cantidadRequerida > stockDisponible) {
                     html += `
@@ -6442,9 +6094,9 @@ function mostrarProductosConProblemas(productos, factura) {
                 console.error(`❌ Error procesando producto ${index}:`, error, producto);
             }
         });
-        
+
         console.log('⚠️ Productos válidos con problemas:', productosValidos);
-        
+
         if (productosValidos === 0) {
             $('#problemasStockLoading').hide();
             $('#problemasStockContent').html(`
@@ -6455,29 +6107,29 @@ function mostrarProductosConProblemas(productos, factura) {
             `).show();
             return;
         }
-        
+
         // Actualizar información de la factura
         $('#problemasStockFactura').text(numeroFactura);
         $('#problemasStockCliente').text(nombreCliente);
-        
+
         // Actualizar tabla
         $('#problemasStockTableBody').html(html);
-        
+
         // ✅ CONFIGURAR EVENTOS PARA BOTONES DE ELIMINAR PRODUCTO
-        $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function(e) {
+        $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function (e) {
             e.preventDefault();
             e.stopPropagation();
             const productoId = $(this).data('producto-id');
             console.log('🗑️ Eliminar producto problema ID:', productoId);
             eliminarProductoProblema(productoId);
         });
-        
+
         // Mostrar contenido y ocultar loading
         $('#problemasStockLoading').hide();
         $('#problemasStockContent').show();
-        
+
         console.log('✅ Modal de problemas de stock mostrado correctamente');
-        
+
     } catch (error) {
         console.error('❌ Error en mostrarProductosConProblemas:', error);
         $('#problemasStockLoading').hide();
@@ -6497,7 +6149,7 @@ function eliminarProductoProblema(productoId) {
     console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA ===');
     console.log('🗑️ Producto ID:', productoId);
     console.log('🗑️ Factura pendiente actual:', facturaPendienteActual);
-    
+
     // ✅ VERIFICAR SI ES UNA FACTURA PENDIENTE
     if (facturaPendienteActual && facturaPendienteActual.facturaId) {
         // Si es factura pendiente, usar endpoint del servidor
@@ -6510,12 +6162,12 @@ function eliminarProductoProblema(productoId) {
             productosEnVenta.splice(indiceEnCarrito, 1);
             actualizarVistaCarrito();
             actualizarTotales();
-            
+
             // Ocultar fila en la tabla
-            $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+            $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function () {
                 $(this).remove();
             });
-            
+
             mostrarToast('Producto eliminado', `${nombreProducto} removido de la factura`, 'info');
         }
     }
@@ -6529,7 +6181,7 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
         console.log('📦 === REGISTRANDO PRODUCTOS PENDIENTES DE ENTREGA ===');
         console.log('📦 Factura ID:', facturaId);
         console.log('📦 Productos con problemas recibidos:', productosConProblemas);
-        
+
         if (!productosConProblemas || productosConProblemas.length === 0) {
             console.log('📦 No hay productos pendientes para registrar');
             return { success: true, message: 'No hay productos pendientes' };
@@ -6548,13 +6200,13 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                 const cantidadRequerida = producto.cantidadRequerida || producto.cantidadRequirida || producto.cantidad || 0;
                 const stockDisponible = producto.stockDisponible || producto.stock || 0;
                 const cantidadPendiente = Math.max(0, cantidadRequerida - stockDisponible);
-                
+
                 console.log(`📦 Procesando producto ${producto.productoId}:`, {
                     cantidadRequerida,
                     stockDisponible,
                     cantidadPendiente
                 });
-                
+
                 return {
                     productoId: producto.productoId,
                     nombreProducto: producto.nombreProducto || 'Sin nombre',
@@ -6593,10 +6245,10 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
 
         if (resultado.success) {
             console.log('✅ Productos pendientes registrados exitosamente');
-            
+
             // ✅ CAPTURAR CÓDIGOS DE SEGUIMIENTO CON MÚLTIPLES ESTRATEGIAS
             let codigosCapturados = [];
-            
+
             // Estrategia 1: Desde pendientesCreados directo
             if (resultado.pendientesCreados && Array.isArray(resultado.pendientesCreados)) {
                 console.log('🎫 Capturando desde resultado.pendientesCreados...');
@@ -6636,7 +6288,7 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                     }
                 }
             }
-            
+
             // ✅ GUARDAR CÓDIGOS GLOBALMENTE
             if (codigosCapturados.length > 0) {
                 window.codigosSeguimientoPendientes = codigosCapturados;
@@ -6657,10 +6309,10 @@ async function registrarProductosPendientesEntrega(facturaId, productosConProble
                 }));
                 console.log('🎫 Códigos fallback generados:', window.codigosSeguimientoPendientes);
             }
-            
+
             const cantidadRegistrados = resultado.pendientesCreados?.length || codigosCapturados.length || productosConProblemas.length;
-            mostrarToast('Productos Pendientes', 
-                `Se registraron ${cantidadRegistrados} productos para entrega posterior`, 
+            mostrarToast('Productos Pendientes',
+                `Se registraron ${cantidadRegistrados} productos para entrega posterior`,
                 'info');
             return resultado;
         } else {
@@ -6682,7 +6334,7 @@ async function eliminarProductoConProblema(facturaId, productoId) {
         console.log('🗑️ === ELIMINANDO PRODUCTO CON PROBLEMA DE STOCK ===');
         console.log('🗑️ Factura ID:', facturaId);
         console.log('🗑️ Producto ID:', productoId);
-        
+
         const confirmacion = await Swal.fire({
             title: '¿Eliminar producto?',
             text: '¿Está seguro de que desea eliminar este producto de la factura?',
@@ -6726,12 +6378,12 @@ async function eliminarProductoConProblema(facturaId, productoId) {
             if (indiceEnCarrito !== -1) {
                 const nombreProducto = productosEnVenta[indiceEnCarrito].nombreProducto;
                 productosEnVenta.splice(indiceEnCarrito, 1);
-                
+
                 // Actualizar vista del carrito
                 actualizarVistaCarrito();
                 actualizarTotales();
                 actualizarEstadoBotonFinalizar();
-                
+
                 // Mostrar confirmación de eliminación con SweetAlert
                 Swal.fire({
                     icon: 'success',
@@ -6743,22 +6395,22 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                     timerProgressBar: true,
                     showConfirmButton: true
                 });
-                
+
                 // Ocultar fila en la tabla de problemas
-                $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function() {
+                $(`.problema-stock-row[data-producto-id="${productoId}"]`).fadeOut(300, function () {
                     $(this).remove();
-                    
+
                     // Verificar si quedan productos con problemas
                     const problemasRestantes = $('.problema-stock-row').length;
                     console.log('🔍 Problemas restantes:', problemasRestantes);
-                    
+
                     if (problemasRestantes === 0) {
                         console.log('✅ No quedan productos con problemas - cerrando modal y abriendo finalización');
-                        
+
                         // ✅ PRESERVAR INFORMACIÓN DE LA FACTURA ANTES DE CONTINUAR
                         if (facturaPendienteActual && facturaPendienteActual.numeroFactura) {
                             console.log('📋 Preservando número de factura:', facturaPendienteActual.numeroFactura);
-                            
+
                             // Asegurar que la factura pendiente mantenga su información
                             window.facturaParaRecibo = {
                                 numeroFactura: facturaPendienteActual.numeroFactura,
@@ -6766,15 +6418,15 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                                 usuarioCreadorNombre: facturaPendienteActual.usuarioCreadorNombre
                             };
                         }
-                        
+
                         // Marcar cierre válido para evitar limpiar carrito
                         if (window.marcarCierreValidoProblemasStock) {
                             window.marcarCierreValidoProblemasStock();
                         }
-                        
+
                         // Cerrar modal de problemas
                         $('#problemasStockModal').modal('hide');
-                        
+
                         // Abrir modal de finalización después de un breve delay
                         setTimeout(() => {
                             if (productosEnVenta.length > 0) {
@@ -6785,13 +6437,13 @@ async function eliminarProductoConProblema(facturaId, productoId) {
                         }, 500);
                     }
                 });
-                
+
                 console.log('✅ Producto eliminado exitosamente');
             }
-            
+
             // Actualizar carrito después de eliminar
             actualizarCarritoDespuesDeEliminar([productoId]);
-            
+
         } else {
             throw new Error(resultado.message || 'Error al eliminar el producto');
         }
@@ -6854,27 +6506,27 @@ function actualizarCarritoDespuesDeEliminar(productosEliminados) {
  */
 function configurarEventosModalProblemasStock() {
     console.log('⚙️ === CONFIGURANDO EVENTOS MODAL PROBLEMAS STOCK ===');
-    
+
     // ✅ LIMPIAR EVENTOS ANTERIORES PARA EVITAR DUPLICADOS
     $(document).off('click.problemasStock', '#btnFacturarTodosModos');
     $(document).off('click.problemasStock', '#btnCancelarProblemasStock');
-    
+
     // ✅ CONFIGURAR EVENTO FACTURAR DE TODOS MODOS (delegación de eventos)
-    $(document).on('click.problemasStock', '#btnFacturarTodosModos', function(e) {
+    $(document).on('click.problemasStock', '#btnFacturarTodosModos', function (e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('✅ BOTÓN FACTURAR DE TODOS MODOS CLICKEADO');
         facturarTodosModos();
     });
-    
+
     // ✅ CONFIGURAR EVENTO CANCELAR (delegación de eventos)
-    $(document).on('click.problemasStock', '#btnCancelarProblemasStock', function(e) {
+    $(document).on('click.problemasStock', '#btnCancelarProblemasStock', function (e) {
         e.preventDefault();
         e.stopPropagation();
         console.log('❌ BOTÓN CANCELAR CLICKEADO');
         cancelarProblemasStock();
     });
-    
+
     console.log('✅ Eventos del modal de problemas de stock configurados con delegación');
 }
 
@@ -6884,7 +6536,7 @@ function configurarEventosModalProblemasStock() {
 async function facturarTodosModos() {
     console.log('⚠️ === FACTURAR DE TODOS MODOS ===');
     console.log('⚠️ Usuario decidió facturar con productos pendientes de entrega');
-    
+
     try {
         // ✅ CONFIRMAR LA ACCIÓN CON EL USUARIO
         const confirmacion = await Swal.fire({
@@ -6915,27 +6567,27 @@ async function facturarTodosModos() {
 
         // ✅ OBTENER PRODUCTOS CON PROBLEMAS DESDE EL DOM CORRECTAMENTE
         const productosConProblemas = [];
-        $('.problema-stock-row').each(function() {
+        $('.problema-stock-row').each(function () {
             const $fila = $(this);
             const productoId = $fila.data('producto-id');
             const nombreProducto = $fila.find('td:first strong').text().trim();
-            
+
             // ✅ CAPTURAR CANTIDADES CORRECTAMENTE DESDE LAS COLUMNAS DE LA TABLA
             const cantidadSolicitada = parseInt($fila.find('td:eq(1) .badge.bg-info').text().trim()) || 0;
             const stockDisponible = parseInt($fila.find('td:eq(2) .badge.bg-warning, td:eq(2) .badge.bg-danger').text().trim()) || 0;
             const cantidadPendiente = parseInt($fila.find('td:eq(3) .badge.bg-danger').text().trim()) || 0;
-            
+
             console.log(`📦 Procesando producto ${productoId}:`, {
                 nombreProducto,
                 cantidadSolicitada,
                 stockDisponible,
                 cantidadPendiente
             });
-            
+
             if (productoId && cantidadSolicitada > 0) {
                 // Buscar el producto en el carrito para obtener precio
                 const productoEnCarrito = productosEnVenta.find(p => p.productoId == productoId);
-                
+
                 productosConProblemas.push({
                     productoId: parseInt(productoId),
                     nombreProducto: nombreProducto,
@@ -6950,37 +6602,37 @@ async function facturarTodosModos() {
                 });
             }
         });
-        
+
         console.log('🔍 Productos con problemas capturados correctamente:', productosConProblemas);
-        
+
         // ✅ VALIDAR QUE SE CAPTURARON DATOS
         if (productosConProblemas.length === 0) {
             console.warn('⚠️ No se capturaron productos con problemas');
             mostrarToast('Advertencia', 'No se detectaron productos con problemas para procesar', 'warning');
             return;
         }
-        
+
         // ✅ MARCAR QUE EL MODAL SE CIERRA POR ACCIÓN VÁLIDA
         if (window.marcarCierreValidoProblemasStock) {
             window.marcarCierreValidoProblemasStock();
         }
-        
+
         // ✅ GUARDAR INFORMACIÓN DE PRODUCTOS PENDIENTES PARA EL PROCESO DE FACTURACIÓN
         window.productosPendientesEntrega = productosConProblemas;
         window.codigosSeguimientoPendientes = []; // Inicializar array para códigos
-        
+
         console.log('💾 Productos pendientes guardados globalmente:', window.productosPendientesEntrega);
-        
+
         // ✅ CERRAR MODAL DE PROBLEMAS
         $('#problemasStockModal').modal('hide');
-        
+
         // ✅ CONTINUAR CON MODAL DE FINALIZACIÓN DESPUÉS DE UN BREVE DELAY
         setTimeout(() => {
             // Agregar flag para indicar que hay pendientes
             window.facturaConPendientes = true;
             mostrarModalFinalizarVenta();
         }, 500);
-        
+
     } catch (error) {
         console.error('❌ Error en facturarTodosModos:', error);
         mostrarToast('Error', 'No se pudo procesar la facturación con pendientes', 'danger');
@@ -6991,22 +6643,22 @@ async function facturarTodosModos() {
 function cancelarProblemasStock() {
     console.log('❌ === CANCELANDO MODAL PROBLEMAS DE STOCK ===');
     console.log('❌ Usuario canceló modal de problemas de stock');
-    
+
     // Cerrar modal
     $('#problemasStockModal').modal('hide');
-    
+
     // El evento hidden.bs.modal se encargará de limpiar el carrito
 }
 
 function imprimirComprobanteEnvio(numeroFactura) {
-    const fecha = new Date().toLocaleDateString('es-CR', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
+    const fecha = new Date().toLocaleDateString('es-CR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
     });
-    const hora = new Date().toLocaleTimeString('es-CR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+    const hora = new Date().toLocaleTimeString('es-CR', {
+        hour: '2-digit',
+        minute: '2-digit'
     });
 
     const comprobanteHTML = `
@@ -7091,7 +6743,7 @@ function imprimirComprobanteEnvio(numeroFactura) {
 // ===== FUNCIÓN PARA RECARGAR PERMISOS DINÁMICAMENTE =====
 function recargarPermisosUsuario() {
     console.log('🔄 === RECARGANDO PERMISOS DE USUARIO ===');
-    
+
     // Limpiar permisos actuales
     permisosUsuario = {
         puedeCrearFacturas: false,
@@ -7100,11 +6752,11 @@ function recargarPermisosUsuario() {
         puedeAnularFacturas: false,
         esAdmin: false
     };
-    
+
     // Recargar configuración desde el servidor si es necesario
     // O simplemente recargar desde las variables globales existentes
     cargarPermisosUsuario();
-    
+
     console.log('🔄 Permisos recargados y aplicados');
 }
 
@@ -7112,22 +6764,22 @@ function recargarPermisosUsuario() {
 async function actualizarVistaProductosPostAjuste() {
     try {
         console.log('🔄 === ACTUALIZANDO VISTA DE PRODUCTOS POST-AJUSTE ===');
-        
+
         // ✅ LIMPIAR COMPLETAMENTE EL ESTADO DE BÚSQUEDA PARA FORZAR ACTUALIZACIÓN
         window.lastProductsHash = null;
         ultimaBusqueda = '';
         busquedaEnProceso = false;
         cargaInicialCompletada = false;
-        
+
         // ✅ LIMPIAR TIMEOUT SI EXISTE
         if (timeoutBusquedaActivo) {
             clearTimeout(timeoutBusquedaActivo);
             timeoutBusquedaActivo = null;
         }
-        
+
         // ✅ OBTENER TÉRMINO DE BÚSQUEDA ACTUAL
         const terminoActual = $('#busquedaProducto').val().trim();
-        
+
         // ✅ MOSTRAR INDICADOR DE CARGA MIENTRAS SE ACTUALIZA
         $('#resultadosBusqueda').html(`
             <div class="col-12 text-center py-4">
@@ -7137,10 +6789,10 @@ async function actualizarVistaProductosPostAjuste() {
                 <p class="mt-2 text-muted">Actualizando información de productos...</p>
             </div>
         `);
-        
+
         // ✅ ESPERAR UN MOMENTO PARA QUE SE VEAN LOS CAMBIOS EN LA UI
         await new Promise(resolve => setTimeout(resolve, 200));
-        
+
         // ✅ BUSCAR PRODUCTOS NUEVAMENTE
         if (terminoActual.length >= 2) {
             console.log('🔄 Actualizando con término de búsqueda:', terminoActual);
@@ -7149,13 +6801,13 @@ async function actualizarVistaProductosPostAjuste() {
             console.log('🔄 Actualizando productos iniciales');
             await buscarProductos('');
         }
-        
+
         console.log('✅ Vista de productos actualizada exitosamente');
-        
+
     } catch (error) {
         console.error('❌ Error al actualizar vista de productos:', error);
         console.warn('❌ No se pudo actualizar la vista de productos - sin toast');
-        
+
         // ✅ INTENTAR RECARGAR PRODUCTOS INICIALES COMO FALLBACK
         try {
             await cargarProductosIniciales();
@@ -7254,14 +6906,14 @@ async function cargarFacturasPendientesBasico(pagina = 1) {
 
 function mostrarFacturasPendientes(facturas) {
     console.log('📋 Mostrando', facturas.length, 'facturas pendientes');
-    
+
     let html = '';
     facturas.forEach(factura => {
         const fecha = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
         const hora = factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
         const total = factura.total || 0;
         const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
-        
+
         // Escapar datos para JavaScript con TODA la información del cliente
         const facturaEscapada = JSON.stringify({
             facturaId: factura.facturaId,
@@ -7276,7 +6928,7 @@ function mostrarFacturasPendientes(facturas) {
             metodoPago: factura.metodoPago,
             detallesFactura: factura.detallesFactura
         }).replace(/"/g, '&quot;');
-        
+
         html += `
             <tr class="factura-pendiente-row" style="cursor: pointer;" 
                 data-factura="${facturaEscapada}"
@@ -7330,7 +6982,7 @@ function mostrarFacturasPendientes(facturas) {
             </tr>
         `;
     });
-    
+
     $('#facturasPendientesTableBody').html(html);
     $('#facturasPendientesLoading').hide();
     $('#facturasPendientesContent').show();
@@ -7349,15 +7001,15 @@ function mostrarSinFacturasPendientes() {
 function seleccionarFacturaPendiente(row) {
     // Remover selección anterior
     $('.factura-pendiente-row').removeClass('table-primary');
-    
+
     // Agregar selección a la fila actual
     $(row).addClass('table-primary');
-    
+
     console.log('📋 Factura pendiente seleccionada');
 }
 
 /**
- * Procesar factura pendiente usando el modal de finalización
+ * Procesar factura pendiente usando el modal de finalización ANTERIOR 
  */
 async function procesarFacturaPendiente(facturaEscapada) {
     try {
@@ -7428,6 +7080,53 @@ async function procesarFacturaPendiente(facturaEscapada) {
             // ✅ CARGAR PRODUCTOS DE LA FACTURA EN EL CARRITO
             if (factura.detallesFactura && Array.isArray(factura.detallesFactura)) {
                 factura.detallesFactura.forEach(detalle => {
+                    // ✅ CAPTURAR INFORMACIÓN DE LLANTA SI EL PRODUCTO ES LLANTA
+                    let esLlanta = false;
+                    let medidaCompleta = null;
+
+                    try {
+                        // Verificar si el producto es llanta y obtener su medida
+                        if (detalle.esLlanta || detalle.EsLlanta) {
+                            esLlanta = true;
+
+                            // Intentar obtener medida desde diferentes fuentes
+                            medidaCompleta = detalle.medidaCompleta ||
+                                detalle.MedidaCompleta ||
+                                detalle.medidaLlanta ||
+                                detalle.MedidaLlanta;
+
+                            // Si no tiene medida completa pero tiene datos de llanta, construirla
+                            if (!medidaCompleta && detalle.llanta) {
+                                const llanta = detalle.llanta;
+                                if (llanta.ancho && llanta.diametro) {
+                                    if (llanta.perfil && llanta.perfil > 0) {
+                                        medidaCompleta = `${llanta.ancho}/${llanta.perfil}/R${llanta.diametro}`;
+                                    } else {
+                                        medidaCompleta = `${llanta.ancho}/R${llanta.diametro}`;
+                                    }
+                                }
+                            }
+
+                            // Si aún no tenemos medida, verificar propiedades alternativas
+                            if (!medidaCompleta && (detalle.Ancho || detalle.ancho)) {
+                                const ancho = detalle.Ancho || detalle.ancho;
+                                const diametro = detalle.Diametro || detalle.diametro;
+                                const perfil = detalle.Perfil || detalle.perfil;
+
+                                if (ancho && diametro) {
+                                    if (perfil && perfil > 0) {
+                                        medidaCompleta = `${ancho}/${perfil}/R${diametro}`;
+                                    } else {
+                                        medidaCompleta = `${ancho}/R${diametro}`;
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.warn('⚠️ Error procesando información de llanta en factura pendiente:', error);
+                        medidaCompleta = null;
+                    }
+
                     productosEnVenta.push({
                         productoId: detalle.productoId,
                         nombreProducto: detalle.nombreProducto,
@@ -7435,7 +7134,9 @@ async function procesarFacturaPendiente(facturaEscapada) {
                         cantidad: detalle.cantidad,
                         stockDisponible: detalle.stockDisponible || 999,
                         facturaId: factura.facturaId,
-                        metodoPago: 'efectivo'
+                        metodoPago: 'efectivo',
+                        esLlanta: esLlanta,
+                        medidaCompleta: medidaCompleta
                     });
                 });
             }
@@ -7525,6 +7226,8 @@ async function procesarFacturaPendiente(facturaEscapada) {
         });
     }
 }
+
+
 /**
  * Cargar datos de factura pendiente en el carrito
  */
@@ -7552,7 +7255,7 @@ function cargarFacturaPendienteEnCarrito(factura) {
         Cliente: factura.Cliente
     });
     console.log('📦 Todas las propiedades de factura:', Object.keys(factura));
-    
+
     // ✅ GUARDAR DATOS DE FACTURA PENDIENTE GLOBALMENTE
     facturaPendienteActual = {
         facturaId: factura.facturaId,
@@ -7561,81 +7264,81 @@ function cargarFacturaPendienteEnCarrito(factura) {
         fechaCreacion: factura.fechaCreacion || new Date().toISOString(),
         usuarioCreadorNombre: factura.usuarioCreadorNombre || 'Sistema'
     };
-    
+
     console.log('💾 Factura pendiente guardada globalmente:', facturaPendienteActual);
-    
+
     // Limpiar carrito actual
     productosEnVenta = [];
-    
+
     // Cargar datos del cliente con mapeo completo y exhaustivo
     clienteSeleccionado = {
         id: factura.clienteId || factura.ClienteId || 1,
         clienteId: factura.clienteId || factura.ClienteId || 1,
-        
+
         // Mapeo para nombre
-        nombre: factura.nombreCliente || 
-               factura.NombreCliente || 
-               factura.Cliente?.Nombre || 
-               'Cliente General',
-        nombreCliente: factura.nombreCliente || 
-                      factura.NombreCliente || 
-                      factura.Cliente?.Nombre || 
-                      'Cliente General',
-        
+        nombre: factura.nombreCliente ||
+            factura.NombreCliente ||
+            factura.Cliente?.Nombre ||
+            'Cliente General',
+        nombreCliente: factura.nombreCliente ||
+            factura.NombreCliente ||
+            factura.Cliente?.Nombre ||
+            'Cliente General',
+
         // Mapeo para email
-        email: factura.emailCliente || 
-              factura.EmailCliente || 
-              factura.Cliente?.Email || 
-              factura.email || 
-              '',
-        emailCliente: factura.emailCliente || 
-                     factura.EmailCliente || 
-                     factura.Cliente?.Email || 
-                     '',
-        
+        email: factura.emailCliente ||
+            factura.EmailCliente ||
+            factura.Cliente?.Email ||
+            factura.email ||
+            '',
+        emailCliente: factura.emailCliente ||
+            factura.EmailCliente ||
+            factura.Cliente?.Email ||
+            '',
+
         // Mapeo para teléfono
-        telefono: factura.telefonoCliente || 
-                 factura.TelefonoCliente || 
-                 factura.Cliente?.Telefono || 
-                 factura.telefono || 
-                 '',
-        telefonoCliente: factura.telefonoCliente || 
-                        factura.TelefonoCliente || 
-                        factura.Cliente?.Telefono || 
-                        '',
-        
+        telefono: factura.telefonoCliente ||
+            factura.TelefonoCliente ||
+            factura.Cliente?.Telefono ||
+            factura.telefono ||
+            '',
+        telefonoCliente: factura.telefonoCliente ||
+            factura.TelefonoCliente ||
+            factura.Cliente?.Telefono ||
+            '',
+
         // Mapeo para identificación
-        identificacion: factura.identificacionCliente || 
-                       factura.IdentificacionCliente || 
-                       factura.Cliente?.Contacto || 
-                       factura.cedula || 
-                       factura.contacto || 
-                       '',
-        identificacionCliente: factura.identificacionCliente || 
-                              factura.IdentificacionCliente || 
-                              factura.Cliente?.Contacto || 
-                              '',
-        
+        identificacion: factura.identificacionCliente ||
+            factura.IdentificacionCliente ||
+            factura.Cliente?.Contacto ||
+            factura.cedula ||
+            factura.contacto ||
+            '',
+        identificacionCliente: factura.identificacionCliente ||
+            factura.IdentificacionCliente ||
+            factura.Cliente?.Contacto ||
+            '',
+
         // Mapeo para dirección
-        direccion: factura.direccionCliente || 
-                  factura.DireccionCliente || 
-                  factura.Cliente?.Direccion || 
-                  factura.direccion || 
-                  '',
-        direccionCliente: factura.direccionCliente || 
-                         factura.DireccionCliente || 
-                         factura.Cliente?.Direccion || 
-                         ''
+        direccion: factura.direccionCliente ||
+            factura.DireccionCliente ||
+            factura.Cliente?.Direccion ||
+            factura.direccion ||
+            '',
+        direccionCliente: factura.direccionCliente ||
+            factura.DireccionCliente ||
+            factura.Cliente?.Direccion ||
+            ''
     };
-    
+
     console.log('👤 Cliente seleccionado creado:', clienteSeleccionado);
-    
+
     // Mostrar cliente seleccionado
     $('#clienteBusqueda').val(factura.nombreCliente);
     $('#nombreClienteSeleccionado').text(factura.nombreCliente);
     $('#emailClienteSeleccionado').text(factura.emailCliente || 'Sin email');
     $('#clienteSeleccionado').removeClass('d-none');
-    
+
     // Cargar productos de la factura
     if (factura.detallesFactura && factura.detallesFactura.length > 0) {
         factura.detallesFactura.forEach(detalle => {
@@ -7651,18 +7354,18 @@ function cargarFacturaPendienteEnCarrito(factura) {
             });
         });
     }
-    
+
     // Actualizar vista del carrito
     actualizarVistaCarrito();
     actualizarTotales();
     actualizarEstadoBotonFinalizar();
-    
+
     console.log('✅ Factura cargada en carrito:', {
         cliente: clienteSeleccionado,
         productos: productosEnVenta.length,
         facturaPendiente: facturaPendienteActual
     });
-    
+
     // Mostrar notificación
     Swal.fire({
         icon: 'info',
@@ -7681,7 +7384,7 @@ function cargarFacturaPendienteEnCarrito(factura) {
 async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total) {
     console.log('💰 === COMPLETANDO FACTURA PENDIENTE DIRECTAMENTE ===');
     console.log('💰 ID:', facturaId, 'Número:', numeroFactura, 'Total:', total);
-    
+
     const confirmacion = await Swal.fire({
         title: '¿Completar Factura?',
         text: `¿Confirma que desea marcar como pagada la factura ${numeroFactura} por ₡${formatearMoneda(total)}?`,
@@ -7692,11 +7395,11 @@ async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total)
         confirmButtonText: 'Sí, Completar',
         cancelButtonText: 'Cancelar'
     });
-    
+
     if (!confirmacion.isConfirmed) {
         return;
     }
-    
+
     try {
         const response = await fetch('/Facturacion/CompletarFacturaPendiente', {
             method: 'POST',
@@ -7716,7 +7419,7 @@ async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total)
         }
 
         const resultado = await response.json();
-        
+
         if (resultado.success) {
             Swal.fire({
                 icon: 'success',
@@ -7724,17 +7427,17 @@ async function completarFacturaPendienteDirecto(facturaId, numeroFactura, total)
                 text: `La factura ${numeroFactura} ha sido marcada como pagada exitosamente`,
                 confirmButtonColor: '#28a745'
             });
-            
+
             // Recargar lista de facturas pendientes
             abrirFacturasPendientes();
-            
+
             // Actualizar vista de productos si es necesario
             await actualizarVistaProductosPostAjuste();
-            
+
         } else {
             throw new Error(resultado.message || 'Error al completar la factura');
         }
-        
+
     } catch (error) {
         console.error('❌ Error completando factura:', error);
         Swal.fire({

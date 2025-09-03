@@ -1,0 +1,49 @@
+// ===== GESTIÓN DEL CARRITO =====
+function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, metodoPago = 'efectivo') {
+    // Si no se especifica precio, calcularlo
+    if (precioUnitario === null) {
+        precioUnitario = (producto.precio || 0) * CONFIGURACION_PRECIOS[metodoPago].multiplicador;
+    }
+
+    // Verificar si el producto ya está en la venta
+    const productoExistente = productosEnVenta.find(p => p.productoId === producto.productoId);
+
+    if (productoExistente) {
+        // Incrementar cantidad si no supera el stock
+        if (productoExistente.cantidad + cantidad <= producto.cantidadEnInventario) {
+            productoExistente.cantidad += cantidad;
+            mostrarToast('Producto actualizado', `Cantidad de ${producto.nombreProducto} incrementada`, 'success');
+        } else {
+            mostrarToast('Stock insuficiente', `No hay suficiente stock disponible para ${producto.nombreProducto}`, 'warning');
+            return;
+        }
+    } else {
+        // Agregar nuevo producto
+        // Validación robusta para imagen URL
+        let imagenUrl = null;
+        if (producto.imagenesProductos && 
+            Array.isArray(producto.imagenesProductos) && 
+            producto.imagenesProductos.length > 0) {
+
+            const primeraImagen = producto.imagenesProductos[0];
+            if (primeraImagen && primeraImagen.Urlimagen) {
+                imagenUrl = primeraImagen.Urlimagen;
+            }
+        }
+
+        productosEnVenta.push({
+            productoId: producto.productoId,
+            nombreProducto: producto.nombreProducto,
+            precioUnitario: precioUnitario,
+            cantidad: cantidad,
+            stockDisponible: producto.cantidadEnInventario,
+            metodoPago: metodoPago,
+            imagenUrl: imagenUrl
+        });
+
+       /* mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');*/
+    }
+
+    actualizarVistaCarrito();
+    actualizarTotales();
+}

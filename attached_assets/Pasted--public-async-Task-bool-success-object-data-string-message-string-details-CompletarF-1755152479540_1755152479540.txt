@@ -1,0 +1,72 @@
+        public async Task<(bool success, object? data, string? message, string? details)> CompletarFacturaAsync(int facturaId, object datosCompletamiento, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("✅ Completando documento ID: {FacturaId}", facturaId);
+                _logger.LogInformation("📋 Datos de completamiento: {Datos}", JsonConvert.SerializeObject(datosCompletamiento));
+
+                // Configurar token JWT si se proporciona
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                // ✅ EXTRAER INFORMACIÓN PARA DETERMINAR EL ENDPOINT
+                dynamic datos = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(datosCompletamiento));
+                bool esProforma = datos?.esProforma == true;
+
+                string endpoint;
+                string tipoDocumento;
+
+                if (esProforma)
+                {
+                    // ✅ PARA PROFORMAS: Usar servicio centralizado
+                    endpoint = _apiConfig.GetApiUrl($"Facturacion/proformas/{facturaId}/marcar-facturada");
+                    tipoDocumento = "Proforma";
+                    _logger.LogInformation("📋 Marcando proforma como facturada usando endpoint: {Endpoint}", endpoint);
+                }
+                else
+                {
+                    // ✅ PARA FACTURAS: Usar servicio centralizado
+                    endpoint = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/completar");
+                    tipoDocumento = "Factura";
+                    _logger.LogInformation("📋 Completando factura usando endpoint: {Endpoint}", endpoint);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(datosCompletamiento, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado al API: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // ✅ USAR PUT PARA AMBOS CASOS (COMPLETAR Y MARCAR COMO FACTURADA)
+                var response = await _httpClient.PutAsync(endpoint, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject(responseContent);
+                    return (success: true, data: resultado, message: $"{tipoDocumento} procesada exitosamente", details: null);
+                }
+                else
+                {
+                    _logger.LogError("❌ Error procesando {TipoDocumento}: {StatusCode} - {Content}",
+                        tipoDocumento, response.StatusCode, responseContent);
+                    return (success: false, data: null, message: $"Error al procesar {tipoDocumento.ToLower()}", details: responseContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error procesando documento");
+                return (success: false, data: null, message: "Error interno: " + ex.Message, details: ex.ToString());
+            }
+        }

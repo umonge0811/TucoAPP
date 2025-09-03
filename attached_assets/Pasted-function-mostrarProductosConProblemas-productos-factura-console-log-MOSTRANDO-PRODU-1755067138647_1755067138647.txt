@@ -1,0 +1,131 @@
+function mostrarProductosConProblemas(productos, factura) {
+    console.log('⚠️ === MOSTRANDO PRODUCTOS CON PROBLEMAS ===');
+    console.log('⚠️ Cantidad de productos:', productos?.length || 0);
+    console.log('⚠️ Productos detallados:', productos);
+    console.log('⚠️ Factura:', factura);
+    
+    try {
+        // Validar productos
+        if (!Array.isArray(productos) || productos.length === 0) {
+            console.error('❌ No hay productos válidos para mostrar');
+            $('#problemasStockLoading').hide();
+            $('#problemasStockContent').html(`
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle me-2"></i>
+                    No se encontraron productos con problemas de stock específicos.
+                </div>
+            `).show();
+            return;
+        }
+        
+        // Extraer información de la factura
+        const numeroFactura = factura?.numeroFactura || facturaPendienteActual?.numeroFactura || 'N/A';
+        const nombreCliente = factura?.nombreCliente || clienteSeleccionado?.nombre || 'Cliente General';
+        
+        console.log('⚠️ Información de la factura extraída:', {
+            numeroFactura,
+            nombreCliente
+        });
+        
+        // Generar HTML de la tabla
+        let html = '';
+        let productosValidos = 0;
+        
+        productos.forEach((producto, index) => {
+            try {
+                // Validar estructura del producto
+                const productoId = producto.productoId || producto.ProductoId || index;
+                const nombreProducto = producto.nombreProducto || producto.NombreProducto || `Producto ${index + 1}`;
+                const cantidadRequerida = parseInt(producto.cantidadRequerida || producto.CantidadRequerida || 0);
+                const stockDisponible = parseInt(producto.stockDisponible || producto.StockDisponible || 0);
+                const faltante = Math.max(0, cantidadRequerida - stockDisponible);
+                
+                console.log(`⚠️ Procesando producto ${index + 1}:`, {
+                    productoId,
+                    nombreProducto,
+                    cantidadRequerida,
+                    stockDisponible,
+                    faltante
+                });
+                
+                // Solo mostrar si realmente hay problema
+                if (cantidadRequerida > stockDisponible) {
+                    html += `
+                        <tr class="problema-stock-row" data-producto-id="${productoId}">
+                            <td>
+                                <strong>${nombreProducto}</strong>
+                                <br><small class="text-muted">ID: ${productoId}</small>
+                                ${producto.descripcion ? `<br><small class="text-muted">${producto.descripcion}</small>` : ''}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info">${cantidadRequerida}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge ${stockDisponible > 0 ? 'bg-warning' : 'bg-danger'}">${stockDisponible}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger">${faltante}</span>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-danger btn-eliminar-problema" 
+                                        data-producto-id="${productoId}"
+                                        title="Eliminar este producto de la factura">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    productosValidos++;
+                }
+            } catch (error) {
+                console.error(`❌ Error procesando producto ${index}:`, error, producto);
+            }
+        });
+        
+        console.log('⚠️ Productos válidos con problemas:', productosValidos);
+        
+        if (productosValidos === 0) {
+            $('#problemasStockLoading').hide();
+            $('#problemasStockContent').html(`
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Todos los productos tienen stock suficiente.
+                </div>
+            `).show();
+            return;
+        }
+        
+        // Actualizar información de la factura
+        $('#problemasStockFactura').text(numeroFactura);
+        $('#problemasStockCliente').text(nombreCliente);
+        
+        // Actualizar tabla
+        $('#problemasStockTableBody').html(html);
+        
+        // ✅ CONFIGURAR EVENTOS PARA BOTONES DE ELIMINAR PRODUCTO
+        $(document).off('click.eliminarProblema', '.btn-eliminar-problema').on('click.eliminarProblema', '.btn-eliminar-problema', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const productoId = $(this).data('producto-id');
+            console.log('🗑️ Eliminar producto problema ID:', productoId);
+            eliminarProductoProblema(productoId);
+        });
+        
+        // Mostrar contenido y ocultar loading
+        $('#problemasStockLoading').hide();
+        $('#problemasStockContent').show();
+        
+        console.log('✅ Modal de problemas de stock mostrado correctamente');
+        
+    } catch (error) {
+        console.error('❌ Error en mostrarProductosConProblemas:', error);
+        $('#problemasStockLoading').hide();
+        $('#problemasStockContent').html(`
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Error al procesar los problemas de stock: ${error.message}
+            </div>
+        `).show();
+    }
+}

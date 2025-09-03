@@ -1,9 +1,12 @@
 @{
     ViewData["Title"] = "Facturación";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css">
-    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css">
 }
+
+    <link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" />
+    <link rel="stylesheet" href="~/css/views/facturacion/mobile.css" />
+    <link rel="stylesheet" href="~/css/print-thermal.css" />
+
 
 
 
@@ -55,10 +58,10 @@
                                     <button type="button" 
                                             id="btnFacturasPendientes" 
                                             class="btn btn-outline-warning"
-                                            title="Ver facturas pendientes"
+                                            title="Ver todas las facturas"
                                             style="display: none;">
-                                        <i class="bi bi-clock-history me-2"></i>
-                                        <span class="btn-text">Facturas Pendientes</span>
+                                        <i class="bi bi-receipt me-2"></i>
+                                        <span class="btn-text">Consultar Facturas</span>
                                     </button>
 
                                     <button type="button" 
@@ -281,11 +284,11 @@
 <div class="modal fade" id="facturasPendientesModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-xl modal-fullscreen-lg-down">
         <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
+            <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title">
-                    <i class="bi bi-clock-history me-2"></i>
-                    <span class="d-none d-md-inline">Facturas Pendientes de Pago</span>
-                    <span class="d-inline d-md-none">Facturas Pendientes</span>
+                    <i class="bi bi-receipt me-2"></i>
+                    <span class="d-none d-md-inline">Consulta de Facturas</span>
+                    <span class="d-inline d-md-none">Facturas</span>
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -313,10 +316,11 @@
                                     <i class="bi bi-funnel me-1"></i>Estado
                                 </label>
                                 <select id="estadoFacturasPendientes" class="form-select">
-                                    <option value="todos">Todos</option>
-                                    <option value="Pendiente">Pendiente</option>
+                                    <option value="todos">Todos los Estados</option>
+                                    <option value="Pendiente" selected>Pendiente</option>
                                     <option value="Pagada">Pagada</option>
                                     <option value="Anulada">Anulada</option>
+                                    <option value="Vencida">Vencida</option>
                                 </select>
                             </div>
 
@@ -367,10 +371,11 @@
                                 <i class="bi bi-funnel me-1"></i>Estado
                             </label>
                             <select id="estadoFacturasPendientesMobile" class="form-select">
-                                <option value="todos">Todos</option>
-                                <option value="Pendiente">Pendiente</option>
+                                <option value="todos">Todos los Estados</option>
+                                <option value="Pendiente" selected>Pendiente</option>
                                 <option value="Pagada">Pagada</option>
                                 <option value="Anulada">Anulada</option>
+                                <option value="Vencida">Vencida</option>
                             </select>
                         </div>
 
@@ -629,6 +634,7 @@
 
     @section Scripts {
         <!-- Scripts específicos para facturación -->
+        <script src="~/js/utils/impresionTermica.js"></script>
         <script src="~/js/views/facturacion/zoomImagenes.js"></script>
         <script src="~/js/views/facturacion/facturacion.js"></script>
         <script src="~/js/views/facturacion/facturasPendientesFilter.js"></script>

@@ -1,4 +1,3 @@
-
 using API.Data;
 using API.Extensions;
 using API.ServicesAPI;
@@ -36,7 +35,7 @@ namespace API.Controllers
             IWebHostEnvironment webHostEnvironment,
             ILogger<InventarioController> logger,
             INotificacionService notificacionService,
-            IPermisosService permisosService, 
+            IPermisosService permisosService,
             IAjustesInventarioPendientesService ajustesService)
         {
             _context = context;
@@ -85,10 +84,10 @@ namespace API.Controllers
                     .Take(5)
                     .Select(p => new { p.PedidoId, p.Estado, p.FechaPedido })
                     .ToListAsync();
-                
+
                 foreach (var ejemplo in ejemplosPedidosPendientes)
                 {
-                    _logger.LogInformation("🔗 Pedido pendiente ejemplo: ID={PedidoId}, Estado={Estado}, Fecha={Fecha}", 
+                    _logger.LogInformation("🔗 Pedido pendiente ejemplo: ID={PedidoId}, Estado={Estado}, Fecha={Fecha}",
                         ejemplo.PedidoId, ejemplo.Estado, ejemplo.FechaPedido);
                 }
 
@@ -114,8 +113,8 @@ namespace API.Controllers
                         p.StockMinimo,
                         p.FechaUltimaActualizacion,
                         TienePedidoPendiente = _context.DetallePedidos
-                            .Where(dp => dp.ProductoId == p.ProductoId && 
-                                        dp.Pedido != null && 
+                            .Where(dp => dp.ProductoId == p.ProductoId &&
+                                        dp.Pedido != null &&
                                         dp.Pedido.Estado == "Pendiente")
                             .Any(),
                         Permisos = new
@@ -153,22 +152,22 @@ namespace API.Controllers
 
                 foreach (var prod in productosConPedidoPendiente.Take(3))
                 {
-                    _logger.LogInformation("✅ Producto con pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}", 
+                    _logger.LogInformation("✅ Producto con pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}",
                         prod.ProductoId, prod.NombreProducto, prod.TienePedidoPendiente);
-                    
+
                     // Verificar manualmente los detalles de pedidos para este producto
                     var detallesParaEsteProducto = await _context.DetallePedidos
                         .Include(dp => dp.Pedido)
                         .Where(dp => dp.ProductoId == prod.ProductoId)
                         .Select(dp => new { dp.DetalleId, dp.ProductoId, PedidoId = dp.Pedido.PedidoId, Estado = dp.Pedido.Estado })
                         .ToListAsync();
-                    
-                    _logger.LogInformation("📋 Detalles encontrados para producto {ProductoId}: {Cantidad}", 
+
+                    _logger.LogInformation("📋 Detalles encontrados para producto {ProductoId}: {Cantidad}",
                         prod.ProductoId, detallesParaEsteProducto.Count);
-                    
+
                     foreach (var detalle in detallesParaEsteProducto)
                     {
-                        _logger.LogInformation("   - Detalle ID={DetalleId}, PedidoId={PedidoId}, Estado={Estado}", 
+                        _logger.LogInformation("   - Detalle ID={DetalleId}, PedidoId={PedidoId}, Estado={Estado}",
                             detalle.DetalleId, detalle.PedidoId, detalle.Estado);
                     }
                 }
@@ -177,7 +176,7 @@ namespace API.Controllers
                 var productosSinPedidoPendiente = productos.Where(p => !p.TienePedidoPendiente).Take(2).ToList();
                 foreach (var prod in productosSinPedidoPendiente)
                 {
-                    _logger.LogInformation("❌ Producto SIN pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}", 
+                    _logger.LogInformation("❌ Producto SIN pedido pendiente: ID={Id}, Nombre='{Nombre}', TienePedidoPendiente={TienePedido}",
                         prod.ProductoId, prod.NombreProducto, prod.TienePedidoPendiente);
                 }
 
@@ -504,13 +503,13 @@ namespace API.Controllers
                     {
                         // Limpiar el nombre del producto para usarlo en el archivo (incluyendo medida si es llanta)
                         string nombreProductoLimpio = LimpiarNombreArchivo(producto.NombreProducto, id);
-                        
+
                         // Obtener la extensión del archivo original
                         string extension = Path.GetExtension(imagen.FileName);
-                        
+
                         // Crear nombre compuesto: ProductoID_Consecutivo_NombreProducto.extension
                         string nombreArchivo = $"{id}_{consecutivo}_{nombreProductoLimpio}{extension}";
-                        
+
                         string rutaArchivo = Path.Combine(uploadsFolder, nombreArchivo);
                         consecutivo++;
 
@@ -836,7 +835,7 @@ namespace API.Controllers
                 await _context.SaveChangesAsync();
 
                 // ✅ PRIMERO: Asignar automáticamente al creador con TODOS los permisos
-                _logger.LogInformation("📋 Asignando automáticamente al creador (Usuario ID: {CreadorId}) con todos los permisos", 
+                _logger.LogInformation("📋 Asignando automáticamente al creador (Usuario ID: {CreadorId}) con todos los permisos",
                     inventario.UsuarioCreadorId);
 
                 var asignacionCreador = new AsignacionUsuarioInventario
@@ -859,7 +858,7 @@ namespace API.Controllers
                         // ✅ EVITAR DUPLICAR AL CREADOR
                         if (asignacion.UsuarioId == inventario.UsuarioCreadorId)
                         {
-                            _logger.LogInformation("⚠️ Saltando asignación duplicada del creador (Usuario ID: {CreadorId})", 
+                            _logger.LogInformation("⚠️ Saltando asignación duplicada del creador (Usuario ID: {CreadorId})",
                                 inventario.UsuarioCreadorId);
                             continue;
                         }
@@ -870,8 +869,8 @@ namespace API.Controllers
                             UsuarioId = asignacion.UsuarioId,
                             PermisoConteo = asignacion.PermisoConteo,
                             PermisoAjuste = asignacion.PermisoAjuste,
-                            PermisoCompletar = asignacion.PermisoCompletar,
                             PermisoValidacion = asignacion.PermisoValidacion,
+                            PermisoCompletar = asignacion.PermisoCompletar,
                             FechaAsignacion = DateTime.Now
                         };
                         _context.AsignacionesUsuariosInventario.Add(nuevaAsignacion);
@@ -1146,20 +1145,20 @@ namespace API.Controllers
                     var llanta = _context.Llantas.FirstOrDefault(l => l.ProductoId == productoId.Value);
                     if (llanta != null && llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
                     {
-                        string medidaLlanta = "";
+                        string medidaCompleta = "";
                         if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                         {
                             // Formato completo: 215/55R16
-                            medidaLlanta = $"{llanta.Ancho}/{llanta.Perfil}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}/{llanta.Perfil}R{llanta.Diametro}";
                         }
                         else
                         {
                             // Formato sin perfil: 215R16
-                            medidaLlanta = $"{llanta.Ancho}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}R{llanta.Diametro}";
                         }
-                        
+
                         // Agregar medida al nombre: "NombreProducto_215-55R16"
-                        nombreFinal = $"{nombreProducto}_{medidaLlanta}";
+                        nombreFinal = $"{nombreProducto}_{medidaCompleta}";
                     }
                 }
                 catch (Exception ex)
@@ -1172,24 +1171,24 @@ namespace API.Controllers
             // Reemplazar caracteres no válidos por guiones bajos
             char[] caracteresInvalidos = Path.GetInvalidFileNameChars();
             string nombreLimpio = nombreFinal;
-            
+
             foreach (char c in caracteresInvalidos)
             {
                 nombreLimpio = nombreLimpio.Replace(c, '_');
             }
-            
+
             // Reemplazar espacios y caracteres especiales por guiones bajos
             nombreLimpio = nombreLimpio.Replace(' ', '_')
                                      .Replace('-', '_')
                                      .Replace('/', '_')
                                      .Trim('_');
-            
+
             // Limitar a 70 caracteres para acomodar la medida adicional
             if (nombreLimpio.Length > 70)
             {
                 nombreLimpio = nombreLimpio.Substring(0, 70).TrimEnd('_');
             }
-            
+
             return nombreLimpio;
         }
 
@@ -1352,6 +1351,163 @@ namespace API.Controllers
             {
                 _logger.LogError(ex, "Error al buscar tipos de terreno");
                 return StatusCode(500, new { message = "Error al buscar tipos de terreno" });
+            }
+        }
+
+        // =====================================
+        // ENDPOINTS PÚBLICOS (SIN AUTENTICACIÓN)
+        // =====================================
+
+        [HttpGet("productos-publicos")]
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductosPublicos()
+        {
+            try
+            {
+                _logger.LogInformation("🌐 === OBTENIENDO PRODUCTOS PÚBLICOS ===");
+
+                var productos = await _context.Productos
+                    .Where(p => p.CantidadEnInventario > 0)
+                    .Include(p => p.Llanta)
+                    .Include(p => p.ImagenesProductos)
+                    .Select(p => new
+                    {
+                        // ✅ ESTRUCTURA IGUAL A FACTURACIÓN
+                        productoId = p.ProductoId,
+                        nombreProducto = p.NombreProducto,
+                        descripcion = p.Descripcion ?? "",
+                        precio = p.Precio ?? 0,
+                        cantidadEnInventario = p.CantidadEnInventario ?? 0,
+                        stockMinimo = p.StockMinimo ?? 0,
+                        fechaUltimaActualizacion = p.FechaUltimaActualizacion,
+                        
+                        // ✅ URLS DE IMÁGENES - ESTRUCTURA IGUAL A FACTURACIÓN
+                        imagenesUrls = p.ImagenesProductos
+                            .Where(img => !string.IsNullOrEmpty(img.Urlimagen))
+                            .Select(img => img.Urlimagen.StartsWith("http") 
+                                ? img.Urlimagen 
+                                : $"http://apillantasymast.somee.com{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}")
+                            .ToList(),
+                            
+                        imagenesProductos = p.ImagenesProductos.Select(img => new
+                        {
+                            imagenId = img.ImagenId,
+                            urlimagen = img.Urlimagen.StartsWith("http") 
+                                ? img.Urlimagen 
+                                : $"http://apillantasymast.somee.com{(img.Urlimagen.StartsWith("/") ? img.Urlimagen : "/" + img.Urlimagen)}",
+                            descripcion = img.Descripcion ?? "",
+                            fechaCreacion = img.FechaCreacion ?? DateTime.Now
+                        }).ToList(),
+                        
+                        // ✅ INFORMACIÓN DE LLANTA - ESTRUCTURA IGUAL A FACTURACIÓN
+                        esLlanta = p.Llanta.Any(),
+                        llanta = p.Llanta.Any() ? new
+                        {
+                            llantaId = p.Llanta.First().LlantaId,
+                            marca = p.Llanta.First().Marca ?? "",
+                            modelo = p.Llanta.First().Modelo ?? "",
+                            ancho = p.Llanta.First().Ancho,
+                            perfil = p.Llanta.First().Perfil,
+                            diametro = p.Llanta.First().Diametro ?? "",
+                            indiceVelocidad = p.Llanta.First().IndiceVelocidad ?? "",
+                            tipoTerreno = p.Llanta.First().TipoTerreno ?? "",
+                            capas = p.Llanta.First().Capas,
+                            medidaCompleta = p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
+                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}/R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho}/R{p.Llanta.First().Diametro}"
+                        } : null,
+                        
+                        // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
+                        marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
+                        modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
+                        medidaCompleta = p.Llanta.Any() 
+                            ? (p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
+                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}")
+                            : null
+                    })
+                    .OrderBy(p => p.nombreProducto)
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Productos públicos obtenidos: {Cantidad}", productos.Count);
+                
+                // Log de ejemplo de URLs generadas y estructura
+                if (productos.Any())
+                {
+                    var primer = productos.First();
+                    if (primer.imagenesUrls.Any())
+                    {
+                        _logger.LogInformation("🖼️ Ejemplo de URL de imagen generada: {Url}", primer.imagenesUrls.First());
+                    }
+                    _logger.LogInformation("📋 Estructura del primer producto: ProductoId={Id}, EsLlanta={EsLlanta}, Llanta={Llanta}",
+                        primer.productoId, primer.esLlanta, primer.llanta != null ? "SÍ" : "NO");
+                }
+
+                // ✅ DEVOLVER EN FORMATO COMPATIBLE CON FACTURACIÓN
+                return Ok(new { 
+                    success = true, 
+                    productos = productos 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener productos públicos");
+                return StatusCode(500, new { 
+                    success = false, 
+                    message = "Error al obtener productos", 
+                    timestamp = DateTime.Now 
+                });
+            }
+        }
+
+        [HttpGet("productos-publicos/{id}")]
+        public async Task<ActionResult<object>> ObtenerProductoPublicoPorId(int id)
+        {
+            try
+            {
+                var producto = await _context.Productos
+                    .Include(p => p.ImagenesProductos)
+                    .Include(p => p.Llanta)
+                    .Where(p => p.ProductoId == id && p.CantidadEnInventario > 0)
+                    .Select(p => new
+                    {
+                        p.ProductoId,
+                        p.NombreProducto,
+                        p.Descripcion,
+                        p.Precio,
+                        p.CantidadEnInventario,
+                        p.FechaUltimaActualizacion,
+                        ImagenesProductos = p.ImagenesProductos.Select(img => new
+                        {
+                            img.ImagenId,
+                            img.Urlimagen,
+                            img.Descripcion,
+                            img.FechaCreacion
+                        }),
+                        Llanta = p.Llanta.Select(l => new
+                        {
+                            l.LlantaId,
+                            l.Ancho,
+                            l.Perfil,
+                            l.Diametro,
+                            l.Marca,
+                            l.Modelo,
+                            l.Capas,
+                            l.IndiceVelocidad,
+                            l.TipoTerreno
+                        }).FirstOrDefault()
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (producto == null)
+                    return NotFound(new { message = "Producto no encontrado o sin stock" });
+
+                return Ok(producto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener producto público por ID: {Id}", id);
+                return StatusCode(500, new { message = "Error al obtener producto" });
             }
         }
     }

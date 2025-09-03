@@ -1,4 +1,4 @@
-﻿function togglePassword(inputId) {
+function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     const button = event.currentTarget;
     const icon = button.querySelector('i');
@@ -27,7 +27,7 @@ function initOlvideContrasenaForm() {
 
         // Validar email
         if (!emailInput.value || !emailInput.checkValidity()) {
-            toastr.error('Por favor ingrese un correo válido');
+            alert('Por favor ingrese un correo válido');
             return;
         }
 
@@ -44,14 +44,19 @@ function initOlvideContrasenaForm() {
             });
 
             if (response.ok) {
-                toastr.success('Se han enviado las instrucciones a tu correo electrónico');
-                form.reset();
+                const result = await response.text();
+                if (result.includes('success')) {
+                    alert('Se han enviado las instrucciones a tu correo electrónico');
+                    form.reset();
+                } else {
+                    alert('No se pudo procesar la solicitud');
+                }
             } else {
-                toastr.error('Error al procesar la solicitud');
+                alert('Error en la solicitud');
             }
         } catch (error) {
             console.error('Error:', error);
-            toastr.error('Error al procesar la solicitud');
+            alert('Ocurrió un error al procesar la solicitud');
         } finally {
             // Restaurar estado del botón
             normalState.style.display = 'inline-flex';
@@ -82,12 +87,12 @@ function initRestablecerContrasenaForm() {
 
         // Validar contraseñas
         if (!password.value || !confirmPassword.value) {
-            toastr.error('Por favor complete todos los campos');
+            alert('Por favor complete todos los campos');
             return;
         }
 
         if (password.value !== confirmPassword.value) {
-            toastr.error('Las contraseñas no coinciden');
+            alert('Las contraseñas no coinciden');
             return;
         }
 

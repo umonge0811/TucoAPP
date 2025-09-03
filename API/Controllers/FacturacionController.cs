@@ -499,6 +499,70 @@ namespace API.Controllers
             }
         }
 
+        [HttpGet("obtener-detalle-factura")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerDetalleFactura([FromQuery] int facturaId)
+        {
+            try
+            {
+                var factura = await _context.Facturas
+                    .Include(f => f.UsuarioCreador)
+                    .Include(f => f.DetallesFactura)
+                        .ThenInclude(d => d.Producto)
+                            .ThenInclude(p => p.Llanta)
+                    .Where(f => f.FacturaId == facturaId)
+                    .Select(f => new FacturaDTO
+                    {
+                        FacturaId = f.FacturaId,
+                        NumeroFactura = f.NumeroFactura,
+                        ClienteId = f.ClienteId,
+                        NombreCliente = f.NombreCliente,
+                        IdentificacionCliente = f.IdentificacionCliente,
+                        TelefonoCliente = f.TelefonoCliente,
+                        EmailCliente = f.EmailCliente,
+                        DireccionCliente = f.DireccionCliente,
+                        FechaFactura = f.FechaFactura,
+                        FechaVencimiento = f.FechaVencimiento,
+                        Subtotal = f.Subtotal,
+                        DescuentoGeneral = f.DescuentoGeneral,
+                        PorcentajeImpuesto = f.PorcentajeImpuesto,
+                        MontoImpuesto = f.MontoImpuesto ?? 0,
+                        Total = f.Total,
+                        Estado = f.Estado,
+                        TipoDocumento = f.TipoDocumento,
+                        MetodoPago = f.MetodoPago,
+                        Observaciones = f.Observaciones,
+                        UsuarioCreadorId = f.UsuarioCreadorId,
+                        UsuarioCreadorNombre = f.UsuarioCreador.NombreUsuario,
+                        FechaCreacion = f.FechaCreacion,
+                        FechaActualizacion = f.FechaActualizacion,
+                        DetallesFactura = f.DetallesFactura.Select(d => new DetalleFacturaDTO
+                        {
+                            DetalleFacturaId = d.DetalleFacturaId,
+                            ProductoId = d.ProductoId,
+                            NombreProducto = d.NombreProducto,
+                            DescripcionProducto = d.DescripcionProducto,
+                            Cantidad = d.Cantidad,
+                            PrecioUnitario = d.PrecioUnitario,
+                            PorcentajeDescuento = d.PorcentajeDescuento,
+                            MontoDescuento = d.MontoDescuento,
+                            Subtotal = d.Subtotal
+                        }).ToList()
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                return Ok(new { success = true, factura = factura });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error al obtener detalle de factura: {Id}", facturaId);
+                return StatusCode(500, new { success = false, message = "Error al obtener factura" });
+            }
+        }
+
         [HttpGet("facturas/{id}")]
         [Authorize]
         public async Task<ActionResult<FacturaDTO>> ObtenerFacturaPorId(int id)
@@ -571,7 +635,7 @@ namespace API.Controllers
 
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
-        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaWebRequest? request = null)
+        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaRequest? request = null)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
                 "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
@@ -779,6 +843,8 @@ namespace API.Controllers
                 var facturasPendientes = await _context.Facturas
                     .Include(f => f.UsuarioCreador)
                     .Include(f => f.DetallesFactura)
+                        .ThenInclude(d => d.Producto)
+                            .ThenInclude(p => p.Llanta)
                     .Where(f => f.Estado == "Pendiente")
                     .OrderByDescending(f => f.FechaCreacion)
                     .Select(f => new FacturaDTO
@@ -816,7 +882,13 @@ namespace API.Controllers
                             PrecioUnitario = d.PrecioUnitario,
                             PorcentajeDescuento = d.PorcentajeDescuento,
                             MontoDescuento = d.MontoDescuento,
-                            Subtotal = d.Subtotal
+                            Subtotal = d.Subtotal,
+                            StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
+                            EsLlanta = d.Producto.Llanta.Any(),
+                            MedidaLlanta = d.Producto.Llanta.Any() ? 
+                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "/R" + d.Producto.Llanta.First().Diametro : null,
+                            MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
                         }).ToList()
                     })
                     .ToListAsync();
@@ -887,7 +959,7 @@ namespace API.Controllers
                         (f.IdentificacionCliente != null && f.IdentificacionCliente.ToLower().Contains(termino)) ||
                         (f.TelefonoCliente != null && f.TelefonoCliente.ToLower().Contains(termino)) ||
                         (f.EmailCliente != null && f.EmailCliente.ToLower().Contains(termino)));
-                    
+
                     var totalConBusqueda = await query.CountAsync();
                     _logger.LogInformation("📋 Después de filtro búsqueda '{Termino}': {Total} proformas", termino, totalConBusqueda);
                 }
@@ -1139,7 +1211,7 @@ namespace API.Controllers
 
                     if (detalleAEliminar != null)
                     {
-                        productosEliminados.Add(new {
+                        productosEliminados.Add(new{
                             productoId = detalleAEliminar.ProductoId,
                             nombreProducto = detalleAEliminar.NombreProducto,
                             cantidad = detalleAEliminar.Cantidad,
@@ -1699,10 +1771,10 @@ namespace API.Controllers
             try
             {
                 _logger.LogInformation("🧪 === TEST PERMISO ENTREGAR PENDIENTES ===");
-                
+
                 var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Entregar Pendientes",
                     "Solo usuarios con permiso 'Entregar Pendientes' pueden marcar productos como entregados");
-                
+
                 var resultado = new
                 {
                     mensaje = "Test de validación del permiso 'Entregar Pendientes'",
@@ -1978,12 +2050,12 @@ namespace API.Controllers
                 {
                     var diasVencida = (DateTime.Now - proforma.FechaVencimiento.Value).Days;
                     var observacionTipo = esVerificacionAutomatica ? "AUTOMÁTICAMENTE" : "MANUALMENTE";
-                    
+
                     proforma.Estado = "Expirada";
                     proforma.FechaActualizacion = DateTime.Now;
                     proforma.Observaciones = (proforma.Observaciones ?? "") + 
                         $" | EXPIRADA {observacionTipo}: {DateTime.Now:dd/MM/yyyy HH:mm} ({diasVencida} días de vencimiento)";
-                    
+
                     cantidadActualizadas++;
 
                     _logger.LogInformation("📅 Proforma expirada {Tipo}: {NumeroFactura} - Vencía: {FechaVencimiento} ({Dias} días)", 
@@ -2050,6 +2122,9 @@ namespace API.Controllers
         public string? MetodoPago { get; set; }
         public List<DetallePagoCompletarDTO>? DetallesPago { get; set; }
         public bool ForzarVerificacionStock { get; set; } = false;
+        public string? NumeroFacturaGenerada { get; set; }
+        public string? Observaciones { get; set; }
+        public bool EsProforma { get; set; } = false;
     }
 
     public class DetallePagoCompletarDTO

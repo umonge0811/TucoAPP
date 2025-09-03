@@ -12,6 +12,7 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<FacturacionService> _logger;
         private readonly ApiConfigurationService _apiConfig;
+        private readonly IConfiguration _configuration;
         private const decimal IVA_PORCENTAJE = 0.13m; // 13% IVA en Costa Rica
         private readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         private readonly string _baseUrl;
@@ -28,6 +29,7 @@ namespace GestionLlantera.Web.Services
         {
             _httpClient = httpClientFactory.CreateClient("APIClient");
             _logger = logger;
+            _configuration = config;
             _baseUrl = config.GetSection("ApiSettings:BaseUrl").Value;
             
             /// ✅ INYECCIÓN DEL SERVICIO DE CONFIGURACIÓN CENTRALIZADA
@@ -390,6 +392,63 @@ namespace GestionLlantera.Web.Services
                     Success = false, 
                     Message = "Error interno al ajustar stock: " + ex.Message 
                 };
+            }
+        }
+
+        public async Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, int tamano = 1000)
+        {
+            try
+            {
+
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwtToken);
+
+                // Construir URL con parámetros
+                var url = $"{_configuration["ApiSettings:BaseUrl"]}/api/Facturacion/facturas?tamano={tamano}";
+               
+
+                _logger.LogInformation("📋 URL de consulta: {Url}", url);
+
+                var response = await client.GetAsync(url);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    var resultado = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                    if (resultado.TryGetProperty("facturas", out var facturasElement))
+                    {
+                        var facturas = System.Text.Json.JsonSerializer.Deserialize<List<object>>(facturasElement.GetRawText());
+                        var totalFacturas = facturas?.Count ?? 0;
+
+                        _logger.LogInformation("✅ Facturas obtenidas exitosamente: {Total} facturas", totalFacturas);
+
+                        return (true, new
+                        {
+                            success = true,
+                            facturas = facturas,
+                            totalFacturas = totalFacturas,
+                            message = $"Se encontraron {totalFacturas} facturas"
+                        }, "Facturas obtenidas exitosamente", null);
+                    }
+                    else
+                    {
+                        return (false, null, "Formato de respuesta inesperado del API", null);
+                    }
+                }
+                else
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error del API obteniendo facturas: {StatusCode} - {Content}",
+                        response.StatusCode, errorContent);
+
+                    return (false, null, "Error del servidor al obtener facturas", errorContent);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error crítico obteniendo facturas");
+                return (false, null, "Error interno al obtener facturas", ex.Message);
             }
         }
 

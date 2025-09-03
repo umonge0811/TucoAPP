@@ -31,7 +31,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
 
-                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                var validacion = await this.ValidarPermisoMvcAsync("Gestion Usuarios");
                 if (validacion != null) return validacion;
 
                 // Obtener roles usando el servicio
@@ -58,11 +58,11 @@ namespace GestionLlantera.Web.Controllers
             {
 
                 // ✅ VERIFICAR PERMISO PARA VER PRODUCTOS
-                if (!await this.TienePermisoAsync("Gestión Usuarios"))
+                if (!await this.TienePermisoAsync("Gestion Usuarios"))
                 {
                     _logger.LogWarning("🚫 Usuario sin permiso 'Gestionar Usuarios' intentó acceder al Modulo Gestion de Usuarios");
 
-                    TempData["AccesoNoAutorizado"] = "Gestión Usuarios";
+                    TempData["AccesoNoAutorizado"] = "Gestion Usuarios";
                     TempData["ModuloAcceso"] = "usuarios";
                     return RedirectToAction("AccessDenied", "Account");
                 }
@@ -93,7 +93,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                var validacion = await this.ValidarPermisoMvcAsync("Gestion Usuarios");
                 if (validacion != null) return validacion;
 
                 // Validación básica
@@ -191,7 +191,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                var validacion = await this.ValidarPermisoMvcAsync("Gestion Usuarios");
                 if (validacion != null) return validacion;
 
                 var usuario = await _usuariosService.ObtenerUsuarioPorIdAsync(id);
@@ -323,7 +323,7 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var validacion = await this.ValidarPermisoMvcAsync("Gestión Usuarios");
+                var validacion = await this.ValidarPermisoMvcAsync("Gestion Usuarios");
                 if (validacion != null) return validacion;
 
                 if (!ModelState.IsValid)

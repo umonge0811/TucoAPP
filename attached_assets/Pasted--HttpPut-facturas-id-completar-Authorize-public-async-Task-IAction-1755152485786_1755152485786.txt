@@ -1,0 +1,198 @@
+        [HttpPut("facturas/{id}/completar")]
+        [Authorize]
+        public async Task<IActionResult> CompletarFactura(int id, [FromBody] CompletarFacturaWebRequest? request = null)
+        {
+            var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "CompletarFacturas",
+                "Solo usuarios con permiso 'CompletarFacturas' pueden completar facturas");
+            if (validacionPermiso != null) return validacionPermiso;
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .Include(f => f.DetallesPago)
+                    .FirstOrDefaultAsync(f => f.FacturaId == id);
+
+                if (factura == null)
+                    return NotFound(new { message = "Factura no encontrada" });
+
+                // ✅ MANEJO ESPECÍFICO PARA PROFORMAS
+                if (request?.EsProforma == true || factura.TipoDocumento == "Proforma" || factura.NumeroFactura.StartsWith("PROF"))
+                {
+                    _logger.LogInformation("📋 Procesando completación de proforma: {NumeroFactura}", factura.NumeroFactura);
+
+                    if (factura.Estado == "Facturada")
+                        return BadRequest(new { message = "La proforma ya ha sido convertida a factura" });
+
+                    if (factura.Estado != "Vigente")
+                        return BadRequest(new { message = "Solo se pueden convertir proformas vigentes" });
+
+                    // Marcar proforma como facturada
+                    factura.Estado = "Facturada";
+                    factura.FechaActualizacion = DateTime.Now;
+
+                    // Agregar información de conversión en observaciones
+                    if (request != null)
+                    {
+                        if (!string.IsNullOrEmpty(request.NumeroFacturaGenerada))
+                        {
+                            factura.Observaciones = (factura.Observaciones ?? "") +
+                                $" | CONVERTIDA A FACTURA: {request.NumeroFacturaGenerada} el {DateTime.Now:dd/MM/yyyy HH:mm}";
+                        }
+
+                        if (!string.IsNullOrEmpty(request.Observaciones))
+                        {
+                            factura.Observaciones = (factura.Observaciones ?? "") + $" | {request.Observaciones}";
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("✅ Proforma {NumeroFactura} marcada como facturada exitosamente", factura.NumeroFactura);
+
+                    return Ok(new
+                    {
+                        message = "Proforma marcada como facturada exitosamente",
+                        numeroProforma = factura.NumeroFactura,
+                        numeroFacturaGenerada = request?.NumeroFacturaGenerada,
+                        estado = factura.Estado,
+                        timestamp = DateTime.Now
+                    });
+                }
+
+                // ✅ MANEJO NORMAL PARA FACTURAS (código existente)
+                if (factura.Estado == "Pagada")
+                    return BadRequest(new { message = "La factura ya está completada" });
+
+                if (factura.Estado == "Anulada")
+                    return BadRequest(new { message = "No se puede completar una factura anulada" });
+
+                // Verificar stock (omitir para facturas pendientes)
+                var debeVerificarStock = factura.Estado != "Pendiente";
+
+                if (request?.ForzarVerificacionStock == true)
+                {
+                    debeVerificarStock = true;
+                    _logger.LogInformation("🔍 Forzando verificación de stock por parámetro en request");
+                }
+
+                if (debeVerificarStock)
+                {
+                    var erroresStock = new List<string>();
+                    foreach (var detalle in factura.DetallesFactura)
+                    {
+                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                        if (producto == null)
+                        {
+                            erroresStock.Add($"Producto {detalle.NombreProducto} no encontrado");
+                            continue;
+                        }
+
+                        if ((producto.CantidadEnInventario ?? 0) < detalle.Cantidad)
+                        {
+                            erroresStock.Add($"Stock insuficiente para {detalle.NombreProducto}. Disponible: {producto.CantidadEnInventario}, Requerido: {detalle.Cantidad}");
+                        }
+                    }
+
+                    if (erroresStock.Any())
+                    {
+                        return BadRequest(new { message = "Error de stock", errores = erroresStock });
+                    }
+                }
+
+                // Actualizar inventario
+                foreach (var detalle in factura.DetallesFactura)
+                {
+                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                    if (producto != null)
+                    {
+                        producto.CantidadEnInventario = Math.Max(0,
+                            (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
+                        producto.FechaUltimaActualizacion = DateTime.Now;
+
+                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
+                            producto.NombreProducto, detalle.Cantidad);
+                    }
+                }
+
+                // Actualizar método de pago si se proporciona
+                if (request != null && !string.IsNullOrEmpty(request.MetodoPago))
+                {
+                    factura.MetodoPago = request.MetodoPago;
+                    _logger.LogInformation("💳 Método de pago actualizado a: {MetodoPago}", request.MetodoPago);
+
+                    // Gestionar detalles de pago múltiples
+                    if (request.DetallesPago != null && request.DetallesPago.Any())
+                    {
+                        _context.DetallesPago.RemoveRange(factura.DetallesPago);
+
+                        foreach (var detallePago in request.DetallesPago)
+                        {
+                            var nuevoDetallePago = new DetallePago
+                            {
+                                FacturaId = factura.FacturaId,
+                                MetodoPago = detallePago.MetodoPago,
+                                Monto = detallePago.Monto,
+                                Referencia = detallePago.Referencia,
+                                Observaciones = detallePago.Observaciones,
+                                FechaPago = detallePago.FechaPago ?? DateTime.Now
+                            };
+                            _context.DetallesPago.Add(nuevoDetallePago);
+                        }
+
+                        if (request.DetallesPago.Count > 1)
+                        {
+                            factura.MetodoPago = "Multiple";
+                            _logger.LogInformation("💳 Factura configurada con pago múltiple: {CantidadMetodos} métodos",
+                                request.DetallesPago.Count);
+                        }
+                    }
+                    else if (!string.IsNullOrEmpty(request.MetodoPago) && request.MetodoPago != "Multiple")
+                    {
+                        if (!factura.DetallesPago.Any())
+                        {
+                            var pagoUnico = new DetallePago
+                            {
+                                FacturaId = factura.FacturaId,
+                                MetodoPago = request.MetodoPago,
+                                Monto = factura.Total,
+                                FechaPago = DateTime.Now
+                            };
+                            _context.DetallesPago.Add(pagoUnico);
+                        }
+                    }
+                }
+
+                // Completar factura
+                factura.Estado = "Pagada";
+                factura.FechaActualizacion = DateTime.Now;
+
+                if (request != null && !string.IsNullOrEmpty(request.Observaciones))
+                {
+                    factura.Observaciones = (factura.Observaciones ?? "") + $" | {request.Observaciones}";
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} completada exitosamente por usuario {Usuario}",
+                    factura.NumeroFactura, User.Identity?.Name);
+
+                return Ok(new
+                {
+                    message = "Factura completada exitosamente",
+                    numeroFactura = factura.NumeroFactura,
+                    estado = factura.Estado,
+                    metodoPago = factura.MetodoPago,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error al completar factura: {Id}", id);
+                return StatusCode(500, new { message = "Error al completar factura" });
+            }
+        }

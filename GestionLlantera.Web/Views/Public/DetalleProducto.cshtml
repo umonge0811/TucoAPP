@@ -1,0 +1,209 @@
+@model Tuco.Clases.DTOs.Inventario.ProductoDTO
+@{
+    ViewData["Title"] = Model?.NombreProducto ?? "Detalle del Producto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/views/public/detalleProducto.css">
+
+<div class="detalle-producto-publico-container">
+    @if (Model != null)
+    {
+        <!-- Breadcrumb -->
+        <div class="container mt-3">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Home")">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Productos", "Public")">Productos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.NombreProducto</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="container-fluid">
+            <div class="producto-layout">
+                <!-- Galería de Imágenes -->
+                <div class="galeria-container">
+                    @if (Model.Imagenes?.Any() == true)
+                    {
+                        <!-- Imagen Principal -->
+                        <div class="imagen-principal-container">
+                            <img id="imagenPrincipal"
+                                 src="@Model.Imagenes.First().UrlImagen"
+                                 alt="@Model.NombreProducto"
+                                 class="imagen-principal"
+                                 data-bs-toggle="modal"
+                                 data-bs-target="#modalImagenGrande">
+                        </div>
+
+                        @if (Model.Imagenes.Count > 1)
+                        {
+                            <!-- Miniaturas -->
+                            <div class="miniaturas-container">
+                                @for (int i = 0; i < Model.Imagenes.Count; i++)
+                                {
+                                    <div class="miniatura @(i == 0 ? "active" : "")"
+                                         data-imagen="@Model.Imagenes[i].UrlImagen"
+                                         onclick="cambiarImagenPrincipal('@Model.Imagenes[i].UrlImagen', this)">
+                                        <img src="@Model.Imagenes[i].UrlImagen" alt="Vista @(i + 1)">
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="sin-imagen-principal">
+                            <i class="fas fa-image"></i>
+                            <p>Sin imagen disponible</p>
+                        </div>
+                    }
+                </div>
+
+                <!-- Información del Producto -->
+                <div class="info-container">
+                    <div class="categoria-tag">
+                        <i class="fas fa-tire me-2"></i>Llanta
+                    </div>
+
+                    <h1 class="producto-titulo">@Model.NombreProducto</h1>
+
+                    <!-- Precio -->
+                    <div class="producto-precio">
+                        <div class="precio-valor">₡@Model.Precio?.ToString("N0")</div>
+                        @if (Model.Precio > 50000)
+                        {
+                            <div class="precio-financiamiento">o desde ₡@((Model.Precio / 6)?.ToString("N0")) en 6 cuotas</div>
+                        }
+                    </div>
+
+                    <!-- Stock -->
+                    <div class="stock-container @(Model.CantidadEnInventario > 5 ? "stock-alto" : "stock-bajo")">
+                        <div class="stock-icon">
+                            <i class="fas @(Model.CantidadEnInventario > 5 ? "fa-check-circle" : "fa-exclamation-triangle")"></i>
+                        </div>
+                        <div class="stock-info">
+                            <h5>@Model.CantidadEnInventario unidades disponibles</h5>
+                            <small>@(Model.CantidadEnInventario > 5 ? "Stock disponible" : "Stock limitado")</small>
+                        </div>
+                    </div>
+
+                    @if (Model.Llanta != null)
+                    {
+                        var llanta = Model.Llanta;
+                        <!-- Especificaciones de Llanta -->
+                        <div class="especificaciones">
+                            <h3 class="seccion-titulo">
+                                <i class="fas fa-cog"></i>Especificaciones
+                            </h3>
+                            <div class="specs-grid">
+                                @if (llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+                                {
+                                    <div class="spec-item">
+                                        <div class="spec-label">Medida</div>
+                                        <div class="spec-value">
+                                            @if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                                            {
+                                                @($"{llanta.Ancho}/{llanta.Perfil}/R{llanta.Diametro}")
+                                            }
+                                            else
+                                            {
+                                                @($"{llanta.Ancho}/R{llanta.Diametro}")
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(llanta.Marca))
+                                {
+                                    <div class="spec-item">
+                                        <div class="spec-label">Marca</div>
+                                        <div class="spec-value">@llanta.Marca</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(llanta.Modelo))
+                                {
+                                    <div class="spec-item">
+                                        <div class="spec-label">Modelo</div>
+                                        <div class="spec-value">@llanta.Modelo</div>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(llanta.TipoTerreno))
+                                {
+                                    <div class="spec-item">
+                                        <div class="spec-label">Tipo</div>
+                                        <div class="spec-value">@llanta.TipoTerreno</div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.Descripcion))
+                    {
+                        <!-- Descripción -->
+                        <div class="descripcion-container">
+                            <h3 class="seccion-titulo">
+                                <i class="fas fa-info-circle"></i>Descripción
+                            </h3>
+                            <div class="descripcion-texto">@Model.Descripcion</div>
+                        </div>
+                    }
+
+                    <!-- Acciones -->
+                    <div class="acciones-container">
+                        <a href="tel:+50689166180" class="btn-accion btn-llamar">
+                            <i class="fas fa-phone"></i>
+                            Llamar para Consultar
+                        </a>
+                        <a href="https://wa.me/50689166180?text=Hola, me interesa el producto: @Uri.EscapeDataString(Model.NombreProducto)"
+                           target="_blank"
+                           class="btn-accion btn-whatsapp">
+                            <i class="fab fa-whatsapp"></i>
+                            Consultar por WhatsApp
+                        </a>
+                        <a href="@Url.Action("Productos", "Public")" class="btn-accion btn-volver">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver a Productos
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para Imagen Grande -->
+        <div class="modal fade" id="modalImagenGrande" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title">@Model.NombreProducto</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center p-0">
+                        <img id="imagenModalGrande"
+                             src="@(Model.Imagenes?.FirstOrDefault()?.UrlImagen ?? "/images/no-image.png")"
+                             alt="@Model.NombreProducto"
+                             class="w-100">
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="container py-5">
+            <div class="text-center">
+                <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
+                <h2>Producto no encontrado</h2>
+                <p class="lead">El producto que buscas no está disponible.</p>
+                <a href="@Url.Action("Productos", "Public")" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Volver a Productos
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/views/public/detalleProducto.js"></script>
+}

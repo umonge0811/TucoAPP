@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace GestionLlantera.Web.Models.DTOs.Inventario
 {
@@ -31,5 +31,8 @@ namespace GestionLlantera.Web.Models.DTOs.Inventario
 
         [Display(Name = "Tipo de Terreno")]
         public string? TipoTerreno { get; set; }
+
+        [Display(Name = "Tipo de Llanta")]
+        public string? TipoLlanta { get; set; }
     }
 }

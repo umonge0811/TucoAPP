@@ -1,0 +1,65 @@
+async function procesarFacturaPendiente(facturaEscapada) {
+    try {
+        // ✅ CERRAR MODAL DE FACTURAS PENDIENTES INMEDIATAMENTE
+        const modalFacturasPendientes = bootstrap.Modal.getInstance(document.getElementById('facturasPendientesModal'));
+        if (modalFacturasPendientes) {
+            modalFacturasPendientes.hide();
+            console.log('🚪 Modal de facturas pendientes cerrado al inicio del procesamiento');
+        }
+
+        // ✅ PEQUEÑO DELAY PARA ASEGURAR QUE EL MODAL SE CIERRE COMPLETAMENTE
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        console.log('💰 === PROCESANDO FACTURA PENDIENTE ===');
+        console.log('💰 Factura escapada recibida:', facturaEscapada);
+
+        // ✅ DESERIALIZAR FACTURA (manejo robusto para ambos formatos)
+        let factura;
+        if (typeof facturaEscapada === 'string') {
+            // Si es cadena, verificar si está escapada
+            if (facturaEscapada.includes('&quot;')) {
+                factura = JSON.parse(facturaEscapada.replace(/&quot;/g, '"'));
+            } else {
+                factura = JSON.parse(facturaEscapada);
+            }
+        } else if (typeof facturaEscapada === 'object' && facturaEscapada !== null) {
+            // Si ya es un objeto, usarlo directamente
+            factura = facturaEscapada;
+        } else {
+            throw new Error('Formato de factura no válido');
+        }
+
+        console.log('💰 Factura deserializada:', factura);
+
+        // ✅ MARCAR COMO FACTURA PENDIENTE PARA EL MODAL
+        facturaPendienteActual = {
+            ...factura,
+            esFacturaPendiente: true  // ✅ AGREGAR ESTA PROPIEDAD
+        };
+
+        // Verificar permisos
+        if (!permisosUsuario.puedeCompletarFacturas) {
+            throw new Error('No tienes permisos para completar facturas');
+        }
+
+        // ✅ VERIFICAR STOCK ANTES DE PROCESAR
+        console.log('📦 Verificando stock de la factura...');
+        const verificacionStock = await verificarStockFacturaPendiente(factura.facturaId);
+        console.log('📦 Resultado verificación stock:', verificacionStock);
+
+        if (!verificacionStock.success) {
+            throw new Error(verificacionStock.message || 'Error verificando stock');
+        }
+
+        if (verificacionStock.tieneProblemas && verificacionStock.productosConProblemas.length > 0) {
+            console.log('⚠️ Se encontraron problemas de stock:', verificacionStock.productosConProblemas);
+
+            // ✅ LIMPIAR CARRITO ANTES DE CARGAR FACTURA PENDIENTE
+            productosEnVenta = [];
+            clienteSeleccionado = null;
+
+            // ✅ ESTABLECER FACTURA PENDIENTE ACTUAL
+            facturaPendienteActual = {
+                ...factura,
+                esFacturaPendiente: true
+            };
