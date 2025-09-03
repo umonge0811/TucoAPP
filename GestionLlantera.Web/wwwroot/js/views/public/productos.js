@@ -163,7 +163,7 @@ function mostrarResultados(productos) {
     // ✅ GUARDAR PRODUCTOS GLOBALMENTE
     todosLosProductos = productos;
     productosLlantas = productos.filter(p => p.esLlanta && p.llanta);
-    
+
     // ✅ POBLAR FILTROS CON DATOS REALES
     poblarFiltrosLlantas();
 
@@ -181,7 +181,7 @@ function mostrarResultados(productos) {
         console.log(`🖼️ Producto ${index + 1}: ${producto.nombreProducto}`);
         console.log(`🖼️   - imagenesUrls:`, producto.imagenesUrls);
         console.log(`🖼️   - imagenesProductos:`, producto.imagenesProductos);
-        
+
         if (producto.imagenesProductos && producto.imagenesProductos.length > 0) {
             producto.imagenesProductos.forEach((img, imgIndex) => {
                 console.log(`🖼️   - Imagen ${imgIndex + 1}:`, {
@@ -247,7 +247,7 @@ function crearCardProducto(producto) {
                 // Intentar diferentes propiedades de URL (case-insensitive)
                 const urlImagen = primeraImagen.Urlimagen || primeraImagen.urlimagen || 
                                  primeraImagen.UrlImagen || primeraImagen.urlImagen;
-                
+
                 if (urlImagen && urlImagen.trim() !== '') {
                     imagenUrl = construirUrlImagen(urlImagen);
                     imagenEncontrada = true;
@@ -279,7 +279,7 @@ function crearCardProducto(producto) {
         const esDesarrollo = window.location.hostname === 'localhost' || 
                            window.location.hostname === '127.0.0.1' ||
                            window.location.hostname.includes('localhost');
-        
+
         const esHTTPS = window.location.protocol === 'https:';
 
         // Si es una URL completa del dominio de producción en desarrollo local, convertirla
@@ -303,14 +303,14 @@ function crearCardProducto(producto) {
             if (esDesarrollo && url.includes('localhost')) {
                 return url;
             }
-            
+
             // En producción, asegurar HTTPS
             if (!esDesarrollo && url.startsWith('http://')) {
                 const urlHTTPS = url.replace('http://', 'https://');
                 console.log(`🔧 ✅ URL convertida a HTTPS: ${urlHTTPS}`);
                 return urlHTTPS;
             }
-            
+
             return url;
         }
 
@@ -318,7 +318,7 @@ function crearCardProducto(producto) {
         if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
             // Asegurar que la URL empiece con /
             const urlLimpia = url.startsWith('/') ? url : `/${url}`;
-            
+
             if (esDesarrollo) {
                 // Para desarrollo local, usar localhost con el protocolo correcto
                 const protocoloLocal = esHTTPS ? 'https' : 'http';
@@ -385,7 +385,7 @@ function crearCardProducto(producto) {
     card.style.transform = 'translateY(20px)';
     card.style.transition = 'all 0.3s ease';
 
-    
+
 
     card.innerHTML = `
         <div class="producto-card ${stockEstado}">
@@ -396,7 +396,7 @@ function crearCardProducto(producto) {
                      alt="${nombreProducto}"
                      onerror="this.src='/images/no-image.png'">
                 ${infoLlanta}
-                
+
                 <!-- Overlay con botón -->
                 <div class="producto-overlay">
                     <button class="btn-ver-detalle" onclick="verDetalleProducto(${productoId})">
@@ -522,7 +522,102 @@ function verDetalleProducto(productoId) {
 
 function configurarFiltrosLlantas() {
     console.log('🔧 Configurando filtros de llantas...');
-    
+
+    // HTML del filtro de llantas
+    const filtroHTML = `
+        <div class="filtro-llantas-container">
+            <div class="filtro-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h3 class="mb-0"><i class="bi bi-funnel me-2 text-primary"></i>Filtrar Llantas</h3>
+                    <div class="filtros-activos-counter" id="filtrosActivosCounter" style="display: none;">
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="bi bi-filter me-1"></i>
+                            <span id="contadorFiltros">0</span> filtros activos
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="filtro-content">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="filtroMarca" class="form-label fw-semibold">
+                            <i class="bi bi-award me-1 text-muted"></i>Marca
+                        </label>
+                        <div class="position-relative">
+                            <select id="filtroMarca" class="form-select">
+                                <option value="">Todas las marcas</option>
+                            </select>
+                            <button type="button" class="btn-clear-filter" data-target="filtroMarca" style="display: none;" title="Limpiar marca">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filtroAncho" class="form-label fw-semibold">
+                            <i class="bi bi-arrows-expand me-1 text-muted"></i>Ancho
+                        </label>
+                        <div class="position-relative">
+                            <select id="filtroAncho" class="form-select">
+                                <option value="">Todos los anchos</option>
+                            </select>
+                            <button type="button" class="btn-clear-filter" data-target="filtroAncho" style="display: none;" title="Limpiar ancho">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filtroPerfil" class="form-label fw-semibold">
+                            <i class="bi bi-layers me-1 text-muted"></i>Perfil
+                        </label>
+                        <div class="position-relative">
+                            <select id="filtroPerfil" class="form-select">
+                                <option value="">Todos los perfiles</option>
+                            </select>
+                            <button type="button" class="btn-clear-filter" data-target="filtroPerfil" style="display: none;" title="Limpiar perfil">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filtroDiametro" class="form-label fw-semibold">
+                            <i class="bi bi-circle me-1 text-muted"></i>Diámetro
+                        </label>
+                        <div class="position-relative">
+                            <select id="filtroDiametro" class="form-select">
+                                <option value="">Todos los diámetros</option>
+                            </select>
+                            <button type="button" class="btn-clear-filter" data-target="filtroDiametro" style="display: none;" title="Limpiar diámetro">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="d-flex gap-2 w-100">
+                            <button type="button" class="btn btn-outline-danger btn-sm flex-fill" id="btnLimpiarTodosFiltros" style="display: none;">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Restablecer
+                            </button>
+                            <div class="filtros-resumen" id="filtrosResumen">
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Selecciona filtros para buscar
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Insertar el HTML de los filtros en el DOM
+    const filtrosContainer = document.getElementById('filtrosContainer');
+    if (filtrosContainer) {
+        filtrosContainer.innerHTML = filtroHTML;
+    } else {
+        console.error('❌ Container para filtros no encontrado');
+        return;
+    }
+
     // Event listeners para los filtros con dependencias
     document.getElementById('filtroMarca').addEventListener('change', () => {
         actualizarFiltrosDependientes();
@@ -537,12 +632,97 @@ function configurarFiltrosLlantas() {
         aplicarFiltrosLlantas();
     });
     document.getElementById('filtroDiametro').addEventListener('change', aplicarFiltrosLlantas);
-    document.getElementById('btnLimpiarFiltros').addEventListener('click', limpiarFiltrosLlantas);
+
+    // Event listeners para filtros
+    $(document).on('change', '#filtroMarca, #filtroAncho, #filtroPerfil, #filtroDiametro', function() {
+        actualizarFiltrosDependientes();
+        filtrarProductos();
+        actualizarIndicadoresFiltros();
+        mostrarBotonesClearIndividuales();
+    });
+
+    // Botones de limpiar filtros individuales
+    $(document).on('click', '.btn-clear-filter', function() {
+        const targetId = $(this).data('target');
+        $('#' + targetId).val('');
+        $(this).hide();
+        actualizarFiltrosDependientes();
+        filtrarProductos();
+        actualizarIndicadoresFiltros();
+    });
+
+    // Limpiar todos los filtros
+    $(document).on('click', '#btnLimpiarTodosFiltros', function() {
+        $('#filtroMarca, #filtroAncho, #filtroPerfil, #filtroDiametro').val('');
+        $('.btn-clear-filter').hide();
+        $('#btnLimpiarTodosFiltros').hide();
+        $('#filtrosActivosCounter').hide();
+        $('#filtrosResumen').html('<small class="text-muted"><i class="bi bi-info-circle me-1"></i>Selecciona filtros para buscar</small>');
+        actualizarFiltrosDependientes();
+        filtrarProductos();
+    });
+
+    // Función para mostrar/ocultar botones de limpiar individuales
+    function mostrarBotonesClearIndividuales() {
+        $('#filtroMarca, #filtroAncho, #filtroPerfil, #filtroDiametro').each(function() {
+            const $select = $(this);
+            const $clearBtn = $select.siblings('.btn-clear-filter');
+
+            if ($select.val() && $select.val() !== '') {
+                $clearBtn.show().addClass('fade-in');
+            } else {
+                $clearBtn.hide().removeClass('fade-in');
+            }
+        });
+    }
+
+    // Función para actualizar indicadores de filtros activos
+    function actualizarIndicadoresFiltros() {
+        const filtrosActivos = [];
+        const filtrosData = {
+            'filtroMarca': { label: 'Marca', icon: 'bi-award' },
+            'filtroAncho': { label: 'Ancho', icon: 'bi-arrows-expand' },
+            'filtroPerfil': { label: 'Perfil', icon: 'bi-layers' },
+            'filtroDiametro': { label: 'Diámetro', icon: 'bi-circle' }
+        };
+
+        Object.keys(filtrosData).forEach(filtroId => {
+            const valor = $('#' + filtroId).val();
+            if (valor && valor !== '') {
+                const texto = $('#' + filtroId + ' option:selected').text();
+                filtrosActivos.push({
+                    ...filtrosData[filtroId],
+                    valor: texto
+                });
+            }
+        });
+
+        // Actualizar contador
+        $('#contadorFiltros').text(filtrosActivos.length);
+
+        if (filtrosActivos.length > 0) {
+            $('#filtrosActivosCounter').show().addClass('fade-in');
+            $('#btnLimpiarTodosFiltros').show().addClass('fade-in');
+
+            // Actualizar resumen
+            const resumenHTML = filtrosActivos.map(filtro => 
+                `<span class="badge bg-light text-dark me-1 mb-1">
+                    <i class="${filtro.icon} me-1"></i>${filtro.label}: ${filtro.valor}
+                </span>`
+            ).join('');
+
+            $('#filtrosResumen').html(`<div class="d-flex flex-wrap">${resumenHTML}</div>`);
+        } else {
+            $('#filtrosActivosCounter').hide().removeClass('fade-in');
+            $('#btnLimpiarTodosFiltros').hide().removeClass('fade-in');
+            $('#filtrosResumen').html('<small class="text-muted"><i class="bi bi-info-circle me-1"></i>Selecciona filtros para buscar</small>');
+        }
+    }
 }
 
 function poblarFiltrosLlantas() {
     console.log('📋 Poblando filtros con llantas disponibles...');
-    
+
     if (!productosLlantas || productosLlantas.length === 0) {
         console.log('⚠️ No hay llantas disponibles para filtrar');
         return;
@@ -567,23 +747,23 @@ function poblarFiltrosLlantas() {
 
 function actualizarFiltrosDependientes() {
     console.log('🔄 Actualizando filtros dependientes...');
-    
+
     // Obtener valores seleccionados actualmente
     const marcaSeleccionada = document.getElementById('filtroMarca').value;
     const anchoSeleccionado = document.getElementById('filtroAncho').value;
     const perfilSeleccionado = document.getElementById('filtroPerfil').value;
     const diametroSeleccionado = document.getElementById('filtroDiametro').value;
-    
+
     // Filtrar llantas disponibles según las selecciones actuales
     let llantasParaAncho = productosLlantas;
     let llantasParaPerfil = productosLlantas;
     let llantasParaDiametro = productosLlantas;
-    
+
     // Para ancho: solo filtrar por marca si está seleccionada
     if (marcaSeleccionada) {
         llantasParaAncho = llantasParaAncho.filter(p => p.llanta.marca === marcaSeleccionada);
     }
-    
+
     // Para perfil: filtrar por marca y ancho si están seleccionados
     if (marcaSeleccionada) {
         llantasParaPerfil = llantasParaPerfil.filter(p => p.llanta.marca === marcaSeleccionada);
@@ -591,7 +771,7 @@ function actualizarFiltrosDependientes() {
     if (anchoSeleccionado) {
         llantasParaPerfil = llantasParaPerfil.filter(p => p.llanta.ancho == anchoSeleccionado);
     }
-    
+
     // Para diámetro: filtrar por marca, ancho y perfil si están seleccionados
     if (marcaSeleccionada) {
         llantasParaDiametro = llantasParaDiametro.filter(p => p.llanta.marca === marcaSeleccionada);
@@ -607,7 +787,7 @@ function actualizarFiltrosDependientes() {
     const anchosDisponibles = [...new Set(llantasParaAncho
         .map(p => p.llanta.ancho)
         .filter(ancho => ancho != null))].sort((a, b) => a - b);
-    
+
     const selectAncho = document.getElementById('filtroAncho');
     selectAncho.innerHTML = '<option value="">Todos los anchos</option>';
     anchosDisponibles.forEach(ancho => {
@@ -619,7 +799,7 @@ function actualizarFiltrosDependientes() {
     const perfilesDisponibles = [...new Set(llantasParaPerfil
         .map(p => p.llanta.perfil)
         .filter(perfil => perfil != null && perfil > 0))].sort((a, b) => a - b);
-    
+
     const selectPerfil = document.getElementById('filtroPerfil');
     selectPerfil.innerHTML = '<option value="">Todos los perfiles</option>';
     perfilesDisponibles.forEach(perfil => {
@@ -631,7 +811,7 @@ function actualizarFiltrosDependientes() {
     const diametrosDisponibles = [...new Set(llantasParaDiametro
         .map(p => p.llanta.diametro)
         .filter(diametro => diametro && diametro.trim() !== ''))].sort();
-    
+
     const selectDiametro = document.getElementById('filtroDiametro');
     selectDiametro.innerHTML = '<option value="">Todos los diámetros</option>';
     diametrosDisponibles.forEach(diametro => {
@@ -644,7 +824,7 @@ function actualizarFiltrosDependientes() {
 
 function aplicarFiltrosLlantas() {
     console.log('🔍 Aplicando filtros de llantas...');
-    
+
     const marcaSeleccionada = document.getElementById('filtroMarca').value;
     const anchoSeleccionado = document.getElementById('filtroAncho').value;
     const perfilSeleccionado = document.getElementById('filtroPerfil').value;
@@ -669,7 +849,7 @@ function aplicarFiltrosLlantas() {
             }
 
             const llanta = producto.llanta;
-            
+
             // Verificar marca
             if (marcaSeleccionada && llanta.marca !== marcaSeleccionada) {
                 return false;
@@ -736,7 +916,7 @@ function mostrarProductosFiltrados(productos) {
 
 function limpiarFiltrosLlantas() {
     console.log('🧹 Limpiando filtros de llantas...');
-    
+
     // Limpiar selects
     document.getElementById('filtroMarca').value = '';
     document.getElementById('filtroAncho').value = '';
