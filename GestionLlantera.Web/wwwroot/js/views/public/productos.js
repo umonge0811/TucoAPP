@@ -375,8 +375,46 @@ function crearCardProducto(producto) {
             return '/images/no-image.png';
         }
 
-        // Si ya es una URL completa, devolverla tal como está
+        console.log(`🔧 construirUrlImagen - URL recibida:`, url);
+        console.log(`🔧 construirUrlImagen - Hostname actual:`, window.location.hostname);
+        console.log(`🔧 construirUrlImagen - Protocol actual:`, window.location.protocol);
+
+        // DETECTAR ENTORNO
+        const esDesarrollo = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' ||
+                           window.location.hostname.includes('localhost');
+        
+        const esHTTPS = window.location.protocol === 'https:';
+
+        // Si es una URL completa del dominio de producción en desarrollo local, convertirla
+        if (esDesarrollo && url.includes('apillantasymast.somee.com')) {
+            // Extraer solo la parte relativa de la URL
+            const match = url.match(/\/uploads\/productos\/.+$/);
+            if (match) {
+                const rutaRelativa = match[0];
+                // Usar la API local con HTTPS si el frontend está en HTTPS
+                const protocoloLocal = esHTTPS ? 'https' : 'http';
+                const puertoLocal = esHTTPS ? '7273' : '5049';
+                const urlLocal = `${protocoloLocal}://localhost:${puertoLocal}${rutaRelativa}`;
+                console.log(`🔧 ✅ URL convertida para desarrollo: ${urlLocal}`);
+                return urlLocal;
+            }
+        }
+
+        // Si ya es una URL completa y estamos en producción, asegurar HTTPS
         if (url.startsWith('http://') || url.startsWith('https://')) {
+            // En desarrollo local, mantener la URL tal como está si es de localhost
+            if (esDesarrollo && url.includes('localhost')) {
+                return url;
+            }
+            
+            // En producción, asegurar HTTPS
+            if (!esDesarrollo && url.startsWith('http://')) {
+                const urlHTTPS = url.replace('http://', 'https://');
+                console.log(`🔧 ✅ URL convertida a HTTPS: ${urlHTTPS}`);
+                return urlHTTPS;
+            }
+            
             return url;
         }
 
@@ -385,17 +423,23 @@ function crearCardProducto(producto) {
             // Asegurar que la URL empiece con /
             const urlLimpia = url.startsWith('/') ? url : `/${url}`;
             
-            // Para desarrollo local, usar localhost (el API está en puerto 5049)
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                return `http://localhost:5049${urlLimpia}`;
-            }
-            // Para producción, usar el dominio de Somee
-            else {
-                return `http://apillantasymast.somee.com${urlLimpia}`;
+            if (esDesarrollo) {
+                // Para desarrollo local, usar localhost con el protocolo correcto
+                const protocoloLocal = esHTTPS ? 'https' : 'http';
+                const puertoLocal = esHTTPS ? '7273' : '5049';
+                const urlLocal = `${protocoloLocal}://localhost:${puertoLocal}${urlLimpia}`;
+                console.log(`🔧 ✅ URL construida para desarrollo: ${urlLocal}`);
+                return urlLocal;
+            } else {
+                // Para producción, usar HTTPS
+                const urlProduccion = `https://apillantasymast.somee.com${urlLimpia}`;
+                console.log(`🔧 ✅ URL construida para producción: ${urlProduccion}`);
+                return urlProduccion;
             }
         }
 
         // Si es otro tipo de URL relativa, usar imagen por defecto
+        console.log(`🔧 ⚠️ URL no reconocida, usando imagen por defecto`);
         return '/images/no-image.png';
     }
 
