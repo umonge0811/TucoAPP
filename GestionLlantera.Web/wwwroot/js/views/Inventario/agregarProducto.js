@@ -377,6 +377,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // ✅ ESTABLECER EL TOGGLE COMO ACTIVADO POR DEFECTO
+        esLlantaCheckbox.checked = true;
+        
         esLlantaCheckbox.addEventListener('change', actualizarTipoProducto);
         actualizarTipoProducto(); // Inicializar estado
     }
