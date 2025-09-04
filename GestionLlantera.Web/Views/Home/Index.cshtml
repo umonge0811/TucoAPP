@@ -168,8 +168,6 @@
                     <img src="~/images/Galeria 1.jpg" 
                          alt="Instalaciones - Área de llantas" 
                          class="w-100 rounded shadow gallery-image"
-                         data-bs-toggle="modal" 
-                         data-bs-target="#galleryModal"
                          data-image="~/images/Galeria 1.jpg"
                          data-title="Área de Llantas"
                          data-description="Nuestra amplia selección de llantas de diferentes marcas y modelos">
@@ -184,8 +182,6 @@
                     <img src="~/images/Galeria 2.jpg" 
                          alt="Servicio de alineación" 
                          class="w-100 rounded shadow gallery-image"
-                         data-bs-toggle="modal" 
-                         data-bs-target="#galleryModal"
                          data-image="~/images/Galeria 2.jpg"
                          data-title="Servicio de Alineación"
                          data-description="Equipo especializado para alineación y balanceo de última tecnología">
@@ -200,8 +196,6 @@
                     <img src="~/images/Galeria 3.jpg" 
                          alt="Llantas para motocicletas" 
                          class="w-100 rounded shadow gallery-image"
-                         data-bs-toggle="modal" 
-                         data-bs-target="#galleryModal"
                          data-image="~/images/Galeria 3.jpg"
                          data-title="Llantas para Motocicletas"
                          data-description="Especialistas en llantas para motocicletas de todas las marcas">
@@ -216,8 +210,6 @@
                     <img src="~/images/Galeria 4.jpg" 
                          alt="Taller mecánico" 
                          class="w-100 rounded shadow gallery-image"
-                         data-bs-toggle="modal" 
-                         data-bs-target="#galleryModal"
                          data-image="~/images/Galeria 4.jpg"
                          data-title="Taller Mecánico"
                          data-description="Instalaciones completas para servicios de mecánica general">
@@ -232,8 +224,6 @@
                     <img src="~/images/Galeria 5.jpg" 
                          alt="Equipo de trabajo" 
                          class="w-100 rounded shadow gallery-image"
-                         data-bs-toggle="modal" 
-                         data-bs-target="#galleryModal"
                          data-image="~/images/Galeria 5.jpg"
                          data-title="Nuestro Equipo"
                          data-description="Técnicos especializados con años de experiencia en el sector">
@@ -248,8 +238,6 @@
                     <img src="~/images/Galeria 6.jpg" 
                          alt="Instalaciones exteriores" 
                          class="w-100 rounded shadow gallery-image"
-                         data-bs-toggle="modal" 
-                         data-bs-target="#galleryModal"
                          data-image="~/images/Galeria 6.jpg"
                          data-title="Instalaciones"
                          data-description="Ubicados en Guápiles, Pococí Limón con fácil acceso">
@@ -271,11 +259,81 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <img id="galleryModalImage" src="" alt="" class="img-fluid rounded">
-                <h6 class="mt-3 fw-bold" id="galleryModalTitle"></h6>
-                <p class="text-muted" id="galleryModalDescription"></p>
+                <div class="d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                    <img id="galleryModalImage" src="" alt="" class="img-fluid rounded" style="max-height: 70vh; max-width: 100%; object-fit: contain;">
+                </div>
+                <div class="mt-3">
+                    <h6 class="fw-bold" id="galleryModalTitle"></h6>
+                    <p class="text-muted" id="galleryModalDescription"></p>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</div></div>
+
+@* Scripts específicos para la galería *@
+<script>
+    // Asegurar que Bootstrap esté disponible y el DOM esté cargado
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎨 Verificando elementos de galería...');
+        
+        // Verificar que Bootstrap Modal esté disponible
+        if (typeof bootstrap === 'undefined') {
+            console.error('❌ Bootstrap no está disponible');
+            return;
+        }
+        
+        // Verificar elementos del modal
+        const modal = document.getElementById('galleryModal');
+        const modalImage = document.getElementById('galleryModalImage');
+        const modalTitle = document.getElementById('galleryModalTitle');
+        const modalDescription = document.getElementById('galleryModalDescription');
+        
+        console.log('🔍 Elementos encontrados:', {
+            modal: !!modal,
+            modalImage: !!modalImage,
+            modalTitle: !!modalTitle,
+            modalDescription: !!modalDescription
+        });
+        
+        // Agregar eventos de click a todas las imágenes de galería
+        const galleryImages = document.querySelectorAll('.gallery-image');
+        console.log(`📷 Configurando ${galleryImages.length} imágenes de galería`);
+        
+        galleryImages.forEach(function(image, index) {
+            console.log(`🖼️ Configurando imagen ${index + 1}:`, image.getAttribute('data-title'));
+            
+            // Quitar data-bs-toggle y data-bs-target para manejar manualmente
+            image.removeAttribute('data-bs-toggle');
+            image.removeAttribute('data-bs-target');
+            
+            // Agregar cursor pointer
+            image.style.cursor = 'pointer';
+            
+            image.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('👆 Click en imagen de galería');
+                
+                // Obtener datos de la imagen
+                const imageSrc = this.getAttribute('data-image');
+                const title = this.getAttribute('data-title');
+                const description = this.getAttribute('data-description');
+                
+                console.log('📸 Datos de imagen:', { imageSrc, title, description });
+                
+                // Actualizar contenido del modal
+                modalImage.src = imageSrc;
+                modalImage.alt = title || 'Imagen de galería';
+                modalTitle.textContent = title || 'Imagen de galería';
+                modalDescription.textContent = description || '';
+                
+                // Mostrar el modal usando Bootstrap
+                const bootstrapModal = new bootstrap.Modal(modal);
+                bootstrapModal.show();
+            });
+        });
+        
+        console.log('✅ Galería configurada correctamente');
+    });
+</script>
 
