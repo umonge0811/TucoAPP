@@ -9,13 +9,23 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeGallery() {
+    console.log('🎨 Inicializando galería...');
+    
     // Manejar clicks en imágenes de la galería
     const galleryImages = document.querySelectorAll('.gallery-image');
+    console.log(`📷 Encontradas ${galleryImages.length} imágenes de galería`);
     
-    galleryImages.forEach(function(image) {
-        image.addEventListener('click', function() {
+    galleryImages.forEach(function(image, index) {
+        console.log(`🖼️ Configurando imagen ${index + 1}:`, image.getAttribute('data-title'));
+        
+        image.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('👆 Click en imagen de galería');
             openGalleryModal(this);
         });
+        
+        // Agregar cursor pointer
+        image.style.cursor = 'pointer';
     });
     
     // Agregar efecto de hover suave
@@ -23,38 +33,57 @@ function initializeGallery() {
     galleryItems.forEach(function(item) {
         item.addEventListener('mouseenter', function() {
             this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'transform 0.3s ease';
         });
         
         item.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
+            this.style.transition = 'transform 0.3s ease';
         });
     });
+    
+    console.log('✅ Galería inicializada correctamente');
 }
 
 function openGalleryModal(imageElement) {
+    console.log('🖼️ Abriendo modal de galería');
+    
     const modal = document.getElementById('galleryModal');
     const modalImage = document.getElementById('galleryModalImage');
     const modalTitle = document.getElementById('galleryModalTitle');
     const modalDescription = document.getElementById('galleryModalDescription');
+    
+    if (!modal || !modalImage || !modalTitle || !modalDescription) {
+        console.error('❌ No se encontraron elementos del modal');
+        return;
+    }
     
     // Obtener datos de la imagen
     const imageSrc = imageElement.getAttribute('data-image');
     const title = imageElement.getAttribute('data-title');
     const description = imageElement.getAttribute('data-description');
     
+    console.log('📸 Datos de imagen:', { imageSrc, title, description });
+    
     // Actualizar contenido del modal
     modalImage.src = imageSrc;
-    modalImage.alt = title;
-    modalTitle.textContent = title;
-    modalDescription.textContent = description;
+    modalImage.alt = title || 'Imagen de galería';
+    modalTitle.textContent = title || 'Imagen de galería';
+    modalDescription.textContent = description || '';
     
     // Agregar efecto de carga
     modalImage.style.opacity = '0.5';
+    modalImage.style.transform = 'scale(0.9)';
     
     modalImage.onload = function() {
         this.style.opacity = '1';
-        this.style.transition = 'opacity 0.3s ease';
+        this.style.transform = 'scale(1)';
+        this.style.transition = 'all 0.3s ease';
     };
+    
+    // Mostrar el modal usando Bootstrap
+    const bootstrapModal = new bootstrap.Modal(modal);
+    bootstrapModal.show();
 }
 
 // Funciones de utilidad para la galería

@@ -206,20 +206,55 @@
     border: none;
     border-radius: 15px;
     overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 #galleryModal .modal-header {
     background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
     color: white;
     border-bottom: none;
+    padding: 1rem 1.5rem;
+}
+
+#galleryModal .modal-title {
+    font-weight: 600;
+    font-size: 1.25rem;
 }
 
 #galleryModal .btn-close {
     filter: invert(1);
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+#galleryModal .btn-close:hover {
+    opacity: 1;
+}
+
+#galleryModal .modal-body {
+    padding: 1.5rem;
+    background: #f8f9fa;
 }
 
 #galleryModalImage {
-    max-height: 500px;
+    max-height: 70vh;
+    max-width: 100%;
     object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+#galleryModalTitle {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+#galleryModalDescription {
+    color: #6c757d;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
