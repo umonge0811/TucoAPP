@@ -869,22 +869,15 @@ function actualizarInfoResultados() {
     // Verificar múltiples indicadores de productos
     const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
     const productosEnDOM = container ? container.querySelectorAll('.producto-item, .producto-card').length : 0;
-    const hayProductosGlobales = (todosLosProductos && todosLosProductos.length > 0) || 
-                                (productosActuales && productosActuales.length > 0);
     
     // Usar los productos realmente mostrados en el DOM como fuente de verdad
     const productosRealesMostrados = productosEnDOM;
     
-    // Usar el total real de productos (priorizar la respuesta del servidor, pero validar)
+    // Usar el total real de productos - CORREGIDO: usar la respuesta del servidor correctamente
     let totalReal = totalProductos;
     
-    // Si totalProductos es 0 o no válido, usar la cantidad mostrada
+    // Si no tenemos totalProductos del servidor, usar los productos mostrados
     if (!totalReal || totalReal === 0) {
-        totalReal = productosRealesMostrados;
-    }
-    
-    // Si el total es menor que los productos mostrados, ajustar
-    if (totalReal < productosRealesMostrados) {
         totalReal = productosRealesMostrados;
     }
     
@@ -895,7 +888,6 @@ function actualizarInfoResultados() {
         tamañoPagina,
         productosEnDOM,
         productosRealesMostrados,
-        hayProductosGlobales,
         todosLosProductos: todosLosProductos?.length || 0,
         productosActuales: productosActuales?.length || 0
     });
@@ -906,16 +898,16 @@ function actualizarInfoResultados() {
             // Si es lazy loading, mostramos la cantidad cargada y el total
             texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
         } else {
-            // Si es paginación, calculamos el rango basado en productos reales
-            const inicio = Math.max(1, (paginaActual - 1) * tamañoPagina + 1);
-            const fin = Math.min(inicio + productosRealesMostrados - 1, totalReal);
-            
-            // Validar que los números sean válidos y coherentes
-            if (!isNaN(inicio) && !isNaN(fin) && fin >= inicio && fin <= totalReal) {
-                texto = `Mostrando ${inicio}-${fin} de ${totalReal} productos`;
-            } else {
-                // Fallback a formato simple si hay problemas con el cálculo
+            // CORREGIDO: Si estamos en paginación normal y hay pocos productos,
+            // mostrar simplemente el conteo real
+            if (totalReal <= tamañoPagina || paginaActual === 1) {
+                // Si todos los productos caben en una página o estamos en la primera página
                 texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
+            } else {
+                // Solo usar rango cuando realmente hay múltiples páginas
+                const inicio = Math.max(1, (paginaActual - 1) * tamañoPagina + 1);
+                const fin = Math.min(inicio + productosRealesMostrados - 1, totalReal);
+                texto = `Mostrando ${inicio}-${fin} de ${totalReal} productos`;
             }
         }
     } else {
