@@ -864,9 +864,6 @@ function actualizarInfoResultados() {
         return;
     }
 
-    const inicio = (paginaActual - 1) * tamañoPagina + 1;
-    const fin = Math.min(paginaActual * tamañoPagina, totalProductos);
-
     let texto = '';
     
     // Verificar múltiples indicadores de productos
@@ -875,26 +872,41 @@ function actualizarInfoResultados() {
     const hayProductosGlobales = (todosLosProductos && todosLosProductos.length > 0) || 
                                 (productosActuales && productosActuales.length > 0);
     
+    // Determinar la cantidad real de productos mostrados
+    const productosRealesMostrados = productosEnDOM || (todosLosProductos ? todosLosProductos.length : 0) || (productosActuales ? productosActuales.length : 0);
+    
+    // Usar el total real de productos disponibles (puede ser diferente del totalProductos del servidor)
+    const totalReal = totalProductos || productosRealesMostrados;
+    
     console.log('📊 Estado actual:', {
         totalProductos,
+        totalReal,
         paginaActual,
         tamañoPagina,
         productosEnDOM,
+        productosRealesMostrados,
         hayProductosGlobales,
         todosLosProductos: todosLosProductos?.length || 0,
         productosActuales: productosActuales?.length || 0
     });
     
     // Solo mostrar "No se encontraron productos" si realmente no hay productos
-    if (totalProductos > 0 || productosEnDOM > 0 || hayProductosGlobales) {
+    if (productosRealesMostrados > 0 || hayProductosGlobales) {
         if (modoLazyLoading) {
             // Si es lazy loading, mostramos la cantidad cargada y el total
-            const cantidadActual = productosActuales?.length || productosEnDOM || (todosLosProductos ? todosLosProductos.length : 0);
-            texto = `Mostrando ${cantidadActual} de ${totalProductos || cantidadActual} productos`;
+            texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
         } else {
-            // Si es paginación, mostramos el rango de la página actual
-            const totalParaMostrar = totalProductos || productosEnDOM || (todosLosProductos ? todosLosProductos.length : 0);
-            texto = `Mostrando ${inicio}-${Math.min(fin, totalParaMostrar)} de ${totalParaMostrar} productos`;
+            // Si es paginación, calculamos el rango basado en productos reales
+            const inicio = Math.max(1, (paginaActual - 1) * tamañoPagina + 1);
+            const fin = Math.min(inicio + productosRealesMostrados - 1, totalReal);
+            
+            // Validar que los números sean válidos
+            if (!isNaN(inicio) && !isNaN(fin) && fin >= inicio) {
+                texto = `Mostrando ${inicio}-${fin} de ${totalReal} productos`;
+            } else {
+                // Fallback a formato simple si hay problemas con el cálculo
+                texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
+            }
         }
     } else {
         texto = 'No se encontraron productos';
