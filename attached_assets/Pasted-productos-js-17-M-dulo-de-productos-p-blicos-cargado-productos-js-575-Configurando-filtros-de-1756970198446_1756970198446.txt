@@ -1,0 +1,67 @@
+productos.js:17 📦 Módulo de productos públicos cargado
+productos.js:575 🔧 Configurando filtros de llantas...
+productos.js:808 🔧 Inicializando eventos de paginación y lazy loading...
+productos.js:40 🔄 Cargando productos iniciales para vista pública...
+productos.js:66 🔍 === INICIO buscarProductos (Vista Pública) ===
+productos.js:67 🔍 Término recibido: "", Página: 1, Cargar Más: false
+productos.js:79 🔍 URL de la solicitud: /Public/ObtenerProductosParaFacturacion?page=1&pageSize=12
+productos.js:32 ✅ Vista pública de productos inicializada correctamente
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+await in cargarConteoNotificaciones
+inicializarNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:346
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+setInterval
+inicializarNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:357
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+setInterval
+inicializarNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:357
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+setInterval
+inicializarNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:357
+productos.js:98 📋 Respuesta del servidor recibida: Object
+productos.js:101 ✅ Se encontraron 4 productos
+productos.js:102 📋 Estructura de datos recibida: Object
+productos.js:210 🔄 === INICIO mostrarResultados ===
+productos.js:211 🔄 Productos recibidos: 4
+productos.js:595 📋 Poblando filtros con llantas disponibles...
+productos.js:620 🔄 Actualizando filtros dependientes...
+productos.js:693 🔄 Filtros actualizados: 2 anchos, 4 perfiles, 3 diámetros disponibles
+productos.js:616 ✅ Filtros iniciales poblados: 2 marcas
+productos.js:271 🖼️ Procesando imágenes para: Llanta DUNLOP Object
+productos.js:319 🔧 construirUrlImagen - URL recibida: http://apillantasymast.somee.com/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+productos.js:320 🔧 construirUrlImagen - Hostname actual: localhost
+productos.js:321 🔧 construirUrlImagen - Protocol actual: https:
+productos.js:340 🔧 ✅ URL convertida para desarrollo: https://localhost:7273/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+productos.js:284 🖼️ ✅ Imagen desde imagenesUrls: https://localhost:7273/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+productos.js:271 🖼️ Procesando imágenes para: Llanta DUNLOP Object
+productos.js:319 🔧 construirUrlImagen - URL recibida: http://apillantasymast.somee.com/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+productos.js:320 🔧 construirUrlImagen - Hostname actual: localhost
+productos.js:321 🔧 construirUrlImagen - Protocol actual: https:
+productos.js:340 🔧 ✅ URL convertida para desarrollo: https://localhost:7273/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+productos.js:284 🖼️ ✅ Imagen desde imagenesUrls: https://localhost:7273/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+productos.js:271 🖼️ Procesando imágenes para: Llanta DUNLOP Object
+productos.js:319 🔧 construirUrlImagen - URL recibida: http://apillantasymast.somee.com/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+productos.js:320 🔧 construirUrlImagen - Hostname actual: localhost
+productos.js:321 🔧 construirUrlImagen - Protocol actual: https:
+productos.js:340 🔧 ✅ URL convertida para desarrollo: https://localhost:7273/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+productos.js:284 🖼️ ✅ Imagen desde imagenesUrls: https://localhost:7273/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+productos.js:271 🖼️ Procesando imágenes para: Llanta Pirelli Confort 2 Object
+productos.js:319 🔧 construirUrlImagen - URL recibida: http://apillantasymast.somee.com/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+productos.js:320 🔧 construirUrlImagen - Hostname actual: localhost
+productos.js:321 🔧 construirUrlImagen - Protocol actual: https:
+productos.js:340 🔧 ✅ URL convertida para desarrollo: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+productos.js:284 🖼️ ✅ Imagen desde imagenesUrls: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+productos.js:255 ✅ 4 productos mostrados en vista pública
+productos.js:884 📊 Estado actual: Object
+productos.js:918 📊 Texto de resultados actualizado: Mostrando 8 de 8 productos
+productos.js:131 📦 Productos mostrados exitosamente en vista pública
+productos.js:160 🔍 === FIN buscarProductos (Vista Pública) ===
+productos.js:49 ✅ Productos iniciales cargados exitosamente
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+setInterval
+inicializarNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:357
