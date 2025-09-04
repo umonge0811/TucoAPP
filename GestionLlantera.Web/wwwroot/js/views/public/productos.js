@@ -364,15 +364,19 @@ function crearCardProducto(producto) {
         }
     }
 
-    // ✅ CALCULAR PRECIOS (MISMA LÓGICA QUE FACTURACIÓN)
+    // ✅ CALCULAR PRECIOS CON IVA INCLUIDO
     const CONFIGURACION_PRECIOS = {
         efectivo: { multiplicador: 1.0 },
         tarjeta: { multiplicador: 1.05 }
     };
 
     const precioBase = (typeof precio === 'number') ? precio : 0;
-    const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
-    const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
+    
+    // Calcular precio final con IVA (13%) para efectivo/transferencia/sinpe
+    const precioFinalEfectivo = (precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador) * 1.13;
+    
+    // Para tarjeta se aplica el 5% adicional sobre el precio base + IVA
+    const precioFinalTarjeta = (precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador) * 1.13;
 
     // ✅ DETERMINAR ESTADO DEL STOCK
     const stockEstado = cantidadInventario <= 0 ? 'sin-stock' :
@@ -416,15 +420,16 @@ function crearCardProducto(producto) {
                     ${descripcion}
                 </p>
 
-                <!-- Precios -->
+                <!-- Precio Final -->
                 <div class="producto-precios">
-                    <div class="precio-item">
-                        <span class="precio-label">Efectivo/SINPE</span>
-                        <span class="precio-valor efectivo">₡${formatearMoneda(precioEfectivo)}</span>
+                    <div class="precio-principal">
+                        <span class="precio-valor-principal">₡${formatearMoneda(precioFinalEfectivo)}</span>
+                        <small class="precio-condiciones">
+                            * Precio válido para Efectivo, Transferencia o SINPE Móvil
+                        </small>
                     </div>
-                    <div class="precio-item">
-                        <span class="precio-label">Tarjeta</span>
-                        <span class="precio-valor tarjeta">₡${formatearMoneda(precioTarjeta)}</span>
+                    <div class="precio-tarjeta-info">
+                        <small class="texto-tarjeta">Tarjeta: ₡${formatearMoneda(precioFinalTarjeta)}</small>
                     </div>
                 </div>
 
