@@ -25,41 +25,62 @@
 }
 
 /* ========================================
-   FILTRO DE LLANTAS
+   FILTRO DE LLANTAS MEJORADO
    ======================================== */
 
 .card {
     border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .card:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
 }
 
 .card-title {
-    color: #343a40;
-    font-weight: 600;
+    color: #2c3e50;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-title i {
+    color: #667eea;
+    font-size: 1.2rem;
 }
 
 .form-label {
-    font-weight: 500;
-    color: #495057;
-    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .form-select {
-    border: 1px solid #ced4da;
-    border-radius: 0.375rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .form-select:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+    transform: translateY(-1px);
 }
 
 .btn-outline-secondary {
@@ -78,60 +99,101 @@
    BOTÓN LIMPIAR FILTROS MEJORADO
    ======================================== */
 .btn-limpiar-filtros {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     border: none;
     color: white;
-    font-weight: 500;
-    padding: 0.6rem 1.2rem;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-    font-size: 0.875rem;
-    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.25);
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    min-width: 120px;
+    gap: 0.75rem;
+    min-width: 140px;
     justify-content: center;
-    height: calc(2.375rem + 2px); /* Misma altura que los select */
+    height: calc(2.375rem + 4px);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-limpiar-filtros::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
 }
 
 .btn-limpiar-filtros:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.35);
-    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
     color: white;
     border: none;
 }
 
+.btn-limpiar-filtros:hover::before {
+    left: 100%;
+}
+
 .btn-limpiar-filtros:active {
-    transform: translateY(0);
+    transform: translateY(-1px) scale(1.01);
 }
 
 .btn-limpiar-filtros i {
-    font-size: 0.8rem;
+    font-size: 1rem;
+    transition: transform 0.3s ease;
 }
 
-/* Alinear el botón con los filtros en la misma fila */
+.btn-limpiar-filtros:hover i {
+    transform: rotate(180deg);
+}
+
+/* Grid de filtros mejorado */
 .filtros-row {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
-    gap: 1rem;
+    grid-template-columns: 2.5fr 1.2fr 1.2fr 1.2fr 1.8fr;
+    gap: 1.5rem;
     align-items: end;
+    padding: 0.5rem 0;
 }
 
 .filtro-col {
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.filtro-col::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+.filtro-col:focus-within::after {
+    width: 100%;
 }
 
 .filtro-boton-col {
     display: flex;
     flex-direction: column;
+    justify-content: flex-end;
 }
 
 .filtro-boton-col .form-label {
     visibility: hidden;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     height: 1.5rem;
 }
 
