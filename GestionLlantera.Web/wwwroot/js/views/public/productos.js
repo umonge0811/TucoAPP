@@ -221,6 +221,7 @@ function mostrarResultados(productos) {
     if (!productos || productos.length === 0) {
         console.log('🔄 No hay productos, mostrando sin resultados');
         mostrarSinResultados();
+        actualizarInfoResultados(); // ✅ ACTUALIZAR INFO INCLUSO SI NO HAY PRODUCTOS
         return;
     }
 
@@ -256,6 +257,9 @@ function mostrarResultados(productos) {
             card.style.transform = 'translateY(0)';
         }, index * 100);
     });
+
+    // ✅ ACTUALIZAR INFORMACIÓN DE RESULTADOS Y OCULTAR LOADING
+    actualizarInfoResultados();
 
     console.log(`✅ ${productos.length} productos mostrados en vista pública`);
 }
@@ -905,13 +909,21 @@ function actualizarInfoResultados() {
     // ✅ TEXTO SIMPLE BASADO EN DATOS REALES
     const texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
 
-    // Actualizar el texto en la interfaz
-    const $infoResultados = $('#info-resultados, .info-resultados, [data-info="resultados"]');
+    // Actualizar el texto en la interfaz - buscar múltiples posibles elementos
+    const $infoResultados = $('#info-resultados, .info-resultados, [data-info="resultados"], #textoResultados');
     if ($infoResultados.length > 0) {
         $infoResultados.text(texto);
         console.log('📊 Texto de resultados actualizado:', texto);
     } else {
-        console.warn('⚠️ Elemento de información de resultados no encontrado');
+        // Si no se encuentra el elemento específico, buscar cualquier elemento que contenga "Cargando productos"
+        const elementosCarga = document.querySelectorAll('*');
+        for (let elemento of elementosCarga) {
+            if (elemento.textContent && elemento.textContent.includes('Cargando productos')) {
+                elemento.textContent = texto;
+                console.log('📊 Texto de carga reemplazado con:', texto);
+                break;
+            }
+        }
     }
 
     console.log('📊 Estado actual:', {
