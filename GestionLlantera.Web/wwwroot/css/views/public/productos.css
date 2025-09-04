@@ -4,7 +4,7 @@
 
 .productos-publicos-container {
     min-height: 100vh;
-    background: #374151;
+    background: #6B7280;
     position: relative;
 }
 
@@ -75,7 +75,7 @@
    HERO SECTION
    ======================================== */
 .hero-section {
-    background: #374151;
+    background: #6B7280;
     color: white;
     padding: 5rem 0;
     margin-bottom: 3rem;
