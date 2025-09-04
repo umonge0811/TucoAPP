@@ -83,63 +83,42 @@
     color: white;
     font-weight: 600;
     padding: 0.75rem 1.5rem;
-    border-radius: 25px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 8px;
+    transition: all 0.3s ease;
     font-size: 0.9rem;
-    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
-    position: relative;
-    overflow: hidden;
-    display: flex;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     min-width: 140px;
     justify-content: center;
-}
-
-.btn-limpiar-filtros::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.5s;
+    margin-top: 1rem;
 }
 
 .btn-limpiar-filtros:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
     background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
     color: white;
     border: none;
 }
 
-.btn-limpiar-filtros:hover::before {
-    left: 100%;
-}
-
 .btn-limpiar-filtros:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0);
 }
 
 .btn-limpiar-filtros i {
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
-/* Contenedor de filtros mejorado */
-.filtros-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+/* Contenedor de filtros - posicionar el botón correctamente */
+.card-body .row:last-child {
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.filtros-actions .btn {
-    margin: 0;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 /* Responsive para el botón */
@@ -148,11 +127,7 @@
         padding: 0.6rem 1.2rem;
         font-size: 0.85rem;
         min-width: 120px;
-    }
-    
-    .filtros-actions {
-        justify-content: center;
-        gap: 0.75rem;
+        width: 100%;
     }
 }
 
@@ -549,13 +524,13 @@
     }
 
 .text-success {
-    color: #27ae60 !important;
+    color: #2c3e50 !important;
     font-weight: 600;
     font-size: 1.1rem;
 }
 
 .text-warning {
-    color: #f39c12 !important;
+    color: #2c3e50 !important;
     font-weight: 600;
     font-size: 1.1rem;
 }
@@ -735,6 +710,7 @@
 
     .text-success, .text-warning {
         font-size: 1rem;
+        color: #2c3e50 !important;
     }
 }
 
