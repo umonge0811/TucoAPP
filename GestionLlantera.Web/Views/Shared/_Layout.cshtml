@@ -84,6 +84,9 @@
                         <a class="nav-link" href="#servicios">Servicios</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#galeria">Galería</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#contacto">Contacto</a>
                     </li>
                     <li class="nav-item ms-lg-3">
@@ -234,6 +237,11 @@
     </script>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @if (ViewContext.View.Path.Contains("/Views/Home/"))
+    {
+        <script src="~/js/views/home/gallery.js" asp-append-version="true"></script>
+    }
 
     <script>
         // ✅ LIMPIAR CACHÉ LOCAL AL CAMBIAR DE USUARIO

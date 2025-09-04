@@ -156,6 +156,129 @@
     </div>
 </div>
 
+@* Gallery Section *@
+<div id="galeria" class="py-5 bg-white">
+    <div class="container py-5">
+        <h2 class="text-center display-6 fw-bold mb-5">Nuestra Galería</h2>
+        <p class="text-center text-muted mb-5 fs-5">Conoce nuestras instalaciones y el trabajo que realizamos día a día</p>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&q=80&w=800" 
+                         alt="Instalaciones - Área de llantas" 
+                         class="w-100 rounded shadow gallery-image"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#galleryModal"
+                         data-image="https://images.unsplash.com/photo-1578844251758-2f71da64c96f?auto=format&fit=crop&q=80&w=1200"
+                         data-title="Área de Llantas"
+                         data-description="Nuestra amplia selección de llantas de diferentes marcas y modelos">
+                    <div class="gallery-overlay">
+                        <i class="bi bi-zoom-in text-white fs-2"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=800&auto=format&fit=crop" 
+                         alt="Servicio de alineación" 
+                         class="w-100 rounded shadow gallery-image"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#galleryModal"
+                         data-image="https://images.unsplash.com/photo-1656232976683-7b688560e427?q=80&w=1200&auto=format&fit=crop"
+                         data-title="Servicio de Alineación"
+                         data-description="Equipo especializado para alineación y balanceo de última tecnología">
+                    <div class="gallery-overlay">
+                        <i class="bi bi-zoom-in text-white fs-2"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=800&auto=format&fit=crop" 
+                         alt="Llantas para motocicletas" 
+                         class="w-100 rounded shadow gallery-image"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#galleryModal"
+                         data-image="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=1200&auto=format&fit=crop"
+                         data-title="Llantas para Motocicletas"
+                         data-description="Especialistas en llantas para motocicletas de todas las marcas">
+                    <div class="gallery-overlay">
+                        <i class="bi bi-zoom-in text-white fs-2"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&q=80&w=800" 
+                         alt="Taller mecánico" 
+                         class="w-100 rounded shadow gallery-image"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#galleryModal"
+                         data-image="https://images.unsplash.com/photo-1486006920555-c77dcf18193c?auto=format&fit=crop&q=80&w=1200"
+                         data-title="Taller Mecánico"
+                         data-description="Instalaciones completas para servicios de mecánica general">
+                    <div class="gallery-overlay">
+                        <i class="bi bi-zoom-in text-white fs-2"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1615906655593-ad0386982a0f?q=80&w=800&auto=format&fit=crop" 
+                         alt="Equipo de trabajo" 
+                         class="w-100 rounded shadow gallery-image"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#galleryModal"
+                         data-image="https://images.unsplash.com/photo-1615906655593-ad0386982a0f?q=80&w=1200&auto=format&fit=crop"
+                         data-title="Nuestro Equipo"
+                         data-description="Técnicos especializados con años de experiencia en el sector">
+                    <div class="gallery-overlay">
+                        <i class="bi bi-zoom-in text-white fs-2"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="gallery-item">
+                    <img src="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?q=80&w=800&auto=format&fit=crop" 
+                         alt="Instalaciones exteriores" 
+                         class="w-100 rounded shadow gallery-image"
+                         data-bs-toggle="modal" 
+                         data-bs-target="#galleryModal"
+                         data-image="https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?q=80&w=1200&auto=format&fit=crop"
+                         data-title="Instalaciones"
+                         data-description="Ubicados en Guápiles, Pococí Limón con fácil acceso">
+                    <div class="gallery-overlay">
+                        <i class="bi bi-zoom-in text-white fs-2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Gallery Modal *@
+<div class="modal fade" id="galleryModal" tabindex="-1" aria-labelledby="galleryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="galleryModalLabel">Imagen de Galería</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="galleryModalImage" src="" alt="" class="img-fluid rounded">
+                <h6 class="mt-3 fw-bold" id="galleryModalTitle"></h6>
+                <p class="text-muted" id="galleryModalDescription"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
 @* Contact Section *@
 <div id="contacto" class="contact-section py-5">
     <div class="container py-5">
