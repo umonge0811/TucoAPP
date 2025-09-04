@@ -97,47 +97,52 @@ async function buscarProductos(termino = '', pagina = 1, cargarMas = false) {
         const data = await response.json();
         console.log('📋 Respuesta del servidor recibida:', data);
 
-        if (data && data.success && data.productos) {
-            console.log(`✅ Se encontraron ${data.productos.length} productos`);
-            console.log('📋 Estructura de datos recibida:', {
-                total: data.totalProductos,
-                llantas: data.productos.filter(p => p.esLlanta).length,
-                accesorios: data.productos.filter(p => !p.esLlanta).length,
-                conImagenes: data.productos.filter(p => p.imagenesUrls && p.imagenesUrls.length > 0).length
-            });
+        // ✅ GUARDAR RESPUESTA DEL SERVIDOR PARA EVITAR DUPLICACIONES
+        window.lastServerResponse = data;
 
-            // Actualizar variables globales de paginación
-            totalProductos = data.totalProductos;
-            totalPaginas = Math.ceil(totalProductos / tamañoPagina);
-            paginaActual = pagina; // Asegurarse de que la página actual sea la correcta
+        if (data.success && data.productos) {
+            console.log(`✅ Se encontraron ${data.productos.length} productos del servidor`);
+            console.log('📋 Estructura de datos recibida:', data);
 
-            // Mostrar resultados
-            if (!cargarMas) {
-                // Si no es "cargar más", reemplazamos el contenido
-                mostrarResultados(data.productos);
-                // Actualizar texto de resultados DESPUÉS de mostrar productos
-                actualizarInfoResultados();
+            // ✅ GESTIÓN DE PRODUCTOS SEGÚN TIPO DE CARGA
+            if (cargarMas) {
+                // Agregar productos sin duplicar
+                productosActuales = [...productosActuales, ...data.productos];
+                todosLosProductos = [...todosLosProductos, ...data.productos];
             } else {
-                // Si es "cargar más", agregamos los nuevos productos
-                renderizarProductosAdicionales(data.productos);
-                // Actualizar texto de resultados DESPUÉS de agregar productos
-                actualizarInfoResultados();
+                // Reemplazar productos completamente
+                productosActuales = [...data.productos];
+                todosLosProductos = [...data.productos];
             }
 
-            // Actualizar controles de paginación o botón de cargar más
-            actualizarControlesPaginacion();
-            actualizarBotonCargarMas();
+            // ✅ ACTUALIZAR VARIABLES DE PAGINACIÓN BASADAS EN SERVIDOR
+            if (data.paginacion) {
+                totalProductos = data.paginacion.totalRegistros;
+                totalPaginas = data.paginacion.totalPaginas;
+                paginaActual = data.paginacion.paginaActual;
+                console.log('📊 Paginación del servidor:', data.paginacion);
+            } else {
+                totalProductos = data.productos.length;
+                totalPaginas = 1;
+                paginaActual = 1;
+                console.log('📊 Sin paginación, usando conteo directo:', totalProductos);
+            }
 
+            // ✅ MOSTRAR PRODUCTOS Y ACTUALIZAR UI
+            await mostrarResultados(data.productos, cargarMas);
             console.log('📦 Productos mostrados exitosamente en vista pública');
-        } else {
-            const errorMessage = data.message || 'Error desconocido al obtener productos';
-            console.error('❌ Error en la respuesta:', errorMessage);
-            console.error('❌ Datos recibidos:', data);
-            if (!cargarMas) {
-                mostrarSinResultados(); // Mostrar mensaje de sin resultados si no es carga adicional
-            }
-        }
 
+            // ✅ GESTIONAR PAGINACIÓN Y LAZY LOADING
+            if (data.paginacion) {
+                actualizarControlesPaginacion(data.paginacion);
+                ocultarBotonCargarMas();
+            } else {
+                mostrarPaginacionSiEsNecesaria();
+            }
+        } else {
+            console.warn('⚠️ Respuesta exitosa pero sin productos válidos:', data);
+            mostrarMensaje('No se encontraron productos', 'info');
+        }
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
         if (!cargarMas) {
@@ -802,7 +807,7 @@ function limpiarFiltrosLlantas() {
 }
 
 // ========================================
-// FUNCIONES DE PAGINACIÓN Y LAZY LOADING
+// FUNCIONES DE PAGINACIÓN Y LAZYLOADING
 // ========================================
 function inicializarEventosPaginacion() {
     console.log('🔧 Inicializando eventos de paginación y lazy loading...');
@@ -858,64 +863,66 @@ function cargarMasProductos() {
 }
 
 function actualizarInfoResultados() {
-    const textoResultados = document.getElementById('textoResultados');
-    if (!textoResultados) {
-        console.warn('⚠️ Elemento textoResultados no encontrado');
-        return;
+    console.log('📊 === ACTUALIZANDO INFO DE RESULTADOS ===');
+
+    // ✅ DETERMINAR EL TOTAL REAL DE PRODUCTOS (SIN DUPLICAR)
+    let totalReal = 0;
+
+    // Prioridad 1: Si hay paginación, usar totalRegistros del servidor
+    if (window.lastServerResponse && window.lastServerResponse.paginacion && 
+        typeof window.lastServerResponse.paginacion.totalRegistros === 'number') {
+        totalReal = window.lastServerResponse.paginacion.totalRegistros;
+        console.log('🔍 ORIGEN: paginacion.totalRegistros del servidor =', totalReal);
+    }
+    // Prioridad 2: Contar productos únicos cargados
+    else if (productosActuales && productosActuales.length > 0) {
+        totalReal = productosActuales.length;
+        console.log('🔍 ORIGEN: productosActuales.length =', totalReal);
+    }
+    // Fallback: usar variable global si existe
+    else if (typeof totalProductos === 'number' && totalProductos > 0) {
+        totalReal = totalProductos;
+        console.log('🔍 ORIGEN: totalProductos global =', totalReal);
+    }
+    else {
+        totalReal = 0;
+        console.log('🔍 ORIGEN: fallback a 0');
     }
 
-    let texto = '';
-    
-    // Verificar múltiples indicadores de productos
-    const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
-    const productosEnDOM = container ? container.querySelectorAll('.producto-item, .producto-card').length : 0;
-    
-    // Usar los productos realmente mostrados en el DOM como fuente de verdad
-    const productosRealesMostrados = productosEnDOM;
-    
-    // Usar el total real de productos - CORREGIDO: usar la respuesta del servidor correctamente
-    let totalReal = totalProductos;
-    
-    // Si no tenemos totalProductos del servidor, usar los productos mostrados
-    if (!totalReal || totalReal === 0) {
-        totalReal = productosRealesMostrados;
+    // ✅ ACTUALIZAR VARIABLE GLOBAL SIN DUPLICAR
+    totalProductos = totalReal;
+
+    console.log('🔍 DIAGNÓSTICO:', {
+        'productosActuales.length': productosActuales?.length || 0,
+        'totalReal calculado': totalReal,
+        'totalProductos final': totalProductos
+    });
+
+    // Calcular productos realmente mostrados
+    const productosRealesMostrados = Math.min(productosActuales?.length || 0, totalReal);
+    console.log('📊 Productos realmente mostrados:', productosRealesMostrados);
+
+    // ✅ TEXTO SIMPLE BASADO EN DATOS REALES
+    const texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
+
+    // Actualizar el texto en la interfaz
+    const $infoResultados = $('#info-resultados, .info-resultados, [data-info="resultados"]');
+    if ($infoResultados.length > 0) {
+        $infoResultados.text(texto);
+        console.log('📊 Texto de resultados actualizado:', texto);
+    } else {
+        console.warn('⚠️ Elemento de información de resultados no encontrado');
     }
-    
+
     console.log('📊 Estado actual:', {
-        totalProductos,
-        totalReal,
         paginaActual,
         tamañoPagina,
-        productosEnDOM,
-        productosRealesMostrados,
-        todosLosProductos: todosLosProductos?.length || 0,
-        productosActuales: productosActuales?.length || 0
+        totalProductos,
+        productosEnPagina: productosActuales?.length || 0,
+        texto
     });
-    
-    // Solo mostrar "No se encontraron productos" si realmente no hay productos
-    if (productosRealesMostrados > 0) {
-        if (modoLazyLoading) {
-            // Si es lazy loading, mostramos la cantidad cargada y el total
-            texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
-        } else {
-            // CORREGIDO: Si estamos en paginación normal y hay pocos productos,
-            // mostrar simplemente el conteo real
-            if (totalReal <= tamañoPagina || paginaActual === 1) {
-                // Si todos los productos caben en una página o estamos en la primera página
-                texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
-            } else {
-                // Solo usar rango cuando realmente hay múltiples páginas
-                const inicio = Math.max(1, (paginaActual - 1) * tamañoPagina + 1);
-                const fin = Math.min(inicio + productosRealesMostrados - 1, totalReal);
-                texto = `Mostrando ${inicio}-${fin} de ${totalReal} productos`;
-            }
-        }
-    } else {
-        texto = 'No se encontraron productos';
-    }
-    
-    textoResultados.textContent = texto;
-    console.log('📊 Texto de resultados actualizado:', texto);
+
+    console.log('📊 === FIN ACTUALIZACIÓN INFO RESULTADOS ===');
 }
 
 function actualizarControlesPaginacion() {
