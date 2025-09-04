@@ -424,6 +424,9 @@ function crearCardProducto(producto) {
                 <div class="producto-precios">
                     <div class="precio-principal">
                         <span class="precio-valor-principal">₡${formatearMoneda(precioFinalEfectivo)}</span>
+                        <small class="precio-condiciones">
+                            * Precio válido para Efectivo, Transferencia o SINPE Móvil
+                        </small>
                     </div>
                 </div>
 
