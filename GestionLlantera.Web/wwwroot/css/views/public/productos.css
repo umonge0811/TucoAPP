@@ -99,7 +99,7 @@
    BOTÓN LIMPIAR FILTROS MEJORADO
    ======================================== */
 .btn-limpiar-filtros {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
     border: none;
     color: white;
     font-weight: 600;
@@ -107,7 +107,7 @@
     border-radius: 12px;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     font-size: 0.9rem;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
@@ -131,8 +131,8 @@
 
 .btn-limpiar-filtros:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
-    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
     color: white;
     border: none;
 }
@@ -569,9 +569,9 @@
 }
 
     .medida-llanta .badge {
-        background: #f8f9fa;
-        color: #2c3e50;
-        border: 1px solid #e9ecef;
+        background: #dc3545;
+        color: white;
+        border: 1px solid #dc3545;
         font-size: 0.85rem;
         font-weight: 500;
         padding: 0.5rem 0.75rem;
@@ -640,9 +640,11 @@
     font-size: 1.1rem;
 }
 
-/* Precios sin colores distintivos */
+/* Precios sin colores distintivos - todos en color neutro */
 .precios-container .text-success,
-.precios-container .text-warning {
+.precios-container .text-warning,
+.precio-valor.efectivo,
+.precio-valor.tarjeta {
     color: #2c3e50 !important;
 }
 
@@ -821,7 +823,9 @@
 
     .text-success, .text-warning,
     .precios-container .text-success,
-    .precios-container .text-warning {
+    .precios-container .text-warning,
+    .precio-valor.efectivo,
+    .precio-valor.tarjeta {
         font-size: 1rem;
         color: #2c3e50 !important;
     }
