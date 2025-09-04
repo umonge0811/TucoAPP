@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Actualizar el alert informativo
                 tipoProductoInfo.className = 'alert alert-success d-flex align-items-center mb-0';
-                textoTipoProducto.innerHTML = '<i class="bi bi-car-front-fill me-1"></i> Producto tipo Llanta - campos específicos habilitados';
+                textoTipoProducto.innerHTML = '<i class="bi bi-car-front-fill me-1"></i> Producto tipo Llanta - campos especificos habilitados';
 
                 // Hacer obligatorios algunos campos de llanta (SIN perfil y SIN nombre)
                 const camposObligatoriosLlanta = [
@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Actualizar el alert informativo
                 tipoProductoInfo.className = 'alert alert-info d-flex align-items-center mb-0';
-                textoTipoProducto.innerHTML = '<i class="bi bi-box me-1"></i> Producto general - información básica';
+                textoTipoProducto.innerHTML = '<i class="bi bi-box me-1"></i> Producto general - informacion basica';
 
                 // Quitar validación de campos de llanta
                 const llantaInputs = llantaFields.querySelectorAll('input, select');

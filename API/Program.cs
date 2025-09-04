@@ -195,9 +195,13 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 // Configurar servidor de archivos estáticos para uploads
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+Console.WriteLine($"📁 Configurando archivos estáticos desde: {uploadsPath}");
+Console.WriteLine($"📁 ¿Directorio existe?: {Directory.Exists(uploadsPath)}");
+
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads")),
+    FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
 

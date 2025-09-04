@@ -6,6 +6,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📦 Módulo de detalle de producto público cargado');
     
+    // Verificar y corregir URLs de imágenes al cargar
+    verificarImagenesProducto();
+    
     // Inicializar funcionalidades
     inicializarGaleriaImagenes();
     inicializarModalImagen();
@@ -13,6 +16,128 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('✅ Detalle de producto público inicializado correctamente');
 });
+
+// ========================================
+// VERIFICACIÓN Y CORRECCIÓN DE IMÁGENES
+// ========================================
+function verificarImagenesProducto() {
+    console.log('🖼️ Verificando imágenes del producto...');
+    
+    // Obtener todas las imágenes del producto
+    const imagenPrincipal = document.getElementById('imagenPrincipal');
+    const miniaturas = document.querySelectorAll('.miniatura img');
+    
+    // Verificar imagen principal
+    if (imagenPrincipal) {
+        console.log('🖼️ URL imagen principal original:', imagenPrincipal.src);
+        const urlCorregida = construirUrlImagenCompleta(imagenPrincipal.src);
+        if (urlCorregida !== imagenPrincipal.src) {
+            console.log('🖼️ Corrigiendo URL imagen principal a:', urlCorregida);
+            imagenPrincipal.src = urlCorregida;
+        }
+        
+        // Verificar si la imagen se carga correctamente
+        imagenPrincipal.onerror = function() {
+            console.warn('⚠️ Error cargando imagen principal, usando imagen por defecto');
+            this.src = '/images/no-image.png';
+        };
+    }
+    
+    // Verificar miniaturas
+    miniaturas.forEach((miniatura, index) => {
+        console.log(`🖼️ URL miniatura ${index + 1} original:`, miniatura.src);
+        const urlCorregida = construirUrlImagenCompleta(miniatura.src);
+        if (urlCorregida !== miniatura.src) {
+            console.log(`🖼️ Corrigiendo URL miniatura ${index + 1} a:`, urlCorregida);
+            miniatura.src = urlCorregida;
+            
+            // Actualizar también el data-imagen del contenedor padre
+            const contenedorMiniatura = miniatura.closest('.miniatura');
+            if (contenedorMiniatura) {
+                contenedorMiniatura.setAttribute('data-imagen', urlCorregida);
+            }
+        }
+        
+        // Verificar si la miniatura se carga correctamente
+        miniatura.onerror = function() {
+            console.warn(`⚠️ Error cargando miniatura ${index + 1}, usando imagen por defecto`);
+            this.src = '/images/no-image.png';
+        };
+    });
+}
+
+// ========================================
+// FUNCIÓN PARA CONSTRUIR URL COMPLETA DE IMAGEN
+// ========================================
+function construirUrlImagenCompleta(url) {
+    if (!url || url.trim() === '' || url.includes('no-image.png')) {
+        return '/images/no-image.png';
+    }
+
+    console.log('🔧 construirUrlImagenCompleta - URL recibida:', url);
+    console.log('🔧 Hostname actual:', window.location.hostname);
+    console.log('🔧 Protocol actual:', window.location.protocol);
+
+    // DETECTAR ENTORNO
+    const esDesarrollo = window.location.hostname === 'localhost' || 
+                       window.location.hostname === '127.0.0.1' ||
+                       window.location.hostname.includes('localhost') ||
+                       window.location.port === '5000';
+    
+    const esHTTPS = window.location.protocol === 'https:';
+
+    // Si es una URL completa del dominio de producción en desarrollo local, convertirla
+    if (esDesarrollo && url.includes('apillantasymast.somee.com')) {
+        // Extraer solo la parte relativa de la URL
+        const match = url.match(/\/uploads\/productos\/.+$/);
+        if (match) {
+            const rutaRelativa = match[0];
+            // Usar la API local 
+            const urlLocal = `http://localhost:5049${rutaRelativa}`;
+            console.log('🔧 ✅ URL convertida para desarrollo local:', urlLocal);
+            return urlLocal;
+        }
+    }
+
+    // Si ya es una URL completa y estamos en desarrollo local
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        // En desarrollo local con localhost, mantener la URL tal como está
+        if (esDesarrollo && (url.includes('localhost') || url.includes('127.0.0.1'))) {
+            return url;
+        }
+        
+        // En producción, asegurar HTTPS
+        if (!esDesarrollo && url.startsWith('http://')) {
+            const urlHTTPS = url.replace('http://', 'https://');
+            console.log('🔧 ✅ URL convertida a HTTPS:', urlHTTPS);
+            return urlHTTPS;
+        }
+        
+        return url;
+    }
+
+    // Si es una URL relativa que empieza con /uploads/, construir URL completa
+    if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
+        // Asegurar que la URL empiece con /
+        const urlLimpia = url.startsWith('/') ? url : `/${url}`;
+        
+        if (esDesarrollo) {
+            // Para desarrollo local, usar localhost en puerto 5049 (API)
+            const urlLocal = `http://localhost:5049${urlLimpia}`;
+            console.log('🔧 ✅ URL construida para desarrollo local:', urlLocal);
+            return urlLocal;
+        } else {
+            // Para producción, usar HTTPS
+            const urlProduccion = `https://apillantasymast.somee.com${urlLimpia}`;
+            console.log('🔧 ✅ URL construida para producción:', urlProduccion);
+            return urlProduccion;
+        }
+    }
+
+    // Si es otro tipo de URL relativa, usar imagen por defecto
+    console.log('🔧 ⚠️ URL no reconocida, usando imagen por defecto');
+    return '/images/no-image.png';
+}
 
 // ========================================
 // GALERÍA DE IMÁGENES
@@ -34,18 +159,35 @@ function cambiarImagenPrincipal(imagenUrl, elemento) {
     const imagenPrincipal = document.getElementById('imagenPrincipal');
     const imagenModal = document.getElementById('imagenModalGrande');
     
+    // Construir URL correcta para la imagen
+    const urlCorregida = construirUrlImagenCompleta(imagenUrl);
+    console.log('🖼️ Cambiando imagen principal a:', urlCorregida);
+    
     if (imagenPrincipal) {
         // Efecto de transición suave
         imagenPrincipal.style.opacity = '0.5';
         
         setTimeout(() => {
-            imagenPrincipal.src = imagenUrl;
+            imagenPrincipal.src = urlCorregida;
             imagenPrincipal.style.opacity = '1';
+            
+            // Verificar si la imagen se carga correctamente
+            imagenPrincipal.onerror = function() {
+                console.warn('⚠️ Error cargando imagen principal cambiada, usando imagen por defecto');
+                this.src = '/images/no-image.png';
+                this.style.opacity = '1';
+            };
         }, 150);
     }
     
     if (imagenModal) {
-        imagenModal.src = imagenUrl;
+        imagenModal.src = urlCorregida;
+        
+        // Verificar si la imagen del modal se carga correctamente
+        imagenModal.onerror = function() {
+            console.warn('⚠️ Error cargando imagen del modal, usando imagen por defecto');
+            this.src = '/images/no-image.png';
+        };
     }
     
     // Actualizar estado activo de miniaturas

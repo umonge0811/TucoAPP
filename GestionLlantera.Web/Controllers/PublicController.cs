@@ -60,10 +60,10 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
-                
+
                 // Obtener producto usando el endpoint público
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/Inventario/productos-publicos");
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogError("❌ Error del API al obtener productos públicos: {StatusCode}", response.StatusCode);
@@ -73,7 +73,7 @@ namespace GestionLlantera.Web.Controllers
 
                 var content = await response.Content.ReadAsStringAsync();
                 var apiResponse = JsonSerializer.Deserialize<dynamic>(content);
-                
+
                 // Parsear la respuesta JSON manualmente para encontrar el producto específico
                 using (JsonDocument doc = JsonDocument.Parse(content))
                 {
@@ -91,7 +91,7 @@ namespace GestionLlantera.Web.Controllers
                     }
 
                     ProductoDTO producto = null;
-                    
+
                     foreach (var item in productosProp.EnumerateArray())
                     {
                         if (item.TryGetProperty("productoId", out var idProp) && idProp.GetInt32() == id)
@@ -171,7 +171,7 @@ namespace GestionLlantera.Web.Controllers
 
                 // ✅ LLAMAR DIRECTAMENTE AL API COMO LO HACE FACTURACIÓN
                 var requestUrl = $"{_apiBaseUrl}/api/Inventario/productos-publicos";
-                
+
                 _logger.LogInformation("🌐 Llamando al API: {Url}", requestUrl);
 
                 var response = await _httpClient.GetAsync(requestUrl);
@@ -180,7 +180,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation("✅ Respuesta exitosa del API recibida");
-                    
+
                     // Devolver la respuesta directamente del API (ya tiene el formato correcto)
                     return Content(content, "application/json");
                 }

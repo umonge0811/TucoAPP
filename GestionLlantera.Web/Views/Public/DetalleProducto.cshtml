@@ -70,10 +70,20 @@
 
                     <!-- Precio -->
                     <div class="producto-precio">
-                        <div class="precio-valor">₡@Model.Precio?.ToString("N0")</div>
-                        @if (Model.Precio > 50000)
+                        @{
+                            decimal precioBase = Model.Precio ?? 0;
+                            decimal precioConIVA = precioBase * 1.13m; // Agregar 13% de IVA
+                        }
+                        <div class="precio-valor">
+                            <span class="precio-monto">₡@precioConIVA.ToString("N0")</span>
+                            <small class="precio-ivi">I.V.I.</small>
+                        </div>
+                        <small class="precio-condiciones">
+                            * Precio válido para Efectivo, Transferencia o SINPE Móvil
+                        </small>
+                        @if (precioConIVA > 50000)
                         {
-                            <div class="precio-financiamiento">o desde ₡@((Model.Precio / 6)?.ToString("N0")) en 6 cuotas</div>
+                            <div class="precio-financiamiento">o desde ₡@((precioConIVA / 6).ToString("N0")) en 6 cuotas</div>
                         }
                     </div>
 

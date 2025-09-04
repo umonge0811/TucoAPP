@@ -83,6 +83,12 @@
                     <li class="nav-item">
                         <a class="nav-link" href="#servicios">Servicios</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#galeria">Galería</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#contacto">Contacto</a>
+                    </li>
                     <li class="nav-item ms-lg-3">
                         <a class="btn btn-primary-custom" asp-controller="Account" asp-action="Login">
                             Iniciar Sesión
@@ -99,7 +105,7 @@
     </main>
 
     @* Footer *@
-    <footer class="bg-light text-dark py-5 mt-auto border-top">
+    <footer id="contacto" class="bg-light text-dark py-5 mt-auto border-top">
         <div class="container">
             <div class="row">
                 <!-- Información de la empresa -->
@@ -165,11 +171,11 @@
                     <div class="schedule bg-white p-3 rounded border">
                         <div class="d-flex justify-content-between mb-1">
                             <span>Lunes - Viernes:</span>
-                            <span class="fw-bold">7:00 AM - 6:00 PM</span>
+                            <span class="fw-bold">7:00 AM - 7:30 PM</span>
                         </div>
                         <div class="d-flex justify-content-between mb-1">
                             <span>Sábados:</span>
-                            <span class="fw-bold">7:00 AM - 4:00 PM</span>
+                            <span class="fw-bold">7:00 AM - 5:00 PM</span>
                         </div>
                         <div class="d-flex justify-content-between">
                             <span>Domingos:</span>
@@ -231,6 +237,11 @@
     </script>
 
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    @if (ViewContext.View.Path.Contains("/Views/Home/"))
+    {
+        <script src="~/js/views/home/gallery.js" asp-append-version="true"></script>
+    }
 
     <script>
         // ✅ LIMPIAR CACHÉ LOCAL AL CAMBIAR DE USUARIO
