@@ -156,45 +156,116 @@ body {
 .producto-precio {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    background: linear-gradient(135deg, #fff5f5, #ffeaea);
-    padding: 1.5rem;
-    border-radius: 15px;
-    border: 2px solid #e60000;
-    box-shadow: 0 6px 20px rgba(230, 0, 0, 0.1);
+    gap: 1rem;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffeaea 50%, #fff 100%);
+    padding: 2rem;
+    border-radius: 20px;
+    border: 3px solid #e60000;
+    box-shadow: 0 8px 30px rgba(230, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.producto-precio::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(230, 0, 0, 0.05) 0%, transparent 70%);
+    animation: pulse-bg 3s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-bg {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.7; }
 }
 
 .precio-valor {
-    font-size: 2.2rem;
-    font-weight: 900;
-    color: #e60000;
-    text-shadow: 2px 2px 4px rgba(230, 0, 0, 0.1);
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    justify-content: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 2;
 }
 
-.precio-valor::before {
+.precio-monto {
+    font-size: 2.8rem;
+    font-weight: 900;
+    color: #e60000;
+    text-shadow: 3px 3px 6px rgba(230, 0, 0, 0.2);
+    letter-spacing: -1px;
+    position: relative;
+}
+
+.precio-monto::before {
     content: '💰';
-    font-size: 1.5rem;
+    font-size: 2rem;
+    margin-right: 0.5rem;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+.precio-ivi {
+    color: #e60000;
+    font-size: 1rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #fff, #f8f8f8);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    border: 2px solid #e60000;
+    box-shadow: 0 2px 8px rgba(230, 0, 0, 0.2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
 }
 
 .precio-condiciones {
-    font-size: 0.85rem;
-    color: #666;
+    font-size: 0.9rem;
+    color: #555;
     font-style: italic;
-    margin-top: 0.5rem;
-    display: block;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 0.8rem 1.2rem;
+    border-radius: 12px;
+    border: 1px solid rgba(230, 0, 0, 0.2);
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+}
+
+.precio-condiciones::before {
+    content: '✓';
+    color: #28a745;
+    font-weight: 900;
+    margin-right: 0.5rem;
 }
 
 .precio-financiamiento {
-    font-size: 1rem;
-    color: #666;
-    background: #f8f9fa;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border-left: 4px solid #e60000;
-    font-weight: 500;
+    font-size: 1.1rem;
+    color: #333;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 1rem 1.5rem;
+    border-radius: 15px;
+    border-left: 5px solid #e60000;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 2;
+}
+
+.precio-financiamiento::before {
+    content: '💳';
+    font-size: 1.2rem;
+    margin-right: 0.8rem;
 }
 
 /* Stock */
