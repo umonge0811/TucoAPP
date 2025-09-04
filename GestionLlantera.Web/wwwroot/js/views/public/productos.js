@@ -872,11 +872,21 @@ function actualizarInfoResultados() {
     const hayProductosGlobales = (todosLosProductos && todosLosProductos.length > 0) || 
                                 (productosActuales && productosActuales.length > 0);
     
-    // Determinar la cantidad real de productos mostrados
-    const productosRealesMostrados = productosEnDOM || (todosLosProductos ? todosLosProductos.length : 0) || (productosActuales ? productosActuales.length : 0);
+    // Usar los productos realmente mostrados en el DOM como fuente de verdad
+    const productosRealesMostrados = productosEnDOM;
     
-    // Usar el total real de productos disponibles (puede ser diferente del totalProductos del servidor)
-    const totalReal = totalProductos || productosRealesMostrados;
+    // Usar el total real de productos (priorizar la respuesta del servidor, pero validar)
+    let totalReal = totalProductos;
+    
+    // Si totalProductos es 0 o no válido, usar la cantidad mostrada
+    if (!totalReal || totalReal === 0) {
+        totalReal = productosRealesMostrados;
+    }
+    
+    // Si el total es menor que los productos mostrados, ajustar
+    if (totalReal < productosRealesMostrados) {
+        totalReal = productosRealesMostrados;
+    }
     
     console.log('📊 Estado actual:', {
         totalProductos,
@@ -891,7 +901,7 @@ function actualizarInfoResultados() {
     });
     
     // Solo mostrar "No se encontraron productos" si realmente no hay productos
-    if (productosRealesMostrados > 0 || hayProductosGlobales) {
+    if (productosRealesMostrados > 0) {
         if (modoLazyLoading) {
             // Si es lazy loading, mostramos la cantidad cargada y el total
             texto = `Mostrando ${productosRealesMostrados} de ${totalReal} productos`;
@@ -900,8 +910,8 @@ function actualizarInfoResultados() {
             const inicio = Math.max(1, (paginaActual - 1) * tamañoPagina + 1);
             const fin = Math.min(inicio + productosRealesMostrados - 1, totalReal);
             
-            // Validar que los números sean válidos
-            if (!isNaN(inicio) && !isNaN(fin) && fin >= inicio) {
+            // Validar que los números sean válidos y coherentes
+            if (!isNaN(inicio) && !isNaN(fin) && fin >= inicio && fin <= totalReal) {
                 texto = `Mostrando ${inicio}-${fin} de ${totalReal} productos`;
             } else {
                 // Fallback a formato simple si hay problemas con el cálculo
