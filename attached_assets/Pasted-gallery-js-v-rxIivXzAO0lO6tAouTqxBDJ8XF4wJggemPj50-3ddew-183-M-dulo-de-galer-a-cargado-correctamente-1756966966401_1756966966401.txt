@@ -1,0 +1,30 @@
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:183 Módulo de galería cargado correctamente
+(índice):301 🎨 Verificando elementos de galería...
+(índice):315 🔍 Elementos encontrados: Object
+(índice):324 📷 Configurando 6 imágenes de galería
+(índice):327 🖼️ Configurando imagen 1: Área de Llantas
+(índice):327 🖼️ Configurando imagen 2: Servicio de Alineación
+(índice):327 🖼️ Configurando imagen 3: Llantas para Motocicletas
+(índice):327 🖼️ Configurando imagen 4: Taller Mecánico
+(índice):327 🖼️ Configurando imagen 5: Nuestro Equipo
+(índice):327 🖼️ Configurando imagen 6: Instalaciones
+(índice):359 ✅ Galería configurada correctamente
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:12 🎨 Inicializando galería...
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:16 📷 Encontradas 6 imágenes de galería
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:19 🖼️ Configurando imagen 1: Área de Llantas
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:19 🖼️ Configurando imagen 2: Servicio de Alineación
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:19 🖼️ Configurando imagen 3: Llantas para Motocicletas
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:19 🖼️ Configurando imagen 4: Taller Mecánico
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:19 🖼️ Configurando imagen 5: Nuestro Equipo
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:19 🖼️ Configurando imagen 6: Instalaciones
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:45 ✅ Galería inicializada correctamente
+site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91 Error al cargar conteo: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+cargarConteoNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:91
+await in cargarConteoNotificaciones
+inicializarNotificaciones @ site.js?v=9A_O-zzG7CthnnIWx6CM4tM8Il8uQety86grFKE-OS8:346
+(índice):338 👆 Click en imagen de galería
+(índice):345 📸 Datos de imagen: Object
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:23 👆 Click en imagen de galería
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:49 🖼️ Abriendo modal de galería
+gallery.js?v=rxIivXzAO0lO6tAouTqxBDJ8XF4wJggemPj50_3ddew:66 📸 Datos de imagen: Object
+Galeria%201.jpg:1  Failed to load resource: the server responded with a status of 404 ()
