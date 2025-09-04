@@ -78,27 +78,27 @@
    BOTÓN LIMPIAR FILTROS MEJORADO
    ======================================== */
 .btn-limpiar-filtros {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
     border: none;
     color: white;
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem;
+    border-radius: 6px;
     transition: all 0.3s ease;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.25);
+    font-size: 0.875rem;
+    box-shadow: 0 2px 6px rgba(108, 117, 125, 0.25);
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    min-width: 140px;
+    min-width: 120px;
     justify-content: center;
-    margin-top: 1rem;
+    height: calc(2.375rem + 2px); /* Misma altura que los select */
 }
 
 .btn-limpiar-filtros:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.35);
-    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+    box-shadow: 0 4px 10px rgba(108, 117, 125, 0.35);
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
     color: white;
     border: none;
 }
@@ -108,26 +108,43 @@
 }
 
 .btn-limpiar-filtros i {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
 
-/* Contenedor de filtros - posicionar el botón correctamente */
-.card-body .row:last-child {
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid #e9ecef;
+/* Alinear el botón con los filtros en la misma fila */
+.filtros-row {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    align-items: end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filtro-col {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filtro-boton-col {
+    flex: 0 0 auto;
 }
 
 /* Responsive para el botón */
 @media (max-width: 768px) {
     .btn-limpiar-filtros {
-        padding: 0.6rem 1.2rem;
-        font-size: 0.85rem;
-        min-width: 120px;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        min-width: 100px;
         width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    .filtros-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filtro-col {
+        min-width: auto;
     }
 }
 
@@ -535,6 +552,12 @@
     font-size: 1.1rem;
 }
 
+/* Precios sin colores distintivos */
+.precios-container .text-success,
+.precios-container .text-warning {
+    color: #2c3e50 !important;
+}
+
 /* Información de stock */
 .stock-info {
     padding: 0.5rem 0;
@@ -708,7 +731,9 @@
         padding: 0.75rem;
     }
 
-    .text-success, .text-warning {
+    .text-success, .text-warning,
+    .precios-container .text-success,
+    .precios-container .text-warning {
         font-size: 1rem;
         color: #2c3e50 !important;
     }
