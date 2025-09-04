@@ -159,18 +159,36 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Obtiene productos para la vista pública, replicando exactamente la lógica de facturación.
+        /// Obtiene productos paginados para la vista pública.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "")
+        public async Task<IActionResult> ObtenerProductosParaFacturacion(
+            string termino = "", 
+            int pagina = 1, 
+            int tamano = 12,
+            string marca = "",
+            int? ancho = null,
+            int? perfil = null,
+            string diametro = "")
         {
             try
             {
-                _logger.LogInformation("🛒 === OBTENIENDO PRODUCTOS PARA VISTA PÚBLICA ===");
-                _logger.LogInformation("🛒 Término de búsqueda: {Termino}", termino);
+                _logger.LogInformation("🛒 === OBTENIENDO PRODUCTOS PAGINADOS PARA VISTA PÚBLICA ===");
+                _logger.LogInformation("🛒 Término: {Termino}, Página: {Pagina}, Tamaño: {Tamano}", termino, pagina, tamano);
 
-                // ✅ LLAMAR DIRECTAMENTE AL API COMO LO HACE FACTURACIÓN
-                var requestUrl = $"{_apiBaseUrl}/api/Inventario/productos-publicos";
+                // Construir parámetros de consulta
+                var parametros = new List<string>();
+                
+                if (pagina > 0) parametros.Add($"pagina={pagina}");
+                if (tamano > 0) parametros.Add($"tamano={tamano}");
+                if (!string.IsNullOrWhiteSpace(termino)) parametros.Add($"busqueda={Uri.EscapeDataString(termino)}");
+                if (!string.IsNullOrWhiteSpace(marca)) parametros.Add($"marca={Uri.EscapeDataString(marca)}");
+                if (ancho.HasValue) parametros.Add($"ancho={ancho.Value}");
+                if (perfil.HasValue) parametros.Add($"perfil={perfil.Value}");
+                if (!string.IsNullOrWhiteSpace(diametro)) parametros.Add($"diametro={Uri.EscapeDataString(diametro)}");
+
+                var queryString = parametros.Any() ? "?" + string.Join("&", parametros) : "";
+                var requestUrl = $"{_apiBaseUrl}/api/Inventario/productos-publicos{queryString}";
 
                 _logger.LogInformation("🌐 Llamando al API: {Url}", requestUrl);
 
@@ -181,7 +199,6 @@ namespace GestionLlantera.Web.Controllers
                     var content = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation("✅ Respuesta exitosa del API recibida");
 
-                    // Devolver la respuesta directamente del API (ya tiene el formato correcto)
                     return Content(content, "application/json");
                 }
                 else
@@ -192,7 +209,13 @@ namespace GestionLlantera.Web.Controllers
                         success = false,
                         message = "Error al obtener productos del servidor",
                         productos = new List<object>(),
-                        total = 0
+                        paginacion = new
+                        {
+                            paginaActual = pagina,
+                            tamano = tamano,
+                            totalRegistros = 0,
+                            totalPaginas = 0
+                        }
                     });
                 }
             }
@@ -204,7 +227,13 @@ namespace GestionLlantera.Web.Controllers
                     success = false,
                     message = "Error interno del servidor",
                     productos = new List<object>(),
-                    total = 0
+                    paginacion = new
+                    {
+                        paginaActual = pagina,
+                        tamano = tamano,
+                        totalRegistros = 0,
+                        totalPaginas = 0
+                    }
                 });
             }
         }

@@ -1360,16 +1360,69 @@ namespace API.Controllers
 
         [HttpGet("productos-publicos")]
         [AllowAnonymous]
-        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductosPublicos()
+        public async Task<ActionResult<IEnumerable<object>>> ObtenerProductosPublicos(
+            [FromQuery] int pagina = 1,
+            [FromQuery] int tamano = 12,
+            [FromQuery] string? busqueda = null,
+            [FromQuery] string? marca = null,
+            [FromQuery] int? ancho = null,
+            [FromQuery] int? perfil = null,
+            [FromQuery] string? diametro = null)
         {
             try
             {
-                _logger.LogInformation("🌐 === OBTENIENDO PRODUCTOS PÚBLICOS ===");
+                _logger.LogInformation("🌐 === OBTENIENDO PRODUCTOS PÚBLICOS PAGINADOS ===");
+                _logger.LogInformation("🌐 Página: {Pagina}, Tamaño: {Tamano}, Búsqueda: {Busqueda}", pagina, tamano, busqueda ?? "N/A");
 
-                var productos = await _context.Productos
+                var query = _context.Productos
                     .Where(p => p.CantidadEnInventario > 0)
                     .Include(p => p.Llanta)
                     .Include(p => p.ImagenesProductos)
+                    .AsQueryable();
+
+                // Aplicar filtros de búsqueda
+                if (!string.IsNullOrWhiteSpace(busqueda))
+                {
+                    query = query.Where(p => 
+                        p.NombreProducto.Contains(busqueda) ||
+                        (p.Descripcion != null && p.Descripcion.Contains(busqueda)) ||
+                        p.Llanta.Any(l => 
+                            (l.Marca != null && l.Marca.Contains(busqueda)) ||
+                            (l.Modelo != null && l.Modelo.Contains(busqueda))
+                        )
+                    );
+                }
+
+                // Filtros específicos de llantas
+                if (!string.IsNullOrWhiteSpace(marca))
+                {
+                    query = query.Where(p => p.Llanta.Any(l => l.Marca != null && l.Marca == marca));
+                }
+
+                if (ancho.HasValue)
+                {
+                    query = query.Where(p => p.Llanta.Any(l => l.Ancho == ancho.Value));
+                }
+
+                if (perfil.HasValue)
+                {
+                    query = query.Where(p => p.Llanta.Any(l => l.Perfil == perfil.Value));
+                }
+
+                if (!string.IsNullOrWhiteSpace(diametro))
+                {
+                    query = query.Where(p => p.Llanta.Any(l => l.Diametro != null && l.Diametro == diametro));
+                }
+
+                // Obtener total de registros
+                var totalRegistros = await query.CountAsync();
+                var totalPaginas = (int)Math.Ceiling((double)totalRegistros / tamano);
+
+                // Aplicar paginación
+                var productos = await query
+                    .OrderBy(p => p.NombreProducto)
+                    .Skip((pagina - 1) * tamano)
+                    .Take(tamano)
                     .Select(p => new
                     {
                         // ✅ ESTRUCTURA IGUAL A FACTURACIÓN
@@ -1426,27 +1479,23 @@ namespace API.Controllers
                                 : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}")
                             : null
                     })
-                    .OrderBy(p => p.nombreProducto)
                     .ToListAsync();
 
-                _logger.LogInformation("✅ Productos públicos obtenidos: {Cantidad}", productos.Count);
-                
-                // Log de ejemplo de URLs generadas y estructura
-                if (productos.Any())
-                {
-                    var primer = productos.First();
-                    if (primer.imagenesUrls.Any())
-                    {
-                        _logger.LogInformation("🖼️ Ejemplo de URL de imagen generada: {Url}", primer.imagenesUrls.First());
-                    }
-                    _logger.LogInformation("📋 Estructura del primer producto: ProductoId={Id}, EsLlanta={EsLlanta}, Llanta={Llanta}",
-                        primer.productoId, primer.esLlanta, primer.llanta != null ? "SÍ" : "NO");
-                }
+                _logger.LogInformation("✅ Productos públicos obtenidos: {Cantidad} de {Total}", productos.Count, totalRegistros);
 
-                // ✅ DEVOLVER EN FORMATO COMPATIBLE CON FACTURACIÓN
+                // ✅ DEVOLVER EN FORMATO PAGINADO
                 return Ok(new { 
                     success = true, 
-                    productos = productos 
+                    productos = productos,
+                    paginacion = new
+                    {
+                        paginaActual = pagina,
+                        tamano = tamano,
+                        totalRegistros = totalRegistros,
+                        totalPaginas = totalPaginas,
+                        tienePaginaAnterior = pagina > 1,
+                        tienePaginaSiguiente = pagina < totalPaginas
+                    }
                 });
             }
             catch (Exception ex)

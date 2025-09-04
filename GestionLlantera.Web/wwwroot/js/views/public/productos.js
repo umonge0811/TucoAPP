@@ -3,18 +3,25 @@
 // ========================================
 
 // Variables globales
-let todosLosProductos = [];
-let productosLlantas = [];
+let todosLosProductos = []; // Todos los productos cargados
+let productosLlantas = []; // Solo las llantas para filtros
+let paginaActual = 1; // Página actual de resultados
+let tamañoPagina = 12; // Cantidad de productos por página
+let totalProductos = 0; // Total de productos disponibles
+let totalPaginas = 0; // Total de páginas calculadas
+let productosActuales = []; // Productos mostrados en la vista actual (para lazy loading)
+let cargandoProductos = false; // Flag para evitar cargas concurrentes
+let modoLazyLoading = false; // Para alternar entre paginación y lazy loading
 
 document.addEventListener('DOMContentLoaded', function () {
     console.log('📦 Módulo de productos públicos cargado');
 
     // Inicializar funcionalidades
-    inicializarAnimaciones();
-    configurarFiltrosLlantas();
-
-    // Cargar productos iniciales
+    inicializarEventos();
+    inicializarFiltros();
+    inicializarEventosPaginacion(); // Nueva función para eventos de paginación
     cargarProductosIniciales();
+    inicializarAnimaciones();
 
     console.log('✅ Vista pública de productos inicializada correctamente');
 });
@@ -30,7 +37,8 @@ async function cargarProductosIniciales() {
         mostrarLoading();
 
         // Cargar productos usando el endpoint que sabemos que funciona
-        await buscarProductos('');
+        // Se pasa página 1 y sin flag de carga adicional
+        await buscarProductos('', 1, false);
 
         console.log('✅ Productos iniciales cargados exitosamente');
 
@@ -40,6 +48,108 @@ async function cargarProductosIniciales() {
     }
 }
 
+// ========================================
+// FUNCIÓN PRINCIPAL DE BÚSQUEDA (MODIFICADA PARA PAGINACIÓN)
+// ========================================
+async function buscarProductos(termino = '', pagina = 1, cargarMas = false) {
+    if (cargandoProductos) {
+        console.log('⏳ Ya se están cargando productos, se ignora esta solicitud.');
+        return;
+    }
+    cargandoProductos = true;
+    console.log(`🔍 === INICIO buscarProductos (Vista Pública) ===`);
+    console.log(`🔍 Término recibido: "${termino}", Página: ${pagina}, Cargar Más: ${cargarMas}`);
+
+    // Mostrar loading
+    if (!cargarMas) {
+        mostrarLoading(); // Mostrar loading general si no es "cargar más"
+    } else {
+        mostrarLoadingCargarMas(); // Mostrar loading específico para el botón "Cargar más"
+    }
+
+    // ✅ USAR LA MISMA URL Y LÓGICA QUE EL ENDPOINT EXITOSO DE FACTURACIÓN
+    // Se agrega el parámetro de página a la URL si el backend lo soporta
+    const url = `/Public/ObtenerProductosParaFacturacion?page=${pagina}&pageSize=${tamañoPagina}`;
+    console.log(`🔍 URL de la solicitud: ${url}`);
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📋 Respuesta del servidor recibida:', data);
+
+        if (data && data.success && data.productos) {
+            console.log(`✅ Se encontraron ${data.productos.length} productos`);
+            console.log('📋 Estructura de datos recibida:', {
+                total: data.totalProductos,
+                llantas: data.productos.filter(p => p.esLlanta).length,
+                accesorios: data.productos.filter(p => !p.esLlanta).length,
+                conImagenes: data.productos.filter(p => p.imagenesUrls && p.imagenesUrls.length > 0).length
+            });
+
+            // Actualizar variables globales de paginación
+            totalProductos = data.totalProductos;
+            totalPaginas = Math.ceil(totalProductos / tamañoPagina);
+            paginaActual = pagina; // Asegurarse de que la página actual sea la correcta
+
+            // Mostrar resultados
+            if (!cargarMas) {
+                // Si no es "cargar más", reemplazamos el contenido
+                mostrarResultados(data.productos);
+            } else {
+                // Si es "cargar más", agregamos los nuevos productos
+                renderizarProductosAdicionales(data.productos);
+            }
+
+            // Actualizar controles de paginación o botón de cargar más
+            actualizarControlesPaginacion();
+            actualizarBotonCargarMas();
+            actualizarInfoResultados(); // Actualizar texto de resultados
+
+            console.log('📦 Productos mostrados exitosamente en vista pública');
+        } else {
+            const errorMessage = data.message || 'Error desconocido al obtener productos';
+            console.error('❌ Error en la respuesta:', errorMessage);
+            console.error('❌ Datos recibidos:', data);
+            if (!cargarMas) {
+                mostrarSinResultados(); // Mostrar mensaje de sin resultados si no es carga adicional
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ Error buscando productos:', error);
+        if (!cargarMas) {
+            mostrarError('Error al buscar productos: ' + error.message);
+        } else {
+            // Si falla la carga adicional, mostrar un mensaje de error temporal
+            $('#productosContainer').append(`
+                <div class="col-12 text-center py-3 alert alert-danger">
+                    Error al cargar más productos. Intenta de nuevo.
+                </div>
+            `);
+            ocultarLoadingCargarMas();
+        }
+    } finally {
+        cargandoProductos = false; // Liberar el flag de carga
+        if (!cargarMas) {
+            ocultarLoading(); // Ocultar loading general
+        }
+    }
+    console.log(`🔍 === FIN buscarProductos (Vista Pública) ===`);
+}
 
 
 // ========================================
@@ -66,80 +176,25 @@ function inicializarAnimaciones() {
 }
 
 // ========================================
-// FUNCIÓN PRINCIPAL DE BÚSQUEDA - COPIA EXACTA DE FACTURACIÓN
-// ========================================
-async function buscarProductos(termino = '') {
-    try {
-        console.log('🔍 === INICIO buscarProductos (Vista Pública) ===');
-        console.log('🔍 Término recibido:', `"${termino}"`);
-
-        // Mostrar loading
-        mostrarLoading();
-
-        // ✅ USAR LA MISMA URL Y LÓGICA QUE EL ENDPOINT EXITOSO DE FACTURACIÓN
-        const response = await fetch('/Public/ObtenerProductosParaFacturacion', {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ Error del servidor:', errorText);
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log('📋 Respuesta del servidor recibida:', data);
-
-        if (data && data.success && data.productos) {
-            console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
-            console.log('📋 Estructura de datos recibida:', {
-                total: data.productos.length,
-                llantas: data.productos.filter(p => p.esLlanta).length,
-                accesorios: data.productos.filter(p => !p.esLlanta).length,
-                conImagenes: data.productos.filter(p => p.imagenesUrls && p.imagenesUrls.length > 0).length
-            });
-            mostrarResultados(data.productos);
-            console.log('📦 Productos mostrados exitosamente en vista pública');
-        } else {
-            const errorMessage = data.message || 'Error desconocido al obtener productos';
-            console.error('❌ Error en la respuesta:', errorMessage);
-            console.error('❌ Datos recibidos:', data);
-            mostrarSinResultados();
-        }
-
-    } catch (error) {
-        console.error('❌ Error buscando productos:', error);
-        mostrarError('Error al buscar productos: ' + error.message);
-    } finally {
-        ocultarLoading();
-    }
-    console.log('🔍 === FIN buscarProductos (Vista Pública) ===');
-}
-
-// ========================================
 // FUNCIONES DE UI - IMPLEMENTACIÓN REAL
 // ========================================
 function mostrarLoading() {
     const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
     if (container) {
         container.innerHTML = `
-            <div class="d-flex justify-content-center align-items-center py-5">
+            <div class="col-12 text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
-                <span class="ms-3">Buscando productos...</span>
+                <div class="mt-3">Buscando productos...</div>
             </div>
         `;
     }
 }
 
 function ocultarLoading() {
-    // La función mostrarResultados ya se encarga de limpiar el loading
+    // La función mostrarResultados y renderizarProductosAdicionales ya se encargan de limpiar el loading
+    // o se usa el spinner específico para "cargar más"
 }
 
 function mostrarResultados(productos) {
@@ -160,10 +215,10 @@ function mostrarResultados(productos) {
         return;
     }
 
-    // ✅ GUARDAR PRODUCTOS GLOBALMENTE
+    // ✅ GUARDAR PRODUCTOS GLOBALMENTE Y FILTRAR LLANTAS
     todosLosProductos = productos;
     productosLlantas = productos.filter(p => p.esLlanta && p.llanta);
-    
+
     // ✅ POBLAR FILTROS CON DATOS REALES
     poblarFiltrosLlantas();
 
@@ -174,26 +229,6 @@ function mostrarResultados(productos) {
     if (noResultadosDiv) {
         noResultadosDiv.style.display = 'none';
     }
-
-    // DIAGNÓSTICO DETALLADO DE IMÁGENES
-    console.log('🖼️ === DIAGNÓSTICO DE IMÁGENES ===');
-    productos.forEach((producto, index) => {
-        console.log(`🖼️ Producto ${index + 1}: ${producto.nombreProducto}`);
-        console.log(`🖼️   - imagenesUrls:`, producto.imagenesUrls);
-        console.log(`🖼️   - imagenesProductos:`, producto.imagenesProductos);
-        
-        if (producto.imagenesProductos && producto.imagenesProductos.length > 0) {
-            producto.imagenesProductos.forEach((img, imgIndex) => {
-                console.log(`🖼️   - Imagen ${imgIndex + 1}:`, {
-                    Urlimagen: img.Urlimagen,
-                    urlimagen: img.urlimagen,
-                    UrlImagen: img.UrlImagen,
-                    urlImagen: img.urlImagen
-                });
-            });
-        }
-    });
-    console.log('🖼️ === FIN DIAGNÓSTICO ===');
 
     // Generar HTML para cada producto
     productos.forEach((producto, index) => {
@@ -245,9 +280,9 @@ function crearCardProducto(producto) {
             const primeraImagen = producto.imagenesProductos[0];
             if (primeraImagen) {
                 // Intentar diferentes propiedades de URL (case-insensitive)
-                const urlImagen = primeraImagen.Urlimagen || primeraImagen.urlimagen || 
+                const urlImagen = primeraImagen.Urlimagen || primeraImagen.urlimagen ||
                                  primeraImagen.UrlImagen || primeraImagen.urlImagen;
-                
+
                 if (urlImagen && urlImagen.trim() !== '') {
                     imagenUrl = construirUrlImagen(urlImagen);
                     imagenEncontrada = true;
@@ -276,10 +311,10 @@ function crearCardProducto(producto) {
         console.log(`🔧 construirUrlImagen - Protocol actual:`, window.location.protocol);
 
         // DETECTAR ENTORNO
-        const esDesarrollo = window.location.hostname === 'localhost' || 
+        const esDesarrollo = window.location.hostname === 'localhost' ||
                            window.location.hostname === '127.0.0.1' ||
                            window.location.hostname.includes('localhost');
-        
+
         const esHTTPS = window.location.protocol === 'https:';
 
         // Si es una URL completa del dominio de producción en desarrollo local, convertirla
@@ -290,7 +325,7 @@ function crearCardProducto(producto) {
                 const rutaRelativa = match[0];
                 // Usar la API local con HTTPS si el frontend está en HTTPS
                 const protocoloLocal = esHTTPS ? 'https' : 'http';
-                const puertoLocal = esHTTPS ? '7273' : '5049';
+                const puertoLocal = esHTTPS ? '7273' : '5049'; // PUERTOS DE EJEMPLO, AJUSTAR SI ES NECESARIO
                 const urlLocal = `${protocoloLocal}://localhost:${puertoLocal}${rutaRelativa}`;
                 console.log(`🔧 ✅ URL convertida para desarrollo: ${urlLocal}`);
                 return urlLocal;
@@ -303,14 +338,14 @@ function crearCardProducto(producto) {
             if (esDesarrollo && url.includes('localhost')) {
                 return url;
             }
-            
+
             // En producción, asegurar HTTPS
             if (!esDesarrollo && url.startsWith('http://')) {
                 const urlHTTPS = url.replace('http://', 'https://');
                 console.log(`🔧 ✅ URL convertida a HTTPS: ${urlHTTPS}`);
                 return urlHTTPS;
             }
-            
+
             return url;
         }
 
@@ -318,11 +353,11 @@ function crearCardProducto(producto) {
         if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
             // Asegurar que la URL empiece con /
             const urlLimpia = url.startsWith('/') ? url : `/${url}`;
-            
+
             if (esDesarrollo) {
                 // Para desarrollo local, usar localhost con el protocolo correcto
                 const protocoloLocal = esHTTPS ? 'https' : 'http';
-                const puertoLocal = esHTTPS ? '7273' : '5049';
+                const puertoLocal = esHTTPS ? '7273' : '5049'; // PUERTOS DE EJEMPLO
                 const urlLocal = `${protocoloLocal}://localhost:${puertoLocal}${urlLimpia}`;
                 console.log(`🔧 ✅ URL construida para desarrollo: ${urlLocal}`);
                 return urlLocal;
@@ -371,10 +406,10 @@ function crearCardProducto(producto) {
     };
 
     const precioBase = (typeof precio === 'number') ? precio : 0;
-    
+
     // Calcular precio final con IVA (13%) para efectivo/transferencia/sinpe
     const precioFinalEfectivo = (precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador) * 1.13;
-    
+
     // Para tarjeta se aplica el 5% adicional sobre el precio base + IVA
     const precioFinalTarjeta = (precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador) * 1.13;
 
@@ -384,12 +419,12 @@ function crearCardProducto(producto) {
 
     // ✅ CREAR CARD HTML MINIMALISTA
     const card = document.createElement('div');
-    card.className = 'col-lg-4 col-md-6 mb-4';
+    card.className = 'col-lg-4 col-md-6 mb-4 producto-item'; // Añadido clase producto-item para observador
     card.style.opacity = '0';
     card.style.transform = 'translateY(20px)';
     card.style.transition = 'all 0.3s ease';
 
-    
+
 
     card.innerHTML = `
         <div class="producto-card ${stockEstado}">
@@ -398,9 +433,9 @@ function crearCardProducto(producto) {
                 <img src="${imagenUrl}" 
                      class="producto-imagen" 
                      alt="${nombreProducto}"
-                     onerror="this.src='/images/no-image.png'">
+                     onerror="this.onerror=null; this.src='/images/no-image.png';">
                 ${infoLlanta}
-                
+
                 <!-- Overlay con botón -->
                 <div class="producto-overlay">
                     <button class="btn-ver-detalle" onclick="verDetalleProducto(${productoId})">
@@ -417,7 +452,7 @@ function crearCardProducto(producto) {
                 </h3>
 
                 <p class="producto-descripcion">
-                    ${descripcion}
+                    ${descripcion.substring(0, 60)}${descripcion.length > 60 ? '...' : ''}
                 </p>
 
                 <!-- Precio Final -->
@@ -512,13 +547,11 @@ function formatearPrecio(precio) {
 }
 
 
-
 function verDetalleProducto(productoId) {
     console.log('🔍 Navegando a detalle del producto:', productoId);
     // Redirigir a la página de detalle del producto
     window.location.href = `/Public/DetalleProducto/${productoId}`;
 }
-
 
 
 // ========================================
@@ -527,7 +560,7 @@ function verDetalleProducto(productoId) {
 
 function configurarFiltrosLlantas() {
     console.log('🔧 Configurando filtros de llantas...');
-    
+
     // Event listeners para los filtros con dependencias
     document.getElementById('filtroMarca').addEventListener('change', () => {
         actualizarFiltrosDependientes();
@@ -547,7 +580,7 @@ function configurarFiltrosLlantas() {
 
 function poblarFiltrosLlantas() {
     console.log('📋 Poblando filtros con llantas disponibles...');
-    
+
     if (!productosLlantas || productosLlantas.length === 0) {
         console.log('⚠️ No hay llantas disponibles para filtrar');
         return;
@@ -572,23 +605,23 @@ function poblarFiltrosLlantas() {
 
 function actualizarFiltrosDependientes() {
     console.log('🔄 Actualizando filtros dependientes...');
-    
+
     // Obtener valores seleccionados actualmente
     const marcaSeleccionada = document.getElementById('filtroMarca').value;
     const anchoSeleccionado = document.getElementById('filtroAncho').value;
     const perfilSeleccionado = document.getElementById('filtroPerfil').value;
     const diametroSeleccionado = document.getElementById('filtroDiametro').value;
-    
+
     // Filtrar llantas disponibles según las selecciones actuales
     let llantasParaAncho = productosLlantas;
     let llantasParaPerfil = productosLlantas;
     let llantasParaDiametro = productosLlantas;
-    
+
     // Para ancho: solo filtrar por marca si está seleccionada
     if (marcaSeleccionada) {
         llantasParaAncho = llantasParaAncho.filter(p => p.llanta.marca === marcaSeleccionada);
     }
-    
+
     // Para perfil: filtrar por marca y ancho si están seleccionados
     if (marcaSeleccionada) {
         llantasParaPerfil = llantasParaPerfil.filter(p => p.llanta.marca === marcaSeleccionada);
@@ -596,7 +629,7 @@ function actualizarFiltrosDependientes() {
     if (anchoSeleccionado) {
         llantasParaPerfil = llantasParaPerfil.filter(p => p.llanta.ancho == anchoSeleccionado);
     }
-    
+
     // Para diámetro: filtrar por marca, ancho y perfil si están seleccionados
     if (marcaSeleccionada) {
         llantasParaDiametro = llantasParaDiametro.filter(p => p.llanta.marca === marcaSeleccionada);
@@ -612,7 +645,7 @@ function actualizarFiltrosDependientes() {
     const anchosDisponibles = [...new Set(llantasParaAncho
         .map(p => p.llanta.ancho)
         .filter(ancho => ancho != null))].sort((a, b) => a - b);
-    
+
     const selectAncho = document.getElementById('filtroAncho');
     selectAncho.innerHTML = '<option value="">Todos los anchos</option>';
     anchosDisponibles.forEach(ancho => {
@@ -624,7 +657,7 @@ function actualizarFiltrosDependientes() {
     const perfilesDisponibles = [...new Set(llantasParaPerfil
         .map(p => p.llanta.perfil)
         .filter(perfil => perfil != null && perfil > 0))].sort((a, b) => a - b);
-    
+
     const selectPerfil = document.getElementById('filtroPerfil');
     selectPerfil.innerHTML = '<option value="">Todos los perfiles</option>';
     perfilesDisponibles.forEach(perfil => {
@@ -636,7 +669,7 @@ function actualizarFiltrosDependientes() {
     const diametrosDisponibles = [...new Set(llantasParaDiametro
         .map(p => p.llanta.diametro)
         .filter(diametro => diametro && diametro.trim() !== ''))].sort();
-    
+
     const selectDiametro = document.getElementById('filtroDiametro');
     selectDiametro.innerHTML = '<option value="">Todos los diámetros</option>';
     diametrosDisponibles.forEach(diametro => {
@@ -649,7 +682,7 @@ function actualizarFiltrosDependientes() {
 
 function aplicarFiltrosLlantas() {
     console.log('🔍 Aplicando filtros de llantas...');
-    
+
     const marcaSeleccionada = document.getElementById('filtroMarca').value;
     const anchoSeleccionado = document.getElementById('filtroAncho').value;
     const perfilSeleccionado = document.getElementById('filtroPerfil').value;
@@ -674,7 +707,7 @@ function aplicarFiltrosLlantas() {
             }
 
             const llanta = producto.llanta;
-            
+
             // Verificar marca
             if (marcaSeleccionada && llanta.marca !== marcaSeleccionada) {
                 return false;
@@ -741,7 +774,7 @@ function mostrarProductosFiltrados(productos) {
 
 function limpiarFiltrosLlantas() {
     console.log('🧹 Limpiando filtros de llantas...');
-    
+
     // Limpiar selects
     document.getElementById('filtroMarca').value = '';
     document.getElementById('filtroAncho').value = '';
@@ -756,9 +789,332 @@ function limpiarFiltrosLlantas() {
 }
 
 // ========================================
-// FUNCIONES GLOBALES
+// FUNCIONES DE PAGINACIÓN Y LAZY LOADING
+// ========================================
+function inicializarEventosPaginacion() {
+    console.log('🔧 Inicializando eventos de paginación y lazy loading...');
+
+    // Evento para controles de paginación
+    $(document).on('click', '.page-link[data-pagina]', function(e) {
+        e.preventDefault();
+        const nuevaPagina = parseInt($(this).data('pagina'));
+        if (nuevaPagina !== paginaActual && !cargandoProductos) {
+            cambiarPagina(nuevaPagina);
+        }
+    });
+
+    // Evento para botón de cargar más (lazy loading)
+    $('#btnCargarMas').on('click', function() {
+        if (!cargandoProductos && paginaActual < totalPaginas) {
+            cargarMasProductos();
+        }
+    });
+
+    // Toggle entre paginación y lazy loading (si existe el botón)
+    $('#toggleModoVista').on('click', function() {
+        modoLazyLoading = !modoLazyLoading;
+        actualizarModoVisualizacion();
+    });
+}
+
+function cambiarPagina(nuevaPagina) {
+    console.log('📄 Cambiando a página:', nuevaPagina);
+    paginaActual = nuevaPagina;
+
+    // Obtener término de búsqueda actual (si se implementa búsqueda)
+    const termino = obtenerTerminoBusqueda(); // Asegúrate que esta función devuelva el término actual
+
+    // Hacer scroll hacia arriba suavemente para enfocar la lista de productos
+    $('html, body').animate({
+        scrollTop: $('#productosContainer').offset().top - 100 // Ajustar según sea necesario
+    }, 500);
+
+    // Buscar productos de la nueva página
+    buscarProductos(termino, nuevaPagina, false); // false indica que no es "cargar más"
+}
+
+function cargarMasProductos() {
+    console.log('➕ Cargando más productos...');
+    const siguientePagina = paginaActual + 1;
+    const termino = obtenerTerminoBusqueda(); // Asegúrate que esta función devuelva el término actual
+
+    // Solo cargar si hay más páginas y no estamos cargando
+    if (siguientePagina <= totalPaginas && !cargandoProductos) {
+        buscarProductos(termino, siguientePagina, true); // true indica que es "cargar más"
+    }
+}
+
+function actualizarInfoResultados() {
+    const inicio = (paginaActual - 1) * tamañoPagina + 1;
+    const fin = Math.min(paginaActual * tamañoPagina, totalProductos);
+
+    let texto = '';
+    if (totalProductos > 0) {
+        if (modoLazyLoading) {
+            // Si es lazy loading, mostramos la cantidad cargada y el total
+            texto = `Mostrando ${productosActuales.length} de ${totalProductos} productos`;
+        } else {
+            // Si es paginación, mostramos el rango de la página actual
+            texto = `Mostrando ${inicio}-${fin} de ${totalProductos} productos`;
+        }
+    } else {
+        texto = 'No se encontraron productos';
+    }
+    // Asumiendo que hay un elemento con id 'textoResultados'
+    $('#textoResultados').text(texto);
+}
+
+function actualizarControlesPaginacion() {
+    const container = $('#paginacionControles');
+    container.empty();
+
+    // Ocultar paginación si está en modo lazy loading o si solo hay una página
+    if (modoLazyLoading || totalPaginas <= 1) {
+        $('#paginacionContainer').hide();
+        return;
+    }
+
+    $('#paginacionContainer').show(); // Mostrar el contenedor de paginación
+
+    // Botón anterior
+    if (paginaActual > 1) {
+        container.append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-pagina="${paginaActual - 1}">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+        `);
+    } else {
+        // Botón anterior deshabilitado si estamos en la primera página
+        container.append(`
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-left"></i></span>
+            </li>
+        `);
+    }
+
+    // Páginas numeradas
+    const inicio = Math.max(1, paginaActual - 2);
+    const fin = Math.min(totalPaginas, paginaActual + 2);
+
+    // Mostrar el primer número si no estamos muy cerca de él
+    if (inicio > 1) {
+        container.append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-pagina="1">1</a>
+            </li>
+        `);
+        // Mostrar puntos suspensivos si hay un salto grande
+        if (inicio > 2) {
+            container.append(`
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            `);
+        }
+    }
+
+    // Mostrar las páginas intermedias
+    for (let i = inicio; i <= fin; i++) {
+        const isActive = i === paginaActual;
+        container.append(`
+            <li class="page-item ${isActive ? 'active' : ''}">
+                ${isActive ?
+                    `<span class="page-link">${i}</span>` : // Página actual no es un enlace
+                    `<a class="page-link" href="#" data-pagina="${i}">${i}</a>`
+                }
+            </li>
+        `);
+    }
+
+    // Mostrar el último número si no estamos muy cerca de él
+    if (fin < totalPaginas) {
+        // Mostrar puntos suspensivos si hay un salto grande
+        if (fin < totalPaginas - 1) {
+            container.append(`
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            `);
+        }
+        container.append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-pagina="${totalPaginas}">${totalPaginas}</a>
+            </li>
+        `);
+    }
+
+    // Botón siguiente
+    if (paginaActual < totalPaginas) {
+        container.append(`
+            <li class="page-item">
+                <a class="page-link" href="#" data-pagina="${paginaActual + 1}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        `);
+    } else {
+        // Botón siguiente deshabilitado si estamos en la última página
+        container.append(`
+            <li class="page-item disabled">
+                <span class="page-link"><i class="bi bi-chevron-right"></i></span>
+            </li>
+        `);
+    }
+}
+
+function actualizarBotonCargarMas() {
+    const btnCargarMas = $('#btnCargarMas');
+
+    // Mostrar botón solo si estamos en modo lazy loading y hay más páginas por cargar
+    if (modoLazyLoading && paginaActual < totalPaginas) {
+        btnCargarMas.show();
+    } else {
+        btnCargarMas.hide();
+    }
+}
+
+function actualizarModoVisualizacion() {
+    console.log(`🔄 Actualizando modo de visualización: ${modoLazyLoading ? 'Lazy Loading' : 'Paginación'}`);
+    // Aquí podrías mostrar/ocultar el botón de toggle y los controles de paginación
+    actualizarControlesPaginacion();
+    actualizarBotonCargarMas();
+    actualizarInfoResultados(); // Actualizar el texto de resultados según el modo
+
+    // Si cambiamos a lazy loading y no estamos en la primera página,
+    // podríamos querer cargar más productos si la vista no está llena.
+    // Por ahora, solo actualizamos la visibilidad de los controles.
+}
+
+
+// ========================================
+// FUNCIONES DE LOADING ESPECÍFICAS
+// ========================================
+function mostrarLoadingCargarMas() {
+    $('#btnCargarMas').hide(); // Ocultar el botón mientras carga
+    $('#loadingCargarMas').removeClass('d-none'); // Mostrar el spinner
+}
+
+function ocultarLoadingCargarMas() {
+    $('#loadingCargarMas').addClass('d-none'); // Ocultar el spinner
+    $('#btnCargarMas').show(); // Mostrar el botón de nuevo
+}
+
+// ========================================
+// FUNCIONES DE RENDERIZADO ADICIONAL
+// ========================================
+function renderizarProductosAdicionales(productos) {
+    console.log('➕ Agregando productos adicionales:', productos.length);
+    const container = $('#productosContainer');
+
+    productos.forEach((producto, index) => {
+        const html = crearCardProducto(producto); // Reutilizamos crearCardProducto
+        container.append(html);
+
+        // Aplicar la animación de entrada a los nuevos elementos
+        // Usamos un pequeño delay para que la animación sea visible
+        setTimeout(() => {
+            const newCard = container.children().last(); // Obtener la última tarjeta añadida
+            newCard.css({
+                opacity: '1',
+                transform: 'translateY(0)'
+            });
+        }, index * 50); // Retraso escalonado para cada tarjeta
+    });
+
+    // Reinicializar animaciones para nuevos elementos si se usa IntersectionObserver
+    // Si las animaciones ya están en las tarjetas al crearlas, esto podría no ser necesario.
+    // Sin embargo, si el observer se inicializa solo una vez, debemos añadir los nuevos elementos.
+    // Como `inicializarAnimaciones` observa elementos con la clase `.producto-item`,
+    // y `crearCardProducto` ya añade esta clase, solo necesitamos asegurarnos que el observer
+    // detecte los nuevos elementos. Si el observer está correctamente configurado para
+    // observar dinámicamente añadidos, no se requiere nada aquí.
+    // Si no, se necesitaría re-inicializar o añadir los nuevos elementos al observer.
+}
+
+function obtenerTerminoBusqueda() {
+    // Esta función debe retornar el término de búsqueda actual si hay un input de búsqueda.
+    // Por ahora, la devolvemos vacía ya que no hay implementación de búsqueda de texto.
+    return '';
+}
+
+// ========================================
+// FUNCIONES DE CONTROL DE FILTROS (REUTILIZADAS Y ADAPTADAS)
+// ========================================
+function inicializarEventos() {
+    // Llama a la configuración de filtros de llantas
+    configurarFiltrosLlantas();
+}
+
+function inicializarFiltros() {
+    // Llama a la función que maneja los eventos de los filtros
+    inicializarEventosFiltros();
+}
+
+function limpiarFiltros() {
+    console.log('🧹 Limpiando todos los filtros');
+
+    // Limpiar selects
+    $('#filtroMarca').val('');
+    $('#filtroAncho').val('');
+    $('#filtroPerfil').val('');
+    $('#filtroDiametro').val('');
+
+    // Limpiar filtros activos (si se usara una variable global para ellos)
+    // filtrosActivos = {}; // Descomentar si se usa
+
+    // Resetear paginación a la primera página
+    paginaActual = 1;
+
+    // Volver a poblar todos los filtros con datos originales
+    poblarFiltrosLlantas();
+
+    // Recargar productos desde el principio (página 1, sin filtros activos)
+    cargarProductosIniciales();
+}
+
+function aplicarFiltros() {
+    console.log('🔍 Aplicando filtros...');
+
+    // Actualizar filtros activos (si se usara una variable global para ellos)
+    // filtrosActivos = {
+    //     marca: $('#filtroMarca').val(),
+    //     ancho: $('#filtroAncho').val(),
+    //     perfil: $('#filtroPerfil').val(),
+    //     diametro: $('#filtroDiametro').val()
+    // }; // Descomentar si se usa
+
+    // Resetear paginación a la primera página al aplicar filtros
+    paginaActual = 1;
+
+    // Buscar con los filtros aplicados
+    // Asegurarse de que `buscarProductos` pueda manejar filtros si se implementan
+    // Por ahora, `buscarProductos` solo usa el término de búsqueda y la página.
+    // Se necesitaría modificar `buscarProductos` para aceptar los filtros como parámetros.
+    // temporalmente llamamos a `aplicarFiltrosLlantas` que sí maneja el filtrado
+    aplicarFiltrosLlantas();
+
+    // Si los filtros aplicados resultan en una lista vacía, `mostrarProductosFiltrados` se encargará de mostrar el mensaje.
+}
+
+// Agregar eventos a los filtros
+function inicializarEventosFiltros() {
+    $('#filtroMarca, #filtroAncho, #filtroPerfil, #filtroDiametro').on('change', function() {
+        aplicarFiltros(); // Llama a la función que aplica los filtros y resetea la paginación
+    });
+
+    $('#btnLimpiarFiltros').on('click', function() {
+        limpiarFiltros(); // Llama a la función para limpiar todos los filtros y recargar
+    });
+}
+
+// ========================================
+// FUNCIONES GLOBALES DE EXPOSICIÓN
 // ========================================
 window.buscarProductos = buscarProductos;
 window.verDetalleProducto = verDetalleProducto;
 window.aplicarFiltrosLlantas = aplicarFiltrosLlantas;
 window.limpiarFiltrosLlantas = limpiarFiltrosLlantas;
+// No exponemos `aplicarFiltros` y `limpiarFiltros` directamente a window,
+// ya que están envueltas por las funciones específicas de llantas.

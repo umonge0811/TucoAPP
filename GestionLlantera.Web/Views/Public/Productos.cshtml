@@ -84,6 +84,19 @@
 
     <!-- Contenedor Principal de Productos -->
     <div class="container">
+        <!-- Información de resultados -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div id="infoResultados" class="d-flex justify-content-between align-items-center">
+                    <span id="textoResultados" class="text-muted"></span>
+                    <div id="loadingSpinner" class="d-none">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        <span>Cargando...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row" id="productosContainer">
             <!-- Los productos se cargarán aquí dinámicamente -->
         </div>
@@ -102,6 +115,31 @@
                     <button class="btn btn-primary btn-lg" onclick="limpiarFiltros()">
                         <i class="bi bi-arrow-clockwise me-2"></i>Ver todos los productos
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles de Paginación -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Paginación de productos" id="paginacionContainer" style="display: none;">
+                    <ul class="pagination justify-content-center" id="paginacionControles">
+                        <!-- Los controles de paginación se generarán dinámicamente -->
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Botón de Cargar Más (Lazy Loading) -->
+        <div class="row mt-3">
+            <div class="col-12 text-center">
+                <button id="btnCargarMas" class="btn btn-outline-primary btn-lg" style="display: none;">
+                    <i class="bi bi-arrow-down-circle me-2"></i>
+                    Cargar más productos
+                </button>
+                <div id="loadingCargarMas" class="d-none mt-3">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <div class="mt-2">Cargando más productos...</div>
                 </div>
             </div>
         </div>
