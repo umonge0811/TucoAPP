@@ -357,7 +357,7 @@ function crearCardProducto(producto) {
             }
 
             if (medidaCompleta) {
-                infoLlanta = `<div class="medida-tag">${medidaCompleta}</div>`;
+                infoLlanta = `<div class="medida-llanta"><span class="badge">${medidaCompleta}</span></div>`;
             }
         } catch (error) {
             console.warn('⚠️ Error procesando información de llanta:', error);

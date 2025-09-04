@@ -1069,16 +1069,10 @@
     transform: scale(1.1);
 }
 
-.medida-tag {
+.medida-llanta {
     position: absolute;
     top: 15px;
     left: 15px;
-    background: #007bff;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 0.9rem;
     z-index: 2;
 }
 
