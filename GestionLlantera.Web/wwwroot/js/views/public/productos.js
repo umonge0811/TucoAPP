@@ -506,11 +506,8 @@ function mostrarSinResultados() {
         container.innerHTML = ''; // Limpiar productos
     }
 
-    // Actualizar el texto de resultados
-    const textoResultados = document.getElementById('textoResultados');
-    if (textoResultados) {
-        textoResultados.textContent = 'No se encontraron productos';
-    }
+    // NO actualizar automáticamente el texto de resultados aquí
+    // Dejar que actualizarInfoResultados() maneje eso basándose en el estado real
 
     if (noResultadosDiv) {
         noResultadosDiv.style.display = 'block';
