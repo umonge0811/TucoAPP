@@ -1036,6 +1036,23 @@ function actualizarBotonCargarMas() {
     }
 }
 
+function ocultarBotonCargarMas() {
+    const btnCargarMas = $('#btnCargarMas');
+    if (btnCargarMas.length) {
+        btnCargarMas.hide();
+    }
+}
+
+function mostrarPaginacionSiEsNecesaria() {
+    // Si hay más de una página, mostrar controles de paginación
+    if (totalPaginas > 1) {
+        actualizarControlesPaginacion();
+        $('#paginacionContainer').show();
+    } else {
+        $('#paginacionContainer').hide();
+    }
+}
+
 function actualizarModoVisualizacion() {
     console.log(`🔄 Actualizando modo de visualización: ${modoLazyLoading ? 'Lazy Loading' : 'Paginación'}`);
     // Aquí podrías mostrar/ocultar el botón de toggle y los controles de paginación
