@@ -1173,7 +1173,10 @@
 }
 
 .precio-valor-principal {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
     font-weight: 700;
     font-size: 1.4rem;
     color: #e60000;
@@ -1186,15 +1189,6 @@
     font-style: italic;
     margin-top: 2px;
     display: block;
-}
-
-.precio-ivi {
-    font-size: 0.7rem;
-    color: #888;
-    font-style: italic;
-    margin-top: 1px;
-    display: block;
-    opacity: 0.8;
 }
 
 .precio-tarjeta-info {

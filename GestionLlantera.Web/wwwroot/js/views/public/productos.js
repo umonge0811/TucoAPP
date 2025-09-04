@@ -423,12 +423,12 @@ function crearCardProducto(producto) {
                 <!-- Precio Final -->
                 <div class="producto-precios">
                     <div class="precio-principal">
-                        <span class="precio-valor-principal">₡${formatearMoneda(precioFinalEfectivo)}</span>
+                        <span class="precio-valor-principal">
+                            <span>₡${formatearMoneda(precioFinalEfectivo)}</span>
+                            <small style="color: #e60000; font-size: 0.7rem; font-weight: 500;">I.V.I.</small>
+                        </span>
                         <small class="precio-condiciones">
                             * Precio válido para Efectivo, Transferencia o SINPE Móvil
-                        </small>
-                        <small class="precio-ivi">
-                            (Impuesto de ventas incluido - I.V.I.)
                         </small>
                     </div>
                 </div>
