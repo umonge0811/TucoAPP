@@ -427,6 +427,9 @@ function crearCardProducto(producto) {
                         <small class="precio-condiciones">
                             * Precio válido para Efectivo, Transferencia o SINPE Móvil
                         </small>
+                        <small class="precio-ivi">
+                            (Impuesto de ventas incluido - I.V.I.)
+                        </small>
                     </div>
                 </div>
 
