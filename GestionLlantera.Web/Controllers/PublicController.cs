@@ -164,8 +164,8 @@ namespace GestionLlantera.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> ObtenerProductosParaFacturacion(
             string termino = "", 
-            int pagina = 1, 
-            int tamano = 12,
+            int page = 1, 
+            int pageSize = 12,
             string marca = "",
             int? ancho = null,
             int? perfil = null,
@@ -174,13 +174,13 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🛒 === OBTENIENDO PRODUCTOS PAGINADOS PARA VISTA PÚBLICA ===");
-                _logger.LogInformation("🛒 Término: {Termino}, Página: {Pagina}, Tamaño: {Tamano}", termino, pagina, tamano);
+                _logger.LogInformation("🛒 Término: {Termino}, Página: {Pagina}, Tamaño: {Tamano}", termino, page, pageSize);
 
                 // Construir parámetros de consulta
                 var parametros = new List<string>();
                 
-                if (pagina > 0) parametros.Add($"pagina={pagina}");
-                if (tamano > 0) parametros.Add($"tamano={tamano}");
+                if (page > 0) parametros.Add($"pagina={page}");
+                if (pageSize > 0) parametros.Add($"tamano={pageSize}");
                 if (!string.IsNullOrWhiteSpace(termino)) parametros.Add($"busqueda={Uri.EscapeDataString(termino)}");
                 if (!string.IsNullOrWhiteSpace(marca)) parametros.Add($"marca={Uri.EscapeDataString(marca)}");
                 if (ancho.HasValue) parametros.Add($"ancho={ancho.Value}");
@@ -211,8 +211,8 @@ namespace GestionLlantera.Web.Controllers
                         productos = new List<object>(),
                         paginacion = new
                         {
-                            paginaActual = pagina,
-                            tamano = tamano,
+                            paginaActual = page,
+                            tamano = pageSize,
                             totalRegistros = 0,
                             totalPaginas = 0
                         }
@@ -229,8 +229,8 @@ namespace GestionLlantera.Web.Controllers
                     productos = new List<object>(),
                     paginacion = new
                     {
-                        paginaActual = pagina,
-                        tamano = tamano,
+                        paginaActual = page,
+                        tamano = pageSize,
                         totalRegistros = 0,
                         totalPaginas = 0
                     }
