@@ -75,6 +75,88 @@
 }
 
 /* ========================================
+   BOTÓN LIMPIAR FILTROS MEJORADO
+   ======================================== */
+.btn-limpiar-filtros {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 140px;
+    justify-content: center;
+}
+
+.btn-limpiar-filtros::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-limpiar-filtros:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+    color: white;
+    border: none;
+}
+
+.btn-limpiar-filtros:hover::before {
+    left: 100%;
+}
+
+.btn-limpiar-filtros:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-limpiar-filtros i {
+    font-size: 1rem;
+}
+
+/* Contenedor de filtros mejorado */
+.filtros-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.filtros-actions .btn {
+    margin: 0;
+}
+
+/* Responsive para el botón */
+@media (max-width: 768px) {
+    .btn-limpiar-filtros {
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+        min-width: 120px;
+    }
+    
+    .filtros-actions {
+        justify-content: center;
+        gap: 0.75rem;
+    }
+}
+
+/* ========================================
    HERO SECTION
    ======================================== */
 .hero-section {
