@@ -113,38 +113,64 @@
 
 /* Alinear el botón con los filtros en la misma fila */
 .filtros-row {
-    display: flex;
-    align-items: end;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1.5fr;
     gap: 1rem;
-    flex-wrap: wrap;
+    align-items: end;
 }
 
 .filtro-col {
-    flex: 1;
-    min-width: 200px;
+    display: flex;
+    flex-direction: column;
 }
 
 .filtro-boton-col {
-    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.filtro-boton-col .form-label {
+    visibility: hidden;
+    margin-bottom: 0.5rem;
+    height: 1.5rem;
 }
 
 /* Responsive para el botón */
 @media (max-width: 768px) {
+    .filtros-row {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .filtro-boton-col .form-label {
+        display: none;
+    }
+    
     .btn-limpiar-filtros {
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
-        min-width: 100px;
-        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+        min-width: auto;
+        margin-top: 0.5rem;
+    }
+}
+
+@media (max-width: 992px) and (min-width: 769px) {
+    .filtros-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+    
+    .filtro-col:nth-child(1) {
+        grid-column: 1 / 3;
+    }
+    
+    .filtro-boton-col {
+        grid-column: 1 / 3;
         margin-top: 0.5rem;
     }
     
-    .filtros-row {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filtro-col {
-        min-width: auto;
+    .filtro-boton-col .form-label {
+        display: none;
     }
 }
 
