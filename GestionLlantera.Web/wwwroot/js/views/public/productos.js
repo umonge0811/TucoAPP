@@ -869,26 +869,32 @@ function actualizarInfoResultados() {
 
     let texto = '';
     
-    // Verificar si realmente tenemos productos
-    const tieneProductosVisibles = document.querySelectorAll('#productosContainer .producto-item').length > 0;
+    // Verificar múltiples indicadores de productos
+    const container = document.getElementById('productosContainer') || document.getElementById('listaProductos');
+    const productosEnDOM = container ? container.querySelectorAll('.producto-item, .producto-card').length : 0;
+    const hayProductosGlobales = (todosLosProductos && todosLosProductos.length > 0) || 
+                                (productosActuales && productosActuales.length > 0);
     
     console.log('📊 Estado actual:', {
         totalProductos,
         paginaActual,
         tamañoPagina,
-        productosVisibles: tieneProductosVisibles,
+        productosEnDOM,
+        hayProductosGlobales,
         todosLosProductos: todosLosProductos?.length || 0,
         productosActuales: productosActuales?.length || 0
     });
     
-    if (totalProductos > 0 && tieneProductosVisibles) {
+    // Solo mostrar "No se encontraron productos" si realmente no hay productos
+    if (totalProductos > 0 || productosEnDOM > 0 || hayProductosGlobales) {
         if (modoLazyLoading) {
             // Si es lazy loading, mostramos la cantidad cargada y el total
-            const cantidadActual = productosActuales.length || (todosLosProductos ? todosLosProductos.length : 0);
-            texto = `Mostrando ${cantidadActual} de ${totalProductos} productos`;
+            const cantidadActual = productosActuales?.length || productosEnDOM || (todosLosProductos ? todosLosProductos.length : 0);
+            texto = `Mostrando ${cantidadActual} de ${totalProductos || cantidadActual} productos`;
         } else {
             // Si es paginación, mostramos el rango de la página actual
-            texto = `Mostrando ${inicio}-${fin} de ${totalProductos} productos`;
+            const totalParaMostrar = totalProductos || productosEnDOM || (todosLosProductos ? todosLosProductos.length : 0);
+            texto = `Mostrando ${inicio}-${Math.min(fin, totalParaMostrar)} de ${totalParaMostrar} productos`;
         }
     } else {
         texto = 'No se encontraron productos';
