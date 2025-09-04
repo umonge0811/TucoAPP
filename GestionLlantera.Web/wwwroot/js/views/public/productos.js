@@ -16,6 +16,12 @@ let modoLazyLoading = false; // Para alternar entre paginación y lazy loading
 document.addEventListener('DOMContentLoaded', function () {
     console.log('📦 Módulo de productos públicos cargado');
 
+    // Inicializar texto de resultados
+    const textoResultados = document.getElementById('textoResultados');
+    if (textoResultados) {
+        textoResultados.textContent = 'Cargando productos...';
+    }
+
     // Inicializar funcionalidades
     inicializarEventos();
     inicializarFiltros();
@@ -218,6 +224,7 @@ function mostrarResultados(productos) {
     // ✅ GUARDAR PRODUCTOS GLOBALMENTE Y FILTRAR LLANTAS
     todosLosProductos = productos;
     productosLlantas = productos.filter(p => p.esLlanta && p.llanta);
+    productosActuales = productos; // Actualizar productos actuales
 
     // ✅ POBLAR FILTROS CON DATOS REALES
     poblarFiltrosLlantas();
@@ -229,6 +236,9 @@ function mostrarResultados(productos) {
     if (noResultadosDiv) {
         noResultadosDiv.style.display = 'none';
     }
+
+    // Actualizar información de resultados
+    actualizarInfoResultados();
 
     // Generar HTML para cada producto
     productos.forEach((producto, index) => {
@@ -494,6 +504,12 @@ function mostrarSinResultados() {
 
     if (container) {
         container.innerHTML = ''; // Limpiar productos
+    }
+
+    // Actualizar el texto de resultados
+    const textoResultados = document.getElementById('textoResultados');
+    if (textoResultados) {
+        textoResultados.textContent = 'No se encontraron productos';
     }
 
     if (noResultadosDiv) {
@@ -845,6 +861,12 @@ function cargarMasProductos() {
 }
 
 function actualizarInfoResultados() {
+    const textoResultados = document.getElementById('textoResultados');
+    if (!textoResultados) {
+        console.warn('⚠️ Elemento textoResultados no encontrado');
+        return;
+    }
+
     const inicio = (paginaActual - 1) * tamañoPagina + 1;
     const fin = Math.min(paginaActual * tamañoPagina, totalProductos);
 
@@ -852,7 +874,8 @@ function actualizarInfoResultados() {
     if (totalProductos > 0) {
         if (modoLazyLoading) {
             // Si es lazy loading, mostramos la cantidad cargada y el total
-            texto = `Mostrando ${productosActuales.length} de ${totalProductos} productos`;
+            const cantidadActual = productosActuales.length || (todosLosProductos ? todosLosProductos.length : 0);
+            texto = `Mostrando ${cantidadActual} de ${totalProductos} productos`;
         } else {
             // Si es paginación, mostramos el rango de la página actual
             texto = `Mostrando ${inicio}-${fin} de ${totalProductos} productos`;
@@ -860,8 +883,9 @@ function actualizarInfoResultados() {
     } else {
         texto = 'No se encontraron productos';
     }
-    // Asumiendo que hay un elemento con id 'textoResultados'
-    $('#textoResultados').text(texto);
+    
+    textoResultados.textContent = texto;
+    console.log('📊 Texto de resultados actualizado:', texto);
 }
 
 function actualizarControlesPaginacion() {
