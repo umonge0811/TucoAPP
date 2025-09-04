@@ -115,15 +115,18 @@ async function buscarProductos(termino = '', pagina = 1, cargarMas = false) {
             if (!cargarMas) {
                 // Si no es "cargar más", reemplazamos el contenido
                 mostrarResultados(data.productos);
+                // Actualizar texto de resultados DESPUÉS de mostrar productos
+                actualizarInfoResultados();
             } else {
                 // Si es "cargar más", agregamos los nuevos productos
                 renderizarProductosAdicionales(data.productos);
+                // Actualizar texto de resultados DESPUÉS de agregar productos
+                actualizarInfoResultados();
             }
 
             // Actualizar controles de paginación o botón de cargar más
             actualizarControlesPaginacion();
             actualizarBotonCargarMas();
-            actualizarInfoResultados(); // Actualizar texto de resultados
 
             console.log('📦 Productos mostrados exitosamente en vista pública');
         } else {
@@ -236,9 +239,6 @@ function mostrarResultados(productos) {
     if (noResultadosDiv) {
         noResultadosDiv.style.display = 'none';
     }
-
-    // Actualizar información de resultados
-    actualizarInfoResultados();
 
     // Generar HTML para cada producto
     productos.forEach((producto, index) => {
@@ -871,7 +871,20 @@ function actualizarInfoResultados() {
     const fin = Math.min(paginaActual * tamañoPagina, totalProductos);
 
     let texto = '';
-    if (totalProductos > 0) {
+    
+    // Verificar si realmente tenemos productos
+    const tieneProductosVisibles = document.querySelectorAll('#productosContainer .producto-item').length > 0;
+    
+    console.log('📊 Estado actual:', {
+        totalProductos,
+        paginaActual,
+        tamañoPagina,
+        productosVisibles: tieneProductosVisibles,
+        todosLosProductos: todosLosProductos?.length || 0,
+        productosActuales: productosActuales?.length || 0
+    });
+    
+    if (totalProductos > 0 && tieneProductosVisibles) {
         if (modoLazyLoading) {
             // Si es lazy loading, mostramos la cantidad cargada y el total
             const cantidadActual = productosActuales.length || (todosLosProductos ? todosLosProductos.length : 0);
