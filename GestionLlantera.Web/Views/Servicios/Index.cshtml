@@ -29,22 +29,16 @@
     <div class="card mb-4">
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <label class="form-label">Buscar:</label>
-                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Nombre, descripción o tipo..." onkeyup="filtrarServicios()">
+                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Nombre o tipo de servicio...">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Tipo de Servicio:</label>
-                    <select id="selectTipoServicio" class="form-select" onchange="filtrarServicios()">
-                        <option value="">Todos los tipos</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label class="form-label">Estado:</label>
-                    <select id="selectEstado" class="form-select" onchange="filtrarServicios()">
+                    <select id="selectEstado" class="form-select">
+                        <option value="">Todos</option>
                         <option value="true">Solo Activos</option>
                         <option value="false">Solo Inactivos</option>
-                        <option value="">Todos</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">

@@ -3,10 +3,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Text;
 using Tuco.Clases.DTOs;
-using System.Text.Json;
-using Microsoft.AspNetCore.Http; // Agregado para HttpContext.Session
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -14,20 +11,13 @@ namespace GestionLlantera.Web.Controllers
     public class ServiciosController : Controller
     {
         private readonly ILogger<ServiciosController> _logger;
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _configuration;
         private readonly IServiciosService _serviciosService;
-
 
         public ServiciosController(
             ILogger<ServiciosController> logger,
-            IHttpClientFactory httpClientFactory,
-            IConfiguration configuration,
             IServiciosService serviciosService)
         {
             _logger = logger;
-            _httpClient = httpClientFactory.CreateClient("ApiClient");
-            _configuration = configuration;
             _serviciosService = serviciosService;
         }
 
@@ -64,12 +54,7 @@ namespace GestionLlantera.Web.Controllers
         /// Obtiene servicios via AJAX para DataTables
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerServicios(
-            string busqueda = "",
-            string tipoServicio = "",
-            bool soloActivos = true,
-            int pagina = 1,
-            int tamano = 50)
+        public async Task<IActionResult> ObtenerServicios()
         {
             try
             {
@@ -87,20 +72,19 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
                 }
 
-                _logger.LogInformation("🔧 Solicitud para obtener servicios: Busqueda='{Busqueda}', TipoServicio='{TipoServicio}', SoloActivos={SoloActivos}, Pagina={Pagina}, Tamano={Tamano}",
-                    busqueda, tipoServicio, soloActivos, pagina, tamano);
+                _logger.LogInformation("🔧 Obteniendo todos los servicios");
 
-                // Pasar los parámetros directamente al servicio
-                var servicios = await _serviciosService.ObtenerServiciosAsync(busqueda, tipoServicio, soloActivos, pagina, tamano);
+                // Llamar al servicio simplificado
+                var servicios = await _serviciosService.ObtenerServiciosAsync(token);
 
                 if (servicios != null)
                 {
-                    return Json(servicios); // Retornar directamente el objeto de respuesta del servicio
+                    return Json(servicios);
                 }
                 else
                 {
                     _logger.LogWarning("⚠️ No se pudieron obtener servicios o la respuesta fue nula.");
-                    return Json(new { success = false, message = "Error al obtener servicios de la API" });
+                    return Json(new List<ServicioDTO>());
                 }
             }
             catch (Exception ex)
@@ -133,7 +117,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 _logger.LogInformation("🔧 Solicitud para obtener servicio por ID: {Id}", id);
-                var servicio = await _serviciosService.ObtenerServicioPorIdAsync(id);
+                var servicio = await _serviciosService.ObtenerServicioPorIdAsync(id, token);
 
                 if (servicio != null)
                 {
@@ -188,7 +172,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 _logger.LogInformation("🔧 Solicitud para crear servicio: Nombre='{NombreServicio}'", servicioDto.NombreServicio);
-                var resultado = await _serviciosService.CrearServicioAsync(servicioDto);
+                var resultado = await _serviciosService.CrearServicioAsync(servicioDto, token);
 
                 if (resultado)
                 {
@@ -243,7 +227,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 _logger.LogInformation("🔧 Solicitud para actualizar servicio {Id}: Nombre='{NombreServicio}'", id, servicioDto.NombreServicio);
-                var resultado = await _serviciosService.ActualizarServicioAsync(id, servicioDto);
+                var resultado = await _serviciosService.ActualizarServicioAsync(id, servicioDto, token);
 
                 if (resultado)
                 {
@@ -286,7 +270,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 _logger.LogInformation("🔧 Solicitud para eliminar servicio {Id}", id);
-                var resultado = await _serviciosService.EliminarServicioAsync(id);
+                var resultado = await _serviciosService.EliminarServicioAsync(id, token);
 
                 if (resultado)
                 {
@@ -303,49 +287,6 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogError(ex, "❌ Error al eliminar servicio {Id}", id);
                 return Json(new { success = false, message = "Error interno al eliminar servicio" });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene tipos de servicios disponibles
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> ObtenerTiposServicios()
-        {
-            try
-            {
-                 if (!await this.TienePermisoAsync("Ver Servicios"))
-                {
-                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Servicios' al intentar obtener tipos de servicios.");
-                    return Json(new { success = false, message = "No tiene permisos para ver tipos de servicios" });
-                }
-
-                // Obtener token JWT del usuario autenticado
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogError("❌ Token JWT no encontrado para obtener tipos de servicios");
-                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
-                }
-
-                _logger.LogInformation("🔧 Solicitud para obtener tipos de servicios");
-                var tipos = await _serviciosService.ObtenerTiposServiciosAsync();
-
-                if (tipos != null)
-                {
-                    _logger.LogInformation("✅ Tipos de servicios obtenidos exitosamente. Total: {Count}", tipos.Count());
-                    return Json(new { success = true, data = tipos });
-                }
-                else
-                {
-                    _logger.LogWarning("⚠️ No se pudieron obtener tipos de servicios o la respuesta fue nula.");
-                    return Json(new { success = false, message = "Error al obtener tipos de servicios" });
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error al obtener tipos de servicios");
-                return Json(new { success = false, message = "Error al obtener tipos de servicios" });
             }
         }
 

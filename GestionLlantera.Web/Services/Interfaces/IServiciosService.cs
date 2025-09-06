@@ -5,11 +5,10 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IServiciosService
     {
-        Task<IEnumerable<ServicioDTO>> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50);
-        Task<ServicioDTO?> ObtenerServicioPorIdAsync(int id);
-        Task<bool> CrearServicioAsync(ServicioDTO servicio);
-        Task<bool> ActualizarServicioAsync(int id, ServicioDTO servicio);
-        Task<bool> EliminarServicioAsync(int id);
-        Task<IEnumerable<string>> ObtenerTiposServiciosAsync();
+        Task<List<ServicioDTO>> ObtenerServiciosAsync(string jwtToken);
+        Task<ServicioDTO?> ObtenerServicioPorIdAsync(int id, string jwtToken);
+        Task<bool> CrearServicioAsync(ServicioDTO servicio, string jwtToken);
+        Task<bool> ActualizarServicioAsync(int id, ServicioDTO servicio, string jwtToken);
+        Task<bool> EliminarServicioAsync(int id, string jwtToken);
     }
 }

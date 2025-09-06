@@ -1,182 +1,189 @@
 
 using GestionLlantera.Web.Services.Interfaces;
+using Newtonsoft.Json;
 using Tuco.Clases.DTOs;
-using System.Text.Json;
-using System.Text;
 
 namespace GestionLlantera.Web.Services
 {
     public class ServiciosService : IServiciosService
     {
         private readonly HttpClient _httpClient;
-        private readonly ApiConfigurationService _apiConfig;
         private readonly ILogger<ServiciosService> _logger;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ApiConfigurationService _apiConfig;
 
-        public ServiciosService(HttpClient httpClient, ApiConfigurationService apiConfig, ILogger<ServiciosService> logger, IHttpContextAccessor httpContextAccessor)
+        public ServiciosService(
+            IHttpClientFactory httpClientFactory,
+            ILogger<ServiciosService> logger,
+            ApiConfigurationService apiConfig)
         {
-            _httpClient = httpClient;
-            _apiConfig = apiConfig;
+            _httpClient = httpClientFactory.CreateClient("ApiClient");
             _logger = logger;
-            _httpContextAccessor = httpContextAccessor;
+            _apiConfig = apiConfig;
         }
 
-        private void AgregarTokenHeaders()
+        private void ConfigurarAutenticacion(string jwtToken)
         {
-            var context = _httpContextAccessor.HttpContext;
-            if (context?.User?.Identity?.IsAuthenticated == true)
+            if (!string.IsNullOrEmpty(jwtToken))
             {
-                var token = context.User.FindFirst("JwtToken")?.Value;
-                if (!string.IsNullOrEmpty(token))
-                {
-                    _httpClient.DefaultRequestHeaders.Authorization = 
-                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                }
+                _httpClient.DefaultRequestHeaders.Authorization = 
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
             }
         }
 
-        public async Task<IEnumerable<ServicioDTO>> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50)
+        public async Task<List<ServicioDTO>> ObtenerServiciosAsync(string jwtToken)
         {
             try
             {
-                AgregarTokenHeaders();
+                _logger.LogInformation("🔧 Obteniendo servicios desde API");
 
-                var queryParams = new List<string>();
-                if (!string.IsNullOrEmpty(busqueda))
-                    queryParams.Add($"busqueda={Uri.EscapeDataString(busqueda)}");
-                if (!string.IsNullOrEmpty(tipoServicio))
-                    queryParams.Add($"tipoServicio={Uri.EscapeDataString(tipoServicio)}");
-                queryParams.Add($"soloActivos={soloActivos}");
-                queryParams.Add($"pagina={pagina}");
-                queryParams.Add($"tamano={tamano}");
+                ConfigurarAutenticacion(jwtToken);
 
-                var queryString = string.Join("&", queryParams);
-                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/servicios?{queryString}");
+                var url = _apiConfig.GetApiUrl("Servicios");
+                var response = await _httpClient.GetAsync(url);
 
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    
-                    var servicios = JsonSerializer.Deserialize<IEnumerable<ServicioDTO>>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new List<ServicioDTO>();
-                    
-                    return servicios;
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al obtener servicios: {StatusCode} - {Error}", 
+                        response.StatusCode, errorContent);
+                    return new List<ServicioDTO>();
                 }
 
-                return new List<ServicioDTO>();
+                var content = await response.Content.ReadAsStringAsync();
+                var servicios = JsonConvert.DeserializeObject<List<ServicioDTO>>(content);
+
+                _logger.LogInformation("✅ Servicios obtenidos exitosamente: {Count}", servicios?.Count ?? 0);
+                return servicios ?? new List<ServicioDTO>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener servicios");
+                _logger.LogError(ex, "💥 Error al obtener servicios");
                 return new List<ServicioDTO>();
             }
         }
 
-        public async Task<ServicioDTO?> ObtenerServicioPorIdAsync(int id)
+        public async Task<ServicioDTO?> ObtenerServicioPorIdAsync(int id, string jwtToken)
         {
             try
             {
-                AgregarTokenHeaders();
+                _logger.LogInformation("🔧 Obteniendo servicio {Id} desde API", id);
 
-                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/servicios/{id}");
+                ConfigurarAutenticacion(jwtToken);
 
-                if (response.IsSuccessStatusCode)
+                var url = _apiConfig.GetApiUrl($"Servicios/{id}");
+                var response = await _httpClient.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<ServicioDTO>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al obtener servicio {Id}: {StatusCode} - {Error}", 
+                        id, response.StatusCode, errorContent);
+                    return null;
                 }
 
+                var content = await response.Content.ReadAsStringAsync();
+                var servicio = JsonConvert.DeserializeObject<ServicioDTO>(content);
+
+                _logger.LogInformation("✅ Servicio {Id} obtenido exitosamente", id);
+                return servicio;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener servicio {Id}", id);
                 return null;
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener servicio {Id}", id);
-                return null;
-            }
         }
 
-        public async Task<bool> CrearServicioAsync(ServicioDTO servicio)
+        public async Task<bool> CrearServicioAsync(ServicioDTO servicio, string jwtToken)
         {
             try
             {
-                AgregarTokenHeaders();
+                _logger.LogInformation("🔧 Creando servicio: {Nombre}", servicio.NombreServicio);
 
-                var json = JsonSerializer.Serialize(servicio);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                ConfigurarAutenticacion(jwtToken);
 
-                var response = await _httpClient.PostAsync($"{_apiConfig.BaseUrl}/api/servicios", content);
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al crear servicio");
-                return false;
-            }
-        }
+                var url = _apiConfig.GetApiUrl("Servicios");
+                var json = JsonConvert.SerializeObject(servicio);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-        public async Task<bool> ActualizarServicioAsync(int id, ServicioDTO servicio)
-        {
-            try
-            {
-                AgregarTokenHeaders();
+                var response = await _httpClient.PostAsync(url, content);
 
-                var json = JsonSerializer.Serialize(servicio);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await _httpClient.PutAsync($"{_apiConfig.BaseUrl}/api/servicios/{id}", content);
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al actualizar servicio {Id}", id);
-                return false;
-            }
-        }
-
-        public async Task<bool> EliminarServicioAsync(int id)
-        {
-            try
-            {
-                AgregarTokenHeaders();
-
-                var response = await _httpClient.DeleteAsync($"{_apiConfig.BaseUrl}/api/servicios/{id}");
-                return response.IsSuccessStatusCode;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al eliminar servicio {Id}", id);
-                return false;
-            }
-        }
-
-        public async Task<IEnumerable<string>> ObtenerTiposServiciosAsync()
-        {
-            try
-            {
-                AgregarTokenHeaders();
-
-                var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/servicios/tipos");
-
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<IEnumerable<string>>(json, new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new List<string>();
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al crear servicio: {StatusCode} - {Error}", 
+                        response.StatusCode, errorContent);
+                    return false;
                 }
 
-                return new List<string>();
+                _logger.LogInformation("✅ Servicio creado exitosamente: {Nombre}", servicio.NombreServicio);
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener tipos de servicios");
-                return new List<string>();
+                _logger.LogError(ex, "💥 Error al crear servicio: {Nombre}", servicio.NombreServicio);
+                return false;
+            }
+        }
+
+        public async Task<bool> ActualizarServicioAsync(int id, ServicioDTO servicio, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("🔧 Actualizando servicio {Id}: {Nombre}", id, servicio.NombreServicio);
+
+                ConfigurarAutenticacion(jwtToken);
+
+                var url = _apiConfig.GetApiUrl($"Servicios/{id}");
+                var json = JsonConvert.SerializeObject(servicio);
+                var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+
+                var response = await _httpClient.PutAsync(url, content);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al actualizar servicio {Id}: {StatusCode} - {Error}", 
+                        id, response.StatusCode, errorContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Servicio {Id} actualizado exitosamente", id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al actualizar servicio {Id}", id);
+                return false;
+            }
+        }
+
+        public async Task<bool> EliminarServicioAsync(int id, string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("🔧 Eliminando servicio {Id}", id);
+
+                ConfigurarAutenticacion(jwtToken);
+
+                var url = _apiConfig.GetApiUrl($"Servicios/{id}");
+                var response = await _httpClient.DeleteAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogError("❌ Error al eliminar servicio {Id}: {StatusCode} - {Error}", 
+                        id, response.StatusCode, errorContent);
+                    return false;
+                }
+
+                _logger.LogInformation("✅ Servicio {Id} eliminado exitosamente", id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al eliminar servicio {Id}", id);
+                return false;
             }
         }
     }

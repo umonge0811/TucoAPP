@@ -4,7 +4,6 @@
 // ================================
 
 let servicios = [];
-let serviciosFiltrados = [];
 let servicioIdEliminar = 0;
 
 // ================================
@@ -29,7 +28,6 @@ $(document).ready(function () {
 function inicializarModulo() {
     configurarEventos();
     cargarServicios();
-    cargarTiposServicios();
 }
 
 // ================================
@@ -52,6 +50,16 @@ function configurarEventos() {
     $('#modalServicio').on('hidden.bs.modal', function () {
         limpiarFormulario();
     });
+
+    // Búsqueda simple
+    $('#inputBusqueda').on('keyup', function() {
+        filtrarServicios();
+    });
+
+    // Filtro por estado
+    $('#selectEstado').on('change', function() {
+        filtrarServicios();
+    });
 }
 
 // ================================
@@ -61,24 +69,14 @@ function configurarEventos() {
 function cargarServicios() {
     mostrarLoading(true);
 
-    const filtros = {
-        busqueda: $('#inputBusqueda').val() || '',
-        tipoServicio: $('#selectTipoServicio').val() || '',
-        estado: $('#selectEstado').val() || '',
-        pagina: 1,
-        tamano: 1000
-    };
-
     $.ajax({
         url: '/Servicios/ObtenerServicios',
         type: 'GET',
-        data: filtros,
         success: function(response) {
             console.log('📋 Datos recibidos del servidor:', response);
 
             if (Array.isArray(response)) {
                 servicios = response;
-                serviciosFiltrados = [...servicios];
                 mostrarServicios();
             } else {
                 console.error('❌ Respuesta no es un array:', response);
@@ -105,7 +103,27 @@ function mostrarServicios() {
     const tbody = $('#tablaServiciosBody');
     tbody.empty();
 
-    if (!serviciosFiltrados || serviciosFiltrados.length === 0) {
+    let serviciosFiltrados = [...servicios];
+
+    // Aplicar filtros
+    const busqueda = $('#inputBusqueda').val().toLowerCase();
+    const estado = $('#selectEstado').val();
+
+    if (busqueda) {
+        serviciosFiltrados = serviciosFiltrados.filter(servicio => 
+            (servicio.NombreServicio && servicio.NombreServicio.toLowerCase().includes(busqueda)) ||
+            (servicio.TipoServicio && servicio.TipoServicio.toLowerCase().includes(busqueda)) ||
+            (servicio.Descripcion && servicio.Descripcion.toLowerCase().includes(busqueda))
+        );
+    }
+
+    if (estado === 'true') {
+        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.EstaActivo === true);
+    } else if (estado === 'false') {
+        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.EstaActivo === false);
+    }
+
+    if (serviciosFiltrados.length === 0) {
         mostrarEmptyState();
         return;
     }
@@ -158,31 +176,6 @@ function crearFilaServicio(servicio) {
 // ================================
 
 function filtrarServicios() {
-    const busqueda = $('#inputBusqueda').val().toLowerCase();
-    const tipoServicio = $('#selectTipoServicio').val();
-    const estado = $('#selectEstado').val();
-
-    serviciosFiltrados = servicios.filter(servicio => {
-        // Filtro de búsqueda
-        const coincideBusqueda = !busqueda || 
-            (servicio.NombreServicio && servicio.NombreServicio.toLowerCase().includes(busqueda)) ||
-            (servicio.TipoServicio && servicio.TipoServicio.toLowerCase().includes(busqueda)) ||
-            (servicio.Descripcion && servicio.Descripcion.toLowerCase().includes(busqueda));
-
-        // Filtro de tipo
-        const coincideTipo = !tipoServicio || servicio.TipoServicio === tipoServicio;
-
-        // Filtro de estado
-        let coincideEstado = true;
-        if (estado === 'true') {
-            coincideEstado = servicio.EstaActivo === true;
-        } else if (estado === 'false') {
-            coincideEstado = servicio.EstaActivo === false;
-        }
-
-        return coincideBusqueda && coincideTipo && coincideEstado;
-    });
-
     mostrarServicios();
 }
 
@@ -338,26 +331,6 @@ function eliminarServicio(servicioId) {
 // ================================
 // UTILIDADES
 // ================================
-
-function cargarTiposServicios() {
-    $.ajax({
-        url: '/Servicios/ObtenerTiposServicios',
-        type: 'GET',
-        success: function(response) {
-            if (response.success && response.data) {
-                const select = $('#selectTipoServicio');
-                select.find('option:not(:first)').remove();
-
-                response.data.forEach(function(tipo) {
-                    select.append(`<option value="${tipo}">${tipo}</option>`);
-                });
-            }
-        },
-        error: function() {
-            console.warn('No se pudieron cargar los tipos de servicios');
-        }
-    });
-}
 
 function limpiarFormulario() {
     $('#formServicio')[0].reset();
