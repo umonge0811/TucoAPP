@@ -75,13 +75,18 @@ namespace GestionLlantera.Web.Controllers
                 var token = ObtenerTokenJWT();
                 if (string.IsNullOrEmpty(token))
                 {
-                    return Json(new { success = false, message = "Token no válido" });
+                    _logger.LogWarning("⚠️ Token JWT no disponible para obtener servicios");
+                    return Json(new { success = false, message = "Sesión expirada. Recargue la página." });
                 }
 
+                // Limpiar headers anteriores y configurar autorización
+                _httpClient.DefaultRequestHeaders.Clear();
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var url = $"api/Servicios?busqueda={Uri.EscapeDataString(busqueda)}&tipoServicio={Uri.EscapeDataString(tipoServicio)}&soloActivos={soloActivos}&pagina={pagina}&tamano={tamano}";
+                // Construir URL con parámetros seguros
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:8000";
+                var url = $"{baseUrl}/api/Servicios?busqueda={Uri.EscapeDataString(busqueda ?? "")}&tipoServicio={Uri.EscapeDataString(tipoServicio ?? "")}&soloActivos={soloActivos}&pagina={pagina}&tamano={tamano}";
                 
                 var response = await _httpClient.GetAsync(url);
                 
@@ -318,11 +323,28 @@ namespace GestionLlantera.Web.Controllers
         }
 
         /// <summary>
-        /// Método auxiliar para obtener el token JWT
+        /// Método auxiliar para obtener el token JWT del usuario autenticado
         /// </summary>
-        private string ObtenerTokenJWT()
+        private string? ObtenerTokenJWT()
         {
-            return HttpContext.Session.GetString("JWTToken") ?? "";
+            var token = User.FindFirst("JwtToken")?.Value;
+
+            if (string.IsNullOrEmpty(token))
+            {
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
+
+                // Listar todos los claims disponibles para debug
+                var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
+            }
+            else
+            {
+                _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
+                    User.Identity?.Name ?? "Anónimo", token.Length);
+            }
+
+            return token;
         }
     }
 }
