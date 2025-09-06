@@ -186,12 +186,12 @@ function inicializarTabla() {
                         <button type="button" class="btn btn-outline-primary btn-sm" 
                                 onclick="editarServicio(${row.ServicioId})" 
                                 title="Editar">
-                            <i class="fas fa-edit"></i>
+                            <i class="bi bi-pencil"></i>
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm" 
                                 onclick="confirmarEliminar(${row.ServicioId}, '${row.NombreServicio}')" 
                                 title="Desactivar">
-                            <i class="fas fa-trash"></i>
+                            <i class="bi bi-trash"></i>
                         </button>
                     `;
                 }

@@ -85,7 +85,7 @@ namespace GestionLlantera.Web.Controllers
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 // Construir URL con parámetros seguros
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:8000";
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
                 var url = $"{baseUrl}/api/Servicios?busqueda={Uri.EscapeDataString(busqueda ?? "")}&tipoServicio={Uri.EscapeDataString(tipoServicio ?? "")}&soloActivos={soloActivos}&pagina={pagina}&tamano={tamano}";
                 
                 var response = await _httpClient.GetAsync(url);
@@ -128,7 +128,8 @@ namespace GestionLlantera.Web.Controllers
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync($"api/Servicios/{id}");
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
+                var response = await _httpClient.GetAsync($"{baseUrl}/api/Servicios/{id}");
                 
                 if (response.IsSuccessStatusCode)
                 {
@@ -185,7 +186,8 @@ namespace GestionLlantera.Web.Controllers
                 var json = JsonConvert.SerializeObject(servicioDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PostAsync("api/Servicios", content);
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
+                var response = await _httpClient.PostAsync($"{baseUrl}/api/Servicios", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -228,7 +230,8 @@ namespace GestionLlantera.Web.Controllers
                 var json = JsonConvert.SerializeObject(servicioDto);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-                var response = await _httpClient.PutAsync($"api/Servicios/{id}", content);
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
+                var response = await _httpClient.PutAsync($"{baseUrl}/api/Servicios/{id}", content);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -268,7 +271,8 @@ namespace GestionLlantera.Web.Controllers
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.DeleteAsync($"api/Servicios/{id}");
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
+                var response = await _httpClient.DeleteAsync($"{baseUrl}/api/Servicios/{id}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -301,7 +305,8 @@ namespace GestionLlantera.Web.Controllers
                 _httpClient.DefaultRequestHeaders.Authorization = 
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-                var response = await _httpClient.GetAsync("api/Servicios/tipos");
+                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
+                var response = await _httpClient.GetAsync($"{baseUrl}/api/Servicios/tipos");
                 
                 if (response.IsSuccessStatusCode)
                 {
