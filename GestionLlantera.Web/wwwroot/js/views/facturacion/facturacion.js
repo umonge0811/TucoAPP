@@ -1435,7 +1435,13 @@ function actualizarVistaCarrito() {
     const container = $('#listaProductosVenta');
     const contador = $('#contadorProductos');
 
-    if (productosEnVenta.length === 0) {
+    // Combinar productos y servicios
+    const todosLosItems = [
+        ...(productosEnVenta || []),
+        ...(window.serviciosEnVenta || [])
+    ];
+
+    if (todosLosItems.length === 0) {
         container.html(`
             <div class="text-center py-4 text-muted">
                 <i class="bi bi-cart-x display-4"></i>
@@ -1448,7 +1454,7 @@ function actualizarVistaCarrito() {
     }
 
     let html = '';
-    productosEnVenta.forEach((producto, index) => {
+    todosLosItems.forEach((producto, index) => {
         const subtotal = producto.precioUnitario * producto.cantidad;
         const metodoPago = producto.metodoPago || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
@@ -1508,7 +1514,7 @@ function actualizarVistaCarrito() {
                                data-index="${index}"
                                value="${producto.cantidad}" 
                                min="1" 
-                               max="${producto.stockDisponible}">
+                               max="${producto.stockDisponible || 999}">
                         <button type="button" 
                                class="btn btn-outline-secondary btn-cantidad-mas"
                                data-index="${index}">+</button>
@@ -1520,7 +1526,7 @@ function actualizarVistaCarrito() {
     });
 
     container.html(html);
-    contador.text(`${productosEnVenta.length} productos`);
+    contador.text(`${todosLosItems.length} productos`);
 
     // ✅ HABILITAR BOTÓN LIMPIAR SOLO SI HAY PRODUCTOS
     $('#btnLimpiarVenta').prop('disabled', false);
@@ -1532,7 +1538,6 @@ function actualizarVistaCarrito() {
     configurarEventosCantidad();
 }
 
-
 function configurarEventosCantidad() {
     $('.btn-cantidad-menos').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
@@ -1540,6 +1545,7 @@ function configurarEventosCantidad() {
             productosEnVenta[index].cantidad--;
             actualizarVistaCarrito();
             actualizarTotales();
+
         }
     });
 
@@ -1580,16 +1586,27 @@ function configurarEventosCantidad() {
 }
 
 function actualizarTotales() {
-    const subtotal = productosEnVenta.reduce((sum, producto) =>
-        sum + (producto.precioUnitario * producto.cantidad), 0);
+    console.log('🧮 Actualizando totales...');
+
+    // Combinar productos y servicios para el cálculo
+    const todosLosItems = [
+        ...(productosEnVenta || []),
+        ...(window.serviciosEnVenta || [])
+    ];
+
+    let subtotal = 0;
+    todosLosItems.forEach(item => {
+        subtotal += item.subtotal || (item.precioUnitario * item.cantidad);
+    });
 
     const iva = subtotal * 0.13; // 13% IVA
     const total = subtotal + iva;
-
     $('#subtotalVenta').text(formatearMoneda(subtotal));
     $('#ivaVenta').text(formatearMoneda(iva));
     $('#totalVenta').text(formatearMoneda(total));
 }
+
+
 
 async function limpiarVenta() {
     // ✅ VERIFICAR SI HAY ALGO QUE LIMPIAR (PRODUCTOS O CLIENTE)
@@ -4066,51 +4083,93 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
 //    });
 //}
 
-///**
-// * ✅ FUNCIÓN: Agregar servicio al carrito de venta
-// */
-//function agregarServicioAVenta(servicio, cantidad = 1, observaciones = '') {
-//    console.log('🛠️ === AGREGANDO SERVICIO A VENTA ===');
-//    console.log('🛠️ Servicio:', servicio.nombreServicio);
-//    console.log('🛠️ Cantidad:', cantidad);
-//    console.log('🛠️ Observaciones:', observaciones);
+// ================================
+// GESTIÓN DE SERVICIOS EN LA VENTA
+// ================================
 
-//    // Verificar si el servicio ya está en la venta
-//    const servicioExistente = productosEnVenta.find(p => 
-//        p.esServicio && p.servicioId === servicio.servicioId
-//    );
+function agregarServicioAVenta(servicio, cantidad, precio) {
+    console.log('🛠️ === AGREGANDO SERVICIO A LA VENTA ===');
+    console.log('🛠️ Servicio:', servicio);
+    console.log('🛠️ Cantidad:', cantidad);
+    console.log('🛠️ Precio:', precio);
 
-//    if (servicioExistente) {
-//        // Incrementar cantidad
-//        servicioExistente.cantidad += cantidad;
-//        if (observaciones) {
-//            servicioExistente.observaciones = observaciones;
-//        }
-//        console.log('🛠️ Cantidad de servicio incrementada');
-//    } else {
-//        // Agregar nuevo servicio
-//        const servicioVenta = {
-//            servicioId: servicio.servicioId,
-//            nombreProducto: servicio.nombreServicio, // Usar el mismo campo que productos
-//            descripcion: servicio.descripcion || '',
-//            precioUnitario: servicio.precioBase,
-//            cantidad: cantidad,
-//            observaciones: observaciones,
-//            metodoPago: 'efectivo',
-//            esServicio: true, // Flag para identificar que es un servicio
-//            tipoServicio: servicio.tipoServicio || 'General',
-//            imagenUrl: null
-//        };
+    // Validar parámetros
+    if (!servicio || !servicio.servicioId) {
+        console.error('❌ Servicio inválido:', servicio);
+        mostrarToast('Error', 'Servicio no válido', 'danger');
+        return;
+    }
 
-//        productosEnVenta.push(servicioVenta);
-//        console.log('🛠️ Nuevo servicio agregado al carrito');
-//    }
+    if (cantidad <= 0) {
+        mostrarToast('Error', 'La cantidad debe ser mayor a 0', 'danger');
+        return;
+    }
 
-//    // Actualizar vistas
-//    actualizarVistaCarrito();
-//    actualizarTotales();
-//    actualizarEstadoBotonFinalizar();
-//}
+    if (precio <= 0) {
+        mostrarToast('Error', 'El precio debe ser mayor a 0', 'danger');
+        return;
+    }
+
+    // Verificar si el array de servicios existe
+    if (typeof window.serviciosEnVenta === 'undefined') {
+        window.serviciosEnVenta = [];
+    }
+
+    // Verificar si el servicio ya está en la venta
+    const servicioExistente = window.serviciosEnVenta.find(s => s.servicioId === servicio.servicioId);
+
+    if (servicioExistente) {
+        // Si ya existe, actualizar cantidad
+        servicioExistente.cantidad += cantidad;
+        servicioExistente.subtotal = servicioExistente.cantidad * servicioExistente.precioUnitario;
+        console.log('✅ Cantidad de servicio actualizada:', servicioExistente);
+    } else {
+        // Agregar nuevo servicio
+        const servicioVenta = {
+            servicioId: servicio.servicioId,
+            nombreProducto: servicio.nombreServicio, // Usar nombreProducto para compatibilidad
+            cantidad: cantidad,
+            precioUnitario: precio,
+            subtotal: cantidad * precio,
+            esServicio: true,
+            tipoServicio: servicio.tipoServicio || 'General',
+            descripcion: servicio.descripcion || ''
+        };
+
+        window.serviciosEnVenta.push(servicioVenta);
+        console.log('✅ Nuevo servicio agregado:', servicioVenta);
+    }
+
+    // Actualizar la vista del carrito y totales
+    actualizarVistaCarrito();
+    actualizarTotales();
+    actualizarEstadoBotonFinalizar();
+
+    // Mostrar confirmación
+    mostrarToast('Servicio agregado', `${servicio.nombreServicio} agregado a la venta`, 'success');
+
+    // ✅ CERRAR AMBOS MODALES DESPUÉS DE AGREGAR
+    // Cerrar modal de agregar servicio específico
+    const modalAgregarServicio = document.getElementById('modalAgregarServicio');
+    if (modalAgregarServicio) {
+        const modal = bootstrap.Modal.getInstance(modalAgregarServicio);
+        if (modal) {
+            modal.hide();
+        }
+    }
+    // Cerrar modal de servicios disponibles
+    const modalServicios = document.getElementById('modalServicios');
+    if (modalServicios) {
+        const modal = bootstrap.Modal.getInstance(modalServicios);
+        if (modal) {
+            modal.hide();
+        }
+    }
+}
+
+// Hacer la función disponible globalmente
+window.agregarServicioAVenta = agregarServicioAVenta;
+
 
 /**
  * ✅ FUNCIÓN: Re-imprimir factura existente desde modal de detalles

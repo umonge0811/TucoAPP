@@ -362,7 +362,7 @@ class ServiciosFacturacion {
         });
 
         // Validación del input
-        $(`#cantidadServicio`).on(`input.${namespace}`, function() {
+        $(`#cantidadServicio`).on(`input.${namespace}`, function () {
             const valor = parseInt($(this).val()) || 1;
             if (valor < 1) {
                 $(this).val(1);
@@ -389,10 +389,28 @@ class ServiciosFacturacion {
                 // Verificar que la función esté disponible globalmente o en el contexto de facturación
                 if (typeof window.agregarServicioAVenta === 'function') {
                     window.agregarServicioAVenta(servicio, cantidad, precio);
-                    $('#modalServicios').modal('hide');
+                    // Cerrar ambos modales
+                    const modalAgregarServicio = bootstrap.Modal.getInstance(document.getElementById('modalAgregarServicio'));
+                    if (modalAgregarServicio) {
+                        modalAgregarServicio.hide();
+                    }
+
+                    const modalServicios = bootstrap.Modal.getInstance(document.getElementById('modalServicios'));
+                    if (modalServicios) {
+                        modalServicios.hide();
+                    }
                 } else if (typeof agregarServicioAVenta === 'function') {
                     agregarServicioAVenta(servicio, cantidad, precio);
-                    $('#modalServicios').modal('hide');
+                    // Cerrar ambos modales
+                    const modalAgregarServicio = bootstrap.Modal.getInstance(document.getElementById('modalAgregarServicio'));
+                    if (modalAgregarServicio) {
+                        modalAgregarServicio.hide();
+                    }
+
+                    const modalServicios = bootstrap.Modal.getInstance(document.getElementById('modalServicios'));
+                    if (modalServicios) {
+                        modalServicios.hide();
+                    }
                 } else {
                     console.error('❌ Función agregarServicioAVenta no disponible');
                     console.log('🔍 Intentando agregar servicio directamente...');
@@ -415,14 +433,23 @@ class ServiciosFacturacion {
                             window.actualizarTotales();
                         }
 
-                        $('#modalServicios').modal('hide');
+                        // Cerrar ambos modales
+                        const modalAgregarServicio = bootstrap.Modal.getInstance(document.getElementById('modalAgregarServicio'));
+                        if (modalAgregarServicio) {
+                            modalAgregarServicio.hide();
+                        }
+
+                        const modalServicios = bootstrap.Modal.getInstance(document.getElementById('modalServicios'));
+                        if (modalServicios) {
+                            modalServicios.hide();
+                        }
                         console.log('✅ Servicio agregado usando fallback');
                     } else {
                         throw new Error('Función de agregar servicio no disponible');
                     }
                 }
 
-                this.mostrarToast('Servicio agregado', `${servicio.nombreServicio} agregado a la venta`, 'success');
+                mostrarToast('Servicio agregado', `${servicio.nombreServicio} agregado a la venta`, 'success');
 
             } catch (error) {
                 console.error('❌ Error agregando servicio:', error);
@@ -455,7 +482,7 @@ class ServiciosFacturacion {
 // INICIALIZACIÓN AUTOMÁTICA
 // ================================
 
-$(document).ready(function() {
+$(document).ready(function () {
     console.log('🛠️ Inicializando módulo especializado de servicios para facturación');
     window.serviciosFacturacion = new ServiciosFacturacion();
     console.log('✅ Módulo de servicios para facturación inicializado');
