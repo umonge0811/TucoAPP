@@ -1460,7 +1460,7 @@ function actualizarVistaCarrito() {
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
         // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA O TIPO DE SERVICIO
-        let nombreCompletoProducto = producto.nombreProducto;
+        let nombreCompletoProducto = producto.nombreProducto || 'Producto sin nombre';
         let infoAdicional = '';
 
         if (producto.esServicio) {
@@ -1508,16 +1508,18 @@ function actualizarVistaCarrito() {
                     <div class="input-group input-group-sm" style="width: 120px;">
                         <button type="button" 
                                 class="btn btn-outline-secondary btn-cantidad-menos"
-                                data-index="${index}">-</button>
+                                data-index="${index}"
+                                ${producto.esServicio ? '' : (producto.cantidad <= 1 ? 'disabled' : '')}>-</button>
                         <input type="number" 
                                class="form-control text-center input-cantidad"
                                data-index="${index}"
                                value="${producto.cantidad}" 
                                min="1" 
-                               max="${producto.stockDisponible || 999}">
+                               max="${producto.esServicio ? 999 : (producto.stockDisponible || 999)}">
                         <button type="button" 
                                class="btn btn-outline-secondary btn-cantidad-mas"
-                               data-index="${index}">+</button>
+                               data-index="${index}"
+                               ${producto.esServicio ? '' : (producto.cantidad >= (producto.stockDisponible || 999) ? 'disabled' : '')}>+</button>
                     </div>
                     <strong class="text-success">₡${formatearMoneda(subtotal)}</strong>
                 </div>
@@ -1538,50 +1540,127 @@ function actualizarVistaCarrito() {
     configurarEventosCantidad();
 }
 
+
 function configurarEventosCantidad() {
     $('.btn-cantidad-menos').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
-        if (productosEnVenta[index].cantidad > 1) {
-            productosEnVenta[index].cantidad--;
+        const todosLosItems = [
+            ...(productosEnVenta || []),
+            ...(window.serviciosEnVenta || [])
+        ];
+
+        if (todosLosItems[index] && todosLosItems[index].cantidad > 1) {
+            // Determinar si es producto o servicio y actualizar el array correspondiente
+            if (index < productosEnVenta.length) {
+                // Es un producto
+                productosEnVenta[index].cantidad--;
+            } else {
+                // Es un servicio
+                const servicioIndex = index - productosEnVenta.length;
+                if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
+                    window.serviciosEnVenta[servicioIndex].cantidad--;
+                    window.serviciosEnVenta[servicioIndex].subtotal =
+                        window.serviciosEnVenta[servicioIndex].cantidad * window.serviciosEnVenta[servicioIndex].precioUnitario;
+                }
+            }
             actualizarVistaCarrito();
             actualizarTotales();
-
         }
     });
 
     $('.btn-cantidad-mas').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
-        if (productosEnVenta[index].cantidad < productosEnVenta[index].stockDisponible) {
-            productosEnVenta[index].cantidad++;
-            actualizarVistaCarrito();
-            actualizarTotales();
-        } else {
-            mostrarToast('Stock limitado', 'No hay más stock disponible', 'warning');
+        const todosLosItems = [
+            ...(productosEnVenta || []),
+            ...(window.serviciosEnVenta || [])
+        ];
+
+        if (todosLosItems[index]) {
+            const item = todosLosItems[index];
+            const puedeIncrementar = item.esServicio || item.cantidad < (item.stockDisponible || 999);
+
+            if (puedeIncrementar) {
+                // Determinar si es producto o servicio y actualizar el array correspondiente
+                if (index < productosEnVenta.length) {
+                    // Es un producto
+                    productosEnVenta[index].cantidad++;
+                } else {
+                    // Es un servicio
+                    const servicioIndex = index - productosEnVenta.length;
+                    if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
+                        window.serviciosEnVenta[servicioIndex].cantidad++;
+                        window.serviciosEnVenta[servicioIndex].subtotal =
+                            window.serviciosEnVenta[servicioIndex].cantidad * window.serviciosEnVenta[servicioIndex].precioUnitario;
+                    }
+                }
+                actualizarVistaCarrito();
+                actualizarTotales();
+            } else {
+                mostrarToast('Stock limitado', 'No hay más stock disponible', 'warning');
+            }
         }
     });
 
     $('.input-cantidad').on('change', function () {
         const index = parseInt($(this).attr('data-index'));
         const nuevaCantidad = parseInt($(this).val());
-        const stockDisponible = productosEnVenta[index].stockDisponible;
+        const todosLosItems = [
+            ...(productosEnVenta || []),
+            ...(window.serviciosEnVenta || [])
+        ];
 
-        if (nuevaCantidad >= 1 && nuevaCantidad <= stockDisponible) {
-            productosEnVenta[index].cantidad = nuevaCantidad;
-            actualizarTotales();
-        } else {
-            $(this).val(productosEnVenta[index].cantidad);
-            if (nuevaCantidad > stockDisponible) {
-                mostrarToast('Stock limitado', 'Cantidad excede el stock disponible', 'warning');
+        if (todosLosItems[index]) {
+            const item = todosLosItems[index];
+            const stockDisponible = item.esServicio ? 999 : (item.stockDisponible || 999);
+
+            if (nuevaCantidad >= 1 && nuevaCantidad <= stockDisponible) {
+                // Determinar si es producto o servicio y actualizar el array correspondiente
+                if (index < productosEnVenta.length) {
+                    // Es un producto
+                    productosEnVenta[index].cantidad = nuevaCantidad;
+                } else {
+                    // Es un servicio
+                    const servicioIndex = index - productosEnVenta.length;
+                    if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
+                        window.serviciosEnVenta[servicioIndex].cantidad = nuevaCantidad;
+                        window.serviciosEnVenta[servicioIndex].subtotal =
+                            nuevaCantidad * window.serviciosEnVenta[servicioIndex].precioUnitario;
+                    }
+                }
+                actualizarTotales();
+            } else {
+                $(this).val(item.cantidad);
+                if (nuevaCantidad > stockDisponible) {
+                    mostrarToast('Stock limitado', 'Cantidad excede el stock disponible', 'warning');
+                }
             }
         }
     });
 
     $('.btn-eliminar-producto').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
-        productosEnVenta.splice(index, 1);
-        actualizarVistaCarrito();
-        actualizarTotales();
-        mostrarToast('Producto eliminado', 'Producto removido de la venta', 'info');
+        const todosLosItems = [
+            ...(productosEnVenta || []),
+            ...(window.serviciosEnVenta || [])
+        ];
+
+        if (todosLosItems[index]) {
+            // Determinar si es producto o servicio y eliminar del array correspondiente
+            if (index < productosEnVenta.length) {
+                // Es un producto
+                productosEnVenta.splice(index, 1);
+            } else {
+                // Es un servicio
+                const servicioIndex = index - productosEnVenta.length;
+                if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
+                    window.serviciosEnVenta.splice(servicioIndex, 1);
+                }
+            }
+
+            actualizarVistaCarrito();
+            actualizarTotales();
+            mostrarToast('Producto eliminado', 'Producto removido de la venta', 'info');
+        }
     });
 }
 
@@ -1601,29 +1680,31 @@ function actualizarTotales() {
 
     const iva = subtotal * 0.13; // 13% IVA
     const total = subtotal + iva;
-    $('#subtotalVenta').text(formatearMoneda(subtotal));
-    $('#ivaVenta').text(formatearMoneda(iva));
-    $('#totalVenta').text(formatearMoneda(total));
+    // ✅ AGREGAR SÍMBOLOS DE MONEDA AQUÍ
+    $('#subtotalVenta').text('₡' + formatearMoneda(subtotal));
+    $('#ivaVenta').text('₡' + formatearMoneda(iva));
+    $('#totalVenta').text('₡' + formatearMoneda(total));
 }
 
 
 
 async function limpiarVenta() {
-    // ✅ VERIFICAR SI HAY ALGO QUE LIMPIAR (PRODUCTOS O CLIENTE)
+    // ✅ VERIFICAR SI HAY ALGO QUE LIMPIAR (PRODUCTOS, SERVICIOS O CLIENTE)
     const tieneProductos = productosEnVenta.length > 0;
+    const tieneServicios = (window.serviciosEnVenta || []).length > 0;
     const tieneCliente = clienteSeleccionado !== null;
 
-    if (!tieneProductos && !tieneCliente) {
+    if (!tieneProductos && !tieneServicios && !tieneCliente) {
         console.log('🧹 No hay nada que limpiar');
         return;
     }
 
     // ✅ DETERMINAR MENSAJE SEGÚN LO QUE HAY QUE LIMPIAR
     let textoConfirmacion = '¿Estás seguro de que deseas limpiar ';
-    if (tieneProductos && tieneCliente) {
-        textoConfirmacion += 'toda la venta (productos y cliente)?';
-    } else if (tieneProductos) {
-        textoConfirmacion += 'todos los productos del carrito?';
+    if ((tieneProductos || tieneServicios) && tieneCliente) {
+        textoConfirmacion += 'toda la venta (productos, servicios y cliente)?';
+    } else if (tieneProductos || tieneServicios) {
+        textoConfirmacion += 'todos los items del carrito?';
     } else {
         textoConfirmacion += 'el cliente seleccionado?';
     }
@@ -1640,14 +1721,17 @@ async function limpiarVenta() {
     });
 
     if (confirmacion.isConfirmed) {
-        // ✅ LIMPIAR SIEMPRE TODO INDEPENDIENTEMENTE DE QUE HAYA O NO
+        // ✅ LIMPIAR TODO
         productosEnVenta = [];
+        if (window.serviciosEnVenta) {
+            window.serviciosEnVenta = [];
+        }
         clienteSeleccionado = null;
-        facturaPendienteActual = null; // ✅ LIMPIAR FACTURA PENDIENTE
+        facturaPendienteActual = null;
         $('#clienteBusqueda').val('');
         $('#clienteSeleccionado').addClass('d-none');
 
-        // ✅ LIMPIAR CÓDIGOS DE SEGUIMIENTO Y PRODUCTOS PENDIENTES
+        // ✅ LIMPIAR OTRAS VARIABLES
         if (window.codigosSeguimientoPendientes) {
             delete window.codigosSeguimientoPendientes;
         }
@@ -1660,21 +1744,11 @@ async function limpiarVenta() {
 
         actualizarVistaCarrito();
         actualizarTotales();
-
-        // ✅ ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR DESPUÉS DE LIMPIAR
         actualizarEstadoBotonFinalizar();
         $('#btnGuardarProforma').show();
 
-        // ✅ MENSAJE DINÁMICO SEGÚN LO QUE SE LIMPIÓ
-        let mensajeLimpieza = 'Venta limpiada';
-        if (tieneProductos && tieneCliente) {
-            mensajeLimpieza = 'Se han removido todos los productos y el cliente seleccionado';
-        } else if (tieneProductos) {
-            mensajeLimpieza = 'Se han removido todos los productos';
-        } else {
-            mensajeLimpieza = 'Se ha removido el cliente seleccionado';
-        }
-
+        // ✅ MENSAJE DINÁMICO
+        let mensajeLimpieza = 'Carrito limpiado exitosamente';
         mostrarToast('Venta limpiada', mensajeLimpieza, 'info');
     }
 }
@@ -6160,47 +6234,37 @@ function obtenerTokenJWT() {
 
 // ===== FUNCIÓN PARA ACTUALIZAR ESTADO DEL BOTÓN FINALIZAR =====
 function actualizarEstadoBotonFinalizar() {
-    const tieneProductos = productosEnVenta.length > 0;
-    const tieneCliente = clienteSeleccionado !== null;
-    const puedeFinalizarVenta = tieneProductos && tieneCliente;
-
     const $btnFinalizar = $('#btnFinalizarVenta');
-    const $btnLimpiar = $('#btnLimpiarVenta'); // ✅ AGREGAR REFERENCIA AL BOTÓN LIMPIAR
+    const $btnLimpiar = $('#btnLimpiarVenta');
 
-    // ✅ HABILITAR BOTÓN LIMPIAR SI HAY PRODUCTOS O CLIENTE SELECCIONADO
-    if (tieneProductos || tieneCliente) {
-        $btnLimpiar.prop('disabled', false);
-    } else {
-        $btnLimpiar.prop('disabled', true);
-    }
+    // Combinar productos y servicios para verificar si hay items
+    const todosLosItems = [
+        ...(productosEnVenta || []),
+        ...(window.serviciosEnVenta || [])
+    ];
 
-    if (puedeFinalizarVenta) {
-        $btnFinalizar.prop('disabled', false)
-            .removeClass('btn-outline-secondary')
-            .addClass('btn-success')
-            .attr('title', 'Finalizar venta');
-    } else {
-        $btnFinalizar.prop('disabled', true)
-            .removeClass('btn-success')
-            .addClass('btn-outline-secondary');
+    const tieneProductos = todosLosItems.length > 0;
+    const tieneCliente = clienteSeleccionado !== null;
 
-        if (!tieneProductos && !tieneCliente) {
-            $btnFinalizar.attr('title', 'Agrega productos y selecciona un cliente');
-        } else if (!tieneProductos) {
-            $btnFinalizar.attr('title', 'Agrega productos a la venta');
-        } else if (!tieneCliente) {
-            $btnFinalizar.attr('title', 'Selecciona un cliente para continuar');
-        }
-    }
-
-    console.log('🔄 Estado botón finalizar actualizado:', {
+    console.log('🎯 Actualizando estado botones:', {
         tieneProductos,
         tieneCliente,
-        puedeFinalizarVenta,
-        disabled: $btnFinalizar.prop('disabled'),
-        limpiarDisabled: $btnLimpiar.prop('disabled') // ✅ AGREGAR LOG DEL BOTÓN LIMPIAR
+        totalItems: todosLosItems.length
     });
+
+    // Habilitar/deshabilitar según productos y cliente
+    if (tieneProductos && tieneCliente) {
+        $btnFinalizar.prop('disabled', false);
+        $btnLimpiar.prop('disabled', false);
+    } else if (tieneProductos && !tieneCliente) {
+        $btnFinalizar.prop('disabled', true);
+        $btnLimpiar.prop('disabled', false);
+    } else {
+        $btnFinalizar.prop('disabled', true);
+        $btnLimpiar.prop('disabled', true);
+    }
 }
+
 
 // ===== MODAL FACTURA PENDIENTE =====
 function mostrarModalFacturaPendiente(resultadoFactura) {
