@@ -31,7 +31,7 @@ namespace API.Controllers
         public async Task<ActionResult<IEnumerable<ServicioDTO>>> GetServicios(
             string busqueda = "",
             string tipoServicio = "",
-            bool soloActivos = true,
+            bool soloActivos = false,
             int pagina = 1,
             int tamano = 50)
         {
