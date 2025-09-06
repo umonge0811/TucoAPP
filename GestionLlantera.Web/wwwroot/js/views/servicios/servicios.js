@@ -117,9 +117,9 @@ function mostrarServicios() {
         );
     }
 
-    if (estado === 'true') {
+    if (estado === 'true' || estado === true) {
         serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.estaActivo === true);
-    } else if (estado === 'false') {
+    } else if (estado === 'false' || estado === false) {
         serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.estaActivo === false);
     }
 

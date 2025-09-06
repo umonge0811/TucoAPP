@@ -1,4 +1,3 @@
-
 @{
     ViewData["Title"] = "Gestión de Servicios";
     ViewData["ActivePage"] = "Servicios";
@@ -51,7 +50,7 @@
         </div>
     </div>
 
-    <!-- Tabla de Servicios -->
+    <!--Tabla de Servicios -->
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
@@ -72,14 +71,14 @@
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Loading spinner -->
             <div id="loadingSpinner" class="text-center py-4" style="display: none;">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
                 </div>
             </div>
-            
+
             <!-- Empty state -->
             <div id="emptyState" class="text-center py-4" style="display: none;">
                 <i class="bi bi-tools fs-1 text-muted"></i>
@@ -198,5 +197,248 @@
 </div>
 
 @section Scripts {
-    <script src="~/js/views/servicios/servicios.js"></script>
+    <script>
+        // Función para cargar los servicios
+        function cargarServicios() {
+            const inputBusqueda = document.getElementById('inputBusqueda').value.toLowerCase();
+            const selectEstado = document.getElementById('selectEstado').value;
+            const tablaServiciosBody = document.getElementById('tablaServiciosBody');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const emptyState = document.getElementById('emptyState');
+
+            tablaServiciosBody.innerHTML = ''; // Limpiar tabla
+            loadingSpinner.style.display = 'block'; // Mostrar spinner
+            emptyState.style.display = 'none'; // Ocultar estado vacío
+
+            fetch('/Servicios/GetServicios')
+                .then(response => response.json())
+                .then(data => {
+                    loadingSpinner.style.display = 'none'; // Ocultar spinner
+
+                    let serviciosFiltrados = data;
+
+                    // Filtrar por búsqueda
+                    if (inputBusqueda) {
+                        serviciosFiltrados = serviciosFiltrados.filter(servicio =>
+                            servicio.nombreServicio.toLowerCase().includes(inputBusqueda) ||
+                            servicio.tipoServicio.toLowerCase().includes(inputBusqueda)
+                        );
+                    }
+
+                    // Filtrar por estado
+                    if (selectEstado !== "") {
+                        // Convertir el valor del select a boolean para la comparación
+                        const estadoSeleccionado = selectEstado === 'true';
+                        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.estaActivo === estadoSeleccionado);
+                    }
+
+                    if (serviciosFiltrados.length > 0) {
+                        serviciosFiltrados.forEach(servicio => {
+                            const row = tablaServiciosBody.insertRow();
+                            row.innerHTML = `
+                                <td>${servicio.id}</td>
+                                <td>${servicio.nombreServicio}</td>
+                                <td>${servicio.tipoServicio}</td>
+                                <td>₡${servicio.precioBase.toFixed(2)}</td>
+                                <td>${servicio.estaActivo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>'}</td>
+                                <td>${new Date(servicio.fechaCreacion).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditarServicio(${servicio.id})">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="confirmarDesactivarServicio(${servicio.id}, '${servicio.nombreServicio}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        emptyState.style.display = 'block'; // Mostrar estado vacío
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar servicios:', error);
+                    loadingSpinner.style.display = 'none'; // Ocultar spinner en caso de error
+                    emptyState.style.display = 'block'; // Mostrar estado vacío en caso de error
+                    emptyState.querySelector('p').textContent = 'Error al cargar los servicios.';
+                });
+        }
+
+        // Función para abrir el modal de nuevo servicio
+        function abrirModalNuevoServicio() {
+            document.getElementById('modalServicioLabel').textContent = 'Nuevo Servicio';
+            document.getElementById('servicioId').value = '0';
+            document.getElementById('formServicio').reset();
+            // Limpiar validaciones previas si existen
+            const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+            invalidFeedbacks.forEach(feedback => feedback.textContent = '');
+            const invalidInputs = document.querySelectorAll('.is-invalid');
+            invalidInputs.forEach(input => input.classList.remove('is-invalid'));
+
+            // Asegurarse de que el checkbox de activo esté marcado por defecto para nuevo servicio
+            document.getElementById('estaActivo').checked = true;
+        }
+
+        // Función para abrir el modal de edición de servicio
+        function abrirModalEditarServicio(id) {
+            fetch(`/Servicios/GetServicioPorId/${id}`)
+                .then(response => response.json())
+                .then(servicio => {
+                    document.getElementById('modalServicioLabel').textContent = 'Editar Servicio';
+                    document.getElementById('servicioId').value = servicio.id;
+                    document.getElementById('nombreServicio').value = servicio.nombreServicio;
+                    document.getElementById('tipoServicio').value = servicio.tipoServicio;
+                    document.getElementById('precioBase').value = servicio.precioBase.toFixed(2);
+                    document.getElementById('descripcion').value = servicio.descripcion || '';
+                    document.getElementById('observaciones').value = servicio.observaciones || '';
+                    document.getElementById('estaActivo').checked = servicio.estaActivo;
+
+                    // Limpiar validaciones previas si existen
+                    const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+                    invalidFeedbacks.forEach(feedback => feedback.textContent = '');
+                    const invalidInputs = document.querySelectorAll('.is-invalid');
+                    invalidInputs.forEach(input => input.classList.remove('is-invalid'));
+
+                    $('#modalServicio').modal('show');
+                })
+                .catch(error => console.error('Error al obtener servicio:', error));
+        }
+
+        // Manejar el envío del formulario de servicio
+        document.getElementById('formServicio').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+            const servicioId = document.getElementById('servicioId').value;
+            const btnGuardar = document.getElementById('btnGuardarServicio');
+            const normalState = btnGuardar.querySelector('.normal-state');
+            const loadingState = btnGuardar.querySelector('.loading-state');
+
+            btnGuardar.disabled = true;
+            normalState.classList.add('d-none');
+            loadingState.classList.remove('d-none');
+
+            // Validar campos requeridos antes de enviar
+            let isValid = true;
+            const requiredInputs = form.querySelectorAll('[required]');
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    input.nextElementSibling.textContent = 'Este campo es obligatorio.';
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.nextElementSibling.textContent = '';
+                }
+            });
+
+            if (!isValid) {
+                btnGuardar.disabled = false;
+                normalState.classList.remove('d-none');
+                loadingState.classList.add('d-none');
+                return;
+            }
+
+
+            const url = servicioId === '0' ? '/Servicios/CrearServicio' : `/Servicios/EditarServicio/${servicioId}`;
+            const method = 'POST'; // Siempre POST para crear o editar según el API
+
+            fetch(url, {
+                method: method,
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        // Si la respuesta no es OK, intenta leer el mensaje de error del body
+                        return response.text().then(text => { throw new Error(text || response.statusText) });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    $('#modalServicio').modal('hide');
+                    cargarServicios(); // Recargar la tabla
+                })
+                .catch(error => {
+                    console.error('Error al guardar servicio:', error);
+                    // Mostrar el mensaje de error en el formulario
+                    let errorMessage = 'Ocurrió un error al guardar el servicio.';
+                    try {
+                        const errorObj = JSON.parse(error.message);
+                        errorMessage = errorObj.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = error.message || errorMessage;
+                    }
+                    // Intentar mostrar el error en un lugar visible, por ejemplo, debajo del título del modal
+                    const modalHeader = form.closest('.modal-content').querySelector('.modal-header');
+                    const errorAlert = modalHeader.nextElementSibling.querySelector('.alert-danger');
+                    if (errorAlert) {
+                        errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${errorMessage}`;
+                        errorAlert.style.display = 'block';
+                    } else {
+                        const newAlert = document.createElement('div');
+                        newAlert.className = 'alert alert-danger mt-2';
+                        newAlert.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${errorMessage}`;
+                        modalHeader.after(newAlert);
+                    }
+                })
+                .finally(() => {
+                    btnGuardar.disabled = false;
+                    normalState.classList.remove('d-none');
+                    loadingState.classList.add('d-none');
+                });
+        });
+
+        // Función para confirmar la desactivación de un servicio
+        function confirmarDesactivarServicio(id, nombre) {
+            document.getElementById('nombreServicioEliminar').textContent = nombre;
+            document.getElementById('btnConfirmarEliminar').onclick = function() {
+                desactivarServicio(id);
+            };
+            $('#modalConfirmarEliminar').modal('show');
+        }
+
+        // Función para desactivar un servicio
+        function desactivarServicio(id) {
+            const btnConfirmar = document.getElementById('btnConfirmarEliminar');
+            const normalState = btnConfirmar.querySelector('.normal-state');
+            const loadingState = btnConfirmar.querySelector('.loading-state');
+
+            btnConfirmar.disabled = true;
+            normalState.classList.add('d-none');
+            loadingState.classList.remove('d-none');
+
+            fetch(`/Servicios/DesactivarServicio/${id}`, {
+                method: 'POST'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al desactivar el servicio.');
+                    }
+                    return response.text(); // O response.json() si el endpoint retorna JSON
+                })
+                .then(() => {
+                    $('#modalConfirmarEliminar').modal('hide');
+                    cargarServicios(); // Recargar la tabla
+                })
+                .catch(error => {
+                    console.error('Error al desactivar servicio:', error);
+                    // Mostrar mensaje de error al usuario si es necesario
+                })
+                .finally(() => {
+                    btnConfirmar.disabled = false;
+                    normalState.classList.remove('d-none');
+                    loadingState.classList.add('d-none');
+                });
+        }
+
+        // Cargar servicios al iniciar la página
+        document.addEventListener('DOMContentLoaded', cargarServicios);
+
+        // Escuchar el evento de input en el campo de búsqueda para filtrar en tiempo real
+        document.getElementById('inputBusqueda').addEventListener('input', cargarServicios);
+
+        // Escuchar el cambio en el select de estado para filtrar
+        document.getElementById('selectEstado').addEventListener('change', cargarServicios);
+    </script>
 }
