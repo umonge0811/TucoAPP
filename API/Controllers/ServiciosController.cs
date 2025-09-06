@@ -1,5 +1,3 @@
-
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -251,6 +249,33 @@ namespace API.Controllers
             {
                 _logger.LogError(ex, "❌ Error al obtener tipos de servicios");
                 return StatusCode(500, "Error interno del servidor");
+            }
+        }
+
+        /// <summary>
+        /// Obtiene todos los tipos de servicios disponibles
+        /// </summary>
+        [HttpGet("ObtenerTipos")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerTipos()
+        {
+            try
+            {
+                var tipos = new[]
+                {
+                    new { id = 1, nombre = "Instalación", descripcion = "Instalación de llantas" },
+                    new { id = 2, nombre = "Balanceado", descripcion = "Balanceado de ruedas" },
+                    new { id = 3, nombre = "Alineación", descripcion = "Alineación de dirección" },
+                    new { id = 4, nombre = "Reparación", descripcion = "Reparación de llantas" },
+                    new { id = 5, nombre = "Cambio de válvulas", descripcion = "Cambio de válvulas" }
+                };
+
+                return Ok(tipos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error obteniendo tipos de servicios");
+                return StatusCode(500, new { message = "Error interno del servidor" });
             }
         }
     }

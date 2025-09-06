@@ -1,4 +1,3 @@
-
 // ================================
 // MÓDULO DE SERVICIOS PARA FACTURACIÓN
 // ================================
@@ -55,13 +54,13 @@ class ServiciosFacturacion {
         try {
             // Cargar tipos de servicios
             await this.cargarTiposServicios();
-            
+
             // Configurar eventos de filtros
             this.configurarEventosFiltros();
-            
+
             // Cargar servicios iniciales
             await this.cargarServicios();
-            
+
         } catch (error) {
             console.error('❌ Error inicializando contenido del modal:', error);
         }
@@ -85,10 +84,10 @@ class ServiciosFacturacion {
 
             const tipos = await response.json();
             const select = $('#tipoServicioFiltro');
-            
+
             // Limpiar opciones existentes excepto la primera
             select.find('option:not(:first)').remove();
-            
+
             // Agregar tipos si la respuesta es exitosa
             if (tipos.success && tipos.data) {
                 tipos.data.forEach(tipo => {
@@ -186,8 +185,8 @@ class ServiciosFacturacion {
         let serviciosFiltrados = this.aplicarFiltros(servicios);
 
         serviciosFiltrados.forEach(servicio => {
-            const estadoBadge = servicio.estaActivo ? 
-                '<span class="badge bg-success">Activo</span>' : 
+            const estadoBadge = servicio.estaActivo ?
+                '<span class="badge bg-success">Activo</span>' :
                 '<span class="badge bg-secondary">Inactivo</span>';
 
             const fila = `
@@ -207,15 +206,15 @@ class ServiciosFacturacion {
                     </td>
                     <td class="text-center">
                         ${servicio.estaActivo ? `
-                            <button type="button" 
+                            <button type="button"
                                     class="btn btn-sm btn-success btn-agregar-servicio-modulo"
                                     data-servicio-id="${servicio.servicioId}"
                                     title="Agregar al carrito">
                                 <i class="bi bi-cart-plus"></i>
                             </button>
                         ` : `
-                            <button type="button" 
-                                    class="btn btn-sm btn-secondary" 
+                            <button type="button"
+                                    class="btn btn-sm btn-secondary"
                                     disabled
                                     title="Servicio inactivo">
                                 <i class="bi bi-x-circle"></i>
@@ -247,7 +246,7 @@ class ServiciosFacturacion {
                 const nombre = (servicio.nombreServicio || '').toLowerCase();
                 const descripcion = (servicio.descripcion || '').toLowerCase();
                 const tipo = (servicio.tipoServicio || '').toLowerCase();
-                
+
                 if (!nombre.includes(busqueda) && !descripcion.includes(busqueda) && !tipo.includes(busqueda)) {
                     return false;
                 }
@@ -278,7 +277,7 @@ class ServiciosFacturacion {
     mostrarModalAgregarServicio(servicioId) {
         try {
             console.log('🛠️ === MOSTRANDO MODAL AGREGAR SERVICIO (ID:' + servicioId + ') ===');
-            
+
             const servicio = this.serviciosDisponibles.find(s => s.servicioId === servicioId);
             if (!servicio) {
                 throw new Error('Servicio no encontrado');
@@ -385,17 +384,43 @@ class ServiciosFacturacion {
             try {
                 const cantidad = parseInt($('#cantidadServicio').val()) || 1;
                 const observaciones = $('#observacionesServicio').val().trim();
+                const precio = servicio.precioBase; // Se usa el precio base
 
-                // Llamar a la función del facturacion.js principal
-                if (typeof agregarServicioAVenta === 'function') {
-                    agregarServicioAVenta(servicio, cantidad, observaciones);
+                // Verificar que la función esté disponible globalmente o en el contexto de facturación
+                if (typeof window.agregarServicioAVenta === 'function') {
+                    window.agregarServicioAVenta(servicio, cantidad, precio);
+                    $('#modalServicios').modal('hide');
+                } else if (typeof agregarServicioAVenta === 'function') {
+                    agregarServicioAVenta(servicio, cantidad, precio);
+                    $('#modalServicios').modal('hide');
                 } else {
                     console.error('❌ Función agregarServicioAVenta no disponible');
-                    throw new Error('Función de agregar servicio no disponible');
+                    console.log('🔍 Intentando agregar servicio directamente...');
+
+                    // Fallback: agregar servicio directamente
+                    if (typeof window.serviciosEnVenta !== 'undefined') {
+                        const servicioVenta = {
+                            servicioId: servicio.servicioId,
+                            nombre: servicio.nombreServicio, // Corrected property name
+                            cantidad: cantidad,
+                            precio: precio,
+                            subtotal: cantidad * precio
+                        };
+
+                        window.serviciosEnVenta = window.serviciosEnVenta || [];
+                        window.serviciosEnVenta.push(servicioVenta);
+
+                        // Actualizar totales si la función existe
+                        if (typeof window.actualizarTotales === 'function') {
+                            window.actualizarTotales();
+                        }
+
+                        $('#modalServicios').modal('hide');
+                        console.log('✅ Servicio agregado usando fallback');
+                    } else {
+                        throw new Error('Función de agregar servicio no disponible');
+                    }
                 }
-                
-                // Cerrar modal
-                this.modalAgregarServicio.hide();
 
                 this.mostrarToast('Servicio agregado', `${servicio.nombreServicio} agregado a la venta`, 'success');
 
