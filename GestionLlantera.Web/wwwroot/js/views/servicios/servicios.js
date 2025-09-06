@@ -12,11 +12,25 @@ let servicioIdEliminar = 0;
 $(document).ready(function () {
     console.log('🔧 Inicializando módulo de servicios...');
     
-    inicializarTabla();
-    cargarTiposServicios();
-    configurarEventos();
+    // Verificar que las dependencias estén cargadas
+    if (!window.jQuery) {
+        console.error('jQuery no está cargado');
+        return;
+    }
     
-    console.log('✅ Módulo de servicios inicializado correctamente');
+    if (!$.fn.DataTable) {
+        console.error('DataTables no está cargado');
+        return;
+    }
+    
+    // Esperar un poco para que el DOM esté completamente listo
+    setTimeout(function() {
+        inicializarTabla();
+        cargarTiposServicios();
+        configurarEventos();
+        
+        console.log('✅ Módulo de servicios inicializado correctamente');
+    }, 100);
 });
 
 // ================================
@@ -53,6 +67,12 @@ function configurarEventos() {
 // ================================
 
 function inicializarTabla() {
+    // Verificar que el elemento tabla existe
+    if (!$('#tablaServicios').length) {
+        console.error('Elemento #tablaServicios no encontrado');
+        return;
+    }
+
     if ($.fn.DataTable.isDataTable('#tablaServicios')) {
         $('#tablaServicios').DataTable().destroy();
     }
@@ -65,9 +85,9 @@ function inicializarTabla() {
             type: 'GET',
             data: function(d) {
                 return {
-                    busqueda: $('#inputBusqueda').val(),
-                    tipoServicio: $('#selectTipoServicio').val(),
-                    soloActivos: $('#selectEstado').val(),
+                    busqueda: $('#inputBusqueda').val() || '',
+                    tipoServicio: $('#selectTipoServicio').val() || '',
+                    soloActivos: $('#selectEstado').val() || '',
                     pagina: 1,
                     tamano: 1000
                 };
