@@ -9,8 +9,9 @@ namespace Tuco.Clases.DTOs.Facturacion
         
         public int FacturaId { get; set; }
         
-        [Required(ErrorMessage = "El producto es requerido")]
-        public int ProductoId { get; set; }
+        public int? ProductoId { get; set; }
+        
+        public int? ServicioId { get; set; }
         
         [Required(ErrorMessage = "El nombre del producto es requerido")]
         public string NombreProducto { get; set; } = string.Empty;
@@ -32,6 +33,9 @@ namespace Tuco.Clases.DTOs.Facturacion
         
         public decimal Subtotal { get; set; }
         
+        // Indica si este detalle es un servicio
+        public bool EsServicio { get; set; }
+        
         // Propiedades adicionales del producto
         public int StockDisponible { get; set; }
         public bool EsLlanta { get; set; }
@@ -46,5 +50,11 @@ namespace Tuco.Clases.DTOs.Facturacion
         
         public bool TieneDescuento => PorcentajeDescuento.HasValue && PorcentajeDescuento > 0;
         public bool StockSuficiente => StockDisponible >= Cantidad;
+        
+        // Validación: debe tener ProductoId O ServicioId
+        public bool TieneProductoOServicio => ProductoId.HasValue || ServicioId.HasValue;
+        
+        // Validación: no puede tener ambos
+        public bool EsValido => (ProductoId.HasValue && !ServicioId.HasValue) || (!ProductoId.HasValue && ServicioId.HasValue);
     }
 }
