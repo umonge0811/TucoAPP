@@ -87,7 +87,6 @@ namespace GestionLlantera.Web.Controllers
 
                 if (servicios != null)
                 {
-                    _logger.LogInformation("✅ Servicios obtenidos exitosamente. Total: {Count}", servicios.Count);
                     return Json(servicios); // Retornar directamente el objeto de respuesta del servicio
                 }
                 else
