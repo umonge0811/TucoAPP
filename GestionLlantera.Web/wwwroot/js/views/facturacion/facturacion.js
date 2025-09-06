@@ -222,8 +222,9 @@ if (typeof window !== 'undefined') {
     window.convertirProformaAFactura = convertirProformaAFactura;
     window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
     window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
+    window.abrirModalServicios = abrirModalServicios; // ✅ EXPORTAR FUNCIÓN DE SERVICIOS
 
-    console.log('📋 Funciones de proformas y detalles exportadas globalmente');
+    console.log('📋 Funciones de proformas, detalles y servicios exportadas globalmente');
 }
 
 // ===== INICIALIZACIÓN =====
@@ -431,9 +432,25 @@ function configurarEventos() {
     });
 
     // ===== BOTÓN SERVICIOS =====
-    $('#btnServicios').on('click', function () {
+    $('#btnServicios').on('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🛠️ Botón servicios clickeado');
         abrirModalServicios();
     });
+
+    // ✅ CONFIGURACIÓN ALTERNATIVA DIRECTA
+    const btnServicios = document.getElementById('btnServicios');
+    if (btnServicios) {
+        btnServicios.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🛠️ Event listener directo - Botón servicios clickeado');
+            abrirModalServicios();
+        });
+        console.log('✅ Event listener directo configurado para botón servicios');
+    } else {
+        console.warn('⚠️ No se encontró el botón servicios en el DOM');
+    }
 
     // ===== MODAL FINALIZAR VENTA =====
     $('#metodoPago').on('change', function () {
