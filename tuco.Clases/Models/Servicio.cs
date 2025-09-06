@@ -44,3 +44,28 @@ namespace tuco.Clases.Models
         public string PrecioFormateado => $"₡{PrecioBase:N2}";
     }
 }
+using System.ComponentModel.DataAnnotations;
+
+namespace tuco.Clases.Models
+{
+    public partial class Servicio
+    {
+        public int ServicioId { get; set; }
+        
+        [Required]
+        [MaxLength(200)]
+        public string NombreServicio { get; set; } = string.Empty;
+        
+        [MaxLength(500)]
+        public string? Descripcion { get; set; }
+        
+        [Required]
+        public decimal Precio { get; set; }
+        
+        public bool Activo { get; set; } = true;
+        
+        public DateTime FechaCreacion { get; set; } = DateTime.Now;
+        
+        public DateTime? FechaActualizacion { get; set; }
+    }
+}

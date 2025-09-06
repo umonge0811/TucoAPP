@@ -11,8 +11,9 @@ namespace tuco.Clases.Models
         [Required]
         public int FacturaId { get; set; }
         
-        [Required]
-        public int ProductoId { get; set; }
+        public int? ProductoId { get; set; }
+        
+        public int? ServicioId { get; set; }
         
         [Required]
         public string NombreProducto { get; set; } = null!;
@@ -34,6 +35,7 @@ namespace tuco.Clases.Models
         
         // Propiedades de navegación
         public virtual Factura Factura { get; set; } = null!;
-        public virtual Producto Producto { get; set; } = null!;
+        public virtual Producto? Producto { get; set; }
+        public virtual Servicio? Servicio { get; set; }
     }
 }

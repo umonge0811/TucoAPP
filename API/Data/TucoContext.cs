@@ -821,6 +821,11 @@ public partial class TucoContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.ProductoId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Servicio)
+                .WithMany()
+                .HasForeignKey(d => d.ServicioId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
             modelBuilder.Entity<DetallePago>(entity =>

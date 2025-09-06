@@ -321,20 +321,28 @@ namespace API.Controllers
                 // Crear detalles de factura
                 foreach (var detalle in facturaDto.DetallesFactura)
                 {
-                    var detalleFactura = new DetalleFactura
+                    // ✅ VALIDAR que tenga ProductoId O ServicioId, pero no ambos
+                    if ((!detalle.ProductoId.HasValue && !detalle.ServicioId.HasValue) ||
+                        (detalle.ProductoId.HasValue && detalle.ServicioId.HasValue))
+                    {
+                        return BadRequest(new { message = "Cada detalle debe tener ProductoId O ServicioId, pero no ambos." });
+                    }
+
+                    var detalleBD = new DetalleFactura
                     {
                         FacturaId = factura.FacturaId,
                         ProductoId = detalle.ProductoId,
+                        ServicioId = detalle.ServicioId,
                         NombreProducto = detalle.NombreProducto,
                         DescripcionProducto = detalle.DescripcionProducto,
                         Cantidad = detalle.Cantidad,
                         PrecioUnitario = detalle.PrecioUnitario,
                         PorcentajeDescuento = detalle.PorcentajeDescuento,
-                        MontoDescuento = detalle.DescuentoCalculado,
-                        Subtotal = detalle.SubtotalConDescuento
+                        MontoDescuento = detalle.MontoDescuento,
+                        Subtotal = detalle.Subtotal
                     };
 
-                    _context.DetallesFactura.Add(detalleFactura);
+                    _context.DetallesFactura.Add(detalleBD);
 
                     // ✅ NO ACTUALIZAR INVENTARIO AQUÍ - Se maneja desde el frontend
                     // El ajuste de stock se realiza desde el JavaScript usando el endpoint específico
