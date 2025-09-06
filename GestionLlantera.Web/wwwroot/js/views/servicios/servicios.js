@@ -111,16 +111,16 @@ function mostrarServicios() {
 
     if (busqueda) {
         serviciosFiltrados = serviciosFiltrados.filter(servicio => 
-            (servicio.NombreServicio && servicio.NombreServicio.toLowerCase().includes(busqueda)) ||
-            (servicio.TipoServicio && servicio.TipoServicio.toLowerCase().includes(busqueda)) ||
-            (servicio.Descripcion && servicio.Descripcion.toLowerCase().includes(busqueda))
+            (servicio.nombreServicio && servicio.nombreServicio.toLowerCase().includes(busqueda)) ||
+            (servicio.tipoServicio && servicio.tipoServicio.toLowerCase().includes(busqueda)) ||
+            (servicio.descripcion && servicio.descripcion.toLowerCase().includes(busqueda))
         );
     }
 
     if (estado === 'true') {
-        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.EstaActivo === true);
+        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.estaActivo === true);
     } else if (estado === 'false') {
-        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.EstaActivo === false);
+        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.estaActivo === false);
     }
 
     if (serviciosFiltrados.length === 0) {
@@ -137,32 +137,32 @@ function mostrarServicios() {
 }
 
 function crearFilaServicio(servicio) {
-    const estadoBadge = servicio.EstaActivo ? 
+    const estadoBadge = servicio.estaActivo ? 
         '<span class="badge bg-success">Activo</span>' : 
         '<span class="badge bg-danger">Inactivo</span>';
 
-    const fechaCreacion = servicio.FechaCreacion ? 
-        new Date(servicio.FechaCreacion).toLocaleDateString('es-CR') : '-';
+    const fechaCreacion = servicio.fechaCreacion ? 
+        new Date(servicio.fechaCreacion).toLocaleDateString('es-CR') : '-';
 
-    const precioFormateado = servicio.PrecioBase ? 
-        `₡${servicio.PrecioBase.toLocaleString('es-CR')}` : '₡0';
+    const precioFormateado = servicio.precioBase ? 
+        `₡${servicio.precioBase.toLocaleString('es-CR')}` : '₡0';
 
     return `
         <tr>
-            <td class="text-center">${servicio.ServicioId}</td>
-            <td>${servicio.NombreServicio || ''}</td>
-            <td class="text-center">${servicio.TipoServicio || ''}</td>
+            <td class="text-center">${servicio.servicioId || servicio.id || ''}</td>
+            <td>${servicio.nombreServicio || servicio.nombre || ''}</td>
+            <td class="text-center">${servicio.tipoServicio || servicio.tipo || ''}</td>
             <td class="text-end precio-cell">${precioFormateado}</td>
             <td class="text-center">${estadoBadge}</td>
             <td class="text-center">${fechaCreacion}</td>
             <td class="text-center">
                 <button type="button" class="btn btn-outline-primary btn-sm" 
-                        onclick="editarServicio(${servicio.ServicioId})" 
+                        onclick="editarServicio(${servicio.servicioId || servicio.id})" 
                         title="Editar">
                     <i class="bi bi-pencil"></i>
                 </button>
                 <button type="button" class="btn btn-outline-danger btn-sm" 
-                        onclick="confirmarEliminar(${servicio.ServicioId}, '${servicio.NombreServicio}')" 
+                        onclick="confirmarEliminar(${servicio.servicioId || servicio.id}, '${servicio.nombreServicio || servicio.nombre}')" 
                         title="Desactivar">
                     <i class="bi bi-trash"></i>
                 </button>
@@ -202,13 +202,13 @@ function editarServicio(servicioId) {
                 const servicio = response.data;
 
                 $('#modalServicioLabel').text('Editar Servicio');
-                $('#servicioId').val(servicio.ServicioId);
-                $('#nombreServicio').val(servicio.NombreServicio);
-                $('#tipoServicio').val(servicio.TipoServicio);
-                $('#precioBase').val(servicio.PrecioBase);
-                $('#descripcion').val(servicio.Descripcion);
-                $('#observaciones').val(servicio.Observaciones);
-                $('#estaActivo').prop('checked', servicio.EstaActivo);
+                $('#servicioId').val(servicio.servicioId || servicio.id);
+                $('#nombreServicio').val(servicio.nombreServicio || servicio.nombre);
+                $('#tipoServicio').val(servicio.tipoServicio || servicio.tipo);
+                $('#precioBase').val(servicio.precioBase || servicio.precio);
+                $('#descripcion').val(servicio.descripcion);
+                $('#observaciones').val(servicio.observaciones);
+                $('#estaActivo').prop('checked', servicio.estaActivo);
 
                 $('#modalServicio').modal('show');
             } else {
