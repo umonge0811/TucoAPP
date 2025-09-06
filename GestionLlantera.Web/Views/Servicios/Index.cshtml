@@ -210,7 +210,7 @@
             loadingSpinner.style.display = 'block'; // Mostrar spinner
             emptyState.style.display = 'none'; // Ocultar estado vacío
 
-            fetch('/Servicios/GetServicios')
+            fetch('/Servicios/ObtenerServicios')
                 .then(response => response.json())
                 .then(data => {
                     loadingSpinner.style.display = 'none'; // Ocultar spinner
@@ -236,17 +236,17 @@
                         serviciosFiltrados.forEach(servicio => {
                             const row = tablaServiciosBody.insertRow();
                             row.innerHTML = `
-                                <td>${servicio.id}</td>
+                                <td>${servicio.servicioId || servicio.id}</td>
                                 <td>${servicio.nombreServicio}</td>
                                 <td>${servicio.tipoServicio}</td>
                                 <td>₡${servicio.precioBase.toFixed(2)}</td>
                                 <td>${servicio.estaActivo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>'}</td>
                                 <td>${new Date(servicio.fechaCreacion).toLocaleDateString()}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditarServicio(${servicio.id})">
+                                    <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditarServicio(${servicio.servicioId || servicio.id})">
                                         <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger" onclick="confirmarDesactivarServicio(${servicio.id}, '${servicio.nombreServicio}')">
+                                    <button class="btn btn-sm btn-danger" onclick="confirmarDesactivarServicio(${servicio.servicioId || servicio.id}, '${servicio.nombreServicio}')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </td>
@@ -281,11 +281,12 @@
 
         // Función para abrir el modal de edición de servicio
         function abrirModalEditarServicio(id) {
-            fetch(`/Servicios/GetServicioPorId/${id}`)
+            fetch(`/Servicios/ObtenerServicioPorId?id=${id}`)
                 .then(response => response.json())
-                .then(servicio => {
+                .then(data => {
+                    const servicio = data.data;
                     document.getElementById('modalServicioLabel').textContent = 'Editar Servicio';
-                    document.getElementById('servicioId').value = servicio.id;
+                    document.getElementById('servicioId').value = servicio.servicioId || servicio.id;
                     document.getElementById('nombreServicio').value = servicio.nombreServicio;
                     document.getElementById('tipoServicio').value = servicio.tipoServicio;
                     document.getElementById('precioBase').value = servicio.precioBase.toFixed(2);
@@ -341,7 +342,7 @@
             }
 
 
-            const url = servicioId === '0' ? '/Servicios/CrearServicio' : `/Servicios/EditarServicio/${servicioId}`;
+            const url = servicioId === '0' ? '/Servicios/CrearServicio' : `/Servicios/ActualizarServicio/${servicioId}`;
             const method = 'POST'; // Siempre POST para crear o editar según el API
 
             fetch(url, {
@@ -408,8 +409,8 @@
             normalState.classList.add('d-none');
             loadingState.classList.remove('d-none');
 
-            fetch(`/Servicios/DesactivarServicio/${id}`, {
-                method: 'POST'
+            fetch(`/Servicios/EliminarServicio?id=${id}`, {
+                method: 'DELETE'
             })
                 .then(response => {
                     if (!response.ok) {
