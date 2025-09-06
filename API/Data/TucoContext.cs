@@ -89,6 +89,8 @@ public partial class TucoContext : DbContext
 
     public DbSet<Anuncio> Anuncios { get; set; }
 
+    public virtual DbSet<Servicio> Servicios { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

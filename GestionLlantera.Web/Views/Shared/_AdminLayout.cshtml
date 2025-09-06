@@ -111,6 +111,15 @@
                         </div>
                     </li>
 
+                    <!-- ✅ SERVICIOS DE MECÁNICA - Módulo independiente -->
+                    <li class="nav-item" asp-permiso="Menu_Servicios">
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"].ToString() == "Servicios" ? "active" : "")"
+                           asp-controller="Servicios"
+                           asp-action="Index">
+                            <i class="bi bi-tools"></i> Servicios de Mecánica
+                        </a>
+                    </li>
+
                     <!-- ✅ PROVEEDORES Y PEDIDOS - Módulo separado -->
                     <li class="nav-item" asp-permiso="Menu_Proveedores">
                         <a class="nav-link" data-bs-toggle="collapse" href="#proveedoresMenu">

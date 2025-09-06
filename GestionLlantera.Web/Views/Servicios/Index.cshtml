@@ -1,0 +1,189 @@
+@{
+    ViewData["Title"] = "Gestión de Servicios";
+    ViewData["ActivePage"] = "Servicios";
+}
+
+<div class="servicios-container">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="page-title">
+                <i class="fas fa-tools"></i>
+                Gestión de Servicios de Mecánica
+            </h2>
+            <p class="page-subtitle">Administra los servicios disponibles para facturación</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalServicio" onclick="abrirModalNuevoServicio()">
+                <i class="fas fa-plus"></i>
+                Nuevo Servicio
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Buscar:</label>
+                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Nombre, descripción o tipo...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo de Servicio:</label>
+                    <select id="selectTipoServicio" class="form-select">
+                        <option value="">Todos los tipos</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Estado:</label>
+                    <select id="selectEstado" class="form-select">
+                        <option value="true">Solo Activos</option>
+                        <option value="false">Solo Inactivos</option>
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="filtrarServicios()">
+                        <i class="fas fa-search"></i>
+                        Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Servicios -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="tablaServicios" class="table table-hover" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre del Servicio</th>
+                            <th>Tipo</th>
+                            <th>Precio Base</th>
+                            <th>Estado</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los datos se cargan via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear/Editar Servicio -->
+<div class="modal fade" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalServicioLabel">Nuevo Servicio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formServicio">
+                <div class="modal-body">
+                    <input type="hidden" id="servicioId" name="servicioId" value="0">
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="nombreServicio" class="form-label">Nombre del Servicio <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombreServicio" name="nombreServicio" required maxlength="100">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="tipoServicio" class="form-label">Tipo de Servicio <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="tipoServicio" name="tipoServicio" required maxlength="50" placeholder="Ej: Mecánica, Llantas, Diagnóstico">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="precioBase" class="form-label">Precio Base (₡) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="precioBase" name="precioBase" required min="0.01" step="0.01">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Describe el servicio..."></textarea>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="2" placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="estaActivo" name="estaActivo" checked>
+                                <label class="form-check-label" for="estaActivo">
+                                    Servicio Activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarServicio">
+                        <span class="normal-state">
+                            <i class="fas fa-save"></i>
+                            Guardar
+                        </span>
+                        <span class="loading-state d-none">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminar -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-labelledby="modalConfirmarEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmarEliminarLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea desactivar este servicio?</p>
+                <p><strong id="nombreServicioEliminar"></strong></p>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    El servicio será desactivado y no estará disponible para nuevas facturas.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    <span class="normal-state">
+                        <i class="fas fa-trash"></i>
+                        Desactivar
+                    </span>
+                    <span class="loading-state d-none">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Desactivando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/views/servicios/servicios.js"></script>
+}
+
+@section Styles {
+    <link href="~/css/views/servicios/servicios.css" rel="stylesheet" />
+}
