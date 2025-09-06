@@ -115,7 +115,7 @@ namespace API.Controllers
         /// </summary>
         [HttpGet("{id}")]
         [Authorize]
-        public async Task<ActionResult<ServicioDTO>> ObtenerServicioPorId(int id)
+        public async Task<IActionResult> ObtenerServicioPorId(int id)
         {
             var validacionPermiso = await this.ValidarPermisoAsync(_permisosService, "Ver Servicios",
                 "Solo usuarios con permiso 'Ver Servicios' pueden consultar servicios");
