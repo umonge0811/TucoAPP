@@ -1762,13 +1762,12 @@ function mostrarModalFinalizarVenta() {
         modalFacturasPendientes.hide();
         console.log('🚪 Modal de facturas pendientes cerrado antes de abrir modal finalizar');
     }
-    if (productosEnVenta.length === 0) {
-        mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
-        return;
-    }
+    // ✅ VALIDACIÓN MEJORADA: CONSIDERAR TANTO PRODUCTOS COMO SERVICIOS
+    const tieneProductos = productosEnVenta.length > 0;
+    const tieneServicios = (window.serviciosEnVenta && window.serviciosEnVenta.length > 0);
 
-    if (productosEnVenta.length === 0) {
-        mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
+    if (!tieneProductos && !tieneServicios) {
+        mostrarToast('Venta vacía', 'Agrega productos o servicios antes de finalizar la venta', 'warning');
         return;
     }
 
@@ -1900,13 +1899,13 @@ function actualizarResumenVentaModal() {
     // Recalcular precios según método de pago seleccionado
     let subtotal = 0;
 
-    // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
+    // ===== MOSTRAR RESUMEN DE PRODUCTOS Y SERVICIOS =====
     let htmlResumen = `
         <div class="table-responsive">
             <table class="table table-sm">
                 <thead class="table-light">
                     <tr>
-                        <th>Producto</th>
+                        <th>Producto/Servicio</th>
                         <th class="text-center">Cant.</th>
                         <th class="text-end">Precio Unit.</th>
                         <th class="text-end">Subtotal</th>
@@ -1915,6 +1914,7 @@ function actualizarResumenVentaModal() {
                 <tbody>
     `;
 
+    // ✅ PROCESAR PRODUCTOS
     productosEnVenta.forEach(producto => {
         // Calcular precio según método de pago seleccionado
         const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
@@ -1944,6 +1944,40 @@ function actualizarResumenVentaModal() {
             </tr>
         `;
     });
+
+    // ✅ PROCESAR SERVICIOS
+    if (window.serviciosEnVenta && window.serviciosEnVenta.length > 0) {
+        window.serviciosEnVenta.forEach(servicio => {
+            // Los servicios mantienen su precio base (no se ajustan por método de pago)
+            const precioServicio = servicio.precioUnitario || servicio.precio || 0;
+            const subtotalServicio = precioServicio * servicio.cantidad;
+            subtotal += subtotalServicio;
+
+            // ✅ CONSTRUIR NOMBRE COMPLETO DEL SERVICIO
+            let infoServicioCompleta = `<strong><i class="bi bi-tools me-1 text-success"></i>[SERVICIO] ${servicio.nombreProducto}</strong>`;
+
+            // Agregar tipo de servicio si existe
+            if (servicio.tipoServicio) {
+                infoServicioCompleta += `<br><small class="text-muted">Tipo: ${servicio.tipoServicio}</small>`;
+            }
+
+            // Agregar observaciones si existen
+            if (servicio.observaciones) {
+                infoServicioCompleta += `<br><small class="text-info">Obs: ${servicio.observaciones}</small>`;
+            }
+
+            htmlResumen += `
+                <tr class="table-light">
+                    <td>
+                        ${infoServicioCompleta}
+                    </td>
+                    <td class="text-center">${servicio.cantidad}</td>
+                    <td class="text-end">₡${formatearMoneda(precioServicio)}</td>
+                    <td class="text-end">₡${formatearMoneda(subtotalServicio)}</td>
+                </tr>
+            `;
+        });
+    }
 
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
@@ -1982,7 +2016,6 @@ function actualizarResumenVentaModal() {
         $('#campoCambio').hide();
     }
 }
-
 
 function configurarModalSegunPermisos() {
     const $btnConfirmar = $('#btnConfirmarVenta');
