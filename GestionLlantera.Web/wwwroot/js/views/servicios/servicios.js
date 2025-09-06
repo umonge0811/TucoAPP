@@ -11,24 +11,24 @@ let servicioIdEliminar = 0;
 
 $(document).ready(function () {
     console.log('🔧 Inicializando módulo de servicios...');
-    
+
     // Verificar que las dependencias estén cargadas
     if (!window.jQuery) {
         console.error('jQuery no está cargado');
         return;
     }
-    
+
     if (!$.fn.DataTable) {
         console.error('DataTables no está cargado');
         return;
     }
-    
+
     // Esperar un poco para que el DOM esté completamente listo
     setTimeout(function() {
         inicializarTabla();
         cargarTiposServicios();
         configurarEventos();
-        
+
         console.log('✅ Módulo de servicios inicializado correctamente');
     }, 100);
 });
@@ -121,25 +121,25 @@ function inicializarTabla() {
             },
             dataSrc: function(json) {
                 console.log('📋 Datos recibidos del servidor:', json);
-                
+
                 // Verificar si es un array directamente
                 if (Array.isArray(json)) {
                     console.log('✅ Datos son un array directo:', json.length, 'servicios');
                     return json;
                 }
-                
+
                 // Verificar si tiene estructura de éxito
                 if (json && json.success && json.data) {
                     console.log('✅ Datos tienen estructura de éxito:', json.data.length, 'servicios');
                     return json.data;
                 }
-                
+
                 // Verificar si tiene servicios directamente
                 if (json && json.servicios) {
                     console.log('✅ Datos tienen servicios:', json.servicios.length, 'servicios');
                     return json.servicios;
                 }
-                
+
                 // Si no es ninguno de los casos anteriores, retornar array vacío
                 console.error('❌ Estructura de datos no reconocida:', json);
                 mostrarNotificacion('Error en el formato de datos de servicios', 'error');
@@ -155,41 +155,50 @@ function inicializarTabla() {
             }
         },
         columns: [
-            { 
-                data: 'ServicioId',
+            {
+                data: 'servicioId',
                 title: 'ID',
                 className: 'text-center',
-                width: '60px'
+                width: '80px'
             },
-            { 
-                data: 'NombreServicio',
-                title: 'Nombre del Servicio',
-                className: 'fw-medium'
+            {
+                data: 'nombreServicio',
+                title: 'Nombre',
+                className: 'text-start'
             },
-            { 
-                data: 'TipoServicio',
-                title: 'Tipo'
+            {
+                data: 'tipoServicio',
+                title: 'Tipo',
+                className: 'text-center',
+                width: '120px'
             },
-            { 
-                data: 'PrecioBase',
+            {
+                data: 'precioBase',
                 title: 'Precio Base',
                 className: 'text-end precio-cell',
+                width: '120px',
                 render: function(data) {
-                    return `₡${parseFloat(data).toLocaleString('es-CR', {minimumFractionDigits: 2})}`;
+                    return data ? `₡${data.toLocaleString('es-CR')}` : '₡0';
                 }
             },
-            { 
-                data: 'EstaActivo',
+            {
+                data: 'descripcion',
+                title: 'Descripción',
+                className: 'text-start'
+            },
+            {
+                data: 'estaActivo',
                 title: 'Estado',
                 className: 'text-center',
+                width: '100px',
                 render: function(data) {
-                    return data 
-                        ? '<span class="badge bg-success">Activo</span>'
-                        : '<span class="badge bg-danger">Inactivo</span>';
+                    return data ? 
+                        '<span class="badge bg-success">Activo</span>' : 
+                        '<span class="badge bg-danger">Inactivo</span>';
                 }
             },
-            { 
-                data: 'FechaCreacion',
+            {
+                data: 'fechaCreacion',
                 title: 'Fecha Creación',
                 className: 'text-center',
                 render: function(data) {
@@ -209,12 +218,12 @@ function inicializarTabla() {
                 render: function(data, type, row) {
                     return `
                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                onclick="editarServicio(${row.ServicioId})" 
+                                onclick="editarServicio(${row.servicioId})" 
                                 title="Editar">
                             <i class="bi bi-pencil"></i>
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm" 
-                                onclick="confirmarEliminar(${row.ServicioId}, '${row.NombreServicio}')" 
+                                onclick="confirmarEliminar(${row.servicioId}, '${row.nombreServicio}')" 
                                 title="Desactivar">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -246,7 +255,7 @@ function abrirModalNuevoServicio() {
 
 function editarServicio(servicioId) {
     console.log(`📝 Editando servicio ID: ${servicioId}`);
-    
+
     $.ajax({
         url: `/Servicios/ObtenerServicioPorId`,
         type: 'GET',
@@ -254,16 +263,16 @@ function editarServicio(servicioId) {
         success: function(response) {
             if (response.success) {
                 const servicio = response.data;
-                
+
                 $('#modalServicioLabel').text('Editar Servicio');
-                $('#servicioId').val(servicio.ServicioId);
-                $('#nombreServicio').val(servicio.NombreServicio);
-                $('#tipoServicio').val(servicio.TipoServicio);
-                $('#precioBase').val(servicio.PrecioBase);
-                $('#descripcion').val(servicio.Descripcion);
-                $('#observaciones').val(servicio.Observaciones);
-                $('#estaActivo').prop('checked', servicio.EstaActivo);
-                
+                $('#servicioId').val(servicio.servicioId);
+                $('#nombreServicio').val(servicio.nombreServicio);
+                $('#tipoServicio').val(servicio.tipoServicio);
+                $('#precioBase').val(servicio.precioBase);
+                $('#descripcion').val(servicio.descripcion);
+                $('#observaciones').val(servicio.observaciones);
+                $('#estaActivo').prop('checked', servicio.estaActivo);
+
                 $('#modalServicio').modal('show');
             } else {
                 mostrarNotificacion(response.message, 'error');
@@ -278,9 +287,9 @@ function editarServicio(servicioId) {
 function guardarServicio() {
     const btn = $('#btnGuardarServicio');
     btn.addClass('loading');
-    
+
     limpiarValidaciones();
-    
+
     const servicioId = parseInt($('#servicioId').val());
     const datos = {
         servicioId: servicioId,
@@ -294,22 +303,22 @@ function guardarServicio() {
 
     // Validación básica del lado cliente
     let esValido = true;
-    
+
     if (!datos.nombreServicio) {
         mostrarErrorCampo('#nombreServicio', 'El nombre del servicio es obligatorio');
         esValido = false;
     }
-    
+
     if (!datos.tipoServicio) {
         mostrarErrorCampo('#tipoServicio', 'El tipo de servicio es obligatorio');
         esValido = false;
     }
-    
+
     if (!datos.precioBase || datos.precioBase <= 0) {
         mostrarErrorCampo('#precioBase', 'El precio base debe ser mayor a 0');
         esValido = false;
     }
-    
+
     if (!esValido) {
         btn.removeClass('loading');
         return;
@@ -325,7 +334,7 @@ function guardarServicio() {
         data: JSON.stringify(datos),
         success: function(response) {
             btn.removeClass('loading');
-            
+
             if (response.success) {
                 $('#modalServicio').modal('hide');
                 tablaServicios.ajax.reload();
@@ -340,7 +349,7 @@ function guardarServicio() {
         },
         error: function(xhr) {
             btn.removeClass('loading');
-            
+
             if (xhr.responseJSON && xhr.responseJSON.message) {
                 mostrarNotificacion(xhr.responseJSON.message, 'error');
             } else {
@@ -359,14 +368,14 @@ function confirmarEliminar(servicioId, nombreServicio) {
 function eliminarServicio(servicioId) {
     const btn = $('#btnConfirmarEliminar');
     btn.addClass('loading');
-    
+
     $.ajax({
         url: `/Servicios/EliminarServicio`,
         type: 'DELETE',
         data: { id: servicioId },
         success: function(response) {
             btn.removeClass('loading');
-            
+
             if (response.success) {
                 $('#modalConfirmarEliminar').modal('hide');
                 tablaServicios.ajax.reload();
@@ -394,7 +403,7 @@ function cargarTiposServicios() {
             if (response.success) {
                 const select = $('#selectTipoServicio');
                 select.find('option:not(:first)').remove();
-                
+
                 response.data.forEach(function(tipo) {
                     select.append(`<option value="${tipo}">${tipo}</option>`);
                 });
@@ -439,7 +448,7 @@ function mostrarErroresValidacion(errores) {
 function mostrarNotificacion(mensaje, tipo) {
     // Implementar según el sistema de notificaciones que uses
     // Por ejemplo: Toastr, SweetAlert, etc.
-    
+
     if (typeof toastr !== 'undefined') {
         toastr[tipo](mensaje);
     } else {

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Text;
 using Tuco.Clases.DTOs;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http; // Agregado para HttpContext.Session
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -87,20 +89,20 @@ namespace GestionLlantera.Web.Controllers
                 // Construir URL con parámetros seguros
                 var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
                 var url = $"{baseUrl}/api/Servicios?busqueda={Uri.EscapeDataString(busqueda ?? "")}&tipoServicio={Uri.EscapeDataString(tipoServicio ?? "")}&soloActivos={soloActivos}&pagina={pagina}&tamano={tamano}";
-                
+
                 _logger.LogInformation("🔧 Llamando a API: {Url}", url);
-                
+
                 var response = await _httpClient.GetAsync(url);
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     _logger.LogInformation("📋 Respuesta de API: {Content}", content);
-                    
+
                     var resultado = JsonConvert.DeserializeObject<dynamic>(content);
-                    
+
                     _logger.LogInformation("✅ Servicios obtenidos exitosamente");
-                    
+
                     // Retornar directamente el array de servicios para DataTables
                     return Json(resultado);
                 }
@@ -138,12 +140,12 @@ namespace GestionLlantera.Web.Controllers
 
                 var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
                 var response = await _httpClient.GetAsync($"{baseUrl}/api/Servicios/{id}");
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     var servicio = JsonConvert.DeserializeObject(content);
-                    
+
                     return Json(new { success = true, data = servicio });
                 }
                 else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -183,7 +185,7 @@ namespace GestionLlantera.Web.Controllers
                             kvp => kvp.Key,
                             kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
                         );
-                    
+
                     return Json(new { success = false, message = "Datos de validación incorrectos", errors = errores });
                 }
 
@@ -206,7 +208,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogWarning("⚠️ Error al crear servicio: {Error}", errorContent);
-                    
+
                     var errorData = JsonConvert.DeserializeObject<dynamic>(errorContent);
                     return Json(new { success = false, message = errorData?.message?.ToString() ?? "Error al crear servicio" });
                 }
@@ -250,7 +252,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     var errorContent = await response.Content.ReadAsStringAsync();
                     _logger.LogWarning("⚠️ Error al actualizar servicio: {Error}", errorContent);
-                    
+
                     var errorData = JsonConvert.DeserializeObject<dynamic>(errorContent);
                     return Json(new { success = false, message = errorData?.message?.ToString() ?? "Error al actualizar servicio" });
                 }
@@ -315,12 +317,12 @@ namespace GestionLlantera.Web.Controllers
 
                 var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
                 var response = await _httpClient.GetAsync($"{baseUrl}/api/Servicios/tipos");
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
                     var tipos = JsonConvert.DeserializeObject(content);
-                    
+
                     return Json(new { success = true, data = tipos });
                 }
                 else
@@ -340,20 +342,34 @@ namespace GestionLlantera.Web.Controllers
         /// </summary>
         private string? ObtenerTokenJWT()
         {
-            var token = User.FindFirst("JwtToken")?.Value;
+            // Intentar obtener el token de la sesión primero
+            var token = HttpContext.Session.GetString("JWTToken");
 
             if (string.IsNullOrEmpty(token))
             {
-                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
-                    User.Identity?.Name ?? "Anónimo");
+                // Si no está en la sesión, intentar obtenerlo de los claims (como antes)
+                token = User.FindFirst("JwtToken")?.Value;
 
-                // Listar todos los claims disponibles para debug
-                var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
-                _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogWarning("⚠️ Token JWT no encontrado en la sesión ni en los claims del usuario: {Usuario}",
+                        User.Identity?.Name ?? "Anónimo");
+
+                    // Listar todos los claims disponibles para debug si no se encuentra el token
+                    var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                    _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
+                }
+                else
+                {
+                    _logger.LogInformation("✅ Token JWT obtenido de claims correctamente para usuario: {Usuario}, Longitud: {Length}",
+                        User.Identity?.Name ?? "Anónimo", token.Length);
+                    // Opcional: Guardar el token en la sesión si se encontró en los claims
+                    HttpContext.Session.SetString("JWTToken", token);
+                }
             }
             else
             {
-                _logger.LogInformation("✅ Token JWT obtenido correctamente para usuario: {Usuario}, Longitud: {Length}",
+                _logger.LogInformation("✅ Token JWT obtenido de la sesión correctamente para usuario: {Usuario}, Longitud: {Length}",
                     User.Identity?.Name ?? "Anónimo", token.Length);
             }
 
