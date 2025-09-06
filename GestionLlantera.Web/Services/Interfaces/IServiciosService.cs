@@ -5,7 +5,7 @@ namespace GestionLlantera.Web.Services.Interfaces
 {
     public interface IServiciosService
     {
-        Task<object> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50);
+        Task<IEnumerable<ServicioDTO>> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50);
         Task<ServicioDTO?> ObtenerServicioPorIdAsync(int id);
         Task<bool> CrearServicioAsync(ServicioDTO servicio);
         Task<bool> ActualizarServicioAsync(int id, ServicioDTO servicio);

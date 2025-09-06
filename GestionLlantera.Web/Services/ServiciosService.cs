@@ -19,7 +19,7 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
         }
 
-        public async Task<object> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50)
+        public async Task<IEnumerable<ServicioDTO>> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50)
         {
             try
             {
@@ -39,37 +39,20 @@ namespace GestionLlantera.Web.Services
                 {
                     var json = await response.Content.ReadAsStringAsync();
                     
-                    // Try to deserialize as DataTables format first
-                    try
+                    var servicios = JsonSerializer.Deserialize<IEnumerable<ServicioDTO>>(json, new JsonSerializerOptions
                     {
-                        var dataTablesResponse = JsonSerializer.Deserialize<object>(json, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                        return dataTablesResponse ?? new { data = new List<ServicioDTO>(), recordsTotal = 0, recordsFiltered = 0 };
-                    }
-                    catch
-                    {
-                        // If that fails, try as simple array and wrap it
-                        var servicios = JsonSerializer.Deserialize<IEnumerable<ServicioDTO>>(json, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        }) ?? new List<ServicioDTO>();
-                        
-                        return new { 
-                            data = servicios, 
-                            recordsTotal = servicios.Count(), 
-                            recordsFiltered = servicios.Count() 
-                        };
-                    }
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<ServicioDTO>();
+                    
+                    return servicios;
                 }
 
-                return new { data = new List<ServicioDTO>(), recordsTotal = 0, recordsFiltered = 0 };
+                return new List<ServicioDTO>();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener servicios");
-                return new { data = new List<ServicioDTO>(), recordsTotal = 0, recordsFiltered = 0 };
+                return new List<ServicioDTO>();
             }
         }
 

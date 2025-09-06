@@ -64,8 +64,7 @@ function cargarServicios() {
     const filtros = {
         busqueda: $('#inputBusqueda').val() || '',
         tipoServicio: $('#selectTipoServicio').val() || '',
-        soloActivos: $('#selectEstado').val() === 'true' ? true : 
-                     $('#selectEstado').val() === 'false' ? false : null,
+        estado: $('#selectEstado').val() || '',
         pagina: 1,
         tamano: 1000
     };
@@ -77,16 +76,12 @@ function cargarServicios() {
         success: function(response) {
             console.log('📋 Datos recibidos del servidor:', response);
 
-            if (response.success && response.data) {
-                servicios = response.data;
-                serviciosFiltrados = [...servicios];
-                mostrarServicios();
-            } else if (Array.isArray(response)) {
+            if (Array.isArray(response)) {
                 servicios = response;
                 serviciosFiltrados = [...servicios];
                 mostrarServicios();
             } else {
-                console.error('❌ Estructura de datos no reconocida:', response);
+                console.error('❌ Respuesta no es un array:', response);
                 mostrarNotificacion('Error en el formato de datos de servicios', 'error');
                 mostrarEmptyState();
             }
@@ -349,7 +344,7 @@ function cargarTiposServicios() {
         url: '/Servicios/ObtenerTiposServicios',
         type: 'GET',
         success: function(response) {
-            if (response.success) {
+            if (response.success && response.data) {
                 const select = $('#selectTipoServicio');
                 select.find('option:not(:first)').remove();
 

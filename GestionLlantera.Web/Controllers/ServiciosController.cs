@@ -297,7 +297,7 @@ namespace GestionLlantera.Web.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al obtener tipos de servicios");
-                return Json(new { success = false, message = "Error interno al obtener tipos de servicios" });
+                return Json(new { success = false, message = "Error al obtener tipos de servicios" });
             }
         }
 
