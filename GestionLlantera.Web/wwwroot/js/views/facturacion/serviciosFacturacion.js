@@ -449,7 +449,6 @@ class ServiciosFacturacion {
                     }
                 }
 
-                mostrarToast('Servicio agregado', `${servicio.nombreServicio} agregado a la venta`, 'success');
 
             } catch (error) {
                 console.error('❌ Error agregando servicio:', error);
