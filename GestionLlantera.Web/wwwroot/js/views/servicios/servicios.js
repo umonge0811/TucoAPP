@@ -131,22 +131,22 @@ function inicializarTabla() {
         },
         columns: [
             { 
-                data: 'servicioId',
+                data: 'ServicioId',
                 title: 'ID',
                 className: 'text-center',
                 width: '60px'
             },
             { 
-                data: 'nombreServicio',
+                data: 'NombreServicio',
                 title: 'Nombre del Servicio',
                 className: 'fw-medium'
             },
             { 
-                data: 'tipoServicio',
+                data: 'TipoServicio',
                 title: 'Tipo'
             },
             { 
-                data: 'precioBase',
+                data: 'PrecioBase',
                 title: 'Precio Base',
                 className: 'text-end precio-cell',
                 render: function(data) {
@@ -154,7 +154,7 @@ function inicializarTabla() {
                 }
             },
             { 
-                data: 'estaActivo',
+                data: 'EstaActivo',
                 title: 'Estado',
                 className: 'text-center',
                 render: function(data) {
@@ -164,7 +164,7 @@ function inicializarTabla() {
                 }
             },
             { 
-                data: 'fechaCreacion',
+                data: 'FechaCreacion',
                 title: 'Fecha Creación',
                 className: 'text-center',
                 render: function(data) {
@@ -184,12 +184,12 @@ function inicializarTabla() {
                 render: function(data, type, row) {
                     return `
                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                onclick="editarServicio(${row.servicioId})" 
+                                onclick="editarServicio(${row.ServicioId})" 
                                 title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm" 
-                                onclick="confirmarEliminar(${row.servicioId}, '${row.nombreServicio}')" 
+                                onclick="confirmarEliminar(${row.ServicioId}, '${row.NombreServicio}')" 
                                 title="Desactivar">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -197,9 +197,6 @@ function inicializarTabla() {
                 }
             }
         ],
-        language: {
-            url: '/lib/datatables/es-MX.json'
-        },
         responsive: true,
         pageLength: 25,
         order: [[1, 'asc']], // Ordenar por nombre
@@ -234,13 +231,13 @@ function editarServicio(servicioId) {
                 const servicio = response.data;
                 
                 $('#modalServicioLabel').text('Editar Servicio');
-                $('#servicioId').val(servicio.servicioId);
-                $('#nombreServicio').val(servicio.nombreServicio);
-                $('#tipoServicio').val(servicio.tipoServicio);
-                $('#precioBase').val(servicio.precioBase);
-                $('#descripcion').val(servicio.descripcion);
-                $('#observaciones').val(servicio.observaciones);
-                $('#estaActivo').prop('checked', servicio.estaActivo);
+                $('#servicioId').val(servicio.ServicioId);
+                $('#nombreServicio').val(servicio.NombreServicio);
+                $('#tipoServicio').val(servicio.TipoServicio);
+                $('#precioBase').val(servicio.PrecioBase);
+                $('#descripcion').val(servicio.Descripcion);
+                $('#observaciones').val(servicio.Observaciones);
+                $('#estaActivo').prop('checked', servicio.EstaActivo);
                 
                 $('#modalServicio').modal('show');
             } else {
