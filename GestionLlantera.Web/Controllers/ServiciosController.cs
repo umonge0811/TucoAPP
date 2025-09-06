@@ -16,15 +16,19 @@ namespace GestionLlantera.Web.Controllers
         private readonly ILogger<ServiciosController> _logger;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly IServiciosService _serviciosService;
+
 
         public ServiciosController(
             ILogger<ServiciosController> logger,
             IHttpClientFactory httpClientFactory,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IServiciosService serviciosService)
         {
             _logger = logger;
             _httpClient = httpClientFactory.CreateClient("ApiClient");
             _configuration = configuration;
+            _serviciosService = serviciosService;
         }
 
         /// <summary>
@@ -71,46 +75,24 @@ namespace GestionLlantera.Web.Controllers
             {
                 if (!await this.TienePermisoAsync("Ver Servicios"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Servicios' al intentar obtener servicios.");
                     return Json(new { success = false, message = "No tiene permisos para ver servicios" });
                 }
 
-                var token = ObtenerTokenJWT();
-                if (string.IsNullOrEmpty(token))
+                _logger.LogInformation("🔧 Solicitud para obtener servicios: Busqueda='{Busqueda}', TipoServicio='{TipoServicio}', SoloActivos={SoloActivos}, Pagina={Pagina}, Tamano={Tamano}",
+                    busqueda, tipoServicio, soloActivos, pagina, tamano);
+
+                // Pasar los parámetros directamente al servicio
+                var servicios = await _serviciosService.ObtenerServiciosAsync(busqueda, tipoServicio, soloActivos, pagina, tamano);
+
+                if (servicios != null)
                 {
-                    _logger.LogWarning("⚠️ Token JWT no disponible para obtener servicios");
-                    return Json(new { success = false, message = "Sesión expirada. Recargue la página." });
-                }
-
-                // Limpiar headers anteriores y configurar autorización
-                _httpClient.DefaultRequestHeaders.Clear();
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                // Construir URL con parámetros seguros
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
-                var url = $"{baseUrl}/api/Servicios?busqueda={Uri.EscapeDataString(busqueda ?? "")}&tipoServicio={Uri.EscapeDataString(tipoServicio ?? "")}&soloActivos={soloActivos}&pagina={pagina}&tamano={tamano}";
-
-                _logger.LogInformation("🔧 Llamando a API: {Url}", url);
-
-                var response = await _httpClient.GetAsync(url);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    _logger.LogInformation("📋 Respuesta de API: {Content}", content);
-
-                    var resultado = JsonConvert.DeserializeObject<dynamic>(content);
-
-                    _logger.LogInformation("✅ Servicios obtenidos exitosamente");
-
-                    // Retornar directamente el array de servicios para DataTables
-                    return Json(resultado);
+                    _logger.LogInformation("✅ Servicios obtenidos exitosamente. Total: {Count}", servicios.Count);
+                    return Json(servicios); // Retornar directamente el objeto de respuesta del servicio
                 }
                 else
                 {
-                    _logger.LogWarning("⚠️ Error en API al obtener servicios: {StatusCode}", response.StatusCode);
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("⚠️ Contenido del error: {ErrorContent}", errorContent);
+                    _logger.LogWarning("⚠️ No se pudieron obtener servicios o la respuesta fue nula.");
                     return Json(new { success = false, message = "Error al obtener servicios de la API" });
                 }
             }
@@ -131,36 +113,28 @@ namespace GestionLlantera.Web.Controllers
             {
                 if (!await this.TienePermisoAsync("Ver Servicios"))
                 {
+                     _logger.LogWarning("🚫 Usuario sin permiso 'Ver Servicios' al intentar obtener servicio {Id}.", id);
                     return Json(new { success = false, message = "No tiene permisos para ver servicios" });
                 }
 
-                var token = ObtenerTokenJWT();
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _logger.LogInformation("🔧 Solicitud para obtener servicio por ID: {Id}", id);
+                var servicio = await _serviciosService.ObtenerServicioPorIdAsync(id);
 
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
-                var response = await _httpClient.GetAsync($"{baseUrl}/api/Servicios/{id}");
-
-                if (response.IsSuccessStatusCode)
+                if (servicio != null)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var servicio = JsonConvert.DeserializeObject(content);
-
+                    _logger.LogInformation("✅ Servicio {Id} obtenido exitosamente.", id);
                     return Json(new { success = true, data = servicio });
-                }
-                else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    return Json(new { success = false, message = "Servicio no encontrado" });
                 }
                 else
                 {
-                    return Json(new { success = false, message = "Error al obtener el servicio" });
+                    _logger.LogWarning("⚠️ Servicio con ID {Id} no encontrado.", id);
+                    return Json(new { success = false, message = "Servicio no encontrado" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al obtener servicio {ServicioId}", id);
-                return Json(new { success = false, message = "Error interno" });
+                _logger.LogError(ex, "❌ Error al obtener servicio {Id}", id);
+                return Json(new { success = false, message = "Error interno al obtener servicio" });
             }
         }
 
@@ -174,6 +148,7 @@ namespace GestionLlantera.Web.Controllers
             {
                 if (!await this.TienePermisoAsync("Editar Servicios"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Editar Servicios' al intentar crear servicio.");
                     return Json(new { success = false, message = "No tiene permisos para crear servicios" });
                 }
 
@@ -185,37 +160,27 @@ namespace GestionLlantera.Web.Controllers
                             kvp => kvp.Key,
                             kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
                         );
-
+                    _logger.LogWarning("⚠️ Datos de validación incorrectos para crear servicio: {Errors}", JsonConvert.SerializeObject(errores));
                     return Json(new { success = false, message = "Datos de validación incorrectos", errors = errores });
                 }
 
-                var token = ObtenerTokenJWT();
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _logger.LogInformation("🔧 Solicitud para crear servicio: Nombre='{NombreServicio}'", servicioDto.NombreServicio);
+                var resultado = await _serviciosService.CrearServicioAsync(servicioDto);
 
-                var json = JsonConvert.SerializeObject(servicioDto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
-                var response = await _httpClient.PostAsync($"{baseUrl}/api/Servicios", content);
-
-                if (response.IsSuccessStatusCode)
+                if (resultado)
                 {
-                    _logger.LogInformation("✅ Servicio creado: {Nombre}", servicioDto.NombreServicio);
+                    _logger.LogInformation("✅ Servicio creado exitosamente: {NombreServicio}", servicioDto.NombreServicio);
                     return Json(new { success = true, message = "Servicio creado exitosamente" });
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("⚠️ Error al crear servicio: {Error}", errorContent);
-
-                    var errorData = JsonConvert.DeserializeObject<dynamic>(errorContent);
-                    return Json(new { success = false, message = errorData?.message?.ToString() ?? "Error al crear servicio" });
+                    _logger.LogWarning("⚠️ Error al crear servicio en el servicio: {NombreServicio}", servicioDto.NombreServicio);
+                    return Json(new { success = false, message = "Error al crear servicio" });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error al crear servicio");
+                _logger.LogError(ex, "❌ Error al crear servicio {NombreServicio}", servicioDto.NombreServicio);
                 return Json(new { success = false, message = "Error interno al crear servicio" });
             }
         }
@@ -230,31 +195,34 @@ namespace GestionLlantera.Web.Controllers
             {
                 if (!await this.TienePermisoAsync("Editar Servicios"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Editar Servicios' al intentar actualizar servicio {Id}.", id);
                     return Json(new { success = false, message = "No tiene permisos para editar servicios" });
                 }
 
-                var token = ObtenerTokenJWT();
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                var json = JsonConvert.SerializeObject(servicioDto);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
-                var response = await _httpClient.PutAsync($"{baseUrl}/api/Servicios/{id}", content);
-
-                if (response.IsSuccessStatusCode)
+                if (!ModelState.IsValid)
                 {
-                    _logger.LogInformation("✅ Servicio actualizado: {Id}", id);
+                    var errores = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray()
+                        );
+                    _logger.LogWarning("⚠️ Datos de validación incorrectos para actualizar servicio {Id}: {Errors}", id, JsonConvert.SerializeObject(errores));
+                    return Json(new { success = false, message = "Datos de validación incorrectos", errors = errores });
+                }
+
+                _logger.LogInformation("🔧 Solicitud para actualizar servicio {Id}: Nombre='{NombreServicio}'", id, servicioDto.NombreServicio);
+                var resultado = await _serviciosService.ActualizarServicioAsync(id, servicioDto);
+
+                if (resultado)
+                {
+                    _logger.LogInformation("✅ Servicio {Id} actualizado exitosamente.", id);
                     return Json(new { success = true, message = "Servicio actualizado exitosamente" });
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    _logger.LogWarning("⚠️ Error al actualizar servicio: {Error}", errorContent);
-
-                    var errorData = JsonConvert.DeserializeObject<dynamic>(errorContent);
-                    return Json(new { success = false, message = errorData?.message?.ToString() ?? "Error al actualizar servicio" });
+                    _logger.LogWarning("⚠️ Error al actualizar servicio {Id} en el servicio.", id);
+                    return Json(new { success = false, message = "Error al actualizar servicio" });
                 }
             }
             catch (Exception ex)
@@ -274,26 +242,22 @@ namespace GestionLlantera.Web.Controllers
             {
                 if (!await this.TienePermisoAsync("Editar Servicios"))
                 {
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Editar Servicios' al intentar eliminar servicio {Id}.", id);
                     return Json(new { success = false, message = "No tiene permisos para eliminar servicios" });
                 }
 
-                var token = ObtenerTokenJWT();
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                _logger.LogInformation("🔧 Solicitud para eliminar servicio {Id}", id);
+                var resultado = await _serviciosService.EliminarServicioAsync(id);
 
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
-                var response = await _httpClient.DeleteAsync($"{baseUrl}/api/Servicios/{id}");
-
-                if (response.IsSuccessStatusCode)
+                if (resultado)
                 {
-                    _logger.LogInformation("🗑️ Servicio eliminado: {Id}", id);
+                    _logger.LogInformation("✅ Servicio {Id} eliminado exitosamente.", id);
                     return Json(new { success = true, message = "Servicio desactivado exitosamente" });
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    var errorData = JsonConvert.DeserializeObject<dynamic>(errorContent);
-                    return Json(new { success = false, message = errorData?.message?.ToString() ?? "Error al eliminar servicio" });
+                    _logger.LogWarning("⚠️ Error al eliminar servicio {Id} en el servicio.", id);
+                    return Json(new { success = false, message = "Error al eliminar servicio" });
                 }
             }
             catch (Exception ex)
@@ -311,29 +275,30 @@ namespace GestionLlantera.Web.Controllers
         {
             try
             {
-                var token = ObtenerTokenJWT();
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
-                var response = await _httpClient.GetAsync($"{baseUrl}/api/Servicios/tipos");
-
-                if (response.IsSuccessStatusCode)
+                 if (!await this.TienePermisoAsync("Ver Servicios"))
                 {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var tipos = JsonConvert.DeserializeObject(content);
+                    _logger.LogWarning("🚫 Usuario sin permiso 'Ver Servicios' al intentar obtener tipos de servicios.");
+                    return Json(new { success = false, message = "No tiene permisos para ver tipos de servicios" });
+                }
 
+                _logger.LogInformation("🔧 Solicitud para obtener tipos de servicios");
+                var tipos = await _serviciosService.ObtenerTiposServiciosAsync();
+
+                if (tipos != null)
+                {
+                    _logger.LogInformation("✅ Tipos de servicios obtenidos exitosamente. Total: {Count}", tipos.Count());
                     return Json(new { success = true, data = tipos });
                 }
                 else
                 {
-                    return Json(new { success = false, data = new string[] { } });
+                    _logger.LogWarning("⚠️ No se pudieron obtener tipos de servicios o la respuesta fue nula.");
+                    return Json(new { success = false, message = "Error al obtener tipos de servicios" });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error al obtener tipos de servicios");
-                return Json(new { success = false, data = new string[] { } });
+                return Json(new { success = false, message = "Error interno al obtener tipos de servicios" });
             }
         }
 
