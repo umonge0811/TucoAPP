@@ -1,8 +1,10 @@
+
 // ================================
 // MÓDULO DE SERVICIOS DE MECÁNICA
 // ================================
 
-let tablaServicios;
+let servicios = [];
+let serviciosFiltrados = [];
 let servicioIdEliminar = 0;
 
 // ================================
@@ -12,26 +14,23 @@ let servicioIdEliminar = 0;
 $(document).ready(function () {
     console.log('🔧 Inicializando módulo de servicios...');
 
-    // Verificar que las dependencias estén cargadas
+    // Verificar que jQuery esté cargado
     if (!window.jQuery) {
         console.error('jQuery no está cargado');
         return;
     }
 
-    if (!$.fn.DataTable) {
-        console.error('DataTables no está cargado');
-        return;
-    }
-
-    // Esperar un poco para que el DOM esté completamente listo
-    setTimeout(function() {
-        inicializarTabla();
-        cargarTiposServicios();
-        configurarEventos();
-
-        console.log('✅ Módulo de servicios inicializado correctamente');
-    }, 100);
+    // Inicializar módulo
+    inicializarModulo();
+    
+    console.log('✅ Módulo de servicios inicializado correctamente');
 });
+
+function inicializarModulo() {
+    configurarEventos();
+    cargarServicios();
+    cargarTiposServicios();
+}
 
 // ================================
 // CONFIGURACIÓN DE EVENTOS
@@ -49,13 +48,6 @@ function configurarEventos() {
         eliminarServicio(servicioIdEliminar);
     });
 
-    // Búsqueda en tiempo real
-    $('#inputBusqueda').on('keyup', function() {
-        if (tablaServicios) {
-            tablaServicios.search(this.value).draw();
-        }
-    });
-
     // Limpiar formulario al cerrar modal
     $('#modalServicio').on('hidden.bs.modal', function () {
         limpiarFormulario();
@@ -63,183 +55,140 @@ function configurarEventos() {
 }
 
 // ================================
-// INICIALIZACIÓN DE TABLA
+// CARGA Y GESTIÓN DE DATOS
 // ================================
 
-function inicializarTabla() {
-    // Verificar que el elemento tabla existe
-    if (!$('#tablaServicios').length) {
-        console.error('Elemento #tablaServicios no encontrado');
+function cargarServicios() {
+    mostrarLoading(true);
+
+    const filtros = {
+        busqueda: $('#inputBusqueda').val() || '',
+        tipoServicio: $('#selectTipoServicio').val() || '',
+        soloActivos: $('#selectEstado').val() === 'true' ? true : 
+                     $('#selectEstado').val() === 'false' ? false : null,
+        pagina: 1,
+        tamano: 1000
+    };
+
+    $.ajax({
+        url: '/Servicios/ObtenerServicios',
+        type: 'GET',
+        data: filtros,
+        success: function(response) {
+            console.log('📋 Datos recibidos del servidor:', response);
+
+            if (response.success && response.data) {
+                servicios = response.data;
+                serviciosFiltrados = [...servicios];
+                mostrarServicios();
+            } else if (Array.isArray(response)) {
+                servicios = response;
+                serviciosFiltrados = [...servicios];
+                mostrarServicios();
+            } else {
+                console.error('❌ Estructura de datos no reconocida:', response);
+                mostrarNotificacion('Error en el formato de datos de servicios', 'error');
+                mostrarEmptyState();
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('❌ Error al cargar servicios:', {
+                status: status,
+                error: error,
+                response: xhr.responseText
+            });
+            mostrarNotificacion('Error al cargar servicios: ' + error, 'error');
+            mostrarEmptyState();
+        },
+        complete: function() {
+            mostrarLoading(false);
+        }
+    });
+}
+
+function mostrarServicios() {
+    const tbody = $('#tablaServiciosBody');
+    tbody.empty();
+
+    if (!serviciosFiltrados || serviciosFiltrados.length === 0) {
+        mostrarEmptyState();
         return;
     }
 
-    if ($.fn.DataTable.isDataTable('#tablaServicios')) {
-        $('#tablaServicios').DataTable().destroy();
-    }
-
-    tablaServicios = $('#tablaServicios').DataTable({
-        processing: true,
-        serverSide: false,
-        language: {
-            "sProcessing":     "Procesando...",
-            "sLengthMenu":     "Mostrar _MENU_ registros",
-            "sZeroRecords":    "No se encontraron resultados",
-            "sEmptyTable":     "Ningún dato disponible en esta tabla",
-            "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
-            "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
-            "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
-            "sInfoPostFix":    "",
-            "sSearch":         "Buscar:",
-            "sUrl":            "",
-            "sInfoThousands":  ",",
-            "sLoadingRecords": "Cargando...",
-            "oPaginate": {
-                "sFirst":    "Primero",
-                "sLast":     "Último",
-                "sNext":     "Siguiente",
-                "sPrevious": "Anterior"
-            },
-            "oAria": {
-                "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
-                "sSortDescending": ": Activar para ordenar la columna de manera descendente"
-            }
-        },
-        ajax: {
-            url: '/Servicios/ObtenerServicios',
-            type: 'GET',
-            headers: {
-                'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-            },
-            data: function(d) {
-                return {
-                    busqueda: $('#inputBusqueda').val() || '',
-                    tipoServicio: $('#selectTipoServicio').val() || '',
-                    soloActivos: $('#selectEstado').val() === 'true' ? true : false,
-                    pagina: 1,
-                    tamano: 1000
-                };
-            },
-            dataSrc: function(json) {
-                console.log('📋 Datos recibidos del servidor:', json);
-
-                // Verificar si es un array directamente
-                if (Array.isArray(json)) {
-                    console.log('✅ Datos son un array directo:', json.length, 'servicios');
-                    return json;
-                }
-
-                // Verificar si tiene estructura de éxito
-                if (json && json.success && json.data) {
-                    console.log('✅ Datos tienen estructura de éxito:', json.data.length, 'servicios');
-                    return json.data;
-                }
-
-                // Verificar si tiene servicios directamente
-                if (json && json.servicios) {
-                    console.log('✅ Datos tienen servicios:', json.servicios.length, 'servicios');
-                    return json.servicios;
-                }
-
-                // Si no es ninguno de los casos anteriores, retornar array vacío
-                console.error('❌ Estructura de datos no reconocida:', json);
-                mostrarNotificacion('Error en el formato de datos de servicios', 'error');
-                return [];
-            },
-            error: function(xhr, status, error) {
-                console.error('❌ Error en la petición AJAX:', {
-                    status: status,
-                    error: error,
-                    response: xhr.responseText
-                });
-                mostrarNotificacion('Error al cargar servicios: ' + error, 'error');
-            }
-        },
-        columns: [
-            {
-                data: 'ServicioId',
-                title: 'ID',
-                className: 'text-center',
-                width: '80px'
-            },
-            {
-                data: 'NombreServicio',
-                title: 'Nombre',
-                className: 'text-start'
-            },
-            {
-                data: 'TipoServicio',
-                title: 'Tipo',
-                className: 'text-center',
-                width: '120px'
-            },
-            {
-                data: 'PrecioBase',
-                title: 'Precio Base',
-                className: 'text-end precio-cell',
-                width: '120px',
-                render: function(data) {
-                    return data ? `₡${data.toLocaleString('es-CR')}` : '₡0';
-                }
-            },
-            {
-                data: 'Descripcion',
-                title: 'Descripción',
-                className: 'text-start'
-            },
-            {
-                data: 'EstaActivo',
-                title: 'Estado',
-                className: 'text-center',
-                width: '100px',
-                render: function(data) {
-                    return data ? 
-                        '<span class="badge bg-success">Activo</span>' : 
-                        '<span class="badge bg-danger">Inactivo</span>';
-                }
-            },
-            {
-                data: 'FechaCreacion',
-                title: 'Fecha Creación',
-                className: 'text-center',
-                render: function(data) {
-                    if (data) {
-                        const fecha = new Date(data);
-                        return fecha.toLocaleDateString('es-CR');
-                    }
-                    return '-';
-                }
-            },
-            {
-                data: null,
-                title: 'Acciones',
-                className: 'text-center',
-                orderable: false,
-                width: '120px',
-                render: function(data, type, row) {
-                    return `
-                        <button type="button" class="btn btn-outline-primary btn-sm" 
-                                onclick="editarServicio(${row.ServicioId})" 
-                                title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm" 
-                                onclick="confirmarEliminar(${row.ServicioId}, '${row.NombreServicio}')" 
-                                title="Desactivar">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    `;
-                }
-            }
-        ],
-        responsive: true,
-        pageLength: 25,
-        order: [[1, 'asc']], // Ordenar por nombre
-        dom: '<"d-flex justify-content-between align-items-center mb-3"lf>rtip',
-        drawCallback: function() {
-            // Aplicar tooltips
-            $('[title]').tooltip();
-        }
+    serviciosFiltrados.forEach(servicio => {
+        const fila = crearFilaServicio(servicio);
+        tbody.append(fila);
     });
+
+    $('#emptyState').hide();
+}
+
+function crearFilaServicio(servicio) {
+    const estadoBadge = servicio.EstaActivo ? 
+        '<span class="badge bg-success">Activo</span>' : 
+        '<span class="badge bg-danger">Inactivo</span>';
+
+    const fechaCreacion = servicio.FechaCreacion ? 
+        new Date(servicio.FechaCreacion).toLocaleDateString('es-CR') : '-';
+
+    const precioFormateado = servicio.PrecioBase ? 
+        `₡${servicio.PrecioBase.toLocaleString('es-CR')}` : '₡0';
+
+    return `
+        <tr>
+            <td class="text-center">${servicio.ServicioId}</td>
+            <td>${servicio.NombreServicio || ''}</td>
+            <td class="text-center">${servicio.TipoServicio || ''}</td>
+            <td class="text-end precio-cell">${precioFormateado}</td>
+            <td class="text-center">${estadoBadge}</td>
+            <td class="text-center">${fechaCreacion}</td>
+            <td class="text-center">
+                <button type="button" class="btn btn-outline-primary btn-sm" 
+                        onclick="editarServicio(${servicio.ServicioId})" 
+                        title="Editar">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" 
+                        onclick="confirmarEliminar(${servicio.ServicioId}, '${servicio.NombreServicio}')" 
+                        title="Desactivar">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+// ================================
+// FILTROS Y BÚSQUEDA
+// ================================
+
+function filtrarServicios() {
+    const busqueda = $('#inputBusqueda').val().toLowerCase();
+    const tipoServicio = $('#selectTipoServicio').val();
+    const estado = $('#selectEstado').val();
+
+    serviciosFiltrados = servicios.filter(servicio => {
+        // Filtro de búsqueda
+        const coincideBusqueda = !busqueda || 
+            (servicio.NombreServicio && servicio.NombreServicio.toLowerCase().includes(busqueda)) ||
+            (servicio.TipoServicio && servicio.TipoServicio.toLowerCase().includes(busqueda)) ||
+            (servicio.Descripcion && servicio.Descripcion.toLowerCase().includes(busqueda));
+
+        // Filtro de tipo
+        const coincideTipo = !tipoServicio || servicio.TipoServicio === tipoServicio;
+
+        // Filtro de estado
+        let coincideEstado = true;
+        if (estado === 'true') {
+            coincideEstado = servicio.EstaActivo === true;
+        } else if (estado === 'false') {
+            coincideEstado = servicio.EstaActivo === false;
+        }
+
+        return coincideBusqueda && coincideTipo && coincideEstado;
+    });
+
+    mostrarServicios();
 }
 
 // ================================
@@ -337,7 +286,7 @@ function guardarServicio() {
 
             if (response.success) {
                 $('#modalServicio').modal('hide');
-                tablaServicios.ajax.reload();
+                cargarServicios();
                 mostrarNotificacion(response.message, 'success');
             } else {
                 if (response.errors) {
@@ -378,7 +327,7 @@ function eliminarServicio(servicioId) {
 
             if (response.success) {
                 $('#modalConfirmarEliminar').modal('hide');
-                tablaServicios.ajax.reload();
+                cargarServicios();
                 mostrarNotificacion(response.message, 'success');
             } else {
                 mostrarNotificacion(response.message, 'error');
@@ -415,12 +364,6 @@ function cargarTiposServicios() {
     });
 }
 
-function filtrarServicios() {
-    if (tablaServicios) {
-        tablaServicios.ajax.reload();
-    }
-}
-
 function limpiarFormulario() {
     $('#formServicio')[0].reset();
     $('#servicioId').val(0);
@@ -445,6 +388,20 @@ function mostrarErroresValidacion(errores) {
     }
 }
 
+function mostrarLoading(mostrar) {
+    if (mostrar) {
+        $('#loadingSpinner').show();
+        $('#emptyState').hide();
+    } else {
+        $('#loadingSpinner').hide();
+    }
+}
+
+function mostrarEmptyState() {
+    $('#emptyState').show();
+    $('#loadingSpinner').hide();
+}
+
 function mostrarNotificacion(mensaje, tipo) {
     // Implementar según el sistema de notificaciones que uses
     // Por ejemplo: Toastr, SweetAlert, etc.
@@ -463,7 +420,5 @@ function mostrarNotificacion(mensaje, tipo) {
 
 // Función para recargar la tabla desde el exterior
 function recargarTablaServicios() {
-    if (tablaServicios) {
-        tablaServicios.ajax.reload();
-    }
+    cargarServicios();
 }

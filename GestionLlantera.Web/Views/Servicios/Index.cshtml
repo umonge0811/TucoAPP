@@ -1,18 +1,11 @@
+
 @{
     ViewData["Title"] = "Gestión de Servicios";
     ViewData["ActivePage"] = "Servicios";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link href="~/css/views/servicios/servicios.css" rel="stylesheet" />
-
-
 }
 
-
-
-
+<link href="~/css/views/servicios/servicios.css" rel="stylesheet" />
 
 <div class="servicios-container">
     <!-- Header Section -->
@@ -38,24 +31,24 @@
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Buscar:</label>
-                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Nombre, descripción o tipo...">
+                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Nombre, descripción o tipo..." onkeyup="filtrarServicios()">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Tipo de Servicio:</label>
-                    <select id="selectTipoServicio" class="form-select">
+                    <select id="selectTipoServicio" class="form-select" onchange="filtrarServicios()">
                         <option value="">Todos los tipos</option>
                     </select>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Estado:</label>
-                    <select id="selectEstado" class="form-select">
+                    <select id="selectEstado" class="form-select" onchange="filtrarServicios()">
                         <option value="true">Solo Activos</option>
                         <option value="false">Solo Inactivos</option>
                         <option value="">Todos</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-outline-primary w-100" onclick="filtrarServicios()">
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="cargarServicios()">
                         <i class="bi bi-search"></i>
                         Buscar
                     </button>
@@ -68,7 +61,7 @@
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
-                <table id="tablaServicios" class="table table-hover" style="width:100%">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -80,10 +73,23 @@
                             <th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tablaServiciosBody">
                         <!-- Los datos se cargan via AJAX -->
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- Loading spinner -->
+            <div id="loadingSpinner" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+            
+            <!-- Empty state -->
+            <div id="emptyState" class="text-center py-4" style="display: none;">
+                <i class="bi bi-tools fs-1 text-muted"></i>
+                <p class="text-muted mt-2">No se encontraron servicios</p>
             </div>
         </div>
     </div>
@@ -198,8 +204,5 @@
 </div>
 
 @section Scripts {
-    <!-- DataTables JavaScript -->
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="~/js/views/servicios/servicios.js"></script>
 }
