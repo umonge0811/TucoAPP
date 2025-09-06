@@ -156,24 +156,24 @@ function inicializarTabla() {
         },
         columns: [
             {
-                data: 'servicioId',
+                data: 'ServicioId',
                 title: 'ID',
                 className: 'text-center',
                 width: '80px'
             },
             {
-                data: 'nombreServicio',
+                data: 'NombreServicio',
                 title: 'Nombre',
                 className: 'text-start'
             },
             {
-                data: 'tipoServicio',
+                data: 'TipoServicio',
                 title: 'Tipo',
                 className: 'text-center',
                 width: '120px'
             },
             {
-                data: 'precioBase',
+                data: 'PrecioBase',
                 title: 'Precio Base',
                 className: 'text-end precio-cell',
                 width: '120px',
@@ -182,12 +182,12 @@ function inicializarTabla() {
                 }
             },
             {
-                data: 'descripcion',
+                data: 'Descripcion',
                 title: 'Descripción',
                 className: 'text-start'
             },
             {
-                data: 'estaActivo',
+                data: 'EstaActivo',
                 title: 'Estado',
                 className: 'text-center',
                 width: '100px',
@@ -198,7 +198,7 @@ function inicializarTabla() {
                 }
             },
             {
-                data: 'fechaCreacion',
+                data: 'FechaCreacion',
                 title: 'Fecha Creación',
                 className: 'text-center',
                 render: function(data) {
@@ -218,12 +218,12 @@ function inicializarTabla() {
                 render: function(data, type, row) {
                     return `
                         <button type="button" class="btn btn-outline-primary btn-sm" 
-                                onclick="editarServicio(${row.servicioId})" 
+                                onclick="editarServicio(${row.ServicioId})" 
                                 title="Editar">
                             <i class="bi bi-pencil"></i>
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm" 
-                                onclick="confirmarEliminar(${row.servicioId}, '${row.nombreServicio}')" 
+                                onclick="confirmarEliminar(${row.ServicioId}, '${row.NombreServicio}')" 
                                 title="Desactivar">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -265,13 +265,13 @@ function editarServicio(servicioId) {
                 const servicio = response.data;
 
                 $('#modalServicioLabel').text('Editar Servicio');
-                $('#servicioId').val(servicio.servicioId);
-                $('#nombreServicio').val(servicio.nombreServicio);
-                $('#tipoServicio').val(servicio.tipoServicio);
-                $('#precioBase').val(servicio.precioBase);
-                $('#descripcion').val(servicio.descripcion);
-                $('#observaciones').val(servicio.observaciones);
-                $('#estaActivo').prop('checked', servicio.estaActivo);
+                $('#servicioId').val(servicio.ServicioId);
+                $('#nombreServicio').val(servicio.NombreServicio);
+                $('#tipoServicio').val(servicio.TipoServicio);
+                $('#precioBase').val(servicio.PrecioBase);
+                $('#descripcion').val(servicio.Descripcion);
+                $('#observaciones').val(servicio.Observaciones);
+                $('#estaActivo').prop('checked', servicio.EstaActivo);
 
                 $('#modalServicio').modal('show');
             } else {

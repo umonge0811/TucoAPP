@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.Models;
-using tuco.Clases.Models;
 
 namespace API.Controllers
 {
