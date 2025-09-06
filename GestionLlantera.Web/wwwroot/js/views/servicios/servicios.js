@@ -142,30 +142,39 @@ function crearFilaServicio(servicio) {
         '<span class="badge bg-danger">Inactivo</span>';
 
     const fechaCreacion = servicio.fechaCreacion ? 
-        new Date(servicio.fechaCreacion).toLocaleDateString('es-CR') : '-';
+        new Date(servicio.fechaCreacion).toLocaleDateString('es-CR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }) : '-';
 
     const precioFormateado = servicio.precioBase ? 
-        `₡${servicio.precioBase.toLocaleString('es-CR')}` : '₡0';
+        `₡${Number(servicio.precioBase).toLocaleString('es-CR', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        })}` : '₡0';
 
     return `
         <tr>
-            <td class="text-center">${servicio.servicioId || servicio.id || ''}</td>
-            <td>${servicio.nombreServicio || servicio.nombre || ''}</td>
-            <td class="text-center">${servicio.tipoServicio || servicio.tipo || ''}</td>
-            <td class="text-end precio-cell">${precioFormateado}</td>
-            <td class="text-center">${estadoBadge}</td>
-            <td class="text-center">${fechaCreacion}</td>
-            <td class="text-center">
-                <button type="button" class="btn btn-outline-primary btn-sm" 
-                        onclick="editarServicio(${servicio.servicioId || servicio.id})" 
-                        title="Editar">
-                    <i class="bi bi-pencil"></i>
-                </button>
-                <button type="button" class="btn btn-outline-danger btn-sm" 
-                        onclick="confirmarEliminar(${servicio.servicioId || servicio.id}, '${servicio.nombreServicio || servicio.nombre}')" 
-                        title="Desactivar">
-                    <i class="bi bi-trash"></i>
-                </button>
+            <td>${servicio.servicioId || servicio.id || ''}</td>
+            <td><strong>${servicio.nombreServicio || servicio.nombre || ''}</strong></td>
+            <td>${servicio.tipoServicio || servicio.tipo || ''}</td>
+            <td class="precio-cell">${precioFormateado}</td>
+            <td>${estadoBadge}</td>
+            <td>${fechaCreacion}</td>
+            <td>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm" 
+                            onclick="editarServicio(${servicio.servicioId || servicio.id})" 
+                            title="Editar servicio">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                            onclick="confirmarEliminar(${servicio.servicioId || servicio.id}, '${(servicio.nombreServicio || servicio.nombre || '').replace(/'/g, '&#39;')}')" 
+                            title="Desactivar servicio">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
             </td>
         </tr>
     `;
