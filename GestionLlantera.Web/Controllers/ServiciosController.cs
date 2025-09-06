@@ -88,19 +88,27 @@ namespace GestionLlantera.Web.Controllers
                 var baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7273";
                 var url = $"{baseUrl}/api/Servicios?busqueda={Uri.EscapeDataString(busqueda ?? "")}&tipoServicio={Uri.EscapeDataString(tipoServicio ?? "")}&soloActivos={soloActivos}&pagina={pagina}&tamano={tamano}";
                 
+                _logger.LogInformation("🔧 Llamando a API: {Url}", url);
+                
                 var response = await _httpClient.GetAsync(url);
                 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var resultado = JsonConvert.DeserializeObject(content);
+                    _logger.LogInformation("📋 Respuesta de API: {Content}", content);
+                    
+                    var resultado = JsonConvert.DeserializeObject<dynamic>(content);
                     
                     _logger.LogInformation("✅ Servicios obtenidos exitosamente");
-                    return Json(new { success = true, data = resultado });
+                    
+                    // Retornar directamente el array de servicios para DataTables
+                    return Json(resultado);
                 }
                 else
                 {
                     _logger.LogWarning("⚠️ Error en API al obtener servicios: {StatusCode}", response.StatusCode);
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    _logger.LogWarning("⚠️ Contenido del error: {ErrorContent}", errorContent);
                     return Json(new { success = false, message = "Error al obtener servicios de la API" });
                 }
             }

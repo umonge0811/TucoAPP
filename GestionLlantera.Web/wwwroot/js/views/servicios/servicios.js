@@ -114,19 +114,44 @@ function inicializarTabla() {
                 return {
                     busqueda: $('#inputBusqueda').val() || '',
                     tipoServicio: $('#selectTipoServicio').val() || '',
-                    soloActivos: $('#selectEstado').val() || '',
+                    soloActivos: $('#selectEstado').val() === 'true' ? true : false,
                     pagina: 1,
                     tamano: 1000
                 };
             },
             dataSrc: function(json) {
-                if (json.success) {
-                    return json.data.servicios;
-                } else {
-                    console.error('Error al cargar servicios:', json.message);
-                    mostrarNotificacion('Error al cargar servicios', 'error');
-                    return [];
+                console.log('📋 Datos recibidos del servidor:', json);
+                
+                // Verificar si es un array directamente
+                if (Array.isArray(json)) {
+                    console.log('✅ Datos son un array directo:', json.length, 'servicios');
+                    return json;
                 }
+                
+                // Verificar si tiene estructura de éxito
+                if (json && json.success && json.data) {
+                    console.log('✅ Datos tienen estructura de éxito:', json.data.length, 'servicios');
+                    return json.data;
+                }
+                
+                // Verificar si tiene servicios directamente
+                if (json && json.servicios) {
+                    console.log('✅ Datos tienen servicios:', json.servicios.length, 'servicios');
+                    return json.servicios;
+                }
+                
+                // Si no es ninguno de los casos anteriores, retornar array vacío
+                console.error('❌ Estructura de datos no reconocida:', json);
+                mostrarNotificacion('Error en el formato de datos de servicios', 'error');
+                return [];
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ Error en la petición AJAX:', {
+                    status: status,
+                    error: error,
+                    response: xhr.responseText
+                });
+                mostrarNotificacion('Error al cargar servicios: ' + error, 'error');
             }
         },
         columns: [
@@ -290,14 +315,12 @@ function guardarServicio() {
         return;
     }
 
-    const url = servicioId === 0 ? '/Servicios/CrearServicio' : `/Servicios/ActualizarServicio`;
+    const url = servicioId === 0 ? '/Servicios/CrearServicio' : `/Servicios/ActualizarServicio/${servicioId}`;
     const method = servicioId === 0 ? 'POST' : 'PUT';
-    const urlParams = servicioId === 0 ? {} : { id: servicioId };
 
     $.ajax({
         url: url,
         type: method,
-        data: urlParams,
         contentType: 'application/json',
         data: JSON.stringify(datos),
         success: function(response) {

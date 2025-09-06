@@ -11,7 +11,7 @@
 }
 
 
-   
+
 
 
 <div class="servicios-container">
@@ -26,7 +26,7 @@
         </div>
         <div class="col-md-4 text-end">
             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalServicio" onclick="abrirModalNuevoServicio()">
-                <i class="bi bi-plus-lg"></i>
+                <i class="bi bi-plus-circle"></i>
                 Nuevo Servicio
             </button>
         </div>
@@ -94,13 +94,14 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <i class="bi bi-wrench me-2"></i>
                 <h5 class="modal-title" id="modalServicioLabel">Nuevo Servicio</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="formServicio">
                 <div class="modal-body">
                     <input type="hidden" id="servicioId" name="servicioId" value="0">
-                    
+
                     <div class="row g-3">
                         <div class="col-md-12">
                             <label for="nombreServicio" class="form-label">Nombre del Servicio <span class="text-danger">*</span></label>
@@ -141,10 +142,12 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
                     <button type="submit" class="btn btn-primary" id="btnGuardarServicio">
                         <span class="normal-state">
-                            <i class="bi bi-check-lg"></i>
+                            <i class="bi bi-check-circle"></i>
                             Guardar
                         </span>
                         <span class="loading-state d-none">
@@ -163,6 +166,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
                 <h5 class="modal-title" id="modalConfirmarEliminarLabel">Confirmar Eliminación</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -175,7 +179,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
                 <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
                     <span class="normal-state">
                         <i class="bi bi-trash"></i>
@@ -197,4 +203,3 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="~/js/views/servicios/servicios.js"></script>
 }
-
