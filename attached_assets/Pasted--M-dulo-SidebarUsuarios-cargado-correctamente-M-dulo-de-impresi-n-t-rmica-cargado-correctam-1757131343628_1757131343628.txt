@@ -1,0 +1,198 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 🖨️ Módulo de impresión térmica cargado correctamente
+ ✅ Sistema de zoom simplificado cargado
+ 📋 Funciones de proformas, detalles y servicios exportadas globalmente
+ 📋 Funciones de facturas pendientes exportadas globalmente
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ ✅ verDetalleProducto disponible desde facturacion.js
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anónimo) @ Facturacion:2229
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 17,
+    "id": 17,
+    "nombre": "Administrador",
+    "nombreUsuario": "Administrador",
+    "email": "admin@llantasymastc.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": false
+  },
+  "fechaActual": "2025-09-05",
+  "horaActual": "22:00",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: false
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🔄 Estado botón finalizar actualizado: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+facturacion.js:509 🔍 Iniciando búsqueda válida...
+facturacion.js:271 ✅ Facturación inicializada correctamente
+facturacion.js:272 🚀 === FIN inicializarFacturacion ===
+InventarioFacturacion.js:24 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+InventarioFacturacion.js:30 ✅ Modal de inventario inicializado correctamente
+InventarioFacturacion.js:49 📦 Configurando eventos del modal inventario...
+InventarioFacturacion.js:75 📦 Configurando filtros de inventario...
+serviciosFacturacion.js:434 🛠️ Inicializando módulo especializado de servicios para facturación
+serviciosFacturacion.js:15 🛠️ === INICIALIZANDO MÓDULO SERVICIOS FACTURACIÓN ===
+serviciosFacturacion.js:436 ✅ Módulo de servicios para facturación inicializado
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+facturacion.js:209 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:210 🎯 Clases CSS: btn w-100 btn-outline-secondary
+facturacion.js:211 🎯 Deshabilitado: true
+facturacion.js:212 🎯 Texto: Completar Venta
+facturacion.js:213 🎯 Título: Agrega productos y selecciona un cliente
+facturacion.js:214 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:531 📋 Respuesta del servidor recibida
+facturacion.js:534 ✅ Se encontraron 5 productos disponibles
+facturacion.js:671 🔄 === INICIO mostrarResultadosProductos ===
+facturacion.js:672 🔄 CONTADOR DE LLAMADAS: 1
+facturacion.js:673 🔄 Productos recibidos: 5
+facturacion.js:708 🔄 Construyendo HTML para 5 productos
+facturacion.js:763 🖼️ Procesando imágenes para producto: Llanta Pirelli Confort 2
+facturacion.js:764 🖼️ Datos del producto: Object
+facturacion.js:777 🖼️ Imágenes desde imagenesProductos: Array(3)
+facturacion.js:782 🖼️ Imágenes desde imagenesUrls: Array(3)
+facturacion.js:801 🖼️ URL original: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+facturacion.js:813 🖼️ URL final construida: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+facturacion.js:851 🔧 Debug llanta: Object
+facturacion.js:763 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+facturacion.js:764 🖼️ Datos del producto: Object
+facturacion.js:777 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:782 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:801 🖼️ URL original: https://localhost:7273/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+facturacion.js:813 🖼️ URL final construida: https://localhost:7273/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+facturacion.js:851 🔧 Debug llanta: Object
+facturacion.js:763 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+facturacion.js:764 🖼️ Datos del producto: Object
+facturacion.js:777 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:782 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:801 🖼️ URL original: https://localhost:7273/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+facturacion.js:813 🖼️ URL final construida: https://localhost:7273/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+facturacion.js:851 🔧 Debug llanta: Object
+facturacion.js:763 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+facturacion.js:764 🖼️ Datos del producto: Object
+facturacion.js:777 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:782 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:801 🖼️ URL original: https://localhost:7273/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+facturacion.js:813 🖼️ URL final construida: https://localhost:7273/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+facturacion.js:851 🔧 Debug llanta: Object
+facturacion.js:763 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+facturacion.js:764 🖼️ Datos del producto: Object
+facturacion.js:777 🖼️ Imágenes desde imagenesProductos: Array(1)
+facturacion.js:782 🖼️ Imágenes desde imagenesUrls: Array(1)
+facturacion.js:801 🖼️ URL original: https://localhost:7273/uploads/productos/6_1_Llanta_DUNLOP_250_70R16.webp
+facturacion.js:813 🖼️ URL final construida: https://localhost:7273/uploads/productos/6_1_Llanta_DUNLOP_250_70R16.webp
+facturacion.js:851 🔧 Debug llanta: Object
+facturacion.js:930 🔄 Actualizando DOM (longitud HTML: 22978 caracteres)
+facturacion.js:963 🔄 === FIN mostrarResultadosProductos ===
+facturacion.js:649 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+facturacion.js:652 📦 Productos mostrados exitosamente
+facturacion.js:665 🔍 === FIN buscarProductos ===
+facturacion.js:5939 📦 Búsqueda inicial ejecutada
+facturacion.js:5941 📦 === FIN cargarProductosIniciales (exitosa) ===
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:30 👥 Inicializando módulo de usuarios conectados del sidebar
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:44 ✅ Módulo de usuarios conectados del sidebar inicializado
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+serviciosFacturacion.js:24 🛠️ Botón servicios clickeado desde módulo especializado
+serviciosFacturacion.js:31 🛠️ === ABRIENDO MODAL DE SERVICIOS (MÓDULO ESPECIALIZADO) ===
+serviciosFacturacion.js:42 🛠️ Modal de servicios visible - inicializando contenido
+Servicios/ObtenerTipos:1  Failed to load resource: the server responded with a status of 404 ()
+serviciosFacturacion.js:104 ❌ Error cargando tipos de servicios: Error: Error HTTP: 404
+    at ServiciosFacturacion.cargarTiposServicios (serviciosFacturacion.js:83:23)
+    at async ServiciosFacturacion.inicializarContenidoModal (serviciosFacturacion.js:57:13)
+    at async HTMLDivElement.<anonymous> (serviciosFacturacion.js:43:17)
+cargarTiposServicios @ serviciosFacturacion.js:104
+await in cargarTiposServicios
+inicializarContenidoModal @ serviciosFacturacion.js:57
+(anónimo) @ serviciosFacturacion.js:43
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+trigger @ jquery.min.js:2
+(anónimo) @ jquery.min.js:2
+each @ jquery.min.js:2
+each @ jquery.min.js:2
+trigger @ jquery.min.js:2
+trigger @ event-handler.js:306
+(anónimo) @ modal.js:245
+g @ index.js:251
+r @ index.js:273
+n @ index.js:100
+(anónimo) @ index.js:279
+setTimeout
+_ @ index.js:277
+_queueCallback @ base-component.js:45
+_showElement @ modal.js:250
+(anónimo) @ modal.js:142
+g @ index.js:251
+(anónimo) @ backdrop.js:54
+g @ index.js:251
+r @ index.js:273
+serviciosFacturacion.js:132 🛠️ === CARGANDO SERVICIOS (MÓDULO ESPECIALIZADO) ===
+serviciosFacturacion.js:154 🛠️ Servicios obtenidos: Array(9)
+serviciosFacturacion.js:180 🛠️ Mostrando servicios en tabla: 9
+serviciosFacturacion.js:280 🛠️ === MOSTRANDO MODAL AGREGAR SERVICIO (ID:4) ===
+serviciosFacturacion.js:287 🛠️ Servicio encontrado: Object
+serviciosFacturacion.js:393 ❌ Función agregarServicioAVenta no disponible
+(anónimo) @ serviciosFacturacion.js:393
+i @ jquery.min.js:2
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+serviciosFacturacion.js:403 ❌ Error agregando servicio: Error: Función de agregar servicio no disponible
+    at HTMLButtonElement.<anonymous> (serviciosFacturacion.js:394:27)
+    at HTMLButtonElement.i (jquery.min.js:2:40027)
+    at HTMLButtonElement.dispatch (jquery.min.js:2:43064)
+    at v.handle (jquery.min.js:2:41048)
+(anónimo) @ serviciosFacturacion.js:403
+i @ jquery.min.js:2
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
