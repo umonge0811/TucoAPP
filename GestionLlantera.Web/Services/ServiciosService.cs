@@ -11,18 +11,36 @@ namespace GestionLlantera.Web.Services
         private readonly HttpClient _httpClient;
         private readonly ApiConfigurationService _apiConfig;
         private readonly ILogger<ServiciosService> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ServiciosService(HttpClient httpClient, ApiConfigurationService apiConfig, ILogger<ServiciosService> logger)
+        public ServiciosService(HttpClient httpClient, ApiConfigurationService apiConfig, ILogger<ServiciosService> logger, IHttpContextAccessor httpContextAccessor)
         {
             _httpClient = httpClient;
             _apiConfig = apiConfig;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
+        }
+
+        private void AgregarTokenHeaders()
+        {
+            var context = _httpContextAccessor.HttpContext;
+            if (context?.User?.Identity?.IsAuthenticated == true)
+            {
+                var token = context.User.FindFirst("JwtToken")?.Value;
+                if (!string.IsNullOrEmpty(token))
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = 
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                }
+            }
         }
 
         public async Task<IEnumerable<ServicioDTO>> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50)
         {
             try
             {
+                AgregarTokenHeaders();
+
                 var queryParams = new List<string>();
                 if (!string.IsNullOrEmpty(busqueda))
                     queryParams.Add($"busqueda={Uri.EscapeDataString(busqueda)}");
@@ -60,6 +78,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                AgregarTokenHeaders();
+
                 var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/servicios/{id}");
 
                 if (response.IsSuccessStatusCode)
@@ -84,6 +104,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                AgregarTokenHeaders();
+
                 var json = JsonSerializer.Serialize(servicio);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -101,6 +123,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                AgregarTokenHeaders();
+
                 var json = JsonSerializer.Serialize(servicio);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -118,6 +142,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                AgregarTokenHeaders();
+
                 var response = await _httpClient.DeleteAsync($"{_apiConfig.BaseUrl}/api/servicios/{id}");
                 return response.IsSuccessStatusCode;
             }
@@ -132,6 +158,8 @@ namespace GestionLlantera.Web.Services
         {
             try
             {
+                AgregarTokenHeaders();
+
                 var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/servicios/tipos");
 
                 if (response.IsSuccessStatusCode)
