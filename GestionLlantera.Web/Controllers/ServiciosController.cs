@@ -79,6 +79,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "No tiene permisos para ver servicios" });
                 }
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para obtener servicios");
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
+                }
+
                 _logger.LogInformation("🔧 Solicitud para obtener servicios: Busqueda='{Busqueda}', TipoServicio='{TipoServicio}', SoloActivos={SoloActivos}, Pagina={Pagina}, Tamano={Tamano}",
                     busqueda, tipoServicio, soloActivos, pagina, tamano);
 
@@ -116,6 +124,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "No tiene permisos para ver servicios" });
                 }
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para obtener servicio {Id}", id);
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
+                }
+
                 _logger.LogInformation("🔧 Solicitud para obtener servicio por ID: {Id}", id);
                 var servicio = await _serviciosService.ObtenerServicioPorIdAsync(id);
 
@@ -149,6 +165,14 @@ namespace GestionLlantera.Web.Controllers
                 {
                     _logger.LogWarning("🚫 Usuario sin permiso 'Editar Servicios' al intentar crear servicio.");
                     return Json(new { success = false, message = "No tiene permisos para crear servicios" });
+                }
+
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para crear servicio");
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
                 }
 
                 if (!ModelState.IsValid)
@@ -198,6 +222,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "No tiene permisos para editar servicios" });
                 }
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para actualizar servicio {Id}", id);
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
+                }
+
                 if (!ModelState.IsValid)
                 {
                     var errores = ModelState
@@ -245,6 +277,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "No tiene permisos para eliminar servicios" });
                 }
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para eliminar servicio {Id}", id);
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
+                }
+
                 _logger.LogInformation("🔧 Solicitud para eliminar servicio {Id}", id);
                 var resultado = await _serviciosService.EliminarServicioAsync(id);
 
@@ -280,6 +320,14 @@ namespace GestionLlantera.Web.Controllers
                     return Json(new { success = false, message = "No tiene permisos para ver tipos de servicios" });
                 }
 
+                // Obtener token JWT del usuario autenticado
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    _logger.LogError("❌ Token JWT no encontrado para obtener tipos de servicios");
+                    return Json(new { success = false, message = "Sesión expirada. Inicie sesión nuevamente." });
+                }
+
                 _logger.LogInformation("🔧 Solicitud para obtener tipos de servicios");
                 var tipos = await _serviciosService.ObtenerTiposServiciosAsync();
 
@@ -306,35 +354,17 @@ namespace GestionLlantera.Web.Controllers
         /// </summary>
         private string? ObtenerTokenJWT()
         {
-            // Intentar obtener el token de la sesión primero
-            var token = HttpContext.Session.GetString("JWTToken");
+            var token = User.FindFirst("JwtToken")?.Value;
 
             if (string.IsNullOrEmpty(token))
             {
-                // Si no está en la sesión, intentar obtenerlo de los claims (como antes)
-                token = User.FindFirst("JwtToken")?.Value;
-
-                if (string.IsNullOrEmpty(token))
-                {
-                    _logger.LogWarning("⚠️ Token JWT no encontrado en la sesión ni en los claims del usuario: {Usuario}",
-                        User.Identity?.Name ?? "Anónimo");
-
-                    // Listar todos los claims disponibles para debug si no se encuentra el token
-                    var claims = User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
-                    _logger.LogWarning("📋 Claims disponibles: {Claims}", string.Join(", ", claims));
-                }
-                else
-                {
-                    _logger.LogInformation("✅ Token JWT obtenido de claims correctamente para usuario: {Usuario}, Longitud: {Length}",
-                        User.Identity?.Name ?? "Anónimo", token.Length);
-                    // Opcional: Guardar el token en la sesión si se encontró en los claims
-                    HttpContext.Session.SetString("JWTToken", token);
-                }
+                _logger.LogWarning("⚠️ Token JWT no encontrado en los claims del usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
             }
             else
             {
-                _logger.LogInformation("✅ Token JWT obtenido de la sesión correctamente para usuario: {Usuario}, Longitud: {Length}",
-                    User.Identity?.Name ?? "Anónimo", token.Length);
+                _logger.LogDebug("✅ Token JWT obtenido correctamente para usuario: {Usuario}",
+                    User.Identity?.Name ?? "Anónimo");
             }
 
             return token;
