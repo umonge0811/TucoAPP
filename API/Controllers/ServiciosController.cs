@@ -1,11 +1,11 @@
 
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
 using Tuco.Clases.DTOs;
 using Tuco.Clases.Models;
-using tuco.Clases.Models;
 
 namespace API.Controllers
 {
@@ -184,10 +184,9 @@ namespace API.Controllers
                 servicio.EstaActivo = servicioDto.EstaActivo;
                 servicio.FechaUltimaActualizacion = DateTime.Now;
 
-                _context.Entry(servicio).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Servicio actualizado: {Nombre} (ID: {Id})", servicio.NombreServicio, id);
+                _logger.LogInformation("✅ Servicio actualizado: {Nombre} (ID: {Id})", servicio.NombreServicio, servicio.ServicioId);
 
                 return NoContent();
             }
@@ -215,10 +214,9 @@ namespace API.Controllers
                 servicio.EstaActivo = false;
                 servicio.FechaUltimaActualizacion = DateTime.Now;
 
-                _context.Entry(servicio).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Servicio desactivado: {Nombre} (ID: {Id})", servicio.NombreServicio, id);
+                _logger.LogInformation("✅ Servicio desactivado: {Nombre} (ID: {Id})", servicio.NombreServicio, servicio.ServicioId);
 
                 return NoContent();
             }
@@ -230,7 +228,7 @@ namespace API.Controllers
         }
 
         /// <summary>
-        /// Obtiene tipos de servicios únicos
+        /// Obtiene tipos de servicios disponibles
         /// </summary>
         [HttpGet("tipos")]
         public async Task<ActionResult<IEnumerable<string>>> GetTiposServicios()
@@ -243,6 +241,8 @@ namespace API.Controllers
                     .Distinct()
                     .OrderBy(t => t)
                     .ToListAsync();
+
+                _logger.LogInformation("✅ Se encontraron {Count} tipos de servicios", tipos.Count);
 
                 return Ok(tipos);
             }

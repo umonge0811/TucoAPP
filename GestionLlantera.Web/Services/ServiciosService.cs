@@ -19,7 +19,7 @@ namespace GestionLlantera.Web.Services
             _logger = logger;
         }
 
-        public async Task<IEnumerable<ServicioDTO>> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true)
+        public async Task<object> ObtenerServiciosAsync(string busqueda = "", string tipoServicio = "", bool soloActivos = true, int pagina = 1, int tamano = 50)
         {
             try
             {
@@ -29,6 +29,8 @@ namespace GestionLlantera.Web.Services
                 if (!string.IsNullOrEmpty(tipoServicio))
                     queryParams.Add($"tipoServicio={Uri.EscapeDataString(tipoServicio)}");
                 queryParams.Add($"soloActivos={soloActivos}");
+                queryParams.Add($"pagina={pagina}");
+                queryParams.Add($"tamano={tamano}");
 
                 var queryString = string.Join("&", queryParams);
                 var response = await _httpClient.GetAsync($"{_apiConfig.BaseUrl}/api/servicios?{queryString}");
@@ -36,18 +38,38 @@ namespace GestionLlantera.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var json = await response.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<IEnumerable<ServicioDTO>>(json, new JsonSerializerOptions
+                    
+                    // Try to deserialize as DataTables format first
+                    try
                     {
-                        PropertyNameCaseInsensitive = true
-                    }) ?? new List<ServicioDTO>();
+                        var dataTablesResponse = JsonSerializer.Deserialize<object>(json, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                        return dataTablesResponse ?? new { data = new List<ServicioDTO>(), recordsTotal = 0, recordsFiltered = 0 };
+                    }
+                    catch
+                    {
+                        // If that fails, try as simple array and wrap it
+                        var servicios = JsonSerializer.Deserialize<IEnumerable<ServicioDTO>>(json, new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        }) ?? new List<ServicioDTO>();
+                        
+                        return new { 
+                            data = servicios, 
+                            recordsTotal = servicios.Count(), 
+                            recordsFiltered = servicios.Count() 
+                        };
+                    }
                 }
 
-                return new List<ServicioDTO>();
+                return new { data = new List<ServicioDTO>(), recordsTotal = 0, recordsFiltered = 0 };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener servicios");
-                return new List<ServicioDTO>();
+                return new { data = new List<ServicioDTO>(), recordsTotal = 0, recordsFiltered = 0 };
             }
         }
 
