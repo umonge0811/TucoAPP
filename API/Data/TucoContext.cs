@@ -77,17 +77,8 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
-    public DbSet<RolPermisoRE> RolPermisos { get; set; }
-
+    public DbSet<UsuarioPermisoRE> UsuarioPermisos { get; set; }
     public DbSet<UsuarioRolRE> UsuarioRoles { get; set; }
-
-    public DbSet<UsuarioPermisoRE> UsuarioPermiso { get; set; }
-
-    public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
-
-    public DbSet<NotaRapida> NotasRapidas { get; set; }
-
-    public DbSet<Anuncio> Anuncios { get; set; }
 
     public virtual DbSet<Servicio> Servicios { get; set; }
 
