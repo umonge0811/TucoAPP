@@ -60,6 +60,7 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
+                _logger.LogInformation("🌐 URL del API configurada: {ApiBaseUrl}", _apiBaseUrl);
 
                 // Obtener producto usando el endpoint público
                 var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/Inventario/productos-publicos");
@@ -107,12 +108,17 @@ namespace GestionLlantera.Web.Controllers
                             if (producto != null && item.TryGetProperty("imagenesUrls", out var imagenesUrlsProp))
                             {
                                 var imagenesUrls = new List<string>();
+                                _logger.LogInformation("🖼️ Procesando {CantidadImagenes} imágenes para producto {ProductoId}", 
+                                    imagenesUrlsProp.GetArrayLength(), id);
+                                
                                 foreach (var imgUrl in imagenesUrlsProp.EnumerateArray())
                                 {
                                     var url = imgUrl.GetString();
                                     if (!string.IsNullOrEmpty(url))
                                     {
-                                        imagenesUrls.Add(ProcessImageUrl(url));
+                                        var urlProcesada = ProcessImageUrl(url);
+                                        imagenesUrls.Add(urlProcesada);
+                                        _logger.LogInformation("🔧 URL original: {UrlOriginal} → URL procesada: {UrlProcesada}", url, urlProcesada);
                                     }
                                 }
 
@@ -124,9 +130,17 @@ namespace GestionLlantera.Web.Controllers
                                         UrlImagen = url
                                     }).ToList();
 
-                                    _logger.LogInformation("🖼️ Imágenes procesadas para producto {ProductoId}: {CantidadImagenes}", 
+                                    _logger.LogInformation("✅ Imágenes procesadas para producto {ProductoId}: {CantidadImagenes}", 
                                         id, producto.Imagenes.Count);
                                 }
+                                else
+                                {
+                                    _logger.LogWarning("⚠️ No se encontraron URLs de imágenes válidas para producto {ProductoId}", id);
+                                }
+                            }
+                            else
+                            {
+                                _logger.LogWarning("⚠️ No se encontró la propiedad 'imagenesUrls' para producto {ProductoId}", id);
                             }
                             break;
                         }
