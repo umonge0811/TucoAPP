@@ -80,6 +80,14 @@
                                     </a>
 
                                     <button type="button" 
+                                            id="btnServicios" 
+                                            class="btn btn-outline-primary"
+                                            title="Ver servicios disponibles">
+                                        <i class="bi bi-tools me-2"></i>
+                                        <span class="btn-text">Servicios</span>
+                                    </button>
+
+                                    <button type="button" 
                                             id="btnAbrirInventario" 
                                             class="btn btn-outline-secondary"
                                             title="Ver inventario completo">
@@ -215,6 +223,7 @@
     @await Html.PartialAsync("_ModalInventario")
     @await Html.PartialAsync("_ModalDetalleProducto")
     @await Html.PartialAsync("_ModalFinalizarVenta")
+    @await Html.PartialAsync("_ModalServicios")
 
 <!-- Modal de Problemas de Stock -->
 <div class="modal fade" id="problemasStockModal" tabindex="-1" aria-labelledby="problemasStockModalLabel" aria-hidden="true">

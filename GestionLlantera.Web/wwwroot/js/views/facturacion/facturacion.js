@@ -430,6 +430,11 @@ function configurarEventos() {
         abrirProformas();
     });
 
+    // ===== BOTÓN SERVICIOS =====
+    $('#btnServicios').on('click', function () {
+        abrirModalServicios();
+    });
+
     // ===== MODAL FINALIZAR VENTA =====
     $('#metodoPago').on('change', function () {
         const metodo = $(this).val();
@@ -1424,13 +1429,25 @@ function actualizarVistaCarrito() {
         const metodoPago = producto.metodoPago || 'efectivo';
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
-        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA O TIPO DE SERVICIO
         let nombreCompletoProducto = producto.nombreProducto;
-        let infoLlantaCarrito = '';
+        let infoAdicional = '';
 
-        if (producto.esLlanta && producto.medidaCompleta) {
+        if (producto.esServicio) {
+            // Mostrar información del servicio
+            infoAdicional = `
+                <div class="info-servicio-carrito mb-1">
+                    <small class="text-success fw-bold">
+                        <i class="bi bi-tools me-1"></i>Servicio - ${producto.tipoServicio || 'General'}
+                    </small>
+                    ${producto.observaciones ? `
+                        <br><small class="text-muted"><i class="bi bi-chat-text me-1"></i>${producto.observaciones}</small>
+                    ` : ''}
+                </div>
+            `;
+        } else if (producto.esLlanta && producto.medidaCompleta) {
             // Mostrar medida como información adicional debajo del nombre
-            infoLlantaCarrito = `
+            infoAdicional = `
                 <div class="info-llanta-carrito mb-1">
                     <small class="text-primary fw-bold">
                         <i class="bi bi-tire me-1"></i>${producto.medidaCompleta}
@@ -1444,7 +1461,7 @@ function actualizarVistaCarrito() {
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <h6 class="mb-1">${nombreCompletoProducto}</h6>
-                        ${infoLlantaCarrito}
+                        ${infoAdicional}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
                             <small class="badge bg-info">${configMetodo.nombre}</small>
@@ -2593,21 +2610,28 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             detallesFactura: productosEnVenta.map(producto => {
                 const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
 
-                // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA
+                // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA O TIPO SI ES SERVICIO
                 let nombreCompletoProducto = producto.nombreProducto;
-                if (producto.esLlanta && producto.medidaCompleta) {
+                if (producto.esServicio) {
+                    nombreCompletoProducto = `[SERVICIO] ${producto.nombreProducto}`;
+                    if (producto.observaciones) {
+                        nombreCompletoProducto += ` - ${producto.observaciones}`;
+                    }
+                } else if (producto.esLlanta && producto.medidaCompleta) {
                     nombreCompletoProducto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
                 }
 
                 return {
-                    productoId: producto.productoId,
+                    productoId: producto.esServicio ? null : producto.productoId,
+                    servicioId: producto.esServicio ? producto.servicioId : null,
                     nombreProducto: nombreCompletoProducto,
                     descripcionProducto: producto.descripcion || '',
                     cantidad: producto.cantidad,
                     precioUnitario: precioAjustado,
                     porcentajeDescuento: 0,
                     montoDescuento: 0,
-                    subtotal: precioAjustado * producto.cantidad
+                    subtotal: precioAjustado * producto.cantidad,
+                    esServicio: producto.esServicio || false
                 };
             })
         };
@@ -3663,6 +3687,408 @@ window.convertirProformaAFacturaGlobal = function (proformaId) {
     console.log('🌐 Función global llamada para convertir proforma:', proformaId);
     convertirProformaAFactura(proformaId);
 };
+
+// ===== GESTIÓN DE SERVICIOS =====
+
+/**
+ * ✅ FUNCIÓN: Abrir modal de servicios
+ */
+async function abrirModalServicios() {
+    try {
+        console.log('🛠️ === ABRIENDO MODAL DE SERVICIOS ===');
+
+        const modal = new bootstrap.Modal(document.getElementById('modalServicios'));
+
+        // Configurar evento para cuando el modal sea completamente visible
+        $('#modalServicios').on('shown.bs.modal', async function () {
+            console.log('🛠️ Modal de servicios completamente visible');
+            
+            // Cargar tipos de servicios para el filtro
+            await cargarTiposServicios();
+            
+            // Configurar eventos de filtros
+            configurarEventosServicios();
+            
+            // Cargar servicios iniciales
+            await cargarServicios();
+        });
+
+        modal.show();
+
+    } catch (error) {
+        console.error('❌ Error abriendo modal de servicios:', error);
+        mostrarToast('Error', 'No se pudo abrir el modal de servicios', 'danger');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Cargar tipos de servicios para filtro
+ */
+async function cargarTiposServicios() {
+    try {
+        const response = await fetch('/api/servicios/tipos', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const tipos = await response.json();
+        const select = $('#tipoServicioFiltro');
+        
+        // Limpiar opciones existentes excepto la primera
+        select.find('option:not(:first)').remove();
+        
+        // Agregar tipos
+        tipos.forEach(tipo => {
+            select.append(`<option value="${tipo}">${tipo}</option>`);
+        });
+
+    } catch (error) {
+        console.error('❌ Error cargando tipos de servicios:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Configurar eventos de los filtros de servicios
+ */
+function configurarEventosServicios() {
+    let timeoutBusqueda = null;
+
+    // Limpiar eventos anteriores
+    $('#busquedaServicios').off('input.servicios');
+    $('#tipoServicioFiltro').off('change.servicios');
+    $('#estadoServicioFiltro').off('change.servicios');
+
+    // Búsqueda con debounce
+    $('#busquedaServicios').on('input.servicios', function () {
+        clearTimeout(timeoutBusqueda);
+        timeoutBusqueda = setTimeout(() => {
+            cargarServicios();
+        }, 300);
+    });
+
+    // Filtros
+    $('#tipoServicioFiltro, #estadoServicioFiltro').on('change.servicios', function () {
+        cargarServicios();
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Cargar servicios con filtros
+ */
+async function cargarServicios() {
+    try {
+        console.log('🛠️ === CARGANDO SERVICIOS ===');
+
+        // Mostrar loading
+        $('#serviciosLoading').show();
+        $('#serviciosContent').hide();
+        $('#serviciosEmpty').hide();
+
+        // Obtener valores de filtros
+        const busqueda = $('#busquedaServicios').val().trim();
+        const tipoServicio = $('#tipoServicioFiltro').val();
+        const estadoFiltro = $('#estadoServicioFiltro').val();
+        
+        const soloActivos = estadoFiltro === 'activos';
+
+        // Construir URL con parámetros
+        const params = new URLSearchParams({
+            busqueda: busqueda,
+            tipoServicio: tipoServicio,
+            soloActivos: soloActivos
+        });
+
+        const response = await fetch(`/api/servicios?${params}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const servicios = await response.json();
+        console.log('🛠️ Servicios obtenidos:', servicios.length);
+
+        if (servicios && servicios.length > 0) {
+            mostrarServicios(servicios, estadoFiltro);
+        } else {
+            mostrarServiciosVacios();
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando servicios:', error);
+        mostrarServiciosVacios();
+        mostrarToast('Error', 'Error al cargar servicios: ' + error.message, 'danger');
+    } finally {
+        $('#serviciosLoading').hide();
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar servicios en la tabla
+ */
+function mostrarServicios(servicios, estadoFiltro) {
+    console.log('🛠️ Mostrando servicios:', servicios.length);
+
+    const tbody = $('#serviciosTableBody');
+    tbody.empty();
+
+    // Filtrar por estado en el frontend si es necesario
+    let serviciosFiltrados = servicios;
+    if (estadoFiltro === 'activos') {
+        serviciosFiltrados = servicios.filter(s => s.estaActivo);
+    } else if (estadoFiltro === 'inactivos') {
+        serviciosFiltrados = servicios.filter(s => !s.estaActivo);
+    }
+
+    serviciosFiltrados.forEach(servicio => {
+        const estadoBadge = servicio.estaActivo ? 
+            '<span class="badge bg-success">Activo</span>' : 
+            '<span class="badge bg-secondary">Inactivo</span>';
+
+        // Escapar datos del servicio
+        const servicioEscapado = JSON.stringify(servicio).replace(/"/g, '&quot;');
+
+        const fila = `
+            <tr data-servicio-id="${servicio.servicioId}" class="servicio-row">
+                <td>
+                    <strong class="text-primary">${servicio.nombreServicio}</strong>
+                    ${servicio.descripcion ? `<br><small class="text-muted">${servicio.descripcion}</small>` : ''}
+                </td>
+                <td>
+                    <span class="badge bg-info">${servicio.tipoServicio || 'General'}</span>
+                </td>
+                <td class="text-end">
+                    <strong class="text-success">₡${formatearMoneda(servicio.precioBase)}</strong>
+                </td>
+                <td class="text-center">
+                    ${estadoBadge}
+                </td>
+                <td class="text-center">
+                    ${servicio.estaActivo ? `
+                        <button type="button" 
+                                class="btn btn-sm btn-success btn-agregar-servicio"
+                                data-servicio-escapado="${servicioEscapado}"
+                                title="Agregar al carrito">
+                            <i class="bi bi-cart-plus"></i>
+                        </button>
+                    ` : `
+                        <button type="button" 
+                                class="btn btn-sm btn-secondary" 
+                                disabled
+                                title="Servicio inactivo">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    `}
+                </td>
+            </tr>
+        `;
+        tbody.append(fila);
+    });
+
+    // Configurar eventos de los botones
+    $('.btn-agregar-servicio').on('click', function () {
+        const servicioEscapado = $(this).data('servicio-escapado');
+        mostrarModalAgregarServicio(servicioEscapado);
+    });
+
+    $('#serviciosContent').show();
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar mensaje cuando no hay servicios
+ */
+function mostrarServiciosVacios() {
+    $('#serviciosContent').hide();
+    $('#serviciosEmpty').show();
+}
+
+/**
+ * ✅ FUNCIÓN: Mostrar modal para agregar servicio al carrito
+ */
+function mostrarModalAgregarServicio(servicioEscapado) {
+    try {
+        console.log('🛠️ === MOSTRANDO MODAL AGREGAR SERVICIO ===');
+        
+        const servicio = JSON.parse(servicioEscapado.replace(/&quot;/g, '"'));
+        console.log('🛠️ Servicio seleccionado:', servicio);
+
+        // Llenar detalles del servicio
+        const detalleHtml = `
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">
+                        <i class="bi bi-tools me-2"></i>${servicio.nombreServicio}
+                    </h5>
+                    ${servicio.descripcion ? `
+                        <p class="card-text text-muted">${servicio.descripcion}</p>
+                    ` : ''}
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Tipo:</strong><br>
+                            <span class="badge bg-info">${servicio.tipoServicio || 'General'}</span>
+                        </div>
+                        <div class="col-6">
+                            <strong>Precio Base:</strong><br>
+                            <span class="text-success fs-5 fw-bold">₡${formatearMoneda(servicio.precioBase)}</span>
+                        </div>
+                    </div>
+                    ${servicio.observaciones ? `
+                        <div class="mt-2">
+                            <strong>Observaciones:</strong><br>
+                            <small class="text-muted">${servicio.observaciones}</small>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        $('#detalleServicioSeleccionado').html(detalleHtml);
+
+        // Resetear campos
+        $('#cantidadServicio').val(1);
+        $('#observacionesServicio').val('');
+
+        // Configurar eventos del modal
+        configurarEventosModalAgregarServicio(servicio);
+
+        // Mostrar modal
+        const modal = new bootstrap.Modal(document.getElementById('modalAgregarServicio'));
+        modal.show();
+
+    } catch (error) {
+        console.error('❌ Error mostrando modal agregar servicio:', error);
+        mostrarToast('Error', 'No se pudo procesar el servicio seleccionado', 'danger');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Configurar eventos del modal agregar servicio
+ */
+function configurarEventosModalAgregarServicio(servicio) {
+    // Limpiar eventos anteriores
+    $('#btnMenosCantidadServicio').off('click.modalServicio');
+    $('#btnMasCantidadServicio').off('click.modalServicio');
+    $('#cantidadServicio').off('input.modalServicio');
+    $('#btnConfirmarAgregarServicio').off('click.modalServicio');
+
+    // Botones de cantidad
+    $('#btnMenosCantidadServicio').on('click.modalServicio', function () {
+        const input = $('#cantidadServicio');
+        const valorActual = parseInt(input.val()) || 1;
+        if (valorActual > 1) {
+            input.val(valorActual - 1);
+        }
+    });
+
+    $('#btnMasCantidadServicio').on('click.modalServicio', function () {
+        const input = $('#cantidadServicio');
+        const valorActual = parseInt(input.val()) || 1;
+        if (valorActual < 10) {
+            input.val(valorActual + 1);
+        }
+    });
+
+    // Validación del input
+    $('#cantidadServicio').on('input.modalServicio', function () {
+        const valor = parseInt($(this).val()) || 1;
+        if (valor < 1) {
+            $(this).val(1);
+        } else if (valor > 10) {
+            $(this).val(10);
+        }
+    });
+
+    // Confirmar agregar servicio
+    $('#btnConfirmarAgregarServicio').one('click.modalServicio', function () {
+        const $boton = $(this);
+        if ($boton.prop('disabled')) {
+            return;
+        }
+
+        $boton.prop('disabled', true);
+        $boton.html('<span class="spinner-border spinner-border-sm me-2"></span>Agregando...');
+
+        const cantidad = parseInt($('#cantidadServicio').val()) || 1;
+        const observaciones = $('#observacionesServicio').val().trim();
+
+        try {
+            agregarServicioAVenta(servicio, cantidad, observaciones);
+            
+            // Cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAgregarServicio'));
+            modal.hide();
+
+            mostrarToast('Servicio agregado', `${servicio.nombreServicio} agregado a la venta`, 'success');
+
+        } catch (error) {
+            console.error('❌ Error agregando servicio:', error);
+            mostrarToast('Error', 'No se pudo agregar el servicio', 'danger');
+        } finally {
+            $boton.prop('disabled', false);
+            $boton.html('<i class="bi bi-cart-plus me-1"></i>Agregar al Carrito');
+        }
+    });
+}
+
+/**
+ * ✅ FUNCIÓN: Agregar servicio al carrito de venta
+ */
+function agregarServicioAVenta(servicio, cantidad = 1, observaciones = '') {
+    console.log('🛠️ === AGREGANDO SERVICIO A VENTA ===');
+    console.log('🛠️ Servicio:', servicio.nombreServicio);
+    console.log('🛠️ Cantidad:', cantidad);
+    console.log('🛠️ Observaciones:', observaciones);
+
+    // Verificar si el servicio ya está en la venta
+    const servicioExistente = productosEnVenta.find(p => 
+        p.esServicio && p.servicioId === servicio.servicioId
+    );
+
+    if (servicioExistente) {
+        // Incrementar cantidad
+        servicioExistente.cantidad += cantidad;
+        if (observaciones) {
+            servicioExistente.observaciones = observaciones;
+        }
+        console.log('🛠️ Cantidad de servicio incrementada');
+    } else {
+        // Agregar nuevo servicio
+        const servicioVenta = {
+            servicioId: servicio.servicioId,
+            nombreProducto: servicio.nombreServicio, // Usar el mismo campo que productos
+            descripcion: servicio.descripcion || '',
+            precioUnitario: servicio.precioBase,
+            cantidad: cantidad,
+            observaciones: observaciones,
+            metodoPago: 'efectivo',
+            esServicio: true, // Flag para identificar que es un servicio
+            tipoServicio: servicio.tipoServicio || 'General',
+            imagenUrl: null
+        };
+
+        productosEnVenta.push(servicioVenta);
+        console.log('🛠️ Nuevo servicio agregado al carrito');
+    }
+
+    // Actualizar vistas
+    actualizarVistaCarrito();
+    actualizarTotales();
+    actualizarEstadoBotonFinalizar();
+}
 
 /**
  * ✅ FUNCIÓN: Re-imprimir factura existente desde modal de detalles
