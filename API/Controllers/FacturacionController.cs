@@ -322,19 +322,27 @@ namespace API.Controllers
                 foreach (var detalle in facturaDto.DetallesFactura)
                 {
                     // ✅ VALIDAR que tenga ProductoId O ServicioId, pero no ambos
-                    if ((!detalle.ProductoId.HasValue && !detalle.ServicioId.HasValue) ||
-                        (detalle.ProductoId.HasValue && detalle.ServicioId.HasValue))
+                    // Permitir ProductoId válido (mayor a 0) o ServicioId válido, pero no ambos o ninguno
+                    bool tieneProducto = detalle.ProductoId.HasValue && detalle.ProductoId.Value > 0;
+                    bool tieneServicio = detalle.ServicioId.HasValue && detalle.ServicioId.Value > 0;
+                    
+                    if (!tieneProducto && !tieneServicio)
                     {
-                        return BadRequest(new { message = "Cada detalle debe tener ProductoId O ServicioId, pero no ambos." });
+                        return BadRequest(new { message = $"El detalle '{detalle.NombreProducto}' debe tener un ProductoId o ServicioId válido." });
+                    }
+                    
+                    if (tieneProducto && tieneServicio)
+                    {
+                        return BadRequest(new { message = $"El detalle '{detalle.NombreProducto}' no puede tener ProductoId y ServicioId al mismo tiempo." });
                     }
 
                     var detalleBD = new DetalleFactura
                     {
                         FacturaId = factura.FacturaId,
-                        // Solo asignar ProductoId si existe, null para servicios
-                        ProductoId = detalle.ProductoId > 0 ? detalle.ProductoId : null,
-                        // Solo asignar ServicioId si existe, null para productos  
-                        ServicioId = detalle.ServicioId > 0 ? detalle.ServicioId : null,
+                        // Solo asignar ProductoId si es válido
+                        ProductoId = tieneProducto ? detalle.ProductoId : null,
+                        // Solo asignar ServicioId si es válido
+                        ServicioId = tieneServicio ? detalle.ServicioId : null,
                         NombreProducto = detalle.NombreProducto,
                         DescripcionProducto = detalle.DescripcionProducto,
                         Cantidad = detalle.Cantidad,
@@ -750,17 +758,17 @@ namespace API.Controllers
                 // Actualizar inventario solo para productos, no para servicios
                 foreach (var detalle in factura.DetallesFactura)
                 {
-                    // Si es un servicio, no actualizar inventario
-                    if (detalle.ServicioId.HasValue)
+                    // Si es un servicio (ServicioId válido), no actualizar inventario
+                    if (detalle.ServicioId.HasValue && detalle.ServicioId.Value > 0)
                     {
                         _logger.LogInformation("🔧 Omitiendo actualización de inventario para servicio: {NombreServicio}", detalle.NombreProducto);
                         continue;
                     }
 
-                    // Solo actualizar inventario para productos físicos
-                    if (detalle.ProductoId.HasValue)
+                    // Solo actualizar inventario para productos físicos (ProductoId válido)
+                    if (detalle.ProductoId.HasValue && detalle.ProductoId.Value > 0)
                     {
-                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                        var producto = await _context.Productos.FindAsync(detalle.ProductoId.Value);
                         if (producto != null)
                         {
                             producto.CantidadEnInventario = Math.Max(0,
@@ -769,6 +777,10 @@ namespace API.Controllers
 
                             _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
                                 producto.NombreProducto, detalle.Cantidad);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("⚠️ Producto no encontrado para ID: {ProductoId}", detalle.ProductoId.Value);
                         }
                     }
                 }
@@ -1143,21 +1155,21 @@ namespace API.Controllers
 
             foreach (var detalle in detalles)
             {
-                // Si es un servicio (ServicioId tiene valor), no validar stock
-                if (detalle.ServicioId.HasValue)
+                // Si es un servicio (ServicioId válido), no validar stock
+                if (detalle.ServicioId.HasValue && detalle.ServicioId.Value > 0)
                 {
                     _logger.LogInformation("🔧 Omitiendo validación de stock para servicio: {NombreServicio}", detalle.NombreProducto);
                     continue;
                 }
 
-                // Solo validar stock para productos físicos (ProductoId tiene valor)
-                if (!detalle.ProductoId.HasValue)
+                // Solo validar stock para productos físicos (ProductoId válido)
+                if (!detalle.ProductoId.HasValue || detalle.ProductoId.Value <= 0)
                 {
                     continue;
                 }
 
                 var producto = await _context.Productos
-                    .Where(p => p.ProductoId == detalle.ProductoId)
+                    .Where(p => p.ProductoId == detalle.ProductoId.Value)
                     .FirstOrDefaultAsync();
 
                 if (producto == null)
