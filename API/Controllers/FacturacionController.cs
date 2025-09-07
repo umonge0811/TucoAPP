@@ -745,18 +745,29 @@ namespace API.Controllers
                     }
                 }
 
-                // Actualizar inventario
+                // Actualizar inventario solo para productos, no para servicios
                 foreach (var detalle in factura.DetallesFactura)
                 {
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                    if (producto != null)
+                    // Si es un servicio, no actualizar inventario
+                    if (detalle.ServicioId.HasValue)
                     {
-                        producto.CantidadEnInventario = Math.Max(0,
-                            (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
-                        producto.FechaUltimaActualizacion = DateTime.Now;
+                        _logger.LogInformation("🔧 Omitiendo actualización de inventario para servicio: {NombreServicio}", detalle.NombreProducto);
+                        continue;
+                    }
 
-                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
-                            producto.NombreProducto, detalle.Cantidad);
+                    // Solo actualizar inventario para productos físicos
+                    if (detalle.ProductoId.HasValue)
+                    {
+                        var producto = await _context.Productos.FindAsync(detalle.ProductoId);
+                        if (producto != null)
+                        {
+                            producto.CantidadEnInventario = Math.Max(0,
+                                (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
+                            producto.FechaUltimaActualizacion = DateTime.Now;
+
+                            _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
+                                producto.NombreProducto, detalle.Cantidad);
+                        }
                     }
                 }
 
@@ -1130,6 +1141,19 @@ namespace API.Controllers
 
             foreach (var detalle in detalles)
             {
+                // Si es un servicio (ServicioId tiene valor), no validar stock
+                if (detalle.ServicioId.HasValue)
+                {
+                    _logger.LogInformation("🔧 Omitiendo validación de stock para servicio: {NombreServicio}", detalle.NombreProducto);
+                    continue;
+                }
+
+                // Solo validar stock para productos físicos (ProductoId tiene valor)
+                if (!detalle.ProductoId.HasValue)
+                {
+                    continue;
+                }
+
                 var producto = await _context.Productos
                     .Where(p => p.ProductoId == detalle.ProductoId)
                     .FirstOrDefaultAsync();
