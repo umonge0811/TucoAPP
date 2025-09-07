@@ -331,8 +331,10 @@ namespace API.Controllers
                     var detalleBD = new DetalleFactura
                     {
                         FacturaId = factura.FacturaId,
-                        ProductoId = detalle.ProductoId,
-                        ServicioId = detalle.ServicioId,
+                        // Solo asignar ProductoId si existe, null para servicios
+                        ProductoId = detalle.ProductoId > 0 ? detalle.ProductoId : null,
+                        // Solo asignar ServicioId si existe, null para productos  
+                        ServicioId = detalle.ServicioId > 0 ? detalle.ServicioId : null,
                         NombreProducto = detalle.NombreProducto,
                         DescripcionProducto = detalle.DescripcionProducto,
                         Cantidad = detalle.Cantidad,
@@ -1357,6 +1359,12 @@ namespace API.Controllers
 
                 foreach (var detalle in factura.DetallesFactura)
                 {
+                    // Si es un servicio, omitir la verificación de stock
+                    if (detalle.ServicioId.HasValue)
+                    {
+                        continue;
+                    }
+
                     var producto = await _context.Productos
                         .Include(p => p.ImagenesProductos)
                         .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);
