@@ -65,8 +65,8 @@ builder.Services.AddCors(options =>
             .WithOrigins(
                 "https://localhost:7038", // Desarrollo local
                 "http://localhost:5000",   // Desarrollo local alternativo
-                "https://www.llantasymastc.com", // Producción principal
-                "http://apillantasymast.somee.com", // API de producción
+                "https://www.llantasymastc.com", // Producción web
+                "http://apillantasymast.somee.com", // Producción API
                 "http://www.apillantasymast.somee.com" // Producción alternativa
             )
             .AllowAnyMethod()
@@ -115,16 +115,13 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new Microsoft.OpenApi.Models.OpenApiReference
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
+                Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                Id = "Bearer"
+            }
+        },
+        new string[] {}
     });
 });
 // Configurar HttpClient
