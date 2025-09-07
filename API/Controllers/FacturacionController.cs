@@ -321,20 +321,38 @@ namespace API.Controllers
                 // Crear detalles de factura
                 foreach (var detalle in facturaDto.DetallesFactura)
                 {
-                    var detalleFactura = new DetalleFactura
+                    // ✅ VALIDAR que tenga ProductoId O ServicioId, pero no ambos
+                    // Permitir ProductoId válido (mayor a 0) o ServicioId válido, pero no ambos o ninguno
+                    bool tieneProducto = detalle.ProductoId.HasValue && detalle.ProductoId.Value > 0;
+                    bool tieneServicio = detalle.ServicioId.HasValue && detalle.ServicioId.Value > 0;
+                    
+                    if (!tieneProducto && !tieneServicio)
+                    {
+                        return BadRequest(new { message = $"El detalle '{detalle.NombreProducto}' debe tener un ProductoId o ServicioId válido." });
+                    }
+                    
+                    if (tieneProducto && tieneServicio)
+                    {
+                        return BadRequest(new { message = $"El detalle '{detalle.NombreProducto}' no puede tener ProductoId y ServicioId al mismo tiempo." });
+                    }
+
+                    var detalleBD = new DetalleFactura
                     {
                         FacturaId = factura.FacturaId,
-                        ProductoId = detalle.ProductoId,
+                        // Solo asignar ProductoId si es válido
+                        ProductoId = tieneProducto ? detalle.ProductoId : null,
+                        // Solo asignar ServicioId si es válido
+                        ServicioId = tieneServicio ? detalle.ServicioId : null,
                         NombreProducto = detalle.NombreProducto,
                         DescripcionProducto = detalle.DescripcionProducto,
                         Cantidad = detalle.Cantidad,
                         PrecioUnitario = detalle.PrecioUnitario,
                         PorcentajeDescuento = detalle.PorcentajeDescuento,
-                        MontoDescuento = detalle.DescuentoCalculado,
-                        Subtotal = detalle.SubtotalConDescuento
+                        MontoDescuento = detalle.MontoDescuento,
+                        Subtotal = detalle.Subtotal
                     };
 
-                    _context.DetallesFactura.Add(detalleFactura);
+                    _context.DetallesFactura.Add(detalleBD);
 
                     // ✅ NO ACTUALIZAR INVENTARIO AQUÍ - Se maneja desde el frontend
                     // El ajuste de stock se realiza desde el JavaScript usando el endpoint específico
@@ -737,18 +755,33 @@ namespace API.Controllers
                     }
                 }
 
-                // Actualizar inventario
+                // Actualizar inventario solo para productos, no para servicios
                 foreach (var detalle in factura.DetallesFactura)
                 {
-                    var producto = await _context.Productos.FindAsync(detalle.ProductoId);
-                    if (producto != null)
+                    // Si es un servicio (ServicioId válido), no actualizar inventario
+                    if (detalle.ServicioId.HasValue && detalle.ServicioId.Value > 0)
                     {
-                        producto.CantidadEnInventario = Math.Max(0,
-                            (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
-                        producto.FechaUltimaActualizacion = DateTime.Now;
+                        _logger.LogInformation("🔧 Omitiendo actualización de inventario para servicio: {NombreServicio}", detalle.NombreProducto);
+                        continue;
+                    }
 
-                        _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
-                            producto.NombreProducto, detalle.Cantidad);
+                    // Solo actualizar inventario para productos físicos (ProductoId válido)
+                    if (detalle.ProductoId.HasValue && detalle.ProductoId.Value > 0)
+                    {
+                        var producto = await _context.Productos.FindAsync(detalle.ProductoId.Value);
+                        if (producto != null)
+                        {
+                            producto.CantidadEnInventario = Math.Max(0,
+                                (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
+                            producto.FechaUltimaActualizacion = DateTime.Now;
+
+                            _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
+                                producto.NombreProducto, detalle.Cantidad);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("⚠️ Producto no encontrado para ID: {ProductoId}", detalle.ProductoId.Value);
+                        }
                     }
                 }
 
@@ -1122,8 +1155,21 @@ namespace API.Controllers
 
             foreach (var detalle in detalles)
             {
+                // Si es un servicio (ServicioId válido), no validar stock
+                if (detalle.ServicioId.HasValue && detalle.ServicioId.Value > 0)
+                {
+                    _logger.LogInformation("🔧 Omitiendo validación de stock para servicio: {NombreServicio}", detalle.NombreProducto);
+                    continue;
+                }
+
+                // Solo validar stock para productos físicos (ProductoId válido)
+                if (!detalle.ProductoId.HasValue || detalle.ProductoId.Value <= 0)
+                {
+                    continue;
+                }
+
                 var producto = await _context.Productos
-                    .Where(p => p.ProductoId == detalle.ProductoId)
+                    .Where(p => p.ProductoId == detalle.ProductoId.Value)
                     .FirstOrDefaultAsync();
 
                 if (producto == null)
@@ -1246,7 +1292,7 @@ namespace API.Controllers
 
                 // Recalcular totales de la factura
                 var detallesRestantes = factura.DetallesFactura
-                    .Where(d => !request.ProductosAEliminar.Contains(d.ProductoId))
+                    .Where(d => !request.ProductosAEliminar.Contains((int)d.ProductoId))
                     .ToList();
 
                 if (!detallesRestantes.Any())
@@ -1325,6 +1371,12 @@ namespace API.Controllers
 
                 foreach (var detalle in factura.DetallesFactura)
                 {
+                    // Si es un servicio, omitir la verificación de stock
+                    if (detalle.ServicioId.HasValue)
+                    {
+                        continue;
+                    }
+
                     var producto = await _context.Productos
                         .Include(p => p.ImagenesProductos)
                         .FirstOrDefaultAsync(p => p.ProductoId == detalle.ProductoId);

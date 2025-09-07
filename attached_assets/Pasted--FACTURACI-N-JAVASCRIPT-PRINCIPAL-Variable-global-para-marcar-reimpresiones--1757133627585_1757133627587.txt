@@ -1460,7 +1460,7 @@ function actualizarVistaCarrito() {
         const configMetodo = CONFIGURACION_PRECIOS[metodoPago] || CONFIGURACION_PRECIOS['efectivo'];
 
         // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA O TIPO DE SERVICIO
-        let nombreCompletoProducto = producto.nombreProducto || 'Producto sin nombre';
+        let nombreCompletoProducto = producto.nombreProducto;
         let infoAdicional = '';
 
         if (producto.esServicio) {
@@ -1486,45 +1486,49 @@ function actualizarVistaCarrito() {
             `;
         }
 
+        // En lugar de usar index, usar tipo-índice
         html += `
-            <div class="producto-venta-item border rounded p-2 mb-2">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">${nombreCompletoProducto}</h6>
-                        ${infoAdicional}
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">₡${formatearMoneda(producto.precioUnitario)} c/u</small>
-                            <small class="badge bg-info">${configMetodo.nombre}</small>
-                        </div>
-                    </div>
-                    <button type="button" 
-                            class="btn btn-sm btn-outline-danger btn-eliminar-producto"
-                            data-index="${index}"
-                            title="Eliminar producto">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <div class="input-group input-group-sm" style="width: 120px;">
-                        <button type="button" 
-                                class="btn btn-outline-secondary btn-cantidad-menos"
-                                data-index="${index}"
-                                ${producto.esServicio ? '' : (producto.cantidad <= 1 ? 'disabled' : '')}>-</button>
-                        <input type="number" 
-                               class="form-control text-center input-cantidad"
-                               data-index="${index}"
-                               value="${producto.cantidad}" 
-                               min="1" 
-                               max="${producto.esServicio ? 999 : (producto.stockDisponible || 999)}">
-                        <button type="button" 
-                               class="btn btn-outline-secondary btn-cantidad-mas"
-                               data-index="${index}"
-                               ${producto.esServicio ? '' : (producto.cantidad >= (producto.stockDisponible || 999) ? 'disabled' : '')}>+</button>
-                    </div>
-                    <strong class="text-success">₡${formatearMoneda(subtotal)}</strong>
-                </div>
+    <div class="producto-venta-item border rounded p-2 mb-2">
+        <div class="d-flex justify-content-between align-items-start">
+            <!-- ... contenido ... -->
+            <button type="button" 
+                    class="btn btn-sm btn-outline-danger btn-eliminar-producto"
+                    data-tipo="${producto.esServicio ? 'servicio' : 'producto'}"
+                    data-index="${producto.esServicio ?
+                (window.serviciosEnVenta || []).findIndex(s => s === producto) :
+                productosEnVenta.findIndex(p => p === producto)}"
+                    title="Eliminar ${producto.esServicio ? 'servicio' : 'producto'}">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="input-group input-group-sm" style="width: 120px;">
+                <button type="button" 
+                        class="btn btn-outline-secondary btn-cantidad-menos"
+                        data-tipo="${producto.esServicio ? 'servicio' : 'producto'}"
+                        data-index="${producto.esServicio ?
+                (window.serviciosEnVenta || []).findIndex(s => s === producto) :
+                productosEnVenta.findIndex(p => p === producto)}">-</button>
+                <input type="number" 
+                       class="form-control text-center input-cantidad"
+                       data-tipo="${producto.esServicio ? 'servicio' : 'producto'}"
+                       data-index="${producto.esServicio ?
+                (window.serviciosEnVenta || []).findIndex(s => s === producto) :
+                productosEnVenta.findIndex(p => p === producto)}"
+                       value="${producto.cantidad}" 
+                       min="1" 
+                       max="${producto.stockDisponible || 999}">
+                <button type="button" 
+                       class="btn btn-outline-secondary btn-cantidad-mas"
+                       data-tipo="${producto.esServicio ? 'servicio' : 'producto'}"
+                       data-index="${producto.esServicio ?
+                (window.serviciosEnVenta || []).findIndex(s => s === producto) :
+                productosEnVenta.findIndex(p => p === producto)}">+</button>
             </div>
-        `;
+            <strong class="text-success">₡${formatearMoneda(subtotal)}</strong>
+        </div>
+    </div>
+`;
     });
 
     container.html(html);
@@ -1540,59 +1544,38 @@ function actualizarVistaCarrito() {
     configurarEventosCantidad();
 }
 
-
 function configurarEventosCantidad() {
     $('.btn-cantidad-menos').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
-        const todosLosItems = [
-            ...(productosEnVenta || []),
-            ...(window.serviciosEnVenta || [])
-        ];
+        const tipo = $(this).attr('data-tipo');
 
-        if (todosLosItems[index] && todosLosItems[index].cantidad > 1) {
-            // Determinar si es producto o servicio y actualizar el array correspondiente
-            if (index < productosEnVenta.length) {
-                // Es un producto
-                productosEnVenta[index].cantidad--;
-            } else {
-                // Es un servicio
-                const servicioIndex = index - productosEnVenta.length;
-                if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
-                    window.serviciosEnVenta[servicioIndex].cantidad--;
-                    window.serviciosEnVenta[servicioIndex].subtotal =
-                        window.serviciosEnVenta[servicioIndex].cantidad * window.serviciosEnVenta[servicioIndex].precioUnitario;
-                }
+        if (tipo === 'servicio' && window.serviciosEnVenta && window.serviciosEnVenta[index]) {
+            if (window.serviciosEnVenta[index].cantidad > 1) {
+                window.serviciosEnVenta[index].cantidad--;
+                actualizarVistaCarrito();
+                actualizarTotales();
             }
-            actualizarVistaCarrito();
-            actualizarTotales();
+        } else if (tipo === 'producto' && productosEnVenta[index]) {
+            if (productosEnVenta[index].cantidad > 1) {
+                productosEnVenta[index].cantidad--;
+                actualizarVistaCarrito();
+                actualizarTotales();
+            }
         }
     });
 
     $('.btn-cantidad-mas').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
-        const todosLosItems = [
-            ...(productosEnVenta || []),
-            ...(window.serviciosEnVenta || [])
-        ];
+        const tipo = $(this).attr('data-tipo');
 
-        if (todosLosItems[index]) {
-            const item = todosLosItems[index];
-            const puedeIncrementar = item.esServicio || item.cantidad < (item.stockDisponible || 999);
-
-            if (puedeIncrementar) {
-                // Determinar si es producto o servicio y actualizar el array correspondiente
-                if (index < productosEnVenta.length) {
-                    // Es un producto
-                    productosEnVenta[index].cantidad++;
-                } else {
-                    // Es un servicio
-                    const servicioIndex = index - productosEnVenta.length;
-                    if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
-                        window.serviciosEnVenta[servicioIndex].cantidad++;
-                        window.serviciosEnVenta[servicioIndex].subtotal =
-                            window.serviciosEnVenta[servicioIndex].cantidad * window.serviciosEnVenta[servicioIndex].precioUnitario;
-                    }
-                }
+        if (tipo === 'servicio' && window.serviciosEnVenta && window.serviciosEnVenta[index]) {
+            // Los servicios no tienen límite de stock
+            window.serviciosEnVenta[index].cantidad++;
+            actualizarVistaCarrito();
+            actualizarTotales();
+        } else if (tipo === 'producto' && productosEnVenta[index]) {
+            if (productosEnVenta[index].cantidad < productosEnVenta[index].stockDisponible) {
+                productosEnVenta[index].cantidad++;
                 actualizarVistaCarrito();
                 actualizarTotales();
             } else {
@@ -1603,33 +1586,23 @@ function configurarEventosCantidad() {
 
     $('.input-cantidad').on('change', function () {
         const index = parseInt($(this).attr('data-index'));
+        const tipo = $(this).attr('data-tipo');
         const nuevaCantidad = parseInt($(this).val());
-        const todosLosItems = [
-            ...(productosEnVenta || []),
-            ...(window.serviciosEnVenta || [])
-        ];
 
-        if (todosLosItems[index]) {
-            const item = todosLosItems[index];
-            const stockDisponible = item.esServicio ? 999 : (item.stockDisponible || 999);
-
-            if (nuevaCantidad >= 1 && nuevaCantidad <= stockDisponible) {
-                // Determinar si es producto o servicio y actualizar el array correspondiente
-                if (index < productosEnVenta.length) {
-                    // Es un producto
-                    productosEnVenta[index].cantidad = nuevaCantidad;
-                } else {
-                    // Es un servicio
-                    const servicioIndex = index - productosEnVenta.length;
-                    if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
-                        window.serviciosEnVenta[servicioIndex].cantidad = nuevaCantidad;
-                        window.serviciosEnVenta[servicioIndex].subtotal =
-                            nuevaCantidad * window.serviciosEnVenta[servicioIndex].precioUnitario;
-                    }
-                }
+        if (tipo === 'servicio' && window.serviciosEnVenta && window.serviciosEnVenta[index]) {
+            if (nuevaCantidad >= 1) {
+                window.serviciosEnVenta[index].cantidad = nuevaCantidad;
                 actualizarTotales();
             } else {
-                $(this).val(item.cantidad);
+                $(this).val(window.serviciosEnVenta[index].cantidad);
+            }
+        } else if (tipo === 'producto' && productosEnVenta[index]) {
+            const stockDisponible = productosEnVenta[index].stockDisponible;
+            if (nuevaCantidad >= 1 && nuevaCantidad <= stockDisponible) {
+                productosEnVenta[index].cantidad = nuevaCantidad;
+                actualizarTotales();
+            } else {
+                $(this).val(productosEnVenta[index].cantidad);
                 if (nuevaCantidad > stockDisponible) {
                     mostrarToast('Stock limitado', 'Cantidad excede el stock disponible', 'warning');
                 }
@@ -1639,30 +1612,26 @@ function configurarEventosCantidad() {
 
     $('.btn-eliminar-producto').on('click', function () {
         const index = parseInt($(this).attr('data-index'));
-        const todosLosItems = [
-            ...(productosEnVenta || []),
-            ...(window.serviciosEnVenta || [])
-        ];
+        const tipo = $(this).attr('data-tipo');
 
-        if (todosLosItems[index]) {
-            // Determinar si es producto o servicio y eliminar del array correspondiente
-            if (index < productosEnVenta.length) {
-                // Es un producto
-                productosEnVenta.splice(index, 1);
-            } else {
-                // Es un servicio
-                const servicioIndex = index - productosEnVenta.length;
-                if (window.serviciosEnVenta && window.serviciosEnVenta[servicioIndex]) {
-                    window.serviciosEnVenta.splice(servicioIndex, 1);
-                }
-            }
-
+        if (tipo === 'servicio' && window.serviciosEnVenta && window.serviciosEnVenta[index]) {
+            const nombreServicio = window.serviciosEnVenta[index].nombreProducto;
+            window.serviciosEnVenta.splice(index, 1);
             actualizarVistaCarrito();
             actualizarTotales();
-            mostrarToast('Producto eliminado', 'Producto removido de la venta', 'info');
+            actualizarEstadoBotonFinalizar();
+            mostrarToast('Servicio eliminado', `${nombreServicio} removido de la venta`, 'info');
+        } else if (tipo === 'producto' && productosEnVenta[index]) {
+            const nombreProducto = productosEnVenta[index].nombreProducto;
+            productosEnVenta.splice(index, 1);
+            actualizarVistaCarrito();
+            actualizarTotales();
+            actualizarEstadoBotonFinalizar();
+            mostrarToast('Producto eliminado', `${nombreProducto} removido de la venta`, 'info');
         }
     });
 }
+
 
 function actualizarTotales() {
     console.log('🧮 Actualizando totales...');
@@ -1680,10 +1649,9 @@ function actualizarTotales() {
 
     const iva = subtotal * 0.13; // 13% IVA
     const total = subtotal + iva;
-    // ✅ AGREGAR SÍMBOLOS DE MONEDA AQUÍ
-    $('#subtotalVenta').text('₡' + formatearMoneda(subtotal));
-    $('#ivaVenta').text('₡' + formatearMoneda(iva));
-    $('#totalVenta').text('₡' + formatearMoneda(total));
+    $('#subtotalVenta').text(formatearMoneda(subtotal));
+    $('#ivaVenta').text(formatearMoneda(iva));
+    $('#totalVenta').text(formatearMoneda(total));
 }
 
 
@@ -1762,12 +1730,13 @@ function mostrarModalFinalizarVenta() {
         modalFacturasPendientes.hide();
         console.log('🚪 Modal de facturas pendientes cerrado antes de abrir modal finalizar');
     }
-    // ✅ VALIDACIÓN MEJORADA: CONSIDERAR TANTO PRODUCTOS COMO SERVICIOS
-    const tieneProductos = productosEnVenta.length > 0;
-    const tieneServicios = (window.serviciosEnVenta && window.serviciosEnVenta.length > 0);
+    if (productosEnVenta.length === 0) {
+        mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
+        return;
+    }
 
-    if (!tieneProductos && !tieneServicios) {
-        mostrarToast('Venta vacía', 'Agrega productos o servicios antes de finalizar la venta', 'warning');
+    if (productosEnVenta.length === 0) {
+        mostrarToast('Venta vacía', 'Agrega productos antes de finalizar la venta', 'warning');
         return;
     }
 
@@ -1899,13 +1868,13 @@ function actualizarResumenVentaModal() {
     // Recalcular precios según método de pago seleccionado
     let subtotal = 0;
 
-    // ===== MOSTRAR RESUMEN DE PRODUCTOS Y SERVICIOS =====
+    // ===== MOSTRAR RESUMEN DE PRODUCTOS =====
     let htmlResumen = `
         <div class="table-responsive">
             <table class="table table-sm">
                 <thead class="table-light">
                     <tr>
-                        <th>Producto/Servicio</th>
+                        <th>Producto</th>
                         <th class="text-center">Cant.</th>
                         <th class="text-end">Precio Unit.</th>
                         <th class="text-end">Subtotal</th>
@@ -1914,7 +1883,6 @@ function actualizarResumenVentaModal() {
                 <tbody>
     `;
 
-    // ✅ PROCESAR PRODUCTOS
     productosEnVenta.forEach(producto => {
         // Calcular precio según método de pago seleccionado
         const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
@@ -1944,40 +1912,6 @@ function actualizarResumenVentaModal() {
             </tr>
         `;
     });
-
-    // ✅ PROCESAR SERVICIOS
-    if (window.serviciosEnVenta && window.serviciosEnVenta.length > 0) {
-        window.serviciosEnVenta.forEach(servicio => {
-            // Los servicios mantienen su precio base (no se ajustan por método de pago)
-            const precioServicio = servicio.precioUnitario || servicio.precio || 0;
-            const subtotalServicio = precioServicio * servicio.cantidad;
-            subtotal += subtotalServicio;
-
-            // ✅ CONSTRUIR NOMBRE COMPLETO DEL SERVICIO
-            let infoServicioCompleta = `<strong><i class="bi bi-tools me-1 text-success"></i>[SERVICIO] ${servicio.nombreProducto}</strong>`;
-
-            // Agregar tipo de servicio si existe
-            if (servicio.tipoServicio) {
-                infoServicioCompleta += `<br><small class="text-muted">Tipo: ${servicio.tipoServicio}</small>`;
-            }
-
-            // Agregar observaciones si existen
-            if (servicio.observaciones) {
-                infoServicioCompleta += `<br><small class="text-info">Obs: ${servicio.observaciones}</small>`;
-            }
-
-            htmlResumen += `
-                <tr class="table-light">
-                    <td>
-                        ${infoServicioCompleta}
-                    </td>
-                    <td class="text-center">${servicio.cantidad}</td>
-                    <td class="text-end">₡${formatearMoneda(precioServicio)}</td>
-                    <td class="text-end">₡${formatearMoneda(subtotalServicio)}</td>
-                </tr>
-            `;
-        });
-    }
 
     const iva = subtotal * 0.13;
     const total = subtotal + iva;
@@ -2016,6 +1950,7 @@ function actualizarResumenVentaModal() {
         $('#campoCambio').hide();
     }
 }
+
 
 function configurarModalSegunPermisos() {
     const $btnConfirmar = $('#btnConfirmarVenta');
@@ -2628,36 +2563,20 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
         // - Creación de facturas normales
         // - Creación de proformas 
         // - Conversión de proformas a facturas (marca automáticamente la proforma como "Facturada")
-
         // Preparar datos de la venta con método de pago seleccionado
         const metodoPagoSeleccionado = esPagoMultiple ? 'multiple' : ($('input[name="metodoPago"]:checked').val() || 'efectivo');
         const configMetodo = esPagoMultiple ? CONFIGURACION_PRECIOS.efectivo : CONFIGURACION_PRECIOS[metodoPagoSeleccionado];
-
         // Validar pagos múltiples si es necesario
         if (esPagoMultiple && !validarPagosMultiples()) {
             return;
         }
-
         let subtotal = 0;
-
-        // ✅ CALCULAR SUBTOTAL DE PRODUCTOS
         productosEnVenta.forEach(producto => {
             const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
             subtotal += precioAjustado * producto.cantidad;
         });
-
-        // ✅ CALCULAR SUBTOTAL DE SERVICIOS
-        if (window.serviciosEnVenta && window.serviciosEnVenta.length > 0) {
-            window.serviciosEnVenta.forEach(servicio => {
-                // Los servicios mantienen su precio base (no se ajustan por método de pago)
-                const precioServicio = servicio.precioUnitario || servicio.precio || 0;
-                subtotal += precioServicio * servicio.cantidad;
-            });
-        }
-
         const iva = subtotal * 0.13;
         const total = subtotal + iva;
-
         // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN EL TIPO DE DOCUMENTO
         let estadoFactura, mensajeExito, debeImprimir, debeAjustarInventario;
         let fechaVencimiento = null;
@@ -2665,14 +2584,12 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
         console.log('🔐 puedeCompletarFacturas:', permisosUsuario.puedeCompletarFacturas);
         console.log('🔐 puedeCrearFacturas:', permisosUsuario.puedeCrearFacturas);
         console.log('🔐 tipoDocumento:', tipoDocumento);
-
         if (tipoDocumento === 'Proforma') {
             // ✅ PROFORMAS: Siempre estado "Vigente" con fecha de vencimiento
             estadoFactura = 'Vigente';
             mensajeExito = 'Proforma creada exitosamente';
             debeImprimir = true;
             debeAjustarInventario = false; // Las proformas NO ajustan inventario
-
             // ✅ CALCULAR FECHA DE VENCIMIENTO (30 días desde hoy)
             const fechaActual = new Date();
             fechaVencimiento = new Date(fechaActual.getTime() + (30 * 24 * 60 * 60 * 1000)); // +30 días
@@ -2696,7 +2613,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             // ❌ SIN PERMISOS: No debería llegar aquí, pero como fallback
             throw new Error('No tienes permisos para procesar ventas');
         }
-
         console.log('📋 Estado determinado:', {
             tipoDocumento,
             estadoFactura,
@@ -2705,7 +2621,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             debeAjustarInventario,
             permisos: permisosUsuario
         });
-
         // Obtener información del usuario actual
         const usuarioActual = obtenerUsuarioActual();
         const usuarioId = usuarioActual?.usuarioId || usuarioActual?.id || 1;
@@ -2713,11 +2628,9 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             usuario: usuarioActual,
             usuarioId: usuarioId
         });
-
         // ✅ CAPTURAR PRODUCTOS PENDIENTES DESDE LAS VARIABLES GLOBALES (solo para facturas)
         let productosPendientesParaEnvio = [];
         let tieneProductosPendientes = false;
-
         if (tipoDocumento === 'Factura' && window.productosPendientesEntrega && window.productosPendientesEntrega.length > 0) {
             console.log('📦 Productos pendientes detectados:', window.productosPendientesEntrega);
             productosPendientesParaEnvio = window.productosPendientesEntrega.map(producto => ({
@@ -2731,7 +2644,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             }));
             tieneProductosPendientes = true;
         }
-
         // ✅ CONSTRUIR OBSERVACIONES DINÁMICAMENTE
         let observacionesFinal = $('#observacionesVenta').val() || '';
 
@@ -2748,7 +2660,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
 
             console.log('📝 Observaciones con información de proforma:', observacionesFinal);
         }
-
         // Crear objeto de factura para enviar a la API
         const facturaData = {
             clienteId: clienteSeleccionado?.clienteId || clienteSeleccionado?.id || null,
@@ -2769,11 +2680,9 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             metodoPago: metodoPagoSeleccionado,
             observaciones: observacionesFinal, // ✅ USAR OBSERVACIONES CONSTRUIDAS DINÁMICAMENTE
             usuarioCreadorId: usuarioId,
-
             // ✅ INCLUIR PRODUCTOS PENDIENTES SI EXISTEN (solo para facturas)
             productosPendientesEntrega: productosPendientesParaEnvio,
             tieneProductosPendientes: tieneProductosPendientes,
-
             detallesPago: esPagoMultiple ? detallesPagoActuales.map(pago => ({
                 metodoPago: pago.metodoPago,
                 monto: pago.monto,
@@ -2781,67 +2690,35 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                 observaciones: pago.observaciones || '',
                 fechaPago: new Date().toISOString()
             })) : [],
+            detallesFactura: productosEnVenta.map(producto => {
+                const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
 
-            detallesFactura: [
-                // ✅ PROCESAR PRODUCTOS
-                ...productosEnVenta.map(producto => {
-                    const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
-
-                    // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA O TIPO SI ES SERVICIO
-                    let nombreCompletoProducto = producto.nombreProducto;
-                    if (producto.esServicio) {
-                        nombreCompletoProducto = `[SERVICIO] ${producto.nombreProducto}`;
-                        if (producto.observaciones) {
-                            nombreCompletoProducto += ` - ${producto.observaciones}`;
-                        }
-                    } else if (producto.esLlanta && producto.medidaCompleta) {
-                        nombreCompletoProducto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
+                // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA O TIPO SI ES SERVICIO
+                let nombreCompletoProducto = producto.nombreProducto;
+                if (producto.esServicio) {
+                    nombreCompletoProducto = `[SERVICIO] ${producto.nombreProducto}`;
+                    if (producto.observaciones) {
+                        nombreCompletoProducto += ` - ${producto.observaciones}`;
                     }
+                } else if (producto.esLlanta && producto.medidaCompleta) {
+                    nombreCompletoProducto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
+                }
 
-                    return {
-                        productoId: producto.esServicio ? null : producto.productoId,
-                        servicioId: producto.esServicio ? producto.servicioId : null,
-                        nombreProducto: nombreCompletoProducto,
-                        descripcionProducto: producto.descripcion || '',
-                        cantidad: producto.cantidad,
-                        precioUnitario: precioAjustado,
-                        porcentajeDescuento: 0,
-                        montoDescuento: 0,
-                        subtotal: precioAjustado * producto.cantidad,
-                        esServicio: producto.esServicio || false
-                    };
-                }),
-
-                // ✅ PROCESAR SERVICIOS
-                ...(window.serviciosEnVenta || []).map(servicio => {
-                    const precioServicio = servicio.precioUnitario || servicio.precio || 0;
-                    let nombreCompletoServicio = `[SERVICIO] ${servicio.nombreProducto}`;
-
-                    if (servicio.tipoServicio) {
-                        nombreCompletoServicio += ` - ${servicio.tipoServicio}`;
-                    }
-                    if (servicio.observaciones) {
-                        nombreCompletoServicio += ` - ${servicio.observaciones}`;
-                    }
-
-                    return {
-                        productoId: null,
-                        servicioId: servicio.servicioId,
-                        nombreProducto: nombreCompletoServicio,
-                        descripcionProducto: servicio.descripcion || '',
-                        cantidad: servicio.cantidad,
-                        precioUnitario: precioServicio,
-                        porcentajeDescuento: 0,
-                        montoDescuento: 0,
-                        subtotal: precioServicio * servicio.cantidad,
-                        esServicio: true
-                    };
-                })
-            ]
+                return {
+                    productoId: producto.esServicio ? null : producto.productoId,
+                    servicioId: producto.esServicio ? producto.servicioId : null,
+                    nombreProducto: nombreCompletoProducto,
+                    descripcionProducto: producto.descripcion || '',
+                    cantidad: producto.cantidad,
+                    precioUnitario: precioAjustado,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioAjustado * producto.cantidad,
+                    esServicio: producto.esServicio || false
+                };
+            })
         };
-
         console.log('📋 Datos de documento preparados:', facturaData);
-
         // Crear la factura/proforma
         const response = await fetch('/Facturacion/CrearFactura', {
             method: 'POST',
@@ -2851,16 +2728,13 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             },
             body: JSON.stringify(facturaData)
         });
-
         if (!response.ok) {
             const errorText = await response.text();
             console.error('❌ Error del servidor al crear documento:', errorText);
             throw new Error(`Error al crear el documento: ${response.status} - ${errorText}`);
         }
-
         const resultadoFactura = await response.json();
         console.log('✅ Documento creado:', resultadoFactura);
-
         if (resultadoFactura.success) {
             // ✅ MARCAR PROFORMA COMO FACTURADA SI ES UNA CONVERSIÓN
             if (window.proformaOriginalParaConversion) {
@@ -2921,7 +2795,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                 // ✅ CERRAR MODAL DE FINALIZAR VENTA INMEDIATAMENTE
                 modalFinalizarVenta.hide();
                 // ✅ GENERAR RECIBO PARA PROFORMA
-                generarReciboFacturaCompletada(resultadoFactura, [...productosEnVenta, ...(window.serviciosEnVenta || [])], metodoPagoSeleccionado);
+                generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
                 // ✅ MOSTRAR SWEETALERT DE CONFIRMACIÓN
                 Swal.fire({
                     icon: 'success',
@@ -3006,7 +2880,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                 if (debeImprimir) {
                     console.log('🖨️ Generando recibo para nueva factura pagada:', resultadoFactura);
                     // ✅ USAR LA FUNCIÓN ESPECÍFICA PARA FACTURAS COMPLETADAS
-                    generarReciboFacturaCompletada(resultadoFactura, [...productosEnVenta, ...(window.serviciosEnVenta || [])], metodoPagoSeleccionado);
+                    generarReciboFacturaCompletada(resultadoFactura, productosEnVenta, metodoPagoSeleccionado);
                 }
                 // ✅ CERRAR MODAL INMEDIATAMENTE DESPUÉS DE PROCESAR
                 modalFinalizarVenta.hide();
@@ -3024,12 +2898,6 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
 
             // ✅ LIMPIAR CARRITO DESPUÉS DE PROCESAR (PARA TODOS LOS CASOS)
             productosEnVenta = [];
-
-            // ✅ LIMPIAR SERVICIOS TAMBIÉN
-            if (window.serviciosEnVenta) {
-                window.serviciosEnVenta = [];
-            }
-
             clienteSeleccionado = null;
             $('#clienteBusqueda').val('');
             $('#clienteSeleccionado').addClass('d-none');
@@ -3081,6 +2949,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
     }
 }
 
+
 /**
  * ✅ NUEVA FUNCIÓN: Crear proforma específicamente
  */
@@ -3103,12 +2972,9 @@ async function procesarProforma() {
 
         console.log('📋 === PROCESANDO PROFORMA DESDE MODAL ===');
 
-        // ✅ VALIDAR QUE HAY PRODUCTOS O SERVICIOS EN LA VENTA
-        const tieneProductos = productosEnVenta.length > 0;
-        const tieneServicios = (window.serviciosEnVenta && window.serviciosEnVenta.length > 0);
-
-        if (!tieneProductos && !tieneServicios) {
-            mostrarToast('Venta vacía', 'Agrega productos o servicios antes de crear la proforma', 'warning');
+        // Validar que hay productos en la venta
+        if (productosEnVenta.length === 0) {
+            mostrarToast('Venta vacía', 'Agrega productos antes de crear la proforma', 'warning');
             return;
         }
 
@@ -3117,11 +2983,6 @@ async function procesarProforma() {
             mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de crear la proforma', 'warning');
             return;
         }
-
-        console.log('📋 Items detectados para proforma:', {
-            productos: tieneProductos ? productosEnVenta.length : 0,
-            servicios: tieneServicios ? window.serviciosEnVenta.length : 0
-        });
 
         // ✅ CREAR PROFORMA
         await crearProforma();
@@ -3148,7 +3009,6 @@ async function procesarProforma() {
         $btnProforma.find('.btn-loading-state').addClass('d-none');
     }
 }
-
 
 // ===== GESTIÓN DE PROFORMAS =====
 

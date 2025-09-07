@@ -77,18 +77,15 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Usuario> Usuarios { get; set; }
 
-    public DbSet<RolPermisoRE> RolPermisos { get; set; }
-
+    public DbSet<UsuarioPermisoRE> UsuarioPermiso { get; set; }
     public DbSet<UsuarioRolRE> UsuarioRoles { get; set; }
 
-    public DbSet<UsuarioPermisoRE> UsuarioPermiso { get; set; }
-
-    public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
-
-    public DbSet<NotaRapida> NotasRapidas { get; set; }
+    public virtual DbSet<Servicio> Servicios { get; set; }
 
     public DbSet<Anuncio> Anuncios { get; set; }
-
+    public DbSet<NotaRapida> NotasRapidas { get; set; }
+    public DbSet<RolPermisoRE> RolPermisos { get; set; }
+    public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -818,6 +815,11 @@ public partial class TucoContext : DbContext
             entity.HasOne(d => d.Producto)
                 .WithMany()
                 .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(d => d.Servicio)
+                .WithMany()
+                .HasForeignKey(d => d.ServicioId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

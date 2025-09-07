@@ -1,0 +1,445 @@
+@{
+    ViewData["Title"] = "Gestión de Servicios";
+    ViewData["ActivePage"] = "Servicios";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link href="~/css/views/servicios/servicios.css" rel="stylesheet" />
+
+<div class="servicios-container">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="page-title">
+                <i class="bi bi-tools"></i>
+                Gestión de Servicios de Mecánica
+            </h2>
+            <p class="page-subtitle">Administra los servicios disponibles para facturación</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalServicio" onclick="abrirModalNuevoServicio()">
+                <i class="bi bi-plus-circle"></i>
+                Nuevo Servicio
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Buscar:</label>
+                    <input type="text" id="inputBusqueda" class="form-control" placeholder="Nombre o tipo de servicio...">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Estado:</label>
+                    <select id="selectEstado" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="true">Solo Activos</option>
+                        <option value="false">Solo Inactivos</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="cargarServicios()">
+                        <i class="bi bi-search"></i>
+                        Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--Tabla de Servicios -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre del Servicio</th>
+                            <th>Tipo</th>
+                            <th>Precio Base</th>
+                            <th>Estado</th>
+                            <th>Fecha Creación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaServiciosBody">
+                        <!-- Los datos se cargan via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading spinner -->
+            <div id="loadingSpinner" class="text-center py-4" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="emptyState" class="text-center py-4" style="display: none;">
+                <i class="bi bi-tools fs-1 text-muted"></i>
+                <p class="text-muted mt-2">No se encontraron servicios</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Crear/Editar Servicio -->
+<div class="modal fade" id="modalServicio" tabindex="-1" aria-labelledby="modalServicioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="bi bi-wrench me-2"></i>
+                <h5 class="modal-title" id="modalServicioLabel">Nuevo Servicio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formServicio">
+                <div class="modal-body">
+                    <input type="hidden" id="servicioId" name="servicioId" value="0">
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label for="nombreServicio" class="form-label">Nombre del Servicio <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nombreServicio" name="nombreServicio" required maxlength="100">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="tipoServicio" class="form-label">Tipo de Servicio <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="tipoServicio" name="tipoServicio" required maxlength="50" placeholder="Ej: Mecánica, Llantas, Diagnóstico">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="precioBase" class="form-label">Precio Base (₡) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="precioBase" name="precioBase" required min="0.01" step="0.01">
+                            <div class="invalid-feedback"></div>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Describe el servicio..."></textarea>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label for="observaciones" class="form-label">Observaciones</label>
+                            <textarea class="form-control" id="observaciones" name="observaciones" rows="2" placeholder="Observaciones adicionales..."></textarea>
+                        </div>
+
+                        <div class="col-md-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="estaActivo" name="estaActivo" checked>
+                                <label class="form-check-label" for="estaActivo">
+                                    Servicio Activo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarServicio">
+                        <span class="normal-state">
+                            <i class="bi bi-check-circle"></i>
+                            Guardar
+                        </span>
+                        <span class="loading-state d-none">
+                            <i class="bi bi-arrow-repeat"></i>
+                            Guardando...
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminar -->
+<div class="modal fade" id="modalConfirmarEliminar" tabindex="-1" aria-labelledby="modalConfirmarEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                <h5 class="modal-title" id="modalConfirmarEliminarLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Está seguro que desea desactivar este servicio?</p>
+                <p><strong id="nombreServicioEliminar"></strong></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    El servicio será desactivado y no estará disponible para nuevas facturas.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" id="btnConfirmarEliminar">
+                    <span class="normal-state">
+                        <i class="bi bi-trash"></i>
+                        Desactivar
+                    </span>
+                    <span class="loading-state d-none">
+                        <i class="bi bi-arrow-repeat"></i>
+                        Desactivando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Función para cargar los servicios
+        function cargarServicios() {
+            const inputBusqueda = document.getElementById('inputBusqueda').value.toLowerCase();
+            const selectEstado = document.getElementById('selectEstado').value;
+            const tablaServiciosBody = document.getElementById('tablaServiciosBody');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const emptyState = document.getElementById('emptyState');
+
+            tablaServiciosBody.innerHTML = ''; // Limpiar tabla
+            loadingSpinner.style.display = 'block'; // Mostrar spinner
+            emptyState.style.display = 'none'; // Ocultar estado vacío
+
+            fetch('/Servicios/ObtenerServicios')
+                .then(response => response.json())
+                .then(data => {
+                    loadingSpinner.style.display = 'none'; // Ocultar spinner
+
+                    let serviciosFiltrados = data;
+
+                    // Filtrar por búsqueda
+                    if (inputBusqueda) {
+                        serviciosFiltrados = serviciosFiltrados.filter(servicio =>
+                            servicio.nombreServicio.toLowerCase().includes(inputBusqueda) ||
+                            servicio.tipoServicio.toLowerCase().includes(inputBusqueda)
+                        );
+                    }
+
+                    // Filtrar por estado
+                    if (selectEstado !== "") {
+                        // Convertir el valor del select a boolean para la comparación
+                        const estadoSeleccionado = selectEstado === 'true';
+                        serviciosFiltrados = serviciosFiltrados.filter(servicio => servicio.estaActivo === estadoSeleccionado);
+                    }
+
+                    if (serviciosFiltrados.length > 0) {
+                        serviciosFiltrados.forEach(servicio => {
+                            const row = tablaServiciosBody.insertRow();
+                            row.innerHTML = `
+                                <td>${servicio.servicioId || servicio.id}</td>
+                                <td>${servicio.nombreServicio}</td>
+                                <td>${servicio.tipoServicio}</td>
+                                <td>₡${servicio.precioBase.toFixed(2)}</td>
+                                <td>${servicio.estaActivo ? '<span class="badge bg-success">Activo</span>' : '<span class="badge bg-danger">Inactivo</span>'}</td>
+                                <td>${new Date(servicio.fechaCreacion).toLocaleDateString()}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning me-1" onclick="abrirModalEditarServicio(${servicio.servicioId || servicio.id})">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="confirmarDesactivarServicio(${servicio.servicioId || servicio.id}, '${servicio.nombreServicio}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            `;
+                        });
+                    } else {
+                        emptyState.style.display = 'block'; // Mostrar estado vacío
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar servicios:', error);
+                    loadingSpinner.style.display = 'none'; // Ocultar spinner en caso de error
+                    emptyState.style.display = 'block'; // Mostrar estado vacío en caso de error
+                    emptyState.querySelector('p').textContent = 'Error al cargar los servicios.';
+                });
+        }
+
+        // Función para abrir el modal de nuevo servicio
+        function abrirModalNuevoServicio() {
+            document.getElementById('modalServicioLabel').textContent = 'Nuevo Servicio';
+            document.getElementById('servicioId').value = '0';
+            document.getElementById('formServicio').reset();
+            // Limpiar validaciones previas si existen
+            const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+            invalidFeedbacks.forEach(feedback => feedback.textContent = '');
+            const invalidInputs = document.querySelectorAll('.is-invalid');
+            invalidInputs.forEach(input => input.classList.remove('is-invalid'));
+
+            // Asegurarse de que el checkbox de activo esté marcado por defecto para nuevo servicio
+            document.getElementById('estaActivo').checked = true;
+        }
+
+        // Función para abrir el modal de edición de servicio
+        function abrirModalEditarServicio(id) {
+            fetch(`/Servicios/ObtenerServicioPorId?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    const servicio = data.data;
+                    document.getElementById('modalServicioLabel').textContent = 'Editar Servicio';
+                    document.getElementById('servicioId').value = servicio.servicioId || servicio.id;
+                    document.getElementById('nombreServicio').value = servicio.nombreServicio;
+                    document.getElementById('tipoServicio').value = servicio.tipoServicio;
+                    document.getElementById('precioBase').value = servicio.precioBase.toFixed(2);
+                    document.getElementById('descripcion').value = servicio.descripcion || '';
+                    document.getElementById('observaciones').value = servicio.observaciones || '';
+                    document.getElementById('estaActivo').checked = servicio.estaActivo;
+
+                    // Limpiar validaciones previas si existen
+                    const invalidFeedbacks = document.querySelectorAll('.invalid-feedback');
+                    invalidFeedbacks.forEach(feedback => feedback.textContent = '');
+                    const invalidInputs = document.querySelectorAll('.is-invalid');
+                    invalidInputs.forEach(input => input.classList.remove('is-invalid'));
+
+                    $('#modalServicio').modal('show');
+                })
+                .catch(error => console.error('Error al obtener servicio:', error));
+        }
+
+        // Manejar el envío del formulario de servicio
+        document.getElementById('formServicio').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const formData = new FormData(form);
+            const servicioId = document.getElementById('servicioId').value;
+            const btnGuardar = document.getElementById('btnGuardarServicio');
+            const normalState = btnGuardar.querySelector('.normal-state');
+            const loadingState = btnGuardar.querySelector('.loading-state');
+
+            btnGuardar.disabled = true;
+            normalState.classList.add('d-none');
+            loadingState.classList.remove('d-none');
+
+            // Validar campos requeridos antes de enviar
+            let isValid = true;
+            const requiredInputs = form.querySelectorAll('[required]');
+            requiredInputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('is-invalid');
+                    input.nextElementSibling.textContent = 'Este campo es obligatorio.';
+                    isValid = false;
+                } else {
+                    input.classList.remove('is-invalid');
+                    input.nextElementSibling.textContent = '';
+                }
+            });
+
+            if (!isValid) {
+                btnGuardar.disabled = false;
+                normalState.classList.remove('d-none');
+                loadingState.classList.add('d-none');
+                return;
+            }
+
+
+            const url = servicioId === '0' ? '/Servicios/CrearServicio' : `/Servicios/ActualizarServicio/${servicioId}`;
+            const method = 'POST'; // Siempre POST para crear o editar según el API
+
+            fetch(url, {
+                method: method,
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        // Si la respuesta no es OK, intenta leer el mensaje de error del body
+                        return response.text().then(text => { throw new Error(text || response.statusText) });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    $('#modalServicio').modal('hide');
+                    cargarServicios(); // Recargar la tabla
+                })
+                .catch(error => {
+                    console.error('Error al guardar servicio:', error);
+                    // Mostrar el mensaje de error en el formulario
+                    let errorMessage = 'Ocurrió un error al guardar el servicio.';
+                    try {
+                        const errorObj = JSON.parse(error.message);
+                        errorMessage = errorObj.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = error.message || errorMessage;
+                    }
+                    // Intentar mostrar el error en un lugar visible, por ejemplo, debajo del título del modal
+                    const modalHeader = form.closest('.modal-content').querySelector('.modal-header');
+                    const errorAlert = modalHeader.nextElementSibling.querySelector('.alert-danger');
+                    if (errorAlert) {
+                        errorAlert.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${errorMessage}`;
+                        errorAlert.style.display = 'block';
+                    } else {
+                        const newAlert = document.createElement('div');
+                        newAlert.className = 'alert alert-danger mt-2';
+                        newAlert.innerHTML = `<i class="bi bi-exclamation-triangle"></i> ${errorMessage}`;
+                        modalHeader.after(newAlert);
+                    }
+                })
+                .finally(() => {
+                    btnGuardar.disabled = false;
+                    normalState.classList.remove('d-none');
+                    loadingState.classList.add('d-none');
+                });
+        });
+
+        // Función para confirmar la desactivación de un servicio
+        function confirmarDesactivarServicio(id, nombre) {
+            document.getElementById('nombreServicioEliminar').textContent = nombre;
+            document.getElementById('btnConfirmarEliminar').onclick = function() {
+                desactivarServicio(id);
+            };
+            $('#modalConfirmarEliminar').modal('show');
+        }
+
+        // Función para desactivar un servicio
+        function desactivarServicio(id) {
+            const btnConfirmar = document.getElementById('btnConfirmarEliminar');
+            const normalState = btnConfirmar.querySelector('.normal-state');
+            const loadingState = btnConfirmar.querySelector('.loading-state');
+
+            btnConfirmar.disabled = true;
+            normalState.classList.add('d-none');
+            loadingState.classList.remove('d-none');
+
+            fetch(`/Servicios/EliminarServicio?id=${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al desactivar el servicio.');
+                    }
+                    return response.text(); // O response.json() si el endpoint retorna JSON
+                })
+                .then(() => {
+                    $('#modalConfirmarEliminar').modal('hide');
+                    cargarServicios(); // Recargar la tabla
+                })
+                .catch(error => {
+                    console.error('Error al desactivar servicio:', error);
+                    // Mostrar mensaje de error al usuario si es necesario
+                })
+                .finally(() => {
+                    btnConfirmar.disabled = false;
+                    normalState.classList.remove('d-none');
+                    loadingState.classList.add('d-none');
+                });
+        }
+
+        // Cargar servicios al iniciar la página
+        document.addEventListener('DOMContentLoaded', cargarServicios);
+
+        // Escuchar el evento de input en el campo de búsqueda para filtrar en tiempo real
+        document.getElementById('inputBusqueda').addEventListener('input', cargarServicios);
+
+        // Escuchar el cambio en el select de estado para filtrar
+        document.getElementById('selectEstado').addEventListener('change', cargarServicios);
+    </script>
+}

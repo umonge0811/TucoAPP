@@ -1,0 +1,59 @@
+Gravedad	Código	Descripción	Proyecto	Archivo	Línea	Estado suprimido	Detalles
+Error (activo)	CS1529	Una cláusula using debe preceder al resto de elementos definidos en el espacio de nombres, excepto las declaraciones de alias externos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	374		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	29		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	52		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	126		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	180		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	197		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	198		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	236		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	241		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	255		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	281		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	289		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	311		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	340		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	393		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	413		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	469		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	518		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	519		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	544		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	558		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	559		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	580		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	589		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	590		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._context' y 'ServiciosController._context'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	611		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	30		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	95		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	108		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	149		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	167		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	212		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	218		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	257		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	263		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	291		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	297		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	322		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	368		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	394		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	410		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	450		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	456		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	493		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	525		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	531		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	561		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	567		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	592		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	598		
+Error (activo)	CS0229	Ambigüedad entre 'ServiciosController._logger' y 'ServiciosController._logger'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	622		
+Error (activo)	CS0579	Atributo 'ApiController' duplicado	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	384		
+Error (activo)	CS0101	El espacio de nombres 'API.Controllers' ya contiene una definición para 'ServiciosController'	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	386		
+Error (activo)	CS1529	Una cláusula using debe preceder al resto de elementos definidos en el espacio de nombres, excepto las declaraciones de alias externos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	375		
+Error (activo)	CS1529	Una cláusula using debe preceder al resto de elementos definidos en el espacio de nombres, excepto las declaraciones de alias externos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	376		
+Error (activo)	CS1529	Una cláusula using debe preceder al resto de elementos definidos en el espacio de nombres, excepto las declaraciones de alias externos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	377		
+Error (activo)	CS1529	Una cláusula using debe preceder al resto de elementos definidos en el espacio de nombres, excepto las declaraciones de alias externos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	378		
+Error (activo)	CS1529	Una cláusula using debe preceder al resto de elementos definidos en el espacio de nombres, excepto las declaraciones de alias externos	API	C:\Users\UMA08\source\repos\Tuco\API\Controllers\ServiciosController.cs	379		
