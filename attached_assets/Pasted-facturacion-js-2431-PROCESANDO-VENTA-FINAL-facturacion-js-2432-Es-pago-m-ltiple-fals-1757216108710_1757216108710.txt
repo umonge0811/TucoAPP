@@ -1,0 +1,34 @@
+facturacion.js:2431 🔍 === PROCESANDO VENTA FINAL ===
+facturacion.js:2432 🔍 Es pago múltiple: false
+facturacion.js:2433 🔍 Detalles de pago actuales: []
+facturacion.js:2444 🔍 Es factura pendiente: false
+facturacion.js:2445 🔍 Factura ID: null
+facturacion.js:2453 🆕 Creando nueva factura
+facturacion.js:2686 🆕 === CREANDO NUEVO DOCUMENTO ===
+facturacion.js:2687 🆕 Tipo de documento: Factura
+facturacion.js:2688 🆕 Es conversión de proforma: true
+facturacion.js:2727 🔐 === VERIFICACIÓN DE PERMISOS ===
+facturacion.js:2728 🔐 puedeCompletarFacturas: true
+facturacion.js:2729 🔐 puedeCrearFacturas: true
+facturacion.js:2730 🔐 tipoDocumento: Factura
+facturacion.js:2750 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+facturacion.js:2763 📋 Estado determinado: {tipoDocumento: 'Factura', estadoFactura: 'Pagada', fechaVencimiento: null, debeImprimir: true, debeAjustarInventario: true, …}
+facturacion.js:6306 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:6307 👤 facturaConfig disponible: true
+facturacion.js:6311 👤 Usuario encontrado en facturaConfig: {usuarioId: 17, id: 17, nombre: 'Administrador', nombreUsuario: 'Administrador', email: 'admin@llantasymastc.com'}
+facturacion.js:6312 👤 Tipo de usuario obtenido: object
+facturacion.js:6313 👤 Propiedades del usuario: (5) ['usuarioId', 'id', 'nombre', 'nombreUsuario', 'email']
+facturacion.js:6314 👤 ID de usuario: 17
+facturacion.js:6315 👤 Nombre de usuario: Administrador
+facturacion.js:2775 👤 Usuario actual para documento: {usuario: {…}, usuarioId: 17}
+facturacion.js:2812 📝 Observaciones con información de proforma: Convertido desde proforma PROF-202509-000001
+facturacion.js:2906 📋 Datos de documento preparados: {clienteId: 14, nombreCliente: 'Ulises Monge Aguilar', identificacionCliente: '3-0435-0539', telefonoCliente: '6282-8588', emailCliente: 'umongegds@gmail.com', …}
+Facturacion:298  GET https://localhost:7038/web/api/Notificaciones/conteo-no-leidas net::ERR_ABORTED 404 (Not Found)
+actualizarContadorNotificaciones @ Facturacion:298
+setInterval
+(anónimo) @ Facturacion:317
+Facturacion:445  GET https://localhost:7038/web/api/Notificaciones/conteo-no-leidas net::ERR_ABORTED 404 (Not Found)
+actualizarContadorNotificaciones @ Facturacion:445
+setInterval
+(anónimo) @ Facturacion:464
+facturacion.js:2925 ✅ Documento creado: {success: false, message: "El detalle '[SERVICIO] Alineación Completa - Aline…on' debe tener un ProductoId o ServicioId válido.", details: `{"message":"El detalle '[SERVICIO] Alineación Comp…' debe tener un ProductoId o ServicioId válido."}`}
