@@ -3103,9 +3103,12 @@ async function procesarProforma() {
 
         console.log('📋 === PROCESANDO PROFORMA DESDE MODAL ===');
 
-        // Validar que hay productos en la venta
-        if (productosEnVenta.length === 0) {
-            mostrarToast('Venta vacía', 'Agrega productos antes de crear la proforma', 'warning');
+        // ✅ VALIDAR QUE HAY PRODUCTOS O SERVICIOS EN LA VENTA
+        const tieneProductos = productosEnVenta.length > 0;
+        const tieneServicios = (window.serviciosEnVenta && window.serviciosEnVenta.length > 0);
+
+        if (!tieneProductos && !tieneServicios) {
+            mostrarToast('Venta vacía', 'Agrega productos o servicios antes de crear la proforma', 'warning');
             return;
         }
 
@@ -3114,6 +3117,11 @@ async function procesarProforma() {
             mostrarToast('Cliente requerido', 'Debes seleccionar un cliente antes de crear la proforma', 'warning');
             return;
         }
+
+        console.log('📋 Items detectados para proforma:', {
+            productos: tieneProductos ? productosEnVenta.length : 0,
+            servicios: tieneServicios ? window.serviciosEnVenta.length : 0
+        });
 
         // ✅ CREAR PROFORMA
         await crearProforma();
@@ -3140,6 +3148,7 @@ async function procesarProforma() {
         $btnProforma.find('.btn-loading-state').addClass('d-none');
     }
 }
+
 
 // ===== GESTIÓN DE PROFORMAS =====
 
