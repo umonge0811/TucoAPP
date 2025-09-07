@@ -1,0 +1,33 @@
+Microsoft.EntityFrameworkCore.DbUpdateException
+  HResult=0x80131500
+  Mensaje = An error occurred while saving the entity changes. See the inner exception for details.
+  Origen = Microsoft.EntityFrameworkCore.Relational
+  Seguimiento de la pila:
+   en Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.<ConsumeAsync>d__3.MoveNext()
+   en Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.<ExecuteAsync>d__50.MoveNext()
+   en Microsoft.EntityFrameworkCore.Update.ReaderModificationCommandBatch.<ExecuteAsync>d__50.MoveNext()
+   en Microsoft.EntityFrameworkCore.SqlServer.Update.Internal.SqlServerModificationCommandBatch.<ExecuteAsync>d__17.MoveNext()
+   en Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.<ExecuteAsync>d__9.MoveNext()
+   en Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.<ExecuteAsync>d__9.MoveNext()
+   en Microsoft.EntityFrameworkCore.Update.Internal.BatchExecutor.<ExecuteAsync>d__9.MoveNext()
+   en Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.<SaveChangesAsync>d__106.MoveNext() en Microsoft.EntityFrameworkCore.ChangeTracking.Internal\StateManager.cs: línea 766
+   en Microsoft.EntityFrameworkCore.ChangeTracking.Internal.StateManager.<SaveChangesAsync>d__110.MoveNext() en Microsoft.EntityFrameworkCore.ChangeTracking.Internal\StateManager.cs: línea 842
+   en Microsoft.EntityFrameworkCore.SqlServer.Storage.Internal.SqlServerExecutionStrategy.<ExecuteAsync>d__7`2.MoveNext()
+   en Microsoft.EntityFrameworkCore.DbContext.<SaveChangesAsync>d__64.MoveNext() en Microsoft.EntityFrameworkCore\DbContext.cs: línea 352
+   en Microsoft.EntityFrameworkCore.DbContext.<SaveChangesAsync>d__64.MoveNext() en Microsoft.EntityFrameworkCore\DbContext.cs: línea 378
+   en API.Controllers.FacturacionController.<CrearFactura>d__7.MoveNext() en C:\Users\UMA08\source\repos\Tuco\API\Controllers\FacturacionController.cs: línea 353
+
+  Esta excepción se generó originalmente en esta pila de llamadas:
+    Microsoft.Data.SqlClient.SqlConnection.OnError(Microsoft.Data.SqlClient.SqlException, bool, System.Action<System.Action>)
+    Microsoft.Data.SqlClient.SqlInternalConnection.OnError(Microsoft.Data.SqlClient.SqlException, bool, System.Action<System.Action>)
+    Microsoft.Data.SqlClient.TdsParser.ThrowExceptionAndWarning(Microsoft.Data.SqlClient.TdsParserStateObject, bool, bool)
+    Microsoft.Data.SqlClient.TdsParser.TryRun(Microsoft.Data.SqlClient.RunBehavior, Microsoft.Data.SqlClient.SqlCommand, Microsoft.Data.SqlClient.SqlDataReader, Microsoft.Data.SqlClient.BulkCopySimpleResultSet, Microsoft.Data.SqlClient.TdsParserStateObject, out bool)
+    Microsoft.Data.SqlClient.SqlDataReader.TryHasMoreRows(out bool)
+    Microsoft.Data.SqlClient.SqlDataReader.TryReadInternal(bool, out bool)
+    Microsoft.Data.SqlClient.SqlDataReader.ReadAsyncExecute(System.Threading.Tasks.Task, object)
+    Microsoft.Data.SqlClient.SqlDataReader.InvokeAsyncCall<T>(Microsoft.Data.SqlClient.SqlDataReader.SqlDataReaderBaseAsyncCallContext<T>)
+    Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeResultSetAsync(int, Microsoft.EntityFrameworkCore.Storage.RelationalDataReader, System.Threading.CancellationToken)
+    Microsoft.EntityFrameworkCore.Update.AffectedCountModificationCommandBatch.ConsumeAsync(Microsoft.EntityFrameworkCore.Storage.RelationalDataReader, System.Threading.CancellationToken)
+
+Excepción interna 1:
+SqlException: Cannot insert the value NULL into column 'ProductoId', table 'DB_tuco.dbo.DetallesFactura'; column does not allow nulls. INSERT fails.
