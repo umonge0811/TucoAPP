@@ -1,19 +1,18 @@
-
 // ========================================
 // DETALLE DE PRODUCTO PÚBLICO - JAVASCRIPT
 // ========================================
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📦 Módulo de detalle de producto público cargado');
-    
+
     // Verificar y corregir URLs de imágenes al cargar
     verificarImagenesProducto();
-    
+
     // Inicializar funcionalidades
     inicializarGaleriaImagenes();
     inicializarModalImagen();
     inicializarAnimaciones();
-    
+
     console.log('✅ Detalle de producto público inicializado correctamente');
 });
 
@@ -22,11 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========================================
 function verificarImagenesProducto() {
     console.log('🖼️ Verificando imágenes del producto...');
-    
+
     // Obtener todas las imágenes del producto
     const imagenPrincipal = document.getElementById('imagenPrincipal');
     const miniaturas = document.querySelectorAll('.miniatura img');
-    
+
     // Verificar imagen principal
     if (imagenPrincipal) {
         console.log('🖼️ URL imagen principal original:', imagenPrincipal.src);
@@ -35,14 +34,14 @@ function verificarImagenesProducto() {
             console.log('🖼️ Corrigiendo URL imagen principal a:', urlCorregida);
             imagenPrincipal.src = urlCorregida;
         }
-        
+
         // Verificar si la imagen se carga correctamente
         imagenPrincipal.onerror = function() {
             console.warn('⚠️ Error cargando imagen principal, usando imagen por defecto');
             this.src = '/images/no-image.png';
         };
     }
-    
+
     // Verificar miniaturas
     miniaturas.forEach((miniatura, index) => {
         console.log(`🖼️ URL miniatura ${index + 1} original:`, miniatura.src);
@@ -50,14 +49,14 @@ function verificarImagenesProducto() {
         if (urlCorregida !== miniatura.src) {
             console.log(`🖼️ Corrigiendo URL miniatura ${index + 1} a:`, urlCorregida);
             miniatura.src = urlCorregida;
-            
+
             // Actualizar también el data-imagen del contenedor padre
             const contenedorMiniatura = miniatura.closest('.miniatura');
             if (contenedorMiniatura) {
                 contenedorMiniatura.setAttribute('data-imagen', urlCorregida);
             }
         }
-        
+
         // Verificar si la miniatura se carga correctamente
         miniatura.onerror = function() {
             console.warn(`⚠️ Error cargando miniatura ${index + 1}, usando imagen por defecto`);
@@ -83,7 +82,7 @@ function construirUrlImagenCompleta(url) {
                        window.location.hostname === '127.0.0.1' ||
                        window.location.hostname.includes('localhost') ||
                        window.location.port === '5000';
-    
+
     const esHTTPS = window.location.protocol === 'https:';
 
     // Si es una URL completa del dominio de producción en desarrollo local, convertirla
@@ -105,14 +104,14 @@ function construirUrlImagenCompleta(url) {
         if (esDesarrollo && (url.includes('localhost') || url.includes('127.0.0.1'))) {
             return url;
         }
-        
+
         // En producción, asegurar HTTPS
         if (!esDesarrollo && url.startsWith('http://')) {
             const urlHTTPS = url.replace('http://', 'https://');
             console.log('🔧 ✅ URL convertida a HTTPS:', urlHTTPS);
             return urlHTTPS;
         }
-        
+
         return url;
     }
 
@@ -120,17 +119,23 @@ function construirUrlImagenCompleta(url) {
     if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
         // Asegurar que la URL empiece con /
         const urlLimpia = url.startsWith('/') ? url : `/${url}`;
-        
-        if (esDesarrollo) {
-            // Para desarrollo local, usar localhost en puerto 5049 (API)
-            const urlLocal = `http://localhost:5049${urlLimpia}`;
+
+        // Si estamos en producción y es una URL relativa
+        const esProduccionReal = window.location.hostname.includes('llantasymastc.com');
+
+        if (esProduccionReal && (url.startsWith('/uploads/') || url.startsWith('uploads/'))) {
+            const urlLimpia = url.startsWith('/') ? url : `/${url}`;
+            const urlProduccion = `http://apillantasymast.somee.com${urlLimpia}`;
+            console.log('🔧 ✅ URL construida para producción real:', urlProduccion);
+            return urlProduccion;
+        }
+
+        // Si estamos en desarrollo y es una URL relativa
+        if (esDesarrollo && (url.startsWith('/uploads/') || url.startsWith('uploads/'))) {
+            const urlLimpia = url.startsWith('/') ? url : `/${url}`;
+            const urlLocal = `http://localhost:8000${urlLimpia}`;
             console.log('🔧 ✅ URL construida para desarrollo local:', urlLocal);
             return urlLocal;
-        } else {
-            // Para producción, usar HTTPS
-            const urlProduccion = `https://apillantasymast.somee.com${urlLimpia}`;
-            console.log('🔧 ✅ URL construida para producción:', urlProduccion);
-            return urlProduccion;
         }
     }
 
@@ -144,9 +149,9 @@ function construirUrlImagenCompleta(url) {
 // ========================================
 function inicializarGaleriaImagenes() {
     const miniaturas = document.querySelectorAll('.miniatura');
-    
+
     if (miniaturas.length === 0) return;
-    
+
     miniaturas.forEach(function(miniatura) {
         miniatura.addEventListener('click', function() {
             const imagenUrl = this.getAttribute('data-imagen');
@@ -158,19 +163,19 @@ function inicializarGaleriaImagenes() {
 function cambiarImagenPrincipal(imagenUrl, elemento) {
     const imagenPrincipal = document.getElementById('imagenPrincipal');
     const imagenModal = document.getElementById('imagenModalGrande');
-    
+
     // Construir URL correcta para la imagen
     const urlCorregida = construirUrlImagenCompleta(imagenUrl);
     console.log('🖼️ Cambiando imagen principal a:', urlCorregida);
-    
+
     if (imagenPrincipal) {
         // Efecto de transición suave
         imagenPrincipal.style.opacity = '0.5';
-        
+
         setTimeout(() => {
             imagenPrincipal.src = urlCorregida;
             imagenPrincipal.style.opacity = '1';
-            
+
             // Verificar si la imagen se carga correctamente
             imagenPrincipal.onerror = function() {
                 console.warn('⚠️ Error cargando imagen principal cambiada, usando imagen por defecto');
@@ -179,22 +184,22 @@ function cambiarImagenPrincipal(imagenUrl, elemento) {
             };
         }, 150);
     }
-    
+
     if (imagenModal) {
         imagenModal.src = urlCorregida;
-        
+
         // Verificar si la imagen del modal se carga correctamente
         imagenModal.onerror = function() {
             console.warn('⚠️ Error cargando imagen del modal, usando imagen por defecto');
             this.src = '/images/no-image.png';
         };
     }
-    
+
     // Actualizar estado activo de miniaturas
     document.querySelectorAll('.miniatura').forEach(function(mini) {
         mini.classList.remove('active');
     });
-    
+
     if (elemento) {
         elemento.classList.add('active');
     }
@@ -206,19 +211,19 @@ function cambiarImagenPrincipal(imagenUrl, elemento) {
 function inicializarModalImagen() {
     const imagenPrincipal = document.getElementById('imagenPrincipal');
     const modalImagen = document.getElementById('modalImagenGrande');
-    
+
     if (!imagenPrincipal || !modalImagen) return;
-    
+
     // Actualizar imagen del modal cuando se abre
     modalImagen.addEventListener('show.bs.modal', function() {
         const imagenActual = imagenPrincipal.src;
         const imagenModal = document.getElementById('imagenModalGrande');
-        
+
         if (imagenModal) {
             imagenModal.src = imagenActual;
         }
     });
-    
+
     // Navegación con teclado en el modal
     document.addEventListener('keydown', function(e) {
         if (modalImagen.classList.contains('show')) {
@@ -234,21 +239,21 @@ function inicializarModalImagen() {
 function navegarImagen(direccion) {
     const miniaturas = document.querySelectorAll('.miniatura');
     const activa = document.querySelector('.miniatura.active');
-    
+
     if (miniaturas.length <= 1 || !activa) return;
-    
+
     let indiceActual = Array.from(miniaturas).indexOf(activa);
     let nuevoIndice = indiceActual + direccion;
-    
+
     if (nuevoIndice < 0) {
         nuevoIndice = miniaturas.length - 1;
     } else if (nuevoIndice >= miniaturas.length) {
         nuevoIndice = 0;
     }
-    
+
     const nuevaMiniatura = miniaturas[nuevoIndice];
     const nuevaImagen = nuevaMiniatura.getAttribute('data-imagen');
-    
+
     cambiarImagenPrincipal(nuevaImagen, nuevaMiniatura);
 }
 
@@ -258,18 +263,18 @@ function navegarImagen(direccion) {
 function inicializarAnimaciones() {
     // Animación de aparición escalonada
     const elementos = document.querySelectorAll('.galeria-producto, .info-producto');
-    
+
     elementos.forEach(function(elemento, index) {
         elemento.style.opacity = '0';
         elemento.style.transform = 'translateY(30px)';
-        
+
         setTimeout(() => {
             elemento.style.transition = 'all 0.6s ease-out';
             elemento.style.opacity = '1';
             elemento.style.transform = 'translateY(0)';
         }, index * 200);
     });
-    
+
     // Observer para animaciones al hacer scroll
     const observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
@@ -281,7 +286,7 @@ function inicializarAnimaciones() {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     });
-    
+
     // Observar secciones
     const secciones = document.querySelectorAll('.especificaciones-llanta, .descripcion-producto, .acciones-producto');
     secciones.forEach(function(seccion) {
@@ -294,7 +299,7 @@ function inicializarAnimaciones() {
 // ========================================
 function copiarEnlace() {
     const url = window.location.href;
-    
+
     if (navigator.clipboard) {
         navigator.clipboard.writeText(url).then(function() {
             mostrarNotificacion('Enlace copiado', 'El enlace del producto ha sido copiado al portapapeles', 'success');
@@ -307,7 +312,7 @@ function copiarEnlace() {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        
+
         mostrarNotificacion('Enlace copiado', 'El enlace del producto ha sido copiado', 'success');
     }
 }
@@ -315,7 +320,7 @@ function copiarEnlace() {
 function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
     // Toast simple sin dependencias externas
     const toastContainer = document.getElementById('toast-container') || crearContainerToast();
-    
+
     const toast = document.createElement('div');
     toast.className = `toast-publico toast-${tipo}`;
     toast.innerHTML = `
@@ -325,9 +330,9 @@ function mostrarNotificacion(titulo, mensaje, tipo = 'info') {
         </div>
         <div class="toast-body">${mensaje}</div>
     `;
-    
+
     toastContainer.appendChild(toast);
-    
+
     // Auto-remover después de 3 segundos
     setTimeout(() => {
         if (toast.parentNode) {
