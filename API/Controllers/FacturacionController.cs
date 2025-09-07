@@ -1278,7 +1278,7 @@ namespace API.Controllers
 
                 // Recalcular totales de la factura
                 var detallesRestantes = factura.DetallesFactura
-                    .Where(d => !request.ProductosAEliminar.Contains(d.ProductoId))
+                    .Where(d => !request.ProductosAEliminar.Contains((int)d.ProductoId))
                     .ToList();
 
                 if (!detallesRestantes.Any())
