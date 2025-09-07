@@ -82,6 +82,10 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<Servicio> Servicios { get; set; }
 
+    public DbSet<Anuncio> Anuncios { get; set; }
+    public DbSet<NotaRapida> NotasRapidas { get; set; }
+    public DbSet<RolPermisoRE> RolPermisos { get; set; }
+    public DbSet<PendientesEntrega> PendientesEntrega { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
