@@ -1,0 +1,49 @@
+async function procesarVentaFinal() {
+    const $btnFinalizar = $('#btnConfirmarVenta');
+
+    try {
+        $btnFinalizar.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Procesando...');
+
+        console.log('🔍 === PROCESANDO VENTA FINAL ===');
+        console.log('🔍 Es pago múltiple:', esPagoMultiple);
+        console.log('🔍 Detalles de pago actuales:', detallesPagoActuales);
+
+        // ✅ VALIDAR PAGOS MÚLTIPLES SI ES NECESARIO
+        if (esPagoMultiple && !validarPagosMultiples()) {
+            $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+            return;
+        }
+
+        const esFacturaPendiente = productosEnVenta.some(p => p.facturaId);
+        const facturaId = esFacturaPendiente ? productosEnVenta[0].facturaId : null;
+
+        console.log('🔍 Es factura pendiente:', esFacturaPendiente);
+        console.log('🔍 Factura ID:', facturaId);
+
+        if (esFacturaPendiente && facturaId) {
+            // ✅ COMPLETAR FACTURA EXISTENTE
+            console.log('✅ Completando factura pendiente ID:', facturaId);
+            await completarFacturaExistente(facturaId);
+        } else {
+            // ✅ CREAR NUEVA FACTURA NORMAL
+            console.log('🆕 Creando nueva factura');
+            await crearNuevaFactura();
+        }
+
+    } catch (error) {
+        console.error('❌ Error procesando venta:', error);
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error procesando la venta',
+                text: 'Hubo un problema inesperado al procesar la venta',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#dc3545'
+            });
+        } else {
+            alert('Error: Hubo un problema procesando la venta');
+        }
+    } finally {
+        $btnFinalizar.prop('disabled', false).html('<i class="bi bi-check-circle me-2"></i>Finalizar Venta');
+    }
+}
