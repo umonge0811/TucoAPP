@@ -592,8 +592,6 @@ namespace API.Controllers
                     .Include(f => f.DetallesFactura)
                         .ThenInclude(d => d.Producto)
                             .ThenInclude(p => p.Llanta)
-                    .Include(f => f.DetallesFactura)
-                        .ThenInclude(d => d.Servicio)
                     .Where(f => f.FacturaId == id)
                     .Select(f => new FacturaDTO
                     {
@@ -624,8 +622,6 @@ namespace API.Controllers
                         {
                             DetalleFacturaId = d.DetalleFacturaId,
                             ProductoId = d.ProductoId,
-                            ServicioId = d.ServicioId,
-                            EsServicio = d.ServicioId.HasValue && d.ServicioId.Value > 0,
                             NombreProducto = d.NombreProducto,
                             DescripcionProducto = d.DescripcionProducto,
                             Cantidad = d.Cantidad,
@@ -633,18 +629,12 @@ namespace API.Controllers
                             PorcentajeDescuento = d.PorcentajeDescuento,
                             MontoDescuento = d.MontoDescuento,
                             Subtotal = d.Subtotal,
-                            // Solo asignar propiedades de producto si NO es un servicio
-                            StockDisponible = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
-                                999 : (int)(d.Producto != null ? d.Producto.CantidadEnInventario ?? 0 : 0),
-                            EsLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
-                                false : (d.Producto != null && d.Producto.Llanta.Any()),
-                            MedidaLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
-                                null : (d.Producto != null && d.Producto.Llanta.Any() ?
-                                    d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null),
-                            MarcaLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
-                                null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null),
-                            ModeloLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
-                                null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null)
+                            StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
+                            EsLlanta = d.Producto.Llanta.Any(),
+                            MedidaLlanta = d.Producto.Llanta.Any() ? 
+                                d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null,
+                            MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
                         }).ToList()
                     })
                     .FirstOrDefaultAsync();
@@ -660,7 +650,6 @@ namespace API.Controllers
                 return StatusCode(500, new { message = "Error al obtener factura" });
             }
         }
-
 
         [HttpPut("facturas/{id}/completar")]
         [Authorize]
