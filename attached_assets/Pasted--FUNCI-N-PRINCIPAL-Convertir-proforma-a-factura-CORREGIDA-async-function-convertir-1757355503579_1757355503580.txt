@@ -1,0 +1,204 @@
+/**
+ * ✅ FUNCIÓN PRINCIPAL: Convertir proforma a factura (CORREGIDA)
+ */
+async function convertirProformaAFactura(proformaEscapada) {
+    try {
+        console.log('🔄 === CONVIRTIENDO PROFORMA A FACTURA ===');
+        console.log('🔄 Proforma escapada recibida:', proformaEscapada);
+        console.log('🔄 Tipo de dato recibido:', typeof proformaEscapada);
+
+        // ✅ MANEJO ROBUSTO DE DIFERENTES FORMATOS DE ENTRADA
+        let proforma;
+
+        if (typeof proformaEscapada === 'string') {
+            // Si es una cadena, verificar si está escapada
+            if (proformaEscapada.includes('&quot;')) {
+                // Cadena escapada, aplicar replace y parsear
+                proforma = JSON.parse(proformaEscapada.replace(/&quot;/g, '"'));
+                console.log('🔄 Proforma parseada desde cadena escapada');
+            } else {
+                // Cadena JSON normal
+                proforma = JSON.parse(proformaEscapada);
+                console.log('🔄 Proforma parseada desde cadena JSON');
+            }
+        } else if (typeof proformaEscapada === 'object' && proformaEscapada !== null) {
+            // Si ya es un objeto, usarlo directamente
+            proforma = proformaEscapada;
+            console.log('🔄 Proforma recibida como objeto directo');
+        } else {
+            throw new Error('Formato de proforma no válido: ' + typeof proformaEscapada);
+        }
+
+        console.log('🔄 Proforma deserializada:', proforma);
+
+        // Confirmar conversión
+        const confirmacion = await Swal.fire({
+            title: '¿Convertir proforma a factura?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Proforma:</strong> ${proforma.numeroFactura || 'N/A'}</p>
+                    <p><strong>Cliente:</strong> ${proforma.nombreCliente || 'Cliente General'}</p>
+                    <p><strong>Total:</strong> ₡${formatearMoneda(proforma.total)}</p>
+                    <hr>
+                    <p><strong>Esta acción:</strong></p>
+                    <ul>
+                        <li>Cargará los productos de la proforma en el carrito</li>
+                        <li>Procesará la venta directamente</li>
+                        <li>Creará una factura oficial inmediatamente</li>
+                    </ul>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, convertir',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!confirmacion.isConfirmed) {
+            return;
+        }
+
+        // Verificar que la proforma esté vigente
+        if (proforma.estado !== 'Vigente') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Proforma no vigente',
+                text: `Solo se pueden convertir proformas vigentes. Estado actual: ${proforma.estado}`,
+                confirmButtonColor: '#ffc107'
+            });
+            return;
+        }
+
+        // Limpiar carrito actual y servicios
+        productosEnVenta = [];
+        serviciosEnVenta = []; // ✅ LIMPIAR SERVICIOS TAMBIÉN
+        clienteSeleccionado = null;
+
+        console.log('🔄 === CARGANDO DATOS DE PROFORMA EN EL CARRITO ===');
+
+        // Cargar cliente de la proforma
+        clienteSeleccionado = {
+            clienteId: proforma.clienteId || null,
+            nombre: proforma.nombreCliente || 'Cliente General',
+            identificacion: proforma.identificacionCliente || '',
+            telefono: proforma.telefonoCliente || '',
+            email: proforma.emailCliente || '',
+            direccion: proforma.direccionCliente || ''
+        };
+
+        console.log('👤 Cliente cargado desde proforma:', clienteSeleccionado);
+
+        // ✅ CARGAR PRODUCTOS Y SERVICIOS DE LA PROFORMA
+        if (proforma.detallesFactura && Array.isArray(proforma.detallesFactura)) {
+            console.log('📦 Cargando detalles desde proforma:', proforma.detallesFactura.length);
+            proforma.detallesFactura.forEach((detalle, index) => {
+                console.log(`🔍 Procesando detalle ${index + 1}:`, detalle);
+                // ✅ VERIFICAR SI ES UN SERVICIO
+                const esServicio = detalle.esServicio ||
+                    detalle.servicioId ||
+                    detalle.nombreProducto?.includes('[SERVICIO]') ||
+                    (!detalle.productoId && detalle.servicioId);
+                if (esServicio) {
+                    // ✅ ES UN SERVICIO - Agregarlo al array de servicios
+                    const servicio = {
+                        servicioId: detalle.servicioId || null,
+                        nombreProducto: detalle.nombreProducto || 'Servicio',
+                        nombre: detalle.nombreProducto?.replace('[SERVICIO] ', '') || 'Servicio',
+                        descripcion: detalle.descripcionProducto || '',
+                        precio: detalle.precioUnitario || 0,
+                        cantidad: detalle.cantidad || 1,
+                        subtotal: (detalle.precioUnitario || 0) * (detalle.cantidad || 1),
+                        esServicio: true
+                    };
+                    serviciosEnVenta.push(servicio);
+                    console.log(`🔧 Servicio ${index + 1} cargado:`, servicio.nombre, 'x', servicio.cantidad);
+                } else {
+                    // ✅ ES UN PRODUCTO - Agregarlo al array de productos
+                    const producto = {
+                        productoId: detalle.productoId || 0,
+                        nombreProducto: detalle.nombreProducto || 'Producto',
+                        precioUnitario: detalle.precioUnitario || 0,
+                        cantidad: detalle.cantidad || 1,
+                        stockDisponible: detalle.stockDisponible || 999,
+                        metodoPago: 'efectivo',
+                        imagenUrl: null,
+                        esServicio: false
+                    };
+                    productosEnVenta.push(producto);
+                    console.log(`📦 Producto ${index + 1} cargado:`, producto.nombreProducto, 'x', producto.cantidad);
+                }
+            });
+        }
+        console.log('📦 Total productos cargados en carrito:', productosEnVenta.length);
+        console.log('🔧 Total servicios cargados en carrito:', serviciosEnVenta.length);
+
+        // Actualizar interfaz del cliente
+        $('#clienteBusqueda').val(clienteSeleccionado.nombre);
+        $('#nombreClienteSeleccionado').text(clienteSeleccionado.nombre);
+        $('#emailClienteSeleccionado').text(clienteSeleccionado.email || 'Sin email');
+        $('#clienteSeleccionado').removeClass('d-none');
+
+        // ✅ ACTUALIZAR CARRITO, SERVICIOS Y TOTALES
+        actualizarVistaCarrito();
+        actualizarTotales();
+        actualizarEstadoBotonFinalizar();
+
+        console.log('🔄 Interfaz actualizada con datos de la proforma (productos y servicios)');
+
+        // Cerrar modal de proformas
+        const modalProformas = bootstrap.Modal.getInstance(document.getElementById('proformasModal'));
+        if (modalProformas) {
+            modalProformas.hide();
+        }
+
+        // Guardar referencia a la proforma original para el proceso de facturación
+        window.proformaOriginalParaConversion = {
+            proformaId: proforma.facturaId || proforma.id || proforma.proformaId,
+            facturaId: proforma.facturaId || proforma.id || proforma.proformaId,
+            numeroProforma: proforma.numeroFactura
+        };
+
+        console.log('📋 Referencia de proforma guardada:', window.proformaOriginalParaConversion);
+        console.log('📋 ID que se usará:', window.proformaOriginalParaConversion.proformaId);
+
+        // ✅ MOSTRAR MODAL DE FINALIZAR VENTA DESPUÉS DE UN BREVE DELAY
+        setTimeout(() => {
+            console.log('🎯 === ABRIENDO MODAL FINALIZAR VENTA ===');
+            console.log('🎯 Productos en carrito:', productosEnVenta.length);
+            console.log('🎯 Servicios en carrito:', serviciosEnVenta.length);
+            console.log('🎯 Cliente seleccionado:', clienteSeleccionado?.nombre);
+
+            // ✅ VERIFICAR QUE TENEMOS AL MENOS PRODUCTOS O SERVICIOS
+            const tieneItems = productosEnVenta.length > 0 || serviciosEnVenta.length > 0;
+
+            if (tieneItems && clienteSeleccionado) {
+                mostrarModalFinalizarVenta();
+                console.log('✅ Modal de finalizar venta mostrado correctamente');
+            } else {
+                console.error('❌ No se puede mostrar modal - faltan datos');
+                console.error('❌ Productos:', productosEnVenta.length);
+                console.error('❌ Servicios:', serviciosEnVenta.length);
+                console.error('❌ Cliente:', !!clienteSeleccionado);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudieron cargar los datos de la proforma correctamente',
+                    confirmButtonColor: '#dc3545'
+                });
+            }
+        }, 800); // Delay de 800ms para asegurar que todo esté cargado
+
+    } catch (error) {
+        console.error('❌ Error convirtiendo proforma:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al convertir',
+            text: 'No se pudo convertir la proforma: ' + (error.message || 'Error desconocido'),
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
