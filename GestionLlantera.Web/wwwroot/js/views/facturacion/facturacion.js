@@ -2752,33 +2752,79 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
         // ✅ CONSTRUIR DETALLES DE FACTURA COMBINANDO PRODUCTOS Y SERVICIOS
         const detallesFactura = [];
 
-        // ✅ PROCESAR PRODUCTOS
-        productosEnVenta.forEach(producto => {
-            const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        // ✅ PROCESAR TODOS LOS ITEMS DEL CARRITO (PRODUCTOS Y SERVICIOS)
+        productosEnVenta.forEach(item => {
+            console.log('🔧 Procesando item del carrito:', item);
+            
+            // ✅ VERIFICAR SI ES UN SERVICIO (puede venir marcado como esServicio o tener servicioId)
+            const esServicio = item.esServicio === true || 
+                               (item.servicioId && item.servicioId > 0) ||
+                               item.nombreProducto.includes('[SERVICIO]');
+            
+            if (esServicio) {
+                // ✅ PROCESAR COMO SERVICIO
+                const precioServicio = item.precioUnitario || item.precio || 0;
+                let nombreCompletoServicio = item.nombreProducto;
+                
+                // Asegurar que tenga el prefijo [SERVICIO] si no lo tiene
+                if (!nombreCompletoServicio.includes('[SERVICIO]')) {
+                    nombreCompletoServicio = `[SERVICIO] ${nombreCompletoServicio}`;
+                }
 
-            // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA
-            let nombreCompletoProducto = producto.nombreProducto;
-            if (producto.esLlanta && producto.medidaCompleta) {
-                nombreCompletoProducto = `${producto.medidaCompleta} ${producto.nombreProducto}`;
+                detallesFactura.push({
+                    productoId: null, // ✅ IMPORTANTE: null para servicios
+                    servicioId: item.servicioId || item.id || null,
+                    nombreProducto: nombreCompletoServicio,
+                    descripcionProducto: item.descripcion || '',
+                    cantidad: item.cantidad || 1,
+                    precioUnitario: precioServicio,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioServicio * (item.cantidad || 1),
+                    esServicio: true // ✅ IMPORTANTE: true para servicios
+                });
+                
+                console.log('🔧 Servicio agregado a detallesFactura:', {
+                    servicioId: item.servicioId || item.id || null,
+                    nombre: nombreCompletoServicio,
+                    precio: precioServicio,
+                    cantidad: item.cantidad || 1
+                });
+            } else {
+                // ✅ PROCESAR COMO PRODUCTO
+                const precioAjustado = item.precioUnitario * configMetodo.multiplicador;
+
+                // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA SI ES LLANTA
+                let nombreCompletoProducto = item.nombreProducto;
+                if (item.esLlanta && item.medidaCompleta) {
+                    nombreCompletoProducto = `${item.medidaCompleta} ${item.nombreProducto}`;
+                }
+
+                detallesFactura.push({
+                    productoId: item.productoId,
+                    servicioId: null, // ✅ IMPORTANTE: null para productos
+                    nombreProducto: nombreCompletoProducto,
+                    descripcionProducto: item.descripcion || '',
+                    cantidad: item.cantidad,
+                    precioUnitario: precioAjustado,
+                    porcentajeDescuento: 0,
+                    montoDescuento: 0,
+                    subtotal: precioAjustado * item.cantidad,
+                    esServicio: false // ✅ IMPORTANTE: false para productos
+                });
+                
+                console.log('🔧 Producto agregado a detallesFactura:', {
+                    productoId: item.productoId,
+                    nombre: nombreCompletoProducto,
+                    precio: precioAjustado,
+                    cantidad: item.cantidad
+                });
             }
-
-            detallesFactura.push({
-                productoId: producto.productoId,
-                servicioId: null, // ✅ IMPORTANTE: null para productos
-                nombreProducto: nombreCompletoProducto,
-                descripcionProducto: producto.descripcion || '',
-                cantidad: producto.cantidad,
-                precioUnitario: precioAjustado,
-                porcentajeDescuento: 0,
-                montoDescuento: 0,
-                subtotal: precioAjustado * producto.cantidad,
-                esServicio: false // ✅ IMPORTANTE: false para productos
-            });
         });
 
-        // ✅ PROCESAR SERVICIOS SI EXISTEN
+        // ✅ PROCESAR SERVICIOS ADICIONALES DE window.serviciosEnVenta SI EXISTEN
         if (window.serviciosEnVenta && window.serviciosEnVenta.length > 0) {
-            console.log('🔧 Procesando servicios para envío al backend:', window.serviciosEnVenta);
+            console.log('🔧 Procesando servicios adicionales para envío al backend:', window.serviciosEnVenta);
 
             window.serviciosEnVenta.forEach(servicio => {
                 const precioServicio = servicio.precioUnitario || servicio.precio || 0;
@@ -2802,6 +2848,13 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
                     montoDescuento: 0,
                     subtotal: precioServicio * (servicio.cantidad || 1),
                     esServicio: true // ✅ IMPORTANTE: true para servicios
+                });
+                
+                console.log('🔧 Servicio adicional agregado a detallesFactura:', {
+                    servicioId: servicio.servicioId || servicio.id,
+                    nombre: nombreCompletoServicio,
+                    precio: precioServicio,
+                    cantidad: servicio.cantidad || 1
                 });
             });
         }
