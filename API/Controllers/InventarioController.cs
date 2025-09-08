@@ -1365,8 +1365,8 @@ namespace API.Controllers
             [FromQuery] int tamano = 12,
             [FromQuery] string? busqueda = null,
             [FromQuery] string? marca = null,
-            [FromQuery] int? ancho = null,
-            [FromQuery] int? perfil = null,
+            [FromQuery] decimal? ancho = null,
+            [FromQuery] decimal? perfil = null,
             [FromQuery] string? diametro = null)
         {
             try

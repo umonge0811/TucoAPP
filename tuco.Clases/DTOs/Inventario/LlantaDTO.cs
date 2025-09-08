@@ -1,4 +1,4 @@
-﻿// Ubicación: tuco.Clases/DTOs/Inventario/LlantaDTO.cs
+// Ubicación: tuco.Clases/DTOs/Inventario/LlantaDTO.cs
 
 using System.ComponentModel.DataAnnotations;
 
@@ -10,9 +10,9 @@ namespace Tuco.Clases.DTOs.Inventario
 
         public int ProductoId { get; set; }
 
-        public int? Ancho { get; set; }
+        public decimal? Ancho { get; set; }
 
-        public int? Perfil { get; set; }
+        public decimal? Perfil { get; set; }
 
         [StringLength(10, ErrorMessage = "El diámetro no puede tener más de 10 caracteres")]
         public string? Diametro { get; set; }

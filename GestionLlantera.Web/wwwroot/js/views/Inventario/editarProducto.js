@@ -598,7 +598,14 @@ document.addEventListener('DOMContentLoaded', function () {
         let esValido = true;
         const camposRequeridos = form.querySelectorAll('[required]');
 
+        // Validar solo campos requeridos básicos (excluyendo medidas de llantas)
         camposRequeridos.forEach(campo => {
+            // Saltar validación de medidas de llantas - permitir cualquier valor
+            if (campo.name === 'Llanta.Ancho' || campo.name === 'Llanta.Perfil' || campo.name === 'Llanta.Diametro') {
+                campo.classList.remove('is-invalid');
+                return;
+            }
+            
             if (!campo.value.trim()) {
                 campo.classList.add('is-invalid');
                 esValido = false;
