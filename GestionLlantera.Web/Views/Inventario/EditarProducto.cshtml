@@ -1,4 +1,4 @@
-@model Tuco.Clases.DTOs.Inventario.ProductoDTO
+﻿@model Tuco.Clases.DTOs.Inventario.ProductoDTO
 @{
     ViewData["Title"] = "Editar Producto";
     Layout = "_AdminLayout";
@@ -154,7 +154,7 @@
                                     <div class="mb-3">
                                         <label asp-for="Llanta.Ancho" class="form-label">Ancho</label>
                                         <div class="input-group">
-                                            <input asp-for="Llanta.Ancho" type="text" class="form-control" />
+                                            <input asp-for="Llanta.Ancho" type="number" min="0" class="form-control" />
                                             <span class="input-group-text">mm</span>
                                         </div>
                                     </div>
@@ -163,7 +163,7 @@
                                     <div class="mb-3">
                                         <label asp-for="Llanta.Perfil" class="form-label">Perfil</label>
                                         <div class="input-group">
-                                            <input asp-for="Llanta.Perfil" type="text" class="form-control" />
+                                            <input asp-for="Llanta.Perfil" type="number" min="0" class="form-control" />
                                             <span class="input-group-text">%</span>
                                         </div>
                                     </div>
@@ -172,7 +172,7 @@
                                     <div class="mb-3">
                                         <label asp-for="Llanta.Diametro" class="form-label">Diámetro</label>
                                         <div class="input-group">
-                                            <input asp-for="Llanta.Diametro" type="text" class="form-control" />
+                                            <input asp-for="Llanta.Diametro" class="form-control" />
                                             <span class="input-group-text">pulgadas</span>
                                         </div>
                                     </div>
@@ -278,58 +278,37 @@
                         <div id="camposAutomaticos" style="display: @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "block" : "none");">
                             <div class="alert alert-info d-flex align-items-center mb-3">
                                 <i class="bi bi-info-circle me-2"></i>
-                                <span>Configure el precio usando <strong>Costo + Precio de Venta</strong> o <strong>Costo + Margen %</strong></span>
+                                <span>El precio se calculará automáticamente: <strong>Precio = Costo + (Costo × % Utilidad)</strong></span>
                             </div>
 
                             <div class="row g-3">
-                                <!-- Precio de Costo (Base) -->
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="mb-3">
                                         <label asp-for="Costo" class="form-label fw-bold">
                                             <i class="bi bi-cash-coin me-1"></i>
-                                            Precio de Costo
+                                            Costo del Producto
                                         </label>
                                         <div class="input-group input-group-lg">
                                             <span class="input-group-text">₡</span>
-                                            <input asp-for="Costo" type="number" step="0.01" min="0" class="form-control" id="inputCosto" placeholder="0.00" />
+                                            <input asp-for="Costo" type="number" step="0.01" min="0" class="form-control" id="inputCosto" />
                                         </div>
-                                        <div class="form-text">Precio al que se compra</div>
                                         <span asp-validation-for="Costo" class="text-danger"></span>
                                     </div>
                                 </div>
-
-                                <!-- Precio de Venta -->
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="mb-3">
-                                        <label class="form-label fw-bold text-primary">
-                                            <i class="bi bi-tag me-1"></i>
-                                            Precio de Venta
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <span class="input-group-text bg-primary text-white">₡</span>
-                                            <input type="number" step="0.01" min="0" class="form-control" id="inputPrecioVenta" placeholder="0.00" />
-                                        </div>
-                                        <div class="form-text">Precio final al cliente</div>
-                                    </div>
-                                </div>
-
-                                <!-- Margen % -->
-                                <div class="col-md-3">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold text-warning">
+                                        <label asp-for="PorcentajeUtilidad" class="form-label fw-bold">
                                             <i class="bi bi-percent me-1"></i>
-                                            Margen %
+                                            Porcentaje de Utilidad
                                         </label>
                                         <div class="input-group input-group-lg">
-                                            <input type="number" step="0.01" min="0" max="999" class="form-control" id="inputMargenPorcentaje" placeholder="0.00" />
-                                            <span class="input-group-text bg-warning text-dark">%</span>
+                                            <input asp-for="PorcentajeUtilidad" type="number" step="0.01" min="0" max="999" class="form-control" id="inputUtilidad" />
+                                            <span class="input-group-text">%</span>
                                         </div>
-                                        <div class="form-text">% sobre el costo</div>
+                                        <span asp-validation-for="PorcentajeUtilidad" class="text-danger"></span>
                                     </div>
                                 </div>
-
-                                <!-- Precio Final (Display) -->
-                                <div class="col-md-3">
+                                <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold text-success">
                                             <i class="bi bi-currency-dollar me-1"></i>
@@ -337,32 +316,14 @@
                                         </label>
                                         <div class="input-group input-group-lg">
                                             <span class="input-group-text bg-success text-white">₡</span>
-                                            <input type="text" class="form-control bg-light text-success fw-bold" id="precioCalculado" readonly value="0.00" style="font-size: 1.2em;" />
+                                            <input type="text" class="form-control bg-light text-success fw-bold" id="precioCalculado" readonly style="font-size: 1.2em;" />
                                         </div>
                                         <div class="form-text">
-                                            <small id="desglosePrecio" class="text-muted">
-                                                Utilidad: ₡0.00
-                                            </small>
+                                            <small id="desglosePrecio" class="text-muted"></small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Botón para limpiar campos -->
-                            <div class="row">
-                                <div class="col-12">
-                                    <div class="text-center mb-3">
-                                        <button type="button" class="btn btn-outline-secondary" id="btnLimpiarPrecios">
-                                            <i class="bi bi-eraser me-2"></i>
-                                            Limpiar Campos de Precio
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Campos ocultos para compatibilidad -->
-                            <input asp-for="PorcentajeUtilidad" type="hidden" id="hiddenPorcentajeUtilidad" />
-                            <input asp-for="Precio" type="hidden" id="hiddenPrecio" />
                         </div>
 
                         <!-- Campo para precio manual -->
@@ -381,7 +342,7 @@
                                         </label>
                                         <div class="input-group input-group-lg">
                                             <span class="input-group-text">₡</span>
-                                            <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" id="inputPrecioManual" placeholder="0.00" />
+                                            <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" id="inputPrecioManual" />
                                         </div>
                                         <span asp-validation-for="Precio" class="text-danger"></span>
                                     </div>
@@ -392,7 +353,7 @@
                         <!-- Resumen visual -->
                         <div class="alert alert-success d-flex align-items-center" id="resumenPrecio">
                             <i class="bi bi-info-circle me-2"></i>
-                            <span id="textoResumen" class="fw-bold">Ingrese el costo y porcentaje de utilidad para calcular el precio automáticamente</span>
+                            <span id="textoResumen" class="fw-bold">Precio actual configurado</span>
                         </div>
                     </div>
                 </div>
