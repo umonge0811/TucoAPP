@@ -73,9 +73,9 @@ async function buscarProductos(termino = '', pagina = 1, cargarMas = false) {
         mostrarLoadingCargarMas(); // Mostrar loading específico para el botón "Cargar más"
     }
 
-    // ✅ USAR EL ENDPOINT PÚBLICO ESPECÍFICO PARA PRODUCTOS PÚBLICOS
-    // Se agrega el parámetro de página a la URL con paginación
-    const url = `/Public/ObtenerProductosPublicos?page=${pagina}&pageSize=${tamañoPagina}`;
+    // ✅ USAR LA MISMA URL Y LÓGICA QUE EL ENDPOINT EXITOSO DE FACTURACIÓN
+    // Se agrega el parámetro de página a la URL si el backend lo soporta
+    const url = `/Public/ObtenerProductosParaFacturacion?page=${pagina}&pageSize=${tamañoPagina}`;
     console.log(`🔍 URL de la solicitud: ${url}`);
 
     try {

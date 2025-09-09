@@ -1,4 +1,3 @@
-
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -104,7 +103,7 @@ namespace GestionLlantera.Web.Controllers
                                 PropertyNameCaseInsensitive = true 
                             });
 
-                            // ✅ PROCESAR IMÁGENES COMO EN EL MÉTODO ObtenerProductosPublicos
+                            // ✅ PROCESAR IMÁGENES COMO EN EL MÉTODO ObtenerProductosParaFacturacion
                             if (producto != null && item.TryGetProperty("imagenesUrls", out var imagenesUrlsProp))
                             {
                                 var imagenesUrls = new List<string>();
@@ -161,10 +160,9 @@ namespace GestionLlantera.Web.Controllers
 
         /// <summary>
         /// Obtiene productos paginados para la vista pública.
-        /// RENOMBRADO: Antes era ObtenerProductosParaFacturacion
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerProductosPublicos(
+        public async Task<IActionResult> ObtenerProductosParaFacturacion(
             string termino = "", 
             int page = 1, 
             int pageSize = 12,
