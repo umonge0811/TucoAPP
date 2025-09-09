@@ -282,7 +282,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Inicializar estilos y cálculo
         actualizarEstilosTarjetas();
-        calcularPrecio();
+        
+        // Realizar cálculo inicial basado en valores existentes
+        if (modoAutomaticoRadio.checked) {
+            calcularDesdeCoste();
+        }
+    }
+
+    // ========================================
+    // FUNCIÓN FALTANTE: calcularPrecio para inicialización
+    // ========================================
+    function calcularPrecio() {
+        if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
+            calcularDesdeCoste();
+        } else if (inputPrecioManual && inputPrecioManual.value) {
+            const precio = parseFloat(inputPrecioManual.value) || 0;
+            if (textoResumen && precio > 0) {
+                textoResumen.innerHTML = `<i class="bi bi-pencil me-1"></i>Precio establecido manualmente: ₡${precio.toLocaleString('es-CR', { minimumFractionDigits: 2 })}`;
+            }
+        }
     }
 
     // ========================================
