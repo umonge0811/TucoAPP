@@ -671,15 +671,12 @@ function mostrarResultadosProductos(productos) {
     console.log('🔄 === INICIO mostrarResultadosProductos ===');
     console.log('🔄 CONTADOR DE LLAMADAS:', contadorLlamadasMostrarResultados);
     console.log('🔄 Productos recibidos:', productos ? productos.length : 'null/undefined');
-
     const container = $('#resultadosBusqueda');
-
     if (!productos || productos.length === 0) {
         console.log('🔄 No hay productos, mostrando sin resultados');
         mostrarSinResultados('productos');
         return;
     }
-
     // ✅ CREAR HASH ÚNICO DEL CONTENIDO PARA DETECTAR CAMBIOS REALES
     const productosHash = JSON.stringify(productos.map(p => ({
         id: p.productoId || p.id,
@@ -687,14 +684,12 @@ function mostrarResultadosProductos(productos) {
         precio: p.precio,
         stock: p.cantidadEnInventario || p.stock
     })));
-
     // ✅ VARIABLE GLOBAL PARA RASTREAR EL ÚLTIMO HASH - SOLO OMITIR SI REALMENTE ES IDÉNTICO
     if (window.lastProductsHash === productosHash && productos.length > 0) {
         console.log('🔄 Productos idénticos detectados, omitiendo actualización DOM para prevenir parpadeo');
         console.log('🔄 === FIN mostrarResultadosProductos (sin cambios) ===');
         return;
     }
-
     // ✅ VERIFICAR SI EL CONTENEDOR YA TIENE CONTENIDO SIMILAR
     const currentContent = container.html().trim();
     if (currentContent && !currentContent.includes('spinner-border') && !currentContent.includes('Cargando')) {
@@ -704,7 +699,6 @@ function mostrarResultadosProductos(productos) {
             // Solo continuar si realmente hay cambios
         }
     }
-
     console.log('🔄 Construyendo HTML para', productos.length, 'productos');
     let html = '';
     productos.forEach((producto, index) => {
@@ -714,20 +708,16 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
-
         // ✅ MAPEO MEJORADO DE MEDIDA DE LLANTA
         let medidaCompleta = null;
         let esLlanta = producto.esLlanta || producto.EsLlanta || false;
-
         try {
             // Primero verificar si ya viene la medida completa
             medidaCompleta = producto.medidaCompleta || producto.MedidaCompleta;
-
             // Si no tiene medida completa pero es llanta, construirla desde los datos de llanta
             if (!medidaCompleta && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
                 esLlanta = true;
                 const llantaInfo = producto.llanta || producto.Llanta[0];
-
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
                         // Formato completo con perfil: 215/55/R16
@@ -738,7 +728,6 @@ function mostrarResultadosProductos(productos) {
                     }
                 }
             }
-
             // Si aún no tenemos medida, verificar propiedades alternativas del backend
             if (!medidaCompleta) {
                 // Verificar formatos alternativos que puedan venir del backend
@@ -755,7 +744,6 @@ function mostrarResultadosProductos(productos) {
             console.warn('⚠️ Error procesando información de llanta:', error);
             medidaCompleta = null;
         }
-
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
         let imagenUrl = '/images/no-image.png'; // Imagen por defecto
         try {
@@ -766,9 +754,7 @@ function mostrarResultadosProductos(productos) {
                     imagenesUrls: producto.imagenesUrls,
                     imagenes: producto.imagenes
                 });
-
                 let imagenesArray = [];
-
                 // Verificar imagenesProductos (formato principal desde la API)
                 if (producto.imagenesProductos && Array.isArray(producto.imagenesProductos) && producto.imagenesProductos.length > 0) {
                     imagenesArray = producto.imagenesProductos
@@ -795,11 +781,9 @@ function mostrarResultadosProductos(productos) {
                         .filter(url => url && url.trim() !== '');
                     console.log('🖼️ Imágenes desde imagenes:', imagenesArray);
                 }
-
                 if (imagenesArray.length > 0) {
                     let urlImagen = imagenesArray[0];
                     console.log('🖼️ URL original:', urlImagen);
-
                     if (urlImagen && urlImagen.trim() !== '') {
                         // Las URLs ya vienen completas desde la API, usar directamente
                         if (urlImagen.startsWith('http://') || urlImagen.startsWith('https://')) {
@@ -820,14 +804,11 @@ function mostrarResultadosProductos(productos) {
             console.warn('⚠️ Error procesando imágenes del producto:', error);
             imagenUrl = '/images/no-image.png';
         }
-
-        // CÁLCULO DE PRECIOS
+        // ✅ CÁLCULO DE PRECIOS CORREGIDO
         const precioBase = (typeof precio === 'number') ? precio : 0;
-        const precioEfectivo = precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador;
-        const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador;
-
+        const precioEfectivo = precioBase; // Usar directamente el precio (ya incluye IVA)
+        const precioTarjeta = precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador; // Solo aplicar 9% adicional
         const stockClase = cantidadInventario <= 0 ? 'border-danger' : cantidadInventario <= stockMinimo ? 'border-warning' : '';
-
         // OBJETO PRODUCTO LIMPIO
         const productoLimpio = {
             productoId: productoId,
@@ -840,14 +821,11 @@ function mostrarResultadosProductos(productos) {
             esLlanta: esLlanta,
             medidaCompleta: medidaCompleta
         };
-
         // ESCAPAR DATOS
         const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
-
         // ✅ AGREGAR MEDIDA DE LLANTA SI EXISTE
         let infoLlanta = '';
-
         console.log('🔧 Debug llanta:', {
             esLlanta: productoLimpio.esLlanta,
             medidaOriginal: producto.MedidaCompleta,
@@ -855,7 +833,6 @@ function mostrarResultadosProductos(productos) {
             medidaFinal: medidaCompleta,
             nombreProducto: producto.nombreProducto
         });
-
         if (productoLimpio.esLlanta && medidaCompleta) {
             infoLlanta = `
                 <div class="info-llanta mb-2">
@@ -863,7 +840,6 @@ function mostrarResultadosProductos(productos) {
                 </div>
             `;
         }
-
         html += `
                         <div class="col-md-6 col-lg-4 mb-3">
                             <div class="card h-100 producto-card ${stockClase}" data-producto-id="${productoId}">
@@ -1666,26 +1642,23 @@ function configurarEventosCantidad() {
 
 function actualizarTotales() {
     console.log('🧮 Actualizando totales...');
-
     // Combinar productos y servicios para el cálculo
     const todosLosItems = [
         ...(productosEnVenta || []),
         ...(window.serviciosEnVenta || [])
     ];
-
-    let subtotal = 0;
+    let total = 0;
     todosLosItems.forEach(item => {
-        subtotal += item.subtotal || (item.precioUnitario * item.cantidad);
+        total += item.subtotal || (item.precioUnitario * item.cantidad);
     });
-
-    const iva = subtotal * 0.13; // 13% IVA
-    const total = subtotal + iva;
+    // El precio ya incluye IVA del 13%, así que extraemos el IVA incluido
+    const subtotal = total / 1.13; // Precio sin IVA
+    const iva = total - subtotal;   // IVA que estaba incluido
     // ✅ AGREGAR SÍMBOLOS DE MONEDA AQUÍ
     $('#subtotalVenta').text('₡' + formatearMoneda(subtotal));
     $('#ivaVenta').text('₡' + formatearMoneda(iva));
     $('#totalVenta').text('₡' + formatearMoneda(total));
 }
-
 
 
 async function limpiarVenta() {
@@ -5098,11 +5071,11 @@ function mostrarErrorBusqueda(tipo, mensajeEspecifico = null) {
     `);
 }
 
-function formatearMoneda(valor) {
+function formatearMoneda(precio) {
     return new Intl.NumberFormat('es-CR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(valor || 0);
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(precio);
 }
 
 function mostrarToast(titulo, mensaje, tipo = 'info') {

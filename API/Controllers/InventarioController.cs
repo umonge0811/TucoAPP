@@ -104,9 +104,6 @@ namespace API.Controllers
                         UtilidadEnDinero = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
                             ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
                             : (decimal?)null,
-                        PrecioCalculado = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
-                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
-                            : p.Precio,
                         UsarCalculoAutomatico = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue),
                         p.Precio,
                         p.CantidadEnInventario,
