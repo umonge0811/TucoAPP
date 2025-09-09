@@ -427,7 +427,7 @@ function crearCardProducto(producto) {
     const precioBase = (typeof precio === 'number') ? precio : 0;
 
     // Calcular precio final con IVA (13%) para efectivo/transferencia/sinpe
-    const precioFinalEfectivo = (precioBase * CONFIGURACION_PRECIOS.efectivo.multiplicador) * 1.13;
+    const precioFinalEfectivo = precioBase ;
 
     // Para tarjeta se aplica el 5% adicional sobre el precio base + IVA
     const precioFinalTarjeta = (precioBase * CONFIGURACION_PRECIOS.tarjeta.multiplicador) * 1.13;
