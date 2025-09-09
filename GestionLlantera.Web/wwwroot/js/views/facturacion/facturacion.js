@@ -5071,11 +5071,11 @@ function mostrarErrorBusqueda(tipo, mensajeEspecifico = null) {
     `);
 }
 
-function formatearMoneda(valor) {
+function formatearMoneda(precio) {
     return new Intl.NumberFormat('es-CR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(valor || 0);
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(precio);
 }
 
 function mostrarToast(titulo, mensaje, tipo = 'info') {
