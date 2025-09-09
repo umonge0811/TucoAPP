@@ -1,11 +1,5 @@
 // ===== FACTURACIÓN - JAVASCRIPT PRINCIPAL =====
 
-// Agregar estas variables al inicio del archivo, junto con las otras variables globales
-let paginaActualProductos = 1;
-let totalPaginasProductos = 1;
-let productosPorPagina = 20;
-let ultimoTerminoBusqueda = 'todas';
-
 
 // Variable global para marcar reimpresiones
 let esReimpresionActual = false;
@@ -48,57 +42,6 @@ const CONFIGURACION_PRECIOS = {
 let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 let detallesPagoActuales = []; // Array para manejar múltiples pagos
 let esPagoMultiple = false; // Flag para determinar si es pago múltiple
-
-
-// Función para cambiar página
-function cambiarPaginaProductos(nuevaPagina) {
-    if (nuevaPagina >= 1 && nuevaPagina <= totalPaginasProductos) {
-        paginaActualProductos = nuevaPagina;
-        buscarProductos(ultimoTerminoBusqueda);
-    }
-}
-// Función para mostrar controles de paginación
-function mostrarPaginacionProductos(totalPaginas, paginaActual) {
-    totalPaginasProductos = totalPaginas;
-
-    if (totalPaginas <= 1) {
-        $('#paginacionProductos').hide();
-        return;
-    }
-    let html = '<nav><ul class="pagination justify-content-center">';
-
-    // Botón anterior
-    if (paginaActual > 1) {
-        html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProductos(${paginaActual - 1})">
-                        <i class="bi bi-chevron-left"></i>
-                    </a>
-                </li>`;
-    }
-
-    // Páginas
-    const inicio = Math.max(1, paginaActual - 2);
-    const fin = Math.min(totalPaginas, inicio + 4);
-
-    for (let i = inicio; i <= fin; i++) {
-        const active = i === paginaActual ? 'active' : '';
-        html += `<li class="page-item ${active}">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProductos(${i})">${i}</a>
-                </li>`;
-    }
-
-    // Botón siguiente
-    if (paginaActual < totalPaginas) {
-        html += `<li class="page-item">
-                    <a class="page-link" href="#" onclick="cambiarPaginaProductos(${paginaActual + 1})">
-                        <i class="bi bi-chevron-right"></i>
-                    </a>
-                </li>`;
-    }
-
-    html += '</ul></nav>';
-    $('#paginacionProductos').html(html).show();
-}
 
 // ===== FUNCIÓN AUXILIAR PARA BUSCAR PERMISOS =====
 function buscarPermiso(permisos, nombrePermiso) {
@@ -542,13 +485,11 @@ function configurarEventos() {
 }
 
 // ===== BÚSQUEDA DE PRODUCTOS =====
-// ===== BÚSQUEDA DE PRODUCTOS CON PAGINACIÓN =====
-async function buscarProductos(termino = '', pagina = 1, tamano = 20) {
+async function buscarProductos(termino) {
     contadorLlamadasBusqueda++;
-    console.log('🔍 === INICIO buscarProductos CON PAGINACIÓN ===');
+    console.log('🔍 === INICIO buscarProductos ===');
     console.log('🔍 CONTADOR DE LLAMADAS:', contadorLlamadasBusqueda);
     console.log('🔍 Término recibido:', `"${termino}"`);
-    console.log('🔍 Página:', pagina, 'Tamaño:', tamano);
     console.log('🔍 busquedaEnProceso:', busquedaEnProceso);
     console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
 
@@ -559,7 +500,7 @@ async function buscarProductos(termino = '', pagina = 1, tamano = 20) {
     }
 
     // ✅ PREVENIR BÚSQUEDAS DUPLICADAS SOLO SI NO ES FORZADA
-    if (termino === ultimaBusqueda && cargaInicialCompletada && window.lastProductsHash && pagina === 1) {
+    if (termino === ultimaBusqueda && cargaInicialCompletada && window.lastProductsHash) {
         console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
         return;
     }
@@ -569,19 +510,9 @@ async function buscarProductos(termino = '', pagina = 1, tamano = 20) {
         busquedaEnProceso = true;
         ultimaBusqueda = termino;
 
-        // ✅ MOSTRAR LOADING SOLO PARA LA PRIMERA PÁGINA
-        if (pagina === 1) {
-            mostrarCargandoProductos();
-        }
+        // ✅ NO MOSTRAR LOADING PARA PREVENIR PARPADEO - El contenido se actualiza solo si hay cambios reales
 
-        // ✅ CONSTRUIR URL CON PARÁMETROS DE PAGINACIÓN
-        const params = new URLSearchParams({
-            termino: termino || 'todas',
-            pagina: pagina,
-            tamano: tamano
-        });
-
-        const response = await fetch(`/Facturacion/ObtenerProductosParaFacturacion?${params}`, {
+        const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
@@ -597,18 +528,14 @@ async function buscarProductos(termino = '', pagina = 1, tamano = 20) {
         }
 
         const data = await response.json();
-        console.log('📋 Respuesta del servidor recibida con paginación');
-        console.log('📋 Total productos en respuesta:', data.productos?.length || 0);
-        console.log('📋 Total productos disponibles:', data.totalProductos || 0);
-        console.log('📋 Página actual:', data.pagina || 1);
-        console.log('📋 Total páginas:', data.totalPaginas || 1);
+        console.log('📋 Respuesta del servidor recibida');
 
         if (data && data.productos) {
-            console.log(`✅ Se encontraron ${data.productos.length} productos en página ${data.pagina}`);
+            console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
 
-            // ✅ APLICAR FILTROS ADICIONALES DE BÚSQUEDA SI ES NECESARIO
+            // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (si es necesario)
             let productosFiltrados = data.productos;
-            if (termino && termino.length >= 2 && termino !== 'todas') {
+            if (termino && termino.length >= 2) {
                 const terminoBusqueda = termino.toLowerCase();
                 productosFiltrados = data.productos.filter(producto => {
                     const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
@@ -634,169 +561,110 @@ async function buscarProductos(termino = '', pagina = 1, tamano = 20) {
                                     `${ancho}/R${diametro}`,
 
                                     // Formatos sin R - ESTOS SON LOS PRINCIPALES
+                                    `${ancho}/${perfil}/${diametro}`,  // 225/50/15
+                                    `${ancho}-${perfil}-${diametro}`,  // 225-50-15
+                                    `${ancho}-${perfil}/${diametro}`,  // 225-50/15
+                                    `${ancho}x${perfil}x${diametro}`,  // 225x50x15
+                                    `${ancho} ${perfil} ${diametro}`,  // 225 50 15
+
+                                    // Formatos adicionales sin perfil
+                                    `${ancho}/${diametro}`,
+                                    `${ancho}-${diametro}`,
+                                    `${ancho}x${diametro}`,
+                                    `${ancho} ${diametro}`,
+
                                     // Componentes individuales
                                     `${ancho}`,
                                     `${perfil}`,
                                     `${diametro}`,
 
-                                    // Combinaciones comunes
-                                    `${ancho}/${perfil}`,
-                                    `${ancho}${perfil}`,
-                                    `${ancho} ${perfil}`,
-                                    `${ancho}-${perfil}`,
-
-                                    // Con diámetro pero sin R
-                                    `${ancho}/${perfil}/${diametro}`,
-                                    `${ancho}/${perfil} ${diametro}`,
-                                    `${ancho}-${perfil}-${diametro}`,
-                                    `${ancho} ${perfil} ${diametro}`,
-
-                                    // Formatos compactos
-                                    `${ancho}${perfil}${diametro}`,
-                                    `${ancho}/${diametro}`,
-                                    `${ancho} ${diametro}`,
-                                    `${ancho}-${diametro}`
+                                    // Solo el diametro con R para compatibilidad
+                                    `R${diametro}`
                                 ];
 
-                                // Verificar si algún formato coincide
-                                cumpleBusqueda = formatosBusqueda.some(formato =>
-                                    formato.toLowerCase().includes(terminoBusqueda)
-                                );
+                                // Crear texto de búsqueda unificado
+                                const textoBusquedaLlanta = formatosBusqueda
+                                    .filter(formato => formato && formato.trim() !== '')
+                                    .join(' ')
+                                    .toLowerCase();
+
+                                cumpleBusqueda = textoBusquedaLlanta.includes(terminoBusqueda);
                             }
                         } catch (error) {
-                            console.warn('⚠️ Error procesando medidas de llanta:', error);
+                            console.warn('⚠️ Error procesando medida de llanta para búsqueda:', error);
                         }
                     }
 
-                    // ✅ BUSCAR EN MARCA Y MODELO DE LLANTAS
-                    if (!cumpleBusqueda && producto.llanta) {
-                        const marca = (producto.llanta.marca || '').toLowerCase();
-                        const modelo = (producto.llanta.modelo || '').toLowerCase();
-                        cumpleBusqueda = marca.includes(terminoBusqueda) || modelo.includes(terminoBusqueda);
+                    // ✅ BUSCAR EN PROPIEDADES ALTERNATIVAS DE MEDIDAS
+                    if (!cumpleBusqueda && (producto.Ancho || producto.Diametro || producto.Perfil)) {
+                        try {
+                            const ancho = producto.Ancho || '';
+                            const perfil = producto.Perfil || '';
+                            const diametro = producto.Diametro || '';
+
+                            // Todos los formatos alternativos sin requerir R
+                            const formatosAlternativos = [
+                                // Con R (compatibilidad)
+                                `${ancho}/${perfil}/R${diametro}`,
+                                `${ancho}/R${diametro}`,
+
+                                // Sin R - FORMATOS PRINCIPALES
+                                `${ancho}/${perfil}/${diametro}`,  // 225/50/15
+                                `${ancho}-${perfil}-${diametro}`,  // 225-50-15
+                                `${ancho}-${perfil}/${diametro}`,  // 225-50/15
+                                `${ancho}x${perfil}x${diametro}`,  // 225x50x15
+                                `${ancho} ${perfil} ${diametro}`,  // 225 50 15
+
+                                // Sin perfil
+                                `${ancho}/${diametro}`,
+                                `${ancho}-${diametro}`,
+                                `${ancho}x${diametro}`,
+                                `${ancho} ${diametro}`,
+
+                                // Individuales
+                                `${ancho}`, `${perfil}`, `${diametro}`, `R${diametro}`
+                            ];
+
+                            const medidaAlternativa = formatosAlternativos
+                                .filter(formato => formato && formato.trim() !== '')
+                                .join(' ')
+                                .toLowerCase();
+
+                            cumpleBusqueda = medidaAlternativa.includes(terminoBusqueda);
+                        } catch (error) {
+                            console.warn('⚠️ Error procesando medidas alternativas:', error);
+                        }
                     }
 
                     return cumpleBusqueda;
                 });
-
-                console.log(`🔍 Productos después del filtro local: ${productosFiltrados.length}`);
+                console.log(`🔍 Productos filtrados por término "${termino}" (incluyendo medidas): ${productosFiltrados.length}`);
             }
 
-            // ✅ MOSTRAR PRODUCTOS EN LA INTERFAZ
-            if (pagina === 1) {
-                // Primera página: reemplazar contenido
-                mostrarProductosEnInterfaz(productosFiltrados);
-            } else {
-                // Páginas siguientes: agregar contenido
-                agregarProductosAInterfaz(productosFiltrados);
-            }
+            mostrarResultadosProductos(productosFiltrados);
 
-            // ✅ ACTUALIZAR CONTROLES DE PAGINACIÓN
-            actualizarControlesPaginacion({
-                paginaActual: data.pagina || pagina,
-                totalPaginas: data.totalPaginas || 1,
-                totalProductos: data.totalProductos || productosFiltrados.length,
-                hayMasPaginas: data.hayMasPaginas || false
-            });
-
-            // ✅ MARCAR CARGA INICIAL COMO COMPLETADA
-            if (pagina === 1) {
+            // ✅ MARCAR CARGA INICIAL COMO COMPLETADA SI ES UNA BÚSQUEDA VACÍA (PRIMERA CARGA)
+            if (termino === '' && !cargaInicialCompletada) {
                 cargaInicialCompletada = true;
-                // Generar hash para evitar duplicados
-                window.lastProductsHash = JSON.stringify(productosFiltrados.map(p => p.productoId)).hashCode();
+                console.log('📦 Carga inicial marcada como completada después de primera búsqueda exitosa');
             }
 
-            console.log('✅ Búsqueda con paginación completada exitosamente');
-
+            console.log('📦 Productos mostrados exitosamente');
         } else {
-            console.warn('⚠️ Respuesta exitosa pero sin productos válidos:', data);
-            if (pagina === 1) {
-                mostrarMensajeVacio('No se encontraron productos disponibles');
-            }
+            const errorMessage = data.message || 'Error desconocido al obtener productos';
+            console.error('❌ Error en la respuesta:', errorMessage);
+            mostrarResultadosProductos([]);
+            mostrarToast('Error', errorMessage, 'danger');
         }
 
     } catch (error) {
-        console.error('❌ Error en búsqueda con paginación:', error);
-        if (pagina === 1) {
-            mostrarErrorBusqueda('Error al buscar productos: ' + error.message);
-        } else {
-            mostrarToast('Error', 'Error cargando más productos', 'danger');
-        }
+        console.error('❌ Error buscando productos:', error);
+        mostrarErrorBusqueda('productos', error.message);
     } finally {
         busquedaEnProceso = false;
-        if (pagina === 1) {
-            ocultarCargandoProductos();
-        }
-        console.log('🔍 === FIN buscarProductos CON PAGINACIÓN ===');
+        console.log('🔍 === FIN buscarProductos ===');
     }
 }
-
-// ✅ FUNCIÓN AUXILIAR PARA AGREGAR PRODUCTOS A LA INTERFAZ (SIN REEMPLAZAR)
-function agregarProductosAInterfaz(productos) {
-    if (!productos || productos.length === 0) return;
-
-    const container = $('#productosContainer');
-    if (!container.length) return;
-
-    productos.forEach(producto => {
-        const productoHTML = generarHTMLProducto(producto);
-        container.append(productoHTML);
-    });
-
-    console.log(`➕ Agregados ${productos.length} productos adicionales a la interfaz`);
-}
-
-// ✅ FUNCIÓN AUXILIAR PARA ACTUALIZAR CONTROLES DE PAGINACIÓN
-function actualizarControlesPaginacion(datosP paginacion) {
-    console.log('📄 Actualizando controles de paginación:', datosP paginacion);
-
-    // Actualizar información de página
-    const infoPagina = $('#infoPaginacion');
-    if (infoPagina.length) {
-        infoPagina.text(`Página ${datosP paginacion.paginaActual} de ${datosP paginacion.totalPaginas } (${datosP paginacion.totalProductos } productos)`);
-    }
-
-    // Mostrar/ocultar botón "Cargar más"
-    const btnCargarMas = $('#btnCargarMasProductos');
-    if (btnCargarMas.length) {
-        if (datosP paginacion.hayMasPaginas && datosP paginacion.paginaActual < datosP paginacion.totalPaginas) {
-            btnCargarMas.show().removeClass('d-none');
-        } else {
-            btnCargarMas.hide().addClass('d-none');
-        }
-    }
-
-    // Actualizar controles de navegación si existen
-    const paginacionContainer = $('#paginacionContainer');
-    if (paginacionContainer.length && datosP paginacion.totalPaginas > 1) {
-        generarControlesPaginacion(datosP paginacion);
-    }
-}
-
-// ✅ FUNCIÓN PARA CARGAR MÁS PRODUCTOS (SIGUIENTE PÁGINA)
-async function cargarMasProductos() {
-    const paginaActual = parseInt($('#infoPaginacion').data('pagina-actual') || '1');
-    const terminoBusqueda = $('#busquedaInput').val() || '';
-    
-    console.log('➕ Cargando más productos - página:', paginaActual + 1);
-    
-    await buscarProductos(terminoBusqueda, paginaActual + 1, 20);
-}
-
-// ✅ FUNCIÓN AUXILIAR PARA GENERAR HASH DE STRING
-String.prototype.hashCode = function() {
-    var hash = 0;
-    if (this.length == 0) {
-        return hash;
-    }
-    for (var i = 0; i < this.length; i++) {
-        var char = this.charCodeAt(i);
-        hash = ((hash<<5)-hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash;
-};
-
-
 
 function mostrarResultadosProductos(productos) {
     contadorLlamadasMostrarResultados++;
