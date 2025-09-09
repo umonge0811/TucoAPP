@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace tuco.Clases.Models;
@@ -9,9 +9,9 @@ public partial class Llanta
 
     public int? ProductoId { get; set; }
 
-    public int? Ancho { get; set; }
+    public decimal? Ancho { get; set; }
 
-    public int? Perfil { get; set; }
+    public decimal? Perfil { get; set; }
 
     public string? Diametro { get; set; }
 

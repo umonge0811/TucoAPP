@@ -1,0 +1,56 @@
+
+        function actualizarVisualizacionPrecio(costo, precioFinal, utilidadDinero, margenPorcentaje) {
+            // Animación suave
+            if (precioCalculado) {
+                precioCalculado.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    precioCalculado.style.transform = 'scale(1)';
+                }, 200);
+
+                precioCalculado.value = precioFinal.toLocaleString('es-CR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
+            if (desglosePrecio) {
+                desglosePrecio.innerHTML = `
+                    <i class="bi bi-calculator me-1"></i>
+                    Utilidad: ?${utilidadDinero.toLocaleString('es-CR', { minimumFractionDigits: 2 })} 
+                    (${margenPorcentaje.toFixed(1)}%)
+                `;
+            }
+
+            if (textoResumen) {
+                const margenClass = margenPorcentaje >= 30 ? 'text-success' : margenPorcentaje >= 15 ? 'text-warning' : 'text-danger';
+                textoResumen.innerHTML = `
+                    <i class="bi bi-check-circle me-1 text-success"></i>
+                    <strong>Precio final: ?${precioFinal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong> 
+                    <span class="${margenClass}">(${margenPorcentaje.toFixed(1)}% de margen)</span>
+                `;
+            }
+        }
+
+        function limpiarCalculos() {
+            if (precioCalculado) {
+                precioCalculado.value = '0.00';
+            }
+
+            if (desglosePrecio) {
+                desglosePrecio.innerHTML = `
+                    <i class="bi bi-dash-circle me-1"></i>
+                    Utilidad: ?0.00
+                `;
+            }
+
+            if (textoResumen) {
+                textoResumen.innerHTML = `
+                    <i class="bi bi-info-circle me-1"></i>
+                    Ingrese el costo y configure el precio de venta o margen de utilidad
+                `;
+            }
+
+            // Limpiar campos ocultos
+            if (hiddenPorcentajeUtilidad) hiddenPorcentajeUtilidad.value = '';
+            if (hiddenPrecio) hiddenPrecio.value = '';
+        }
