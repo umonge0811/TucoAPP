@@ -1,4 +1,4 @@
-﻿@model Tuco.Clases.DTOs.Inventario.ProductoDTO
+@model Tuco.Clases.DTOs.Inventario.ProductoDTO
 @{
     ViewData["Title"] = "Editar Producto";
     Layout = "_AdminLayout";
@@ -237,36 +237,45 @@
                         </h3>
                     </div>
                     <div class="card-body">
-                        <!-- Selector de modo de precio -->
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Método de Configuración de Precio</label>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="card h-100" id="cardAutomatico">
-                                        <div class="card-body text-center">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="modoPrecio" id="modoAutomatico" value="automatico"
-                                                       @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "checked" : "")>
-                                                <label class="form-check-label fw-bold" for="modoAutomatico">
-                                                    <i class="bi bi-gear-fill text-primary me-2" style="font-size: 1.5em;"></i>
-                                                    <div>Cálculo Automático</div>
-                                                    <small class="text-muted">Costo + Porcentaje de Utilidad</small>
-                                                </label>
+                        <!-- Selección de Modo de Precio -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <label class="form-label fw-bold mb-3">
+                                    <i class="bi bi-gear me-2"></i>Método de Configuración de Precio
+                                </label>
+                                <div class="row">
+                                    <!-- Tarjeta Modo Automático -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100 cursor-pointer" id="cardAutomatico">
+                                            <div class="card-body text-center">
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input" type="radio" name="modoPrecio"
+                                                           id="modoAutomatico" value="automatico"
+                                                           @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "checked" : "")>
+                                                    <label class="form-check-label w-100" for="modoAutomatico">
+                                                        <i class="bi bi-calculator display-6 text-primary d-block mb-2"></i>
+                                                        <h6 class="fw-bold">Cálculo Automático</h6>
+                                                        <small class="text-muted">Basado en costo + utilidad</small>
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="card h-100" id="cardManual">
-                                        <div class="card-body text-center">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="modoPrecio" id="modoManual" value="manual"
-                                                       @(!Model.Costo.HasValue || !Model.PorcentajeUtilidad.HasValue ? "checked" : "")>
-                                                <label class="form-check-label fw-bold" for="modoManual">
-                                                    <i class="bi bi-pencil-fill text-warning me-2" style="font-size: 1.5em;"></i>
-                                                    <div>Precio Manual</div>
-                                                    <small class="text-muted">Establecer precio directamente</small>
-                                                </label>
+
+                                    <!-- Tarjeta Modo Manual -->
+                                    <div class="col-md-6">
+                                        <div class="card h-100 cursor-pointer" id="cardManual">
+                                            <div class="card-body text-center">
+                                                <div class="form-check mb-0">
+                                                    <input class="form-check-input" type="radio" name="modoPrecio"
+                                                           id="modoManual" value="manual"
+                                                           @(!Model.Costo.HasValue || !Model.PorcentajeUtilidad.HasValue ? "checked" : "")>
+                                                    <label class="form-check-label w-100" for="modoManual">
+                                                        <i class="bi bi-pencil display-6 text-warning d-block mb-2"></i>
+                                                        <h6 class="fw-bold">Precio Manual</h6>
+                                                        <small class="text-muted">Precio fijo establecido</small>
+                                                    </label>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -274,86 +283,95 @@
                             </div>
                         </div>
 
-                        <!-- Campos para cálculo automático -->
-                        <div id="camposAutomaticos" style="display: @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "block" : "none");">
-                            <div class="alert alert-info d-flex align-items-center mb-3">
+                        <!-- Campos para Cálculo Automático -->
+                        <div id="camposAutomaticos" style="display: @(Model.Costo.HasValue && Model.PorcentajeUtilidad.HasValue ? "block" : "none")">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-calculator me-2"></i>Configuración Automática
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="inputCosto" class="form-label fw-bold">
+                                                <i class="bi bi-cash-coin me-1"></i>Precio de Costo *
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">₡</span>
+                                                <input type="number" step="0.01" min="0" class="form-control"
+                                                       id="inputCosto" asp-for="Costo" placeholder="0.00">
+                                            </div>
+                                            <small class="text-muted">Costo de adquisición del producto</small>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="inputUtilidad" class="form-label fw-bold">
+                                                <i class="bi bi-percent me-1"></i>Porcentaje de Utilidad *
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="number" step="0.01" min="0" class="form-control"
+                                                       id="inputUtilidad" asp-for="PorcentajeUtilidad" placeholder="0.00">
+                                                <span class="input-group-text bg-light">%</span>
+                                            </div>
+                                            <small class="text-muted">Margen de ganancia deseado</small>
+                                        </div>
+                                    </div>
+
+                                    <!-- Resultado del Cálculo -->
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <label for="precioCalculado" class="form-label fw-bold">
+                                                <i class="bi bi-currency-dollar me-1"></i>Precio Final Calculado
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-success text-white">₡</span>
+                                                <input type="text" class="form-control bg-light fw-bold"
+                                                       id="precioCalculado" readonly placeholder="0.00">
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-muted d-block" id="desglosePrecio">
+                                                    <i class="bi bi-info-circle me-1"></i>
+                                                    Ingrese costo y utilidad para ver el cálculo
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campo para Precio Manual -->
+                        <div id="campoManual" style="display: @(!Model.Costo.HasValue || !Model.PorcentajeUtilidad.HasValue ? "block" : "none")">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-dark">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-pencil me-2"></i>Precio Manual
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="inputPrecioManual" class="form-label fw-bold">
+                                                <i class="bi bi-currency-dollar me-1"></i>Precio de Venta *
+                                            </label>
+                                            <div class="input-group">
+                                                <span class="input-group-text bg-light">₡</span>
+                                                <input type="number" step="0.01" min="0.01" class="form-control"
+                                                       id="inputPrecioManual" asp-for="Precio" placeholder="0.00">
+                                            </div>
+                                            <small class="text-muted">Precio fijo de venta al público</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Resumen Visual del Precio -->
+                        <div class="mt-3">
+                            <div class="alert alert-info mb-0" id="textoResumen">
                                 <i class="bi bi-info-circle me-2"></i>
-                                <span>El precio se calculará automáticamente: <strong>Precio = Costo + (Costo × % Utilidad)</strong></span>
+                                <span>Seleccione un método de configuración de precio</span>
                             </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label asp-for="Costo" class="form-label fw-bold">
-                                            <i class="bi bi-cash-coin me-1"></i>
-                                            Costo del Producto
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <span class="input-group-text">₡</span>
-                                            <input asp-for="Costo" type="number" step="0.01" min="0" class="form-control" id="inputCosto" />
-                                        </div>
-                                        <span asp-validation-for="Costo" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label asp-for="PorcentajeUtilidad" class="form-label fw-bold">
-                                            <i class="bi bi-percent me-1"></i>
-                                            Porcentaje de Utilidad
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <input asp-for="PorcentajeUtilidad" type="number" step="0.01" min="0" max="999" class="form-control" id="inputUtilidad" />
-                                            <span class="input-group-text">%</span>
-                                        </div>
-                                        <span asp-validation-for="PorcentajeUtilidad" class="text-danger"></span>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label class="form-label fw-bold text-success">
-                                            <i class="bi bi-currency-dollar me-1"></i>
-                                            Precio Final
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <span class="input-group-text bg-success text-white">₡</span>
-                                            <input type="text" class="form-control bg-light text-success fw-bold" id="precioCalculado" readonly style="font-size: 1.2em;" />
-                                        </div>
-                                        <div class="form-text">
-                                            <small id="desglosePrecio" class="text-muted"></small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Campo para precio manual -->
-                        <div id="campoManual" style="display: @(!Model.Costo.HasValue || !Model.PorcentajeUtilidad.HasValue ? "block" : "none");">
-                            <div class="alert alert-warning d-flex align-items-center mb-3">
-                                <i class="bi bi-exclamation-triangle me-2"></i>
-                                <span>Estableciendo precio manualmente. No se calculará automáticamente el margen de utilidad.</span>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label asp-for="Precio" class="form-label fw-bold">
-                                            <i class="bi bi-tag me-1"></i>
-                                            Precio de Venta
-                                        </label>
-                                        <div class="input-group input-group-lg">
-                                            <span class="input-group-text">₡</span>
-                                            <input asp-for="Precio" type="number" step="0.01" min="0" class="form-control" id="inputPrecioManual" />
-                                        </div>
-                                        <span asp-validation-for="Precio" class="text-danger"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Resumen visual -->
-                        <div class="alert alert-success d-flex align-items-center" id="resumenPrecio">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <span id="textoResumen" class="fw-bold">Precio actual configurado</span>
                         </div>
                     </div>
                 </div>

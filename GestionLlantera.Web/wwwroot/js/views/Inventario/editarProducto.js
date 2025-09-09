@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('🚀 EditarProducto - Inicializando...');
 
     // Referencias a elementos del DOM
@@ -560,9 +560,9 @@
 
         // Validar campos requeridos básicos (excluyendo medidas de llantas)
         camposRequeridos.forEach(campo => {
-            // Saltar validación de medidas de llantas - permitir cualquier valor (ya se validan abajo si el modo es automático)
+            // Saltar validación de medidas de llantas - permitir cualquier valor
             if (campo.name === 'Llanta.Ancho' || campo.name === 'Llanta.Perfil' || campo.name === 'Llanta.Diametro') {
-                return; // No hacer nada para estos campos aquí
+                return;
             }
 
             if (!campo.value.trim()) {
@@ -572,23 +572,28 @@
             }
         });
 
+        // Validación específica para configuración de precios
         if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
-            if (!inputCosto || !inputCosto.value || parseFloat(inputCosto.value) <= 0) {
-                if (inputCosto) inputCosto.classList.add('is-invalid');
-                esValido = false;
+            // Modo automático: validar costo y utilidad
+            const costoValue = inputCosto ? parseFloat(inputCosto.value) || 0 : 0;
+            const utilidadValue = inputUtilidad ? parseFloat(inputUtilidad.value) || 0 : 0;
+
+            if (costoValue <= 0) {
+                mostrarError('El costo es obligatorio y debe ser mayor a 0', inputCosto);
+            } else {
+                limpiarError(inputCosto);
             }
-            
-            const precioVenta = inputPrecioVenta ? parseFloat(inputPrecioVenta.value) || 0 : 0;
-            const margenPorcentaje = inputMargenPorcentaje ? parseFloat(inputMargenPorcentaje.value) || 0 : 0;
-            
-            if (precioVenta <= 0 && margenPorcentaje <= 0) {
-                if (inputPrecioVenta) inputPrecioVenta.classList.add('is-invalid');
-                if (inputMargenPorcentaje) inputMargenPorcentaje.classList.add('is-invalid');
-                esValido = false;
+
+            if (utilidadValue < 0) {
+                mostrarError('La utilidad no puede ser negativa', inputUtilidad);
+            } else {
+                limpiarError(inputUtilidad);
             }
         } else if (modoManualRadio && modoManualRadio.checked) {
-            const precioManual = inputPrecioManual ? parseFloat(inputPrecioManual.value) || 0 : 0;
-            if (precioManual <= 0) {
+            // Modo manual: validar precio manual
+            const precioManualValue = inputPrecioManual ? parseFloat(inputPrecioManual.value) || 0 : 0;
+            
+            if (precioManualValue <= 0) {
                 mostrarError('El precio manual es obligatorio y debe ser mayor a 0', inputPrecioManual);
             } else {
                 limpiarError(inputPrecioManual);
