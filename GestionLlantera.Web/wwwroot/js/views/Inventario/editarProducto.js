@@ -530,12 +530,45 @@
         let esValido = true;
         const camposRequeridos = form.querySelectorAll('[required]');
 
-        camposRequeridos.forEach(campo => {
-            if (!campo.value.trim()) {
+        // Función auxiliar para mostrar errores, ahora maneja el campo específico
+        function mostrarError(mensaje, campo) {
+            if (campo) {
                 campo.classList.add('is-invalid');
-                esValido = false;
-            } else {
+                const feedback = campo.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = mensaje;
+                } else {
+                    const divFeedback = document.createElement('div');
+                    divFeedback.classList.add('invalid-feedback');
+                    divFeedback.textContent = mensaje;
+                    campo.parentNode.insertBefore(divFeedback, campo.nextSibling);
+                }
+            }
+            esValido = false;
+        }
+
+        // Función auxiliar para limpiar errores
+        function limpiarError(campo) {
+            if (campo) {
                 campo.classList.remove('is-invalid');
+                const feedback = campo.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = '';
+                }
+            }
+        }
+
+        // Validar campos requeridos básicos (excluyendo medidas de llantas)
+        camposRequeridos.forEach(campo => {
+            // Saltar validación de medidas de llantas - permitir cualquier valor (ya se validan abajo si el modo es automático)
+            if (campo.name === 'Llanta.Ancho' || campo.name === 'Llanta.Perfil' || campo.name === 'Llanta.Diametro') {
+                return; // No hacer nada para estos campos aquí
+            }
+
+            if (!campo.value.trim()) {
+                mostrarError('Este campo es obligatorio', campo);
+            } else {
+                limpiarError(campo);
             }
         });
 
@@ -544,14 +577,21 @@
                 if (inputCosto) inputCosto.classList.add('is-invalid');
                 esValido = false;
             }
-            if (!inputUtilidad || !inputUtilidad.value || parseFloat(inputUtilidad.value) < 0) {
-                if (inputUtilidad) inputUtilidad.classList.add('is-invalid');
+            
+            const precioVenta = inputPrecioVenta ? parseFloat(inputPrecioVenta.value) || 0 : 0;
+            const margenPorcentaje = inputMargenPorcentaje ? parseFloat(inputMargenPorcentaje.value) || 0 : 0;
+            
+            if (precioVenta <= 0 && margenPorcentaje <= 0) {
+                if (inputPrecioVenta) inputPrecioVenta.classList.add('is-invalid');
+                if (inputMargenPorcentaje) inputMargenPorcentaje.classList.add('is-invalid');
                 esValido = false;
             }
         } else if (modoManualRadio && modoManualRadio.checked) {
-            if (!inputPrecioManual || !inputPrecioManual.value || parseFloat(inputPrecioManual.value) <= 0) {
-                if (inputPrecioManual) inputPrecioManual.classList.add('is-invalid');
-                esValido = false;
+            const precioManual = inputPrecioManual ? parseFloat(inputPrecioManual.value) || 0 : 0;
+            if (precioManual <= 0) {
+                mostrarError('El precio manual es obligatorio y debe ser mayor a 0', inputPrecioManual);
+            } else {
+                limpiarError(inputPrecioManual);
             }
         }
 
@@ -601,12 +641,8 @@
             console.log('🗑️ Lista completa:', imagenesAEliminar);
 
             if (imagenesAEliminar.length > 0) {
+                // Agregar cada ID una vez para evitar duplicados en el FormData si se hace con append multiple times
                 imagenesAEliminar.forEach((id, index) => {
-                    formData.append(`imagenesAEliminar[${index}]`, id.toString());
-                    console.log(`📎 Agregando eliminación [${index}]: ${id}`);
-                });
-
-                imagenesAEliminar.forEach(id => {
                     formData.append('imagenesAEliminar', id.toString());
                 });
 
