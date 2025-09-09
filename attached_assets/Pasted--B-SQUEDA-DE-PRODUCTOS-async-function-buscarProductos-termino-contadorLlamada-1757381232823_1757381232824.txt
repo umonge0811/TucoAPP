@@ -1,0 +1,181 @@
+// ===== BÚSQUEDA DE PRODUCTOS =====
+async function buscarProductos(termino) {
+    contadorLlamadasBusqueda++;
+    console.log('🔍 === INICIO buscarProductos ===');
+    console.log('🔍 CONTADOR DE LLAMADAS:', contadorLlamadasBusqueda);
+    console.log('🔍 Término recibido:', `"${termino}"`);
+    console.log('🔍 busquedaEnProceso:', busquedaEnProceso);
+    console.log('🔍 ultimaBusqueda:', `"${ultimaBusqueda}"`);
+
+    // ✅ PERMITIR INTERRUMPIR BÚSQUEDAS PARA CAMPO VACÍO
+    if (busquedaEnProceso && termino.length > 0) {
+        console.log('⏸️ Búsqueda ya en proceso, omitiendo llamada duplicada');
+        return;
+    }
+
+    // ✅ PREVENIR BÚSQUEDAS DUPLICADAS SOLO SI NO ES FORZADA
+    if (termino === ultimaBusqueda && cargaInicialCompletada && window.lastProductsHash) {
+        console.log('⏸️ Búsqueda duplicada del mismo término omitida:', termino);
+        return;
+    }
+
+    try {
+        console.log('🔍 Iniciando búsqueda válida...');
+        busquedaEnProceso = true;
+        ultimaBusqueda = termino;
+
+        // ✅ NO MOSTRAR LOADING PARA PREVENIR PARPADEO - El contenido se actualiza solo si hay cambios reales
+
+        const response = await fetch('/Facturacion/ObtenerProductosParaFacturacion', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log('📋 Respuesta del servidor recibida');
+
+        if (data && data.productos) {
+            console.log(`✅ Se encontraron ${data.productos.length} productos disponibles`);
+
+            // ✅ FILTRAR PRODUCTOS SEGÚN EL TÉRMINO DE BÚSQUEDA (si es necesario)
+            let productosFiltrados = data.productos;
+            if (termino && termino.length >= 2) {
+                const terminoBusqueda = termino.toLowerCase();
+                productosFiltrados = data.productos.filter(producto => {
+                    const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
+                    const descripcion = (producto.descripcion || producto.Descripcion || '').toLowerCase();
+
+                    // ✅ BUSCAR EN NOMBRE Y DESCRIPCIÓN
+                    let cumpleBusqueda = nombre.includes(terminoBusqueda) || descripcion.includes(terminoBusqueda);
+
+                    // ✅ BUSCAR EN MEDIDAS DE LLANTAS (TODOS LOS FORMATOS SIN REQUERIR R)
+                    if (!cumpleBusqueda && (producto.llanta || (producto.Llanta && producto.Llanta.length > 0))) {
+                        try {
+                            const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                            if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                                const ancho = llantaInfo.ancho;
+                                const perfil = llantaInfo.perfil || '';
+                                const diametro = llantaInfo.diametro;
+
+                                // Crear TODOS los formatos de medida para búsqueda
+                                const formatosBusqueda = [
+                                    // Formato original con R
+                                    `${ancho}/${perfil}/R${diametro}`,
+                                    `${ancho}/R${diametro}`,
+
+                                    // Formatos sin R - ESTOS SON LOS PRINCIPALES
+                                    `${ancho}/${perfil}/${diametro}`,  // 225/50/15
+                                    `${ancho}-${perfil}-${diametro}`,  // 225-50-15
+                                    `${ancho}-${perfil}/${diametro}`,  // 225-50/15
+                                    `${ancho}x${perfil}x${diametro}`,  // 225x50x15
+                                    `${ancho} ${perfil} ${diametro}`,  // 225 50 15
+
+                                    // Formatos adicionales sin perfil
+                                    `${ancho}/${diametro}`,
+                                    `${ancho}-${diametro}`,
+                                    `${ancho}x${diametro}`,
+                                    `${ancho} ${diametro}`,
+
+                                    // Componentes individuales
+                                    `${ancho}`,
+                                    `${perfil}`,
+                                    `${diametro}`,
+
+                                    // Solo el diametro con R para compatibilidad
+                                    `R${diametro}`
+                                ];
+
+                                // Crear texto de búsqueda unificado
+                                const textoBusquedaLlanta = formatosBusqueda
+                                    .filter(formato => formato && formato.trim() !== '')
+                                    .join(' ')
+                                    .toLowerCase();
+
+                                cumpleBusqueda = textoBusquedaLlanta.includes(terminoBusqueda);
+                            }
+                        } catch (error) {
+                            console.warn('⚠️ Error procesando medida de llanta para búsqueda:', error);
+                        }
+                    }
+
+                    // ✅ BUSCAR EN PROPIEDADES ALTERNATIVAS DE MEDIDAS
+                    if (!cumpleBusqueda && (producto.Ancho || producto.Diametro || producto.Perfil)) {
+                        try {
+                            const ancho = producto.Ancho || '';
+                            const perfil = producto.Perfil || '';
+                            const diametro = producto.Diametro || '';
+
+                            // Todos los formatos alternativos sin requerir R
+                            const formatosAlternativos = [
+                                // Con R (compatibilidad)
+                                `${ancho}/${perfil}/R${diametro}`,
+                                `${ancho}/R${diametro}`,
+
+                                // Sin R - FORMATOS PRINCIPALES
+                                `${ancho}/${perfil}/${diametro}`,  // 225/50/15
+                                `${ancho}-${perfil}-${diametro}`,  // 225-50-15
+                                `${ancho}-${perfil}/${diametro}`,  // 225-50/15
+                                `${ancho}x${perfil}x${diametro}`,  // 225x50x15
+                                `${ancho} ${perfil} ${diametro}`,  // 225 50 15
+
+                                // Sin perfil
+                                `${ancho}/${diametro}`,
+                                `${ancho}-${diametro}`,
+                                `${ancho}x${diametro}`,
+                                `${ancho} ${diametro}`,
+
+                                // Individuales
+                                `${ancho}`, `${perfil}`, `${diametro}`, `R${diametro}`
+                            ];
+
+                            const medidaAlternativa = formatosAlternativos
+                                .filter(formato => formato && formato.trim() !== '')
+                                .join(' ')
+                                .toLowerCase();
+
+                            cumpleBusqueda = medidaAlternativa.includes(terminoBusqueda);
+                        } catch (error) {
+                            console.warn('⚠️ Error procesando medidas alternativas:', error);
+                        }
+                    }
+
+                    return cumpleBusqueda;
+                });
+                console.log(`🔍 Productos filtrados por término "${termino}" (incluyendo medidas): ${productosFiltrados.length}`);
+            }
+
+            mostrarResultadosProductos(productosFiltrados);
+
+            // ✅ MARCAR CARGA INICIAL COMO COMPLETADA SI ES UNA BÚSQUEDA VACÍA (PRIMERA CARGA)
+            if (termino === '' && !cargaInicialCompletada) {
+                cargaInicialCompletada = true;
+                console.log('📦 Carga inicial marcada como completada después de primera búsqueda exitosa');
+            }
+
+            console.log('📦 Productos mostrados exitosamente');
+        } else {
+            const errorMessage = data.message || 'Error desconocido al obtener productos';
+            console.error('❌ Error en la respuesta:', errorMessage);
+            mostrarResultadosProductos([]);
+            mostrarToast('Error', errorMessage, 'danger');
+        }
+
+    } catch (error) {
+        console.error('❌ Error buscando productos:', error);
+        mostrarErrorBusqueda('productos', error.message);
+    } finally {
+        busquedaEnProceso = false;
+        console.log('🔍 === FIN buscarProductos ===');
+    }
+}
