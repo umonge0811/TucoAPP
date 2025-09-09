@@ -613,10 +613,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (textoResumen) {
                 const margenClass = margenPorcentaje >= 30 ? 'text-success' : margenPorcentaje >= 15 ? 'text-warning' : 'text-danger';
                 textoResumen.innerHTML = `
-                    <i class="bi bi-check-circle me-1 text-success"></i>
-                    <strong>Precio final: ?${precioFinal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong> 
-                    <span class="${margenClass}">(${margenPorcentaje.toFixed(1)}% de margen)</span>
-                `;
+<i class="bi bi-check-circle me-1 text-success"></i>
+<strong>Precio final: &#8353;${precioFinal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong> 
+<span class="${margenClass}">(${margenPorcentaje.toFixed(1)}% de margen)</span>
+`;
             }
         }
 
