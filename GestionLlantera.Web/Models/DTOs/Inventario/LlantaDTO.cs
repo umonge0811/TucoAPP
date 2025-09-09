@@ -9,10 +9,10 @@ namespace GestionLlantera.Web.Models.DTOs.Inventario
         public int ProductoId { get; set; }
 
         [Display(Name = "Ancho")]
-        public int? Ancho { get; set; }
+        public decimal? Ancho { get; set; }
 
         [Display(Name = "Perfil")]
-        public int? Perfil { get; set; }
+        public decimal? Perfil { get; set; }
 
         [Display(Name = "Diámetro")]
         public string? Diametro { get; set; }

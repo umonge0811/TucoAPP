@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,8 +10,8 @@ namespace Tuco.Clases.DTOs.Inventario
     /// </summary>
     public class LlantaTomaDTO
     {
-        public int? Ancho { get; set; }
-        public int? Perfil { get; set; }
+        public decimal? Ancho { get; set; }
+        public decimal? Perfil { get; set; }
         public string? Diametro { get; set; }
         public string? Marca { get; set; }
         public string? Modelo { get; set; }

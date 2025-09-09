@@ -598,40 +598,106 @@ document.addEventListener('DOMContentLoaded', function () {
         let esValido = true;
         const camposRequeridos = form.querySelectorAll('[required]');
 
-        // Validar solo campos requeridos básicos (excluyendo medidas de llantas)
-        camposRequeridos.forEach(campo => {
-            // Saltar validación de medidas de llantas - permitir cualquier valor
-            if (campo.name === 'Llanta.Ancho' || campo.name === 'Llanta.Perfil' || campo.name === 'Llanta.Diametro') {
-                campo.classList.remove('is-invalid');
-                return;
-            }
-            
-            if (!campo.value.trim()) {
+        // Función auxiliar para mostrar errores, ahora maneja el campo específico
+        function mostrarError(mensaje, campo) {
+            if (campo) {
                 campo.classList.add('is-invalid');
-                esValido = false;
-            } else {
+                const feedback = campo.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = mensaje;
+                } else {
+                    const divFeedback = document.createElement('div');
+                    divFeedback.classList.add('invalid-feedback');
+                    divFeedback.textContent = mensaje;
+                    campo.parentNode.insertBefore(divFeedback, campo.nextSibling);
+                }
+            }
+            esValido = false;
+        }
+
+        // Función auxiliar para limpiar errores
+        function limpiarError(campo) {
+            if (campo) {
                 campo.classList.remove('is-invalid');
+                const feedback = campo.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.textContent = '';
+                }
+            }
+        }
+
+        // Validar campos requeridos básicos (excluyendo medidas de llantas)
+        camposRequeridos.forEach(campo => {
+            // Saltar validación de medidas de llantas - permitir cualquier valor (ya se validan abajo si el modo es automático)
+            if (campo.name === 'Llanta.Ancho' || campo.name === 'Llanta.Perfil' || campo.name === 'Llanta.Diametro') {
+                return; // No hacer nada para estos campos aquí
+            }
+
+            if (!campo.value.trim()) {
+                mostrarError('Este campo es obligatorio', campo);
+            } else {
+                limpiarError(campo);
             }
         });
 
-        if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
-            if (!inputCosto || !inputCosto.value || parseFloat(inputCosto.value) <= 0) {
-                if (inputCosto) inputCosto.classList.add('is-invalid');
-                esValido = false;
+        // Validación específica para campos de llanta si están presentes
+        const anchoInput = form.querySelector('input[name="Llanta.Ancho"]');
+        const perfilInput = form.querySelector('input[name="Llanta.Perfil"]');
+        const diametroInput = form.querySelector('input[name="Llanta.Diametro"]');
+
+        if (anchoInput) {
+            const ancho = anchoInput.value;
+            // Validar que ancho y perfil sean números positivos (pueden ser decimales)
+            if (ancho && (isNaN(Number(ancho)) || Number(ancho) <= 0)) {
+                mostrarError('El ancho debe ser un número positivo', anchoInput);
+            } else {
+                limpiarError(anchoInput);
             }
-            
+        }
+
+        if (perfilInput) {
+            const perfil = perfilInput.value;
+            if (perfil && (isNaN(Number(perfil)) || Number(perfil) <= 0)) {
+                mostrarError('El perfil debe ser un número positivo', perfilInput);
+            } else {
+                limpiarError(perfilInput);
+            }
+        }
+
+        if (diametroInput) {
+            const diametro = diametroInput.value;
+            if (diametro && (isNaN(Number(diametro)) || Number(diametro) <= 0)) {
+                mostrarError('El diámetro debe ser un número positivo', diametroInput);
+            } else {
+                limpiarError(diametroInput);
+            }
+        }
+
+        // Validación de precio según el modo seleccionado
+        if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
+            const costo = inputCosto ? parseFloat(inputCosto.value) || 0 : 0;
             const precioVenta = inputPrecioVenta ? parseFloat(inputPrecioVenta.value) || 0 : 0;
             const margenPorcentaje = inputMargenPorcentaje ? parseFloat(inputMargenPorcentaje.value) || 0 : 0;
-            
+
+            if (costo <= 0) {
+                mostrarError('El costo es obligatorio y debe ser mayor a 0', inputCosto);
+            } else {
+                limpiarError(inputCosto);
+            }
+
             if (precioVenta <= 0 && margenPorcentaje <= 0) {
-                if (inputPrecioVenta) inputPrecioVenta.classList.add('is-invalid');
-                if (inputMargenPorcentaje) inputMargenPorcentaje.classList.add('is-invalid');
-                esValido = false;
+                mostrarError('Debe ingresar un precio de venta o un margen de utilidad', inputPrecioVenta);
+                mostrarError('Debe ingresar un precio de venta o un margen de utilidad', inputMargenPorcentaje);
+            } else {
+                limpiarError(inputPrecioVenta);
+                limpiarError(inputMargenPorcentaje);
             }
         } else if (modoManualRadio && modoManualRadio.checked) {
-            if (!inputPrecioManual || !inputPrecioManual.value || parseFloat(inputPrecioManual.value) <= 0) {
-                if (inputPrecioManual) inputPrecioManual.classList.add('is-invalid');
-                esValido = false;
+            const precioManual = inputPrecioManual ? parseFloat(inputPrecioManual.value) || 0 : 0;
+            if (precioManual <= 0) {
+                mostrarError('El precio manual es obligatorio y debe ser mayor a 0', inputPrecioManual);
+            } else {
+                limpiarError(inputPrecioManual);
             }
         }
 
@@ -681,12 +747,8 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('🗑️ Lista completa:', imagenesAEliminar);
 
             if (imagenesAEliminar.length > 0) {
+                // Agregar cada ID una vez para evitar duplicados en el FormData si se hace con append multiple times
                 imagenesAEliminar.forEach((id, index) => {
-                    formData.append(`imagenesAEliminar[${index}]`, id.toString());
-                    console.log(`📎 Agregando eliminación [${index}]: ${id}`);
-                });
-
-                imagenesAEliminar.forEach(id => {
                     formData.append('imagenesAEliminar', id.toString());
                 });
 
