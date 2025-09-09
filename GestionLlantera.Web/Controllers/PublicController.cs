@@ -162,7 +162,7 @@ namespace GestionLlantera.Web.Controllers
         /// Obtiene productos paginados para la vista pública.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> ObtenerProductosParaFacturacion(
+        public async Task<IActionResult> ObtenerProductosPublica(
             string termino = "", 
             int page = 1, 
             int pageSize = 12,

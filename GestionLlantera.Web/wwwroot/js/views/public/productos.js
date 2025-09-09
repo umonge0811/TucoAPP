@@ -75,7 +75,7 @@ async function buscarProductos(termino = '', pagina = 1, cargarMas = false) {
 
     // ✅ USAR LA MISMA URL Y LÓGICA QUE EL ENDPOINT EXITOSO DE FACTURACIÓN
     // Se agrega el parámetro de página a la URL si el backend lo soporta
-    const url = `/Public/ObtenerProductosParaFacturacion?page=${pagina}&pageSize=${tamañoPagina}`;
+    const url = `/Public/ObtenerProductosPublica?page=${pagina}&pageSize=${tamañoPagina}`;
     console.log(`🔍 URL de la solicitud: ${url}`);
 
     try {
