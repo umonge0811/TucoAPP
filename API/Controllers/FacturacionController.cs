@@ -47,7 +47,7 @@ namespace API.Controllers
             [FromQuery] string? busqueda = null,
             [FromQuery] bool soloConStock = true,
             [FromQuery] int pagina = 1,
-            [FromQuery] int tamano = 20)
+            [FromQuery] int tamano = 50)
         {
             try
             {
@@ -66,8 +66,8 @@ namespace API.Controllers
                     query = query.Where(p => p.CantidadEnInventario > 0);
                 }
 
-                // Aplicar búsqueda si se proporciona (excepto "todas")
-                if (!string.IsNullOrWhiteSpace(busqueda) && busqueda.ToLower() != "todas")
+                // Aplicar búsqueda si se proporciona
+                if (!string.IsNullOrWhiteSpace(busqueda))
                 {
                     query = query.Where(p => 
                         p.NombreProducto.Contains(busqueda) ||

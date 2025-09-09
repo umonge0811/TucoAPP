@@ -130,7 +130,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "", int pagina = 1, int tamano = 20)
+        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "", int pagina = 1, int tamano = 2000)
         {
             try
             {
@@ -146,7 +146,7 @@ namespace GestionLlantera.Web.Controllers
                 var todosLosProductos = await _inventarioService.ObtenerProductosAsync(jwtToken);
 
                 // Filtrar por término de búsqueda si se proporciona
-                if (!string.IsNullOrWhiteSpace(termino) && termino != "todas")
+                if (!string.IsNullOrWhiteSpace(termino))
                 {
                     todosLosProductos = todosLosProductos.Where(p =>
                         p.NombreProducto.Contains(termino, StringComparison.OrdinalIgnoreCase) ||
@@ -159,10 +159,8 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // Filtrar solo productos con stock disponible para la venta
-                var productosConStock = todosLosProductos.Where(p => p.CantidadEnInventario > 0).ToList();
-                
-                var totalProductos = productosConStock.Count;
-                var productosDisponibles = productosConStock
+                var productosDisponibles = todosLosProductos
+                    .Where(p => p.CantidadEnInventario > 0)
                     .Skip((pagina - 1) * tamano)
                     .Take(tamano)
                     .ToList();
@@ -197,12 +195,7 @@ namespace GestionLlantera.Web.Controllers
                 {
                     success = true,
                     productos = productos,
-                    total = productos.Count,
-                    totalProductos = totalProductos,
-                    pagina = pagina,
-                    tamano = tamano,
-                    totalPaginas = (int)Math.Ceiling((double)totalProductos / tamano),
-                    hayMasPaginas = pagina < (int)Math.Ceiling((double)totalProductos / tamano)
+                    total = productos.Count
                 });
             }
             catch (Exception ex)
