@@ -17,11 +17,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const camposAutomaticos = document.getElementById('camposAutomaticos');
     const campoManual = document.getElementById('campoManual');
     const inputCosto = document.getElementById('inputCosto');
-    const inputUtilidad = document.getElementById('inputUtilidad');
+    const inputPrecioVenta = document.getElementById('inputPrecioVenta');
+    const inputMargenPorcentaje = document.getElementById('inputMargenPorcentaje');
     const inputPrecioManual = document.getElementById('inputPrecioManual');
     const precioCalculado = document.getElementById('precioCalculado');
     const desglosePrecio = document.getElementById('desglosePrecio');
     const textoResumen = document.getElementById('textoResumen');
+    const btnLimpiarPrecios = document.getElementById('btnLimpiarPrecios');
+    const hiddenPorcentajeUtilidad = document.getElementById('hiddenPorcentajeUtilidad');
+    const hiddenPrecio = document.getElementById('hiddenPrecio');
 
     // Verificar elementos críticos
     if (!form) {
@@ -55,52 +59,180 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        function calcularPrecio() {
-            if (!modoAutomaticoRadio.checked || !inputCosto || !inputUtilidad || !precioCalculado) {
+        // ========================================
+        // FUNCIONES DE CÁLCULO DE PRECIOS (IDÉNTICA A AGREGARPRODUCTO)
+        // ========================================
+
+        let calculoEnProceso = false;
+
+        function calcularDesdeCoste() {
+            if (calculoEnProceso) return;
+            calculoEnProceso = true;
+
+            const coste = parseFloat(inputCosto.value) || 0;
+            const precioVenta = parseFloat(inputPrecioVenta.value) || 0;
+            const margenPorcentaje = parseFloat(inputMargenPorcentaje.value) || 0;
+
+            console.log(`🧮 Calculando desde costo: ${coste}`);
+
+            if (coste <= 0) {
+                limpiarCamposCalculados();
+                calculoEnProceso = false;
                 return;
             }
 
-            const costo = parseFloat(inputCosto.value) || 0;
-            const porcentajeUtilidad = parseFloat(inputUtilidad.value) || 0;
+            // Si hay precio de venta, calcular margen
+            if (precioVenta > 0 && precioVenta !== coste) {
+                const utilidad = precioVenta - coste;
+                const porcentaje = (utilidad / coste) * 100;
 
-            console.log(`💰 Calculando precio: Costo=₡${costo}, Utilidad=${porcentajeUtilidad}%`);
+                inputMargenPorcentaje.value = porcentaje.toFixed(2);
+                actualizarPrecioFinal(precioVenta, utilidad, porcentaje);
+            }
+            // Si hay margen, calcular precio de venta
+            else if (margenPorcentaje >= 0) {
+                const utilidad = coste * (margenPorcentaje / 100);
+                const precioFinal = coste + utilidad;
 
-            if (costo > 0 && porcentajeUtilidad >= 0) {
-                const utilidadDinero = costo * (porcentajeUtilidad / 100);
-                const precioFinal = costo + utilidadDinero;
+                inputPrecioVenta.value = precioFinal.toFixed(2);
+                actualizarPrecioFinal(precioFinal, utilidad, margenPorcentaje);
+            }
 
-                precioCalculado.value = precioFinal.toLocaleString('es-CR', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                });
+            calculoEnProceso = false;
+        }
 
-                if (desglosePrecio) {
-                    desglosePrecio.innerHTML = `
-                        <i class="bi bi-calculator me-1"></i>
-                        Costo: ₡${costo.toLocaleString('es-CR', { minimumFractionDigits: 2 })} + 
-                        Utilidad: ₡${utilidadDinero.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
-                    `;
+        function calcularDesdePrecioVenta() {
+            if (calculoEnProceso) return;
+            calculoEnProceso = true;
+
+            const coste = parseFloat(inputCosto.value) || 0;
+            const precioVenta = parseFloat(inputPrecioVenta.value) || 0;
+
+            console.log(`🏷️ Calculando desde precio de venta: ${precioVenta}`);
+
+            if (precioVenta <= 0 || coste <= 0) {
+                if (precioVenta > 0) {
+                    actualizarPrecioFinal(precioVenta, 0, 0);
+                } else {
+                    limpiarCamposCalculados();
                 }
+                calculoEnProceso = false;
+                return;
+            }
 
-                if (textoResumen) {
-                    const margenClass = porcentajeUtilidad >= 30 ? 'text-success' :
-                        porcentajeUtilidad >= 15 ? 'text-warning' : 'text-danger';
-                    textoResumen.innerHTML = `
-                        <i class="bi bi-check-circle me-1 text-success"></i>
-                        <strong>Precio actualizado: ₡${precioFinal.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong> 
-                        <span class="${margenClass}">(${porcentajeUtilidad}% de utilidad)</span>
-                    `;
-                }
-            } else {
-                precioCalculado.value = '0.00';
-                if (desglosePrecio) {
-                    desglosePrecio.innerHTML = '<i class="bi bi-dash-circle me-1"></i>Ingrese costo y utilidad';
-                }
-                if (textoResumen) {
-                    textoResumen.innerHTML = '<i class="bi bi-info-circle me-1"></i>Ingrese el costo y porcentaje de utilidad';
-                }
+            const utilidad = precioVenta - coste;
+            const porcentaje = (utilidad / coste) * 100;
+
+            inputMargenPorcentaje.value = porcentaje.toFixed(2);
+            actualizarPrecioFinal(precioVenta, utilidad, porcentaje);
+
+            calculoEnProceso = false;
+        }
+
+        function calcularDesdeMargen() {
+            if (calculoEnProceso) return;
+            calculoEnProceso = true;
+
+            const coste = parseFloat(inputCosto.value) || 0;
+            const margenPorcentaje = parseFloat(inputMargenPorcentaje.value) || 0;
+
+            console.log(`📊 Calculando desde margen: ${margenPorcentaje}%`);
+
+            if (margenPorcentaje < 0 || coste <= 0) {
+                limpiarCamposCalculados();
+                calculoEnProceso = false;
+                return;
+            }
+
+            const utilidad = coste * (margenPorcentaje / 100);
+            const precioFinal = coste + utilidad;
+
+            inputPrecioVenta.value = precioFinal.toFixed(2);
+            actualizarPrecioFinal(precioFinal, utilidad, margenPorcentaje);
+
+            calculoEnProceso = false;
+        }
+
+        function actualizarPrecioFinal(precio, utilidad, porcentaje) {
+            // Actualizar campo visual
+            precioCalculado.value = precio.toLocaleString('es-CR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+
+            // Actualizar campos ocultos para el backend
+            if (hiddenPrecio) hiddenPrecio.value = precio.toFixed(2);
+            if (hiddenPorcentajeUtilidad) hiddenPorcentajeUtilidad.value = porcentaje.toFixed(2);
+
+            // Actualizar desglose
+            if (desglosePrecio) {
+                desglosePrecio.innerHTML = `Utilidad: ₡${utilidad.toLocaleString('es-CR', { minimumFractionDigits: 2 })}`;
+            }
+
+            // Actualizar resumen con colores según el margen
+            if (textoResumen) {
+                const margenClass = porcentaje >= 30 ? 'text-success' :
+                    porcentaje >= 15 ? 'text-warning' : 'text-danger';
+
+                textoResumen.innerHTML = `
+                    <i class="bi bi-check-circle me-1 text-success"></i>
+                    <strong>Precio configurado: ₡${precio.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</strong>
+                    <span class="${margenClass}">(${porcentaje.toFixed(1)}% de utilidad)</span>
+                `;
             }
         }
+
+        function limpiarCamposCalculados() {
+            if (!calculoEnProceso) {
+                precioCalculado.value = '0.00';
+                if (desglosePrecio) desglosePrecio.innerHTML = 'Utilidad: ₡0.00';
+                if (textoResumen) {
+                    textoResumen.innerHTML = '<i class="bi bi-info-circle me-1"></i>Configure el costo para calcular automáticamente';
+                }
+                if (hiddenPrecio) hiddenPrecio.value = '';
+                if (hiddenPorcentajeUtilidad) hiddenPorcentajeUtilidad.value = '';
+            }
+        }
+
+        // ========================================
+        // EVENT LISTENERS PARA CÁLCULOS BIDIRECCIONALES
+        // ========================================
+
+        if (inputCosto) {
+            inputCosto.addEventListener('input', calcularDesdeCoste);
+            inputCosto.addEventListener('blur', calcularDesdeCoste);
+        }
+
+        if (inputPrecioVenta) {
+            inputPrecioVenta.addEventListener('input', calcularDesdePrecioVenta);
+            inputPrecioVenta.addEventListener('blur', calcularDesdePrecioVenta);
+        }
+
+        if (inputMargenPorcentaje) {
+            inputMargenPorcentaje.addEventListener('input', calcularDesdeMargen);
+            inputMargenPorcentaje.addEventListener('blur', calcularDesdeMargen);
+        }
+
+        // Botón limpiar precios
+        if (btnLimpiarPrecios) {
+            btnLimpiarPrecios.addEventListener('click', function () {
+                console.log('🧹 Limpiando todos los campos de precio');
+
+                if (inputCosto) inputCosto.value = '';
+                if (inputPrecioVenta) inputPrecioVenta.value = '';
+                if (inputMargenPorcentaje) inputMargenPorcentaje.value = '';
+
+                limpiarCamposCalculados();
+
+                if (textoResumen) {
+                    textoResumen.innerHTML = '<i class="bi bi-info-circle me-1"></i>Ingrese el costo y porcentaje de utilidad para calcular el precio automáticamente';
+                }
+            });
+        }
+
+        // ========================================
+        // CAMBIO ENTRE MODO AUTOMÁTICO Y MANUAL
+        // ========================================
 
         // Eventos para cambio de modo
         modoAutomaticoRadio.addEventListener('change', function () {
@@ -109,7 +241,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (camposAutomaticos) camposAutomaticos.style.display = 'block';
                 if (campoManual) campoManual.style.display = 'none';
                 actualizarEstilosTarjetas();
-                calcularPrecio();
+                
+                // Recalcular si hay valores
+                calcularDesdeCoste();
+                
+                if (!inputCosto?.value && textoResumen) {
+                    textoResumen.innerHTML = '<i class="bi bi-info-circle me-1"></i>Ingrese el costo y porcentaje de utilidad para calcular el precio automáticamente';
+                }
             }
         });
 
@@ -119,22 +257,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (camposAutomaticos) camposAutomaticos.style.display = 'none';
                 if (campoManual) campoManual.style.display = 'block';
                 actualizarEstilosTarjetas();
+                
+                // Limpiar campos ocultos del modo automático
+                if (hiddenPorcentajeUtilidad) hiddenPorcentajeUtilidad.value = '';
+                
                 if (textoResumen) {
                     textoResumen.innerHTML = '<i class="bi bi-pencil me-1"></i>Precio establecido manualmente';
                 }
             }
         });
-
-        // Eventos para cálculo en tiempo real
-        if (inputCosto) {
-            inputCosto.addEventListener('input', calcularPrecio);
-            inputCosto.addEventListener('blur', calcularPrecio);
-        }
-
-        if (inputUtilidad) {
-            inputUtilidad.addEventListener('input', calcularPrecio);
-            inputUtilidad.addEventListener('blur', calcularPrecio);
-        }
 
         // Efectos visuales para las tarjetas
         if (cardAutomatico && cardManual) {
@@ -481,20 +612,22 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('🧮 Configurando para cálculo automático...');
 
             const costoValue = inputCosto ? parseFloat(inputCosto.value) || 0 : 0;
-            const utilidadValue = inputUtilidad ? parseFloat(inputUtilidad.value) || 0 : 0;
+            const precioFinalValue = hiddenPrecio ? parseFloat(hiddenPrecio.value) || 0 : 0;
+            const porcentajeValue = hiddenPorcentajeUtilidad ? parseFloat(hiddenPorcentajeUtilidad.value) || 0 : 0;
 
             console.log(`💳 Costo: ${costoValue}`);
-            console.log(`📊 Utilidad: ${utilidadValue}%`);
+            console.log(`💵 Precio Final: ${precioFinalValue}`);
+            console.log(`📊 Porcentaje: ${porcentajeValue}%`);
 
             if (costoValue <= 0) {
-                console.error('❌ Costo debe ser mayor a 0 para cálculo automático');
+                console.error('❌ Debe configurar un costo válido');
                 if (inputCosto) inputCosto.classList.add('is-invalid');
                 return false;
             }
 
-            if (utilidadValue < 0) {
-                console.error('❌ Utilidad no puede ser negativa');
-                if (inputUtilidad) inputUtilidad.classList.add('is-invalid');
+            if (precioFinalValue <= 0) {
+                console.error('❌ Debe calcular un precio válido');
+                mostrarNotificacion('error', 'Configure el precio usando costo + precio de venta o costo + margen');
                 return false;
             }
 
@@ -512,13 +645,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return false;
             }
 
-            if (inputCosto) {
-                inputCosto.value = '';
-                console.log('🔄 Costo limpiado para precio manual');
-            }
-            if (inputUtilidad) {
-                inputUtilidad.value = '';
-                console.log('🔄 Utilidad limpiada para precio manual');
+            // Limpiar campos del modo automático
+            if (hiddenPorcentajeUtilidad) {
+                hiddenPorcentajeUtilidad.value = '';
+                console.log('🔄 Porcentaje limpiado para precio manual');
             }
         }
 
@@ -574,9 +704,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Validación específica para configuración de precios
         if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
-            // Modo automático: validar costo y utilidad
+            // Modo automático: validar que haya precio calculado
             const costoValue = inputCosto ? parseFloat(inputCosto.value) || 0 : 0;
-            const utilidadValue = inputUtilidad ? parseFloat(inputUtilidad.value) || 0 : 0;
+            const precioFinalValue = hiddenPrecio ? parseFloat(hiddenPrecio.value) || 0 : 0;
 
             if (costoValue <= 0) {
                 mostrarError('El costo es obligatorio y debe ser mayor a 0', inputCosto);
@@ -584,10 +714,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 limpiarError(inputCosto);
             }
 
-            if (utilidadValue < 0) {
-                mostrarError('La utilidad no puede ser negativa', inputUtilidad);
+            if (precioFinalValue <= 0) {
+                mostrarError('Configure el precio usando costo + precio de venta o costo + margen', inputCosto);
             } else {
-                limpiarError(inputUtilidad);
+                limpiarError(inputCosto);
             }
         } else if (modoManualRadio && modoManualRadio.checked) {
             // Modo manual: validar precio manual
