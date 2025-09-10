@@ -61,89 +61,87 @@ namespace GestionLlantera.Web.Controllers
             {
                 _logger.LogInformation("🔍 Solicitando detalle del producto público: {ProductoId}", id);
 
-                // Obtener producto usando el endpoint público
-                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/Inventario/productos-publicos");
+                // Obtener producto específico usando el endpoint directo por ID
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/Inventario/productos-publicos/{id}");
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogError("❌ Error del API al obtener productos públicos: {StatusCode}", response.StatusCode);
-                    TempData["Error"] = "Error al obtener los productos del servidor.";
+                    if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                    {
+                        _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado o sin stock", id);
+                        TempData["Error"] = "El producto no está disponible o no existe.";
+                    }
+                    else
+                    {
+                        _logger.LogError("❌ Error del API al obtener producto público: {StatusCode}", response.StatusCode);
+                        TempData["Error"] = "Error al obtener el producto del servidor.";
+                    }
                     return RedirectToAction("Productos");
                 }
 
                 var content = await response.Content.ReadAsStringAsync();
-                var apiResponse = JsonSerializer.Deserialize<dynamic>(content);
 
-                // Parsear la respuesta JSON manualmente para encontrar el producto específico
+                // Deserializar la respuesta directamente al producto
                 using (JsonDocument doc = JsonDocument.Parse(content))
                 {
                     var root = doc.RootElement;
-                    if (!root.TryGetProperty("success", out var successProp) || !successProp.GetBoolean())
-                    {
-                        TempData["Error"] = "No se pudieron obtener los productos.";
-                        return RedirectToAction("Productos");
-                    }
 
-                    if (!root.TryGetProperty("productos", out var productosProp))
+                    // Crear ProductoDTO desde la respuesta del API
+                    var producto = new ProductoDTO
                     {
-                        TempData["Error"] = "No se encontraron productos.";
-                        return RedirectToAction("Productos");
-                    }
+                        ProductoId = root.GetProperty("productoId").GetInt32(),
+                        NombreProducto = root.GetProperty("nombreProducto").GetString(),
+                        Descripcion = root.TryGetProperty("descripcion", out var desc) ? desc.GetString() : null,
+                        Precio = root.TryGetProperty("precio", out var precio) ? precio.GetDecimal() : 0,
+                        CantidadEnInventario = root.TryGetProperty("cantidadEnInventario", out var cantidad) ? cantidad.GetInt32() : 0,
+                        FechaUltimaActualizacion = root.TryGetProperty("fechaUltimaActualizacion", out var fecha) ? fecha.GetDateTime() : DateTime.Now
+                    };
 
-                    ProductoDTO producto = null;
-
-                    foreach (var item in productosProp.EnumerateArray())
+                    // Procesar imágenes si existen
+                    if (root.TryGetProperty("imagenesProductos", out var imagenesArray))
                     {
-                        if (item.TryGetProperty("productoId", out var idProp) && idProp.GetInt32() == id)
+                        var imagenesUrls = new List<string>();
+                        foreach (var img in imagenesArray.EnumerateArray())
                         {
-                            // Convertir el JsonElement a ProductoDTO
-                            var jsonString = item.GetRawText();
-                            producto = JsonSerializer.Deserialize<ProductoDTO>(jsonString, new JsonSerializerOptions 
-                            { 
-                                PropertyNameCaseInsensitive = true 
-                            });
-
-                            // ✅ PROCESAR IMÁGENES COMO EN EL MÉTODO ObtenerProductosParaFacturacion
-                            if (producto != null && item.TryGetProperty("imagenesUrls", out var imagenesUrlsProp))
+                            if (img.TryGetProperty("urlimagen", out var urlProp))
                             {
-                                var imagenesUrls = new List<string>();
-                                foreach (var imgUrl in imagenesUrlsProp.EnumerateArray())
+                                var url = urlProp.GetString();
+                                if (!string.IsNullOrEmpty(url))
                                 {
-                                    var url = imgUrl.GetString();
-                                    if (!string.IsNullOrEmpty(url))
-                                    {
-                                        imagenesUrls.Add(ProcessImageUrl(url));
-                                    }
-                                }
-
-                                // Convertir URLs a ImagenProductoDTO para compatibilidad con la vista
-                                if (imagenesUrls.Any())
-                                {
-                                    producto.Imagenes = imagenesUrls.Select(url => new Tuco.Clases.DTOs.Inventario.ImagenProductoDTO
-                                    {
-                                        UrlImagen = url
-                                    }).ToList();
-
-                                    _logger.LogInformation("🖼️ Imágenes procesadas para producto {ProductoId}: {CantidadImagenes}", 
-                                        id, producto.Imagenes.Count);
+                                    imagenesUrls.Add(ProcessImageUrl(url));
                                 }
                             }
-                            break;
+                        }
+
+                        // Convertir URLs a ImagenProductoDTO para compatibilidad con la vista
+                        if (imagenesUrls.Any())
+                        {
+                            producto.Imagenes = imagenesUrls.Select(url => new Tuco.Clases.DTOs.Inventario.ImagenProductoDTO
+                            {
+                                UrlImagen = url
+                            }).ToList();
+
+                            _logger.LogInformation("🖼️ Imágenes procesadas para producto {ProductoId}: {CantidadImagenes}",
+                                id, producto.Imagenes.Count);
                         }
                     }
 
-                    if (producto == null)
+                    // Procesar información de llanta si existe
+                    if (root.TryGetProperty("llanta", out var llantaProp) && llantaProp.ValueKind != JsonValueKind.Null)
                     {
-                        _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado en productos públicos", id);
-                        TempData["Error"] = "El producto no está disponible o no existe.";
-                        return RedirectToAction("Productos");
-                    }
+                        producto.EsLlanta = true;
+                        var llantaDto = new Tuco.Clases.DTOs.Inventario.LlantaDTO
+                        {
+                            Marca = llantaProp.TryGetProperty("marca", out var marca) ? marca.GetString() : null,
+                            Modelo = llantaProp.TryGetProperty("modelo", out var modelo) ? modelo.GetString() : null,
+                            Ancho = llantaProp.TryGetProperty("ancho", out var anchoVal) && anchoVal.TryGetDecimal(out var ancho) ? ancho : null,
+                            Perfil = llantaProp.TryGetProperty("perfil", out var perfilVal) && perfilVal.TryGetDecimal(out var perfil) ? perfil : null,
+                            Diametro = llantaProp.TryGetProperty("diametro", out var diametroVal) ? diametroVal.GetString() : null,
+                            IndiceVelocidad = llantaProp.TryGetProperty("indiceVelocidad", out var indiceVal) ? indiceVal.GetString() : null,
+                            TipoTerreno = llantaProp.TryGetProperty("tipoTerreno", out var tipoVal) ? tipoVal.GetString() : null
+                        };
 
-                    if (producto.CantidadEnInventario <= 0)
-                    {
-                        _logger.LogWarning("⚠️ Producto {ProductoId} sin stock disponible", id);
-                        TempData["Error"] = "El producto no tiene stock disponible.";
-                        return RedirectToAction("Productos");
+                        producto.Llanta = llantaDto;
                     }
 
                     _logger.LogInformation("✅ Producto {ProductoId} encontrado: {NombreProducto}", id, producto.NombreProducto);
@@ -157,6 +155,7 @@ namespace GestionLlantera.Web.Controllers
                 return RedirectToAction("Productos");
             }
         }
+
 
         /// <summary>
         /// Obtiene productos paginados para la vista pública.
