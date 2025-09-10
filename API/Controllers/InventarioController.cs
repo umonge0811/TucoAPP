@@ -1463,8 +1463,8 @@ namespace API.Controllers
                             tipoTerreno = p.Llanta.First().TipoTerreno ?? "",
                             capas = p.Llanta.First().Capas,
                             medidaCompleta = p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
-                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}/R{p.Llanta.First().Diametro}"
-                                : $"{p.Llanta.First().Ancho}/R{p.Llanta.First().Diametro}"
+                                ? $"{p.Llanta.First().Ancho?.ToString("0.##")}/{p.Llanta.First().Perfil?.ToString("0.##")}/R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho?.ToString("0.##")}/R{p.Llanta.First().Diametro}"
                         } : null,
                         
                         // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
@@ -1472,8 +1472,8 @@ namespace API.Controllers
                         modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         medidaCompleta = p.Llanta.Any() 
                             ? (p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
-                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}R{p.Llanta.First().Diametro}"
-                                : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}")
+                                ? $"{p.Llanta.First().Ancho?.ToString("0.##")}/{p.Llanta.First().Perfil?.ToString("0.##")}R{p.Llanta.First().Diametro}"
+                                : $"{p.Llanta.First().Ancho?.ToString("0.##")}R{p.Llanta.First().Diametro}")
                             : null
                     })
                     .ToListAsync();
