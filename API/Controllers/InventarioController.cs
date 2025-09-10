@@ -1540,7 +1540,10 @@ namespace API.Controllers
                             l.Modelo,
                             l.Capas,
                             l.IndiceVelocidad,
-                            l.TipoTerreno
+                            l.TipoTerreno,
+                            MedidaCompleta = l.Perfil.HasValue && l.Perfil.Value > 0
+                                ? (l.Ancho.HasValue ? l.Ancho.Value.ToString("0.##") : "0") + "/" + l.Perfil.Value.ToString("0.##") + "R" + l.Diametro
+                                : (l.Ancho.HasValue ? l.Ancho.Value.ToString("0.##") : "0") + "R" + l.Diametro
                         }).FirstOrDefault()
                     })
                     .FirstOrDefaultAsync();
