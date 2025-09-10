@@ -108,11 +108,7 @@
                                     <div class="spec-item">
                                         <div class="spec-label">Medida</div>
                                         <div class="spec-value">
-                                            @if (!string.IsNullOrEmpty(llanta.MedidaCompleta))
-                                            {
-                                                @llanta.MedidaCompleta
-                                            }
-                                            else if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                                            @if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                                             {
                                                 @($"{llanta.Ancho?.ToString("0.##")}/{llanta.Perfil?.ToString("0.##")}/R{llanta.Diametro}")
                                             }
