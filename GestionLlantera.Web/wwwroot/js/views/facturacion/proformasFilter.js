@@ -313,7 +313,7 @@ function mostrarProformasEnTabla(proformas) {
                             <i class="bi bi-printer"></i>
                         </button>
                         ${proforma.estado === 'Vigente' ? `
-                        <button type="button" class="btn btn-outline-success" title="Convertir a Factura" data-proforma-data='${JSON.stringify(proforma).replace(/'/g, "&#39;")}'>
+                        <button type="button" class="btn btn-outline-success" title="Convertir a Factura" data-proforma-id="${proforma.facturaId || proforma.id}">
                             <i class="bi bi-arrow-up-circle"></i>
                         </button>
                         ` : ''}
@@ -463,7 +463,7 @@ function configurarEventosBotonesProformas() {
     // Limpiar eventos anteriores
     $('.btn-outline-info[data-proforma-id]').off('click.proformaVer');
     $('.btn-outline-secondary[data-proforma-id]').off('click.proformaImprimir');
-    $('.btn-outline-success[data-proforma-data]').off('click.proformaConvertir');
+    $('.btn-outline-success[data-proforma-id]').off('click.proformaConvertir');
 
     // Ver detalles de proforma
     $('.btn-outline-info[data-proforma-id]').on('click.proformaVer', function() {
@@ -495,22 +495,113 @@ function configurarEventosBotonesProformas() {
         }
     });
 
-    // Convertir proforma
-    $('.btn-outline-success[data-proforma-data]').on('click.proformaConvertir', function() {
-        const proformaData = $(this).data('proforma-data');
-        console.log('🔄 Convertir proforma:', proformaData);
+    // Convertir proforma - NUEVO: Obtener detalles completos antes de convertir
+    $('.btn-outline-success[data-proforma-id]').on('click.proformaConvertir', function() {
+        const proformaId = $(this).data('proforma-id');
+        console.log('🔄 Iniciando conversión de proforma con ID:', proformaId);
         
-        if (typeof convertirProformaAFactura === 'function') {
-            convertirProformaAFactura(proformaData);
-        } else {
-            console.error('❌ Función convertirProformaAFactura no está disponible');
-            if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', 'Función de conversión no disponible', 'danger');
-            }
-        }
+        // Obtener detalles completos de la proforma antes de convertir
+        obtenerDetallesProformaParaConversion(proformaId);
     });
 
     console.log('✅ Eventos de botones configurados');
+}
+
+/**
+ * Obtener detalles completos de proforma para conversión
+ */
+async function obtenerDetallesProformaParaConversion(proformaId) {
+    try {
+        console.log('📋 === OBTENIENDO DETALLES COMPLETOS PARA CONVERSIÓN ===');
+        console.log('📋 Proforma ID:', proformaId);
+
+        // Mostrar loading
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Preparando conversión...',
+                text: 'Obteniendo detalles completos de la proforma',
+                icon: 'info',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+
+        const response = await fetch(`/Facturacion/ObtenerFacturaPorId/${proformaId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+
+        const resultado = await response.json();
+        console.log('📋 Detalles completos obtenidos:', resultado);
+
+        // Cerrar loading
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+
+        if (resultado.success || resultado.facturaId) {
+            const proformaCompleta = resultado.success ? resultado.data : resultado;
+            
+            // ✅ VERIFICAR QUE TENEMOS DETALLES COMPLETOS INCLUYENDO SERVICIOS
+            console.log('🔧 Verificando detalles de la proforma completa:');
+            console.log('🔧 - Tiene detallesFactura:', !!(proformaCompleta.detallesFactura && proformaCompleta.detallesFactura.length > 0));
+            
+            if (proformaCompleta.detallesFactura && proformaCompleta.detallesFactura.length > 0) {
+                console.log('🔧 - Total detalles:', proformaCompleta.detallesFactura.length);
+                
+                // Verificar si hay servicios
+                const servicios = proformaCompleta.detallesFactura.filter(detalle => detalle.esServicio || detalle.servicioId);
+                console.log('🔧 - Servicios encontrados:', servicios.length);
+                
+                if (servicios.length > 0) {
+                    console.log('🔧 - Detalles de servicios:', servicios);
+                }
+            }
+
+            // Llamar a la función de conversión con los datos completos
+            if (typeof convertirProformaAFactura === 'function') {
+                console.log('🔄 Iniciando conversión con datos completos...');
+                convertirProformaAFactura(proformaCompleta);
+            } else {
+                console.error('❌ Función convertirProformaAFactura no está disponible');
+                if (typeof mostrarToast === 'function') {
+                    mostrarToast('Error', 'Función de conversión no disponible', 'danger');
+                }
+            }
+        } else {
+            throw new Error(resultado.message || 'Error al obtener detalles de la proforma');
+        }
+
+    } catch (error) {
+        console.error('❌ Error obteniendo detalles para conversión:', error);
+        
+        // Cerrar loading si está abierto
+        if (typeof Swal !== 'undefined') {
+            Swal.close();
+        }
+        
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudieron obtener los detalles completos de la proforma: ' + error.message,
+                confirmButtonColor: '#dc3545'
+            });
+        } else if (typeof mostrarToast === 'function') {
+            mostrarToast('Error', 'Error obteniendo detalles: ' + error.message, 'danger');
+        }
+    }
 }
 
 // Exportar funciones para uso global
@@ -522,6 +613,7 @@ if (typeof window !== 'undefined') {
     window.mostrarProformasEnTabla = mostrarProformasEnTabla;
     window.recargarProformas = recargarProformas;
     window.configurarEventosBotonesProformas = configurarEventosBotonesProformas;
+    window.obtenerDetallesProformaParaConversion = obtenerDetallesProformaParaConversion;
     
     console.log('📋 Módulo de filtros de proformas (Frontend) cargado correctamente');
 } else {

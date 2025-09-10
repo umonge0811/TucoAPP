@@ -189,8 +189,8 @@ namespace GestionLlantera.Web.Services
                             {
                                 LlantaId = (int)llantaData.llantaId,
                                 ProductoId = producto.ProductoId,
-                                Ancho = llantaData.ancho != null ? (int?)llantaData.ancho : null,
-                                Perfil = llantaData.perfil != null ? (int?)llantaData.perfil : null,
+                                Ancho = llantaData.ancho != null ? (decimal?)llantaData.ancho : null,
+                                Perfil = llantaData.perfil != null ? (decimal?)llantaData.perfil : null,
                                 Diametro = llantaData.diametro?.ToString() ?? "",
                                 Marca = llantaData.marca?.ToString() ?? "",
                                 Modelo = llantaData.modelo?.ToString() ?? "",
@@ -371,8 +371,8 @@ namespace GestionLlantera.Web.Services
                             {
                                 LlantaId = GetSafeInt(llantaData.llantaId, 0),
                                 ProductoId = producto.ProductoId,
-                                Ancho = GetSafeNullableInt(llantaData.ancho),
-                                Perfil = GetSafeNullableInt(llantaData.perfil),
+                                Ancho = GetSafeNullableDecimal(llantaData.ancho),
+                                Perfil = GetSafeNullableDecimal(llantaData.perfil),
                                 Diametro = GetSafeString(llantaData.diametro, ""),
                                 Marca = GetSafeString(llantaData.marca, ""),
                                 Modelo = GetSafeString(llantaData.modelo, ""),
@@ -1836,19 +1836,20 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        private static int? GetSafeNullableInt(dynamic value)
+        private static int? GetSafeNullableInt(object value)
         {
-            try
-            {
-                if (value == null) return null;
-                if (int.TryParse(value.ToString(), out int result))
-                    return result;
-                return null;
-            }
-            catch
-            {
-                return null;
-            }
+            if (value == null) return null;
+            if (int.TryParse(value.ToString(), out int result))
+                return result;
+            return null;
+        }
+
+        private static decimal? GetSafeNullableDecimal(object value)
+        {
+            if (value == null) return null;
+            if (decimal.TryParse(value.ToString(), out decimal result))
+                return result;
+            return null;
         }
 
         private static DateTime? GetSafeDateTime(dynamic value)

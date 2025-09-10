@@ -1,0 +1,314 @@
+ 👥 Módulo SidebarUsuarios cargado correctamente
+ 🖨️ Módulo de impresión térmica cargado correctamente
+ ✅ Sistema de zoom simplificado cargado
+ 📋 Funciones de proformas, detalles y servicios exportadas globalmente
+ 📋 Funciones de facturas pendientes exportadas globalmente
+ 📋 Módulo de filtros de proformas (Frontend) cargado correctamente
+ ✅ verDetalleProducto disponible desde facturacion.js
+ 📦 Módulo InventarioFacturacion.js cargado correctamente
+ 🎯 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🎯 Configuración completa: Object
+ ❌ No se encontraron permisos en la configuración
+(anónimo) @ Facturacion:2229
+ 🔧 === CONFIGURACIÓN DE FACTURACIÓN CARGADA ===
+ 🔧 Configuración completa: Object
+ 🔧 Usuario disponible: undefined
+ 🔧 Permisos disponibles: undefined
+ 🔧 Token disponible: undefined
+ 👥 DOM cargado, inicializando sidebar usuarios...
+ 🚀 Inicializando módulo de facturación
+ 🚀 === INICIO inicializarFacturacion ===
+ 🔐 Cargando permisos del usuario...
+ 🔍 === INICIANDO CARGA DE PERMISOS EN FACTURACIÓN ===
+ 🔍 Configuración recibida: {
+  "usuario": {
+    "usuarioId": 17,
+    "id": 17,
+    "nombre": "Administrador",
+    "nombreUsuario": "Administrador",
+    "email": "admin@llantasymastc.com"
+  },
+  "permisos": {
+    "puedeCrearFacturas": true,
+    "puedeCompletarFacturas": true,
+    "puedeEditarFacturas": true,
+    "puedeAnularFacturas": true,
+    "esAdmin": false
+  },
+  "fechaActual": "2025-09-06",
+  "horaActual": "21:41",
+  "tokenDisponible": true
+}
+ 🔐 === PERMISOS CARGADOS CORRECTAMENTE ===
+ 🔐 puedeCrearFacturas: true
+ 🔐 puedeCompletarFacturas: true
+ 🔐 puedeEditarFacturas: true
+ 🔐 puedeAnularFacturas: true
+ 🔐 esAdmin: false
+ 🎯 === CONFIGURANDO INTERFAZ SEGÚN PERMISOS ===
+ 🎯 Permisos actuales del usuario: Object
+ 🎯 puedeCompletarFacturas: true (tipo: boolean )
+ 🎯 puedeCrearFacturas: true (tipo: boolean )
+ 🎯 Evaluación de permisos:
+ 🎯   - puedeCompletar (CompletarFacturas): true
+ 🎯   - puedeCrear (CrearFacturas): true
+ 👑 === INTERFAZ CONFIGURADA: USUARIO CON PERMISO COMPLETAR ===
+ 👑 Botón: Verde - "Completar Venta"
+ 👑 Flujo: Factura pagada inmediatamente con ajuste de stock
+ 📋 Botón Facturas Pendientes habilitado para usuario con permisos de completar
+ 🚀 Inicializando modales...
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🚀 Configurando eventos...
+ 🚀 Actualizando totales...
+ 🧮 Actualizando totales...
+ 🎯 Actualizando estado botones: Object
+ 🚀 Iniciando carga de productos iniciales...
+ 📦 === INICIO cargarProductosIniciales ===
+ 📦 cargaInicialCompletada: false
+ 📦 Iniciando carga de productos iniciales...
+ 🔍 === INICIO buscarProductos ===
+ 🔍 CONTADOR DE LLAMADAS: 1
+ 🔍 Término recibido: ""
+ 🔍 busquedaEnProceso: false
+ 🔍 ultimaBusqueda: ""
+ 🔍 Iniciando búsqueda válida...
+ ✅ Facturación inicializada correctamente
+ 🚀 === FIN inicializarFacturacion ===
+ 📦 === INICIALIZANDO MODAL INVENTARIO FACTURACIÓN ===
+ ✅ Modal de inventario inicializado correctamente
+ 📦 Configurando eventos del modal inventario...
+ 📦 Configurando filtros de inventario...
+ 🛠️ Inicializando módulo especializado de servicios para facturación
+ 🛠️ === INICIALIZANDO MÓDULO SERVICIOS FACTURACIÓN ===
+ ✅ Módulo de servicios para facturación inicializado
+api/permisos/funciones:1  Failed to load resource: the server responded with a status of 404 ()
+DiagnosticoPermisos/mis-permisos:1  Failed to load resource: the server responded with a status of 404 ()
+ 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+ 🎯 Clases CSS: btn w-100 btn-success
+ 🎯 Deshabilitado: true
+ 🎯 Texto: Completar Venta
+ 🎯 Título: Procesar venta completa, ajustar stock e imprimir factura
+ 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+ 📋 Respuesta del servidor recibida
+ ✅ Se encontraron 6 productos disponibles
+ 🔄 === INICIO mostrarResultadosProductos ===
+ 🔄 CONTADOR DE LLAMADAS: 1
+ 🔄 Productos recibidos: 6
+ 🔄 Construyendo HTML para 6 productos
+ 🖼️ Procesando imágenes para producto: Llanta Pirelli Confort 2
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(3)
+ 🖼️ Imágenes desde imagenesUrls: Array(3)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/1_1_Llanta_Pirelli_Confort_2_225_50R15.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/2_1_Llanta_DUNLOP_205_35R16.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/4_1_Llanta_DUNLOP_225_80R20.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/5_1_Llanta_DUNLOP_225_30R15.jpg
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(1)
+ 🖼️ Imágenes desde imagenesUrls: Array(1)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/6_1_Llanta_DUNLOP_250_70R16.webp
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/6_1_Llanta_DUNLOP_250_70R16.webp
+ 🔧 Debug llanta: Object
+ 🖼️ Procesando imágenes para producto: Llanta DUNLOP
+ 🖼️ Datos del producto: Object
+ 🖼️ Imágenes desde imagenesProductos: Array(4)
+ 🖼️ Imágenes desde imagenesUrls: Array(4)
+ 🖼️ URL original: https://localhost:7273/uploads/productos/7_1_Llanta_DUNLOP_225_60R16.jpg
+ 🖼️ URL final construida: https://localhost:7273/uploads/productos/7_1_Llanta_DUNLOP_225_60R16.jpg
+ 🔧 Debug llanta: Object
+ 🔄 Actualizando DOM (longitud HTML: 27973 caracteres)
+ 🔄 === FIN mostrarResultadosProductos ===
+ 📦 Carga inicial marcada como completada después de primera búsqueda exitosa
+ 📦 Productos mostrados exitosamente
+ 🔍 === FIN buscarProductos ===
+ 📦 Búsqueda inicial ejecutada
+ 📦 === FIN cargarProductosIniciales (exitosa) ===
+ 👥 Inicializando módulo de usuarios conectados del sidebar
+ ✅ Módulo de usuarios conectados del sidebar inicializado
+ ✅ Contador del sidebar actualizado: 1 usuarios
+ ✅ Panel de usuarios conectados (sidebar) actualizado
+ 📋 === ABRIENDO MODAL DE PROFORMAS ===
+ 📋 *** MODAL DE PROFORMAS COMPLETAMENTE VISIBLE ***
+ 📋 Elementos disponibles en el DOM:
+ 📋 - Input búsqueda: 1
+ 📋 - Select estado: 1
+ 📋 - Tabla body: 1
+ 📋 - Loading: 1
+ 📋 - Content: 1
+ 📅 Ejecutando verificación automática de vencimiento...
+ 📅 === VERIFICANDO VENCIMIENTO AUTOMÁTICAMENTE ===
+ 📅 Resultado verificación automática: Object
+ ⚠️ Error en verificación automática: Error del servidor al verificar vencimiento
+verificarVencimientoProformasAutomatico @ facturacion.js:4950
+await in verificarVencimientoProformasAutomatico
+(anónimo) @ facturacion.js:3535
+dispatch @ jquery.min.js:2
+v.handle @ jquery.min.js:2
+trigger @ jquery.min.js:2
+(anónimo) @ jquery.min.js:2
+each @ jquery.min.js:2
+each @ jquery.min.js:2
+trigger @ jquery.min.js:2
+trigger @ bootstrap.bundle.min.js:6
+(anónimo) @ bootstrap.bundle.min.js:6
+g @ bootstrap.bundle.min.js:6
+r @ bootstrap.bundle.min.js:6
+ ✅ Inicializando filtros de proformas...
+ 🔍 === INICIALIZANDO FILTROS DE PROFORMAS (FRONTEND) ===
+ 🔍 Configurando eventos de filtrado...
+ ✅ Evento de búsqueda configurado
+ ✅ Evento de estado configurado
+ ✅ Botón limpiar configurado
+ ✅ Evento de proformas por página configurado
+ 📋 === CARGANDO TODAS LAS PROFORMAS ===
+ ✅ Filtros de proformas inicializados correctamente
+ 📋 Respuesta del servidor: Object
+ ✅ Proformas cargadas: 1
+ 🔍 === APLICANDO FILTROS LOCALMENTE ===
+ 🔍 Total proformas: 1
+ 🔍 Filtros: Object
+ 🔍 Proformas filtradas: 1
+ 📋 === MOSTRANDO PROFORMAS PAGINADAS ===
+ 📋 Página actual: 1
+ 📋 Proformas por página: 20
+ 📋 Total páginas: 1
+ 📋 Mostrando proformas: 0 a 20
+ 📋 Proformas en esta página: 1
+ 📋 === MOSTRANDO PROFORMAS EN TABLA ===
+ 📋 Proformas a mostrar: 1
+ 🔧 Configurando eventos de botones de proformas...
+ ✅ Eventos de botones configurados
+ ✅ Proformas mostradas en tabla
+ 🔄 Convertir proforma: Object
+ 🔄 === CONVIRTIENDO PROFORMA A FACTURA ===
+ 🔄 Proforma escapada recibida: Object
+ 🔄 Tipo de dato recibido: object
+ 🔄 Proforma recibida como objeto directo
+ 🔄 Proforma deserializada: Object
+ 🔄 === CARGANDO DATOS DE PROFORMA EN EL CARRITO ===
+ 👤 Cliente cargado desde proforma: Object
+ 📦 Cargando productos desde proforma: 3
+ 📦 Producto 1 cargado: 225/50/R15 Llanta Pirelli Confort 2 x 4
+ 📦 Producto 2 cargado: [SERVICIO] Alineación Completa - Alineacion x 4
+ 📦 Producto 3 cargado: [SERVICIO] Tramado de Llantas - Tramado x 1
+ 📦 Total productos cargados en carrito: 3
+ 🎯 Actualizando estado botones: Object
+ 🧮 Actualizando totales...
+ 🎯 Actualizando estado botones: Object
+ 🔄 Interfaz actualizada con datos de la proforma
+ 📋 Referencia de proforma guardada: Object
+ 📋 ID que se usará: 2340
+facturacion.js:4231 🎯 === ABRIENDO MODAL FINALIZAR VENTA ===
+facturacion.js:4232 🎯 Productos en carrito: 3
+facturacion.js:4233 🎯 Cliente seleccionado: Ulises Monge Aguilar
+facturacion.js:1789 📋 === DEPURACIÓN CLIENTE SELECCIONADO ===
+facturacion.js:1790 📋 Cliente completo: Object
+facturacion.js:1791 📋 Propiedades disponibles: Array(6)
+facturacion.js:1792 📋 Factura pendiente actual: null
+facturacion.js:1793 📋 Proforma original para conversión: Object
+facturacion.js:1805 📋 Mostrando información de conversión de proforma
+facturacion.js:2026 🎯 === CONFIGURANDO MODAL SEGÚN PERMISOS ===
+facturacion.js:2027 🎯 Permisos del usuario: Object
+facturacion.js:2028 🎯 puedeCompletarFacturas: true
+facturacion.js:2029 🎯 puedeCrearFacturas: true
+facturacion.js:2030 🎯 esAdmin: false
+facturacion.js:2031 🎯 Es conversión de proforma: true
+facturacion.js:2032 🎯 Es factura pendiente: false
+facturacion.js:2045 🎯 Botón de proforma mostrado - No es factura pendiente
+facturacion.js:2065 📄 Modal configurado para conversión de proforma
+facturacion.js:1860 📋 Datos mapeados para formulario: Object
+facturacion.js:4238 ✅ Modal de finalizar venta mostrado correctamente
+facturacion.js:2117 🎯 === ESTADO FINAL DEL BOTÓN FINALIZAR ===
+facturacion.js:2118 🎯 Clases CSS: btn btn-success
+facturacion.js:2119 🎯 Deshabilitado: false
+facturacion.js:2120 🎯 Texto: 
+                    
+                    Convertir y Completar
+                
+facturacion.js:2121 🎯 Título: Convertir proforma a factura, procesar pago y ajustar stock
+facturacion.js:2122 🎯 Botón Proforma Visible: false
+facturacion.js:2123 🎯 === FIN CONFIGURACIÓN INTERFAZ ===
+facturacion.js:2431 🔍 === PROCESANDO VENTA FINAL ===
+facturacion.js:2432 🔍 Es pago múltiple: false
+facturacion.js:2433 🔍 Detalles de pago actuales: Array(0)
+facturacion.js:2444 🔍 Es factura pendiente: false
+facturacion.js:2445 🔍 Factura ID: null
+facturacion.js:2990 🆕 === CREANDO NUEVO DOCUMENTO ===
+facturacion.js:2991 🆕 Tipo de documento: Factura
+facturacion.js:2992 🆕 Es conversión de proforma: true
+facturacion.js:3031 🔐 === VERIFICACIÓN DE PERMISOS ===
+facturacion.js:3032 🔐 puedeCompletarFacturas: true
+facturacion.js:3033 🔐 puedeCrearFacturas: true
+facturacion.js:3034 🔐 tipoDocumento: Factura
+facturacion.js:3054 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+facturacion.js:3067 📋 Estado determinado: Object
+facturacion.js:6590 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:6591 👤 facturaConfig disponible: true
+facturacion.js:6595 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:6596 👤 Tipo de usuario obtenido: object
+facturacion.js:6597 👤 Propiedades del usuario: Array(5)
+facturacion.js:6598 👤 ID de usuario: 17
+facturacion.js:6599 👤 Nombre de usuario: Administrador
+facturacion.js:3079 👤 Usuario actual para documento: Object
+facturacion.js:3116 📝 Observaciones con información de proforma: Convertido desde proforma PROF-202509-000001
+facturacion.js:3210 📋 Datos de documento preparados: Object
+facturacion.js:3229 ✅ Documento creado: Object
+facturacion.js:2431 🔍 === PROCESANDO VENTA FINAL ===
+facturacion.js:2432 🔍 Es pago múltiple: false
+facturacion.js:2433 🔍 Detalles de pago actuales: Array(0)
+facturacion.js:2444 🔍 Es factura pendiente: false
+facturacion.js:2445 🔍 Factura ID: null
+facturacion.js:2990 🆕 === CREANDO NUEVO DOCUMENTO ===
+facturacion.js:2991 🆕 Tipo de documento: Factura
+facturacion.js:2992 🆕 Es conversión de proforma: true
+facturacion.js:3031 🔐 === VERIFICACIÓN DE PERMISOS ===
+facturacion.js:3032 🔐 puedeCompletarFacturas: true
+facturacion.js:3033 🔐 puedeCrearFacturas: true
+facturacion.js:3034 🔐 tipoDocumento: Factura
+facturacion.js:3054 👑 Procesando con permiso CompletarFacturas - Factura pagada inmediatamente con ajuste de stock
+facturacion.js:3067 📋 Estado determinado: Object
+facturacion.js:6590 👤 === OBTENIENDO USUARIO ACTUAL EN FACTURACIÓN ===
+facturacion.js:6591 👤 facturaConfig disponible: true
+facturacion.js:6595 👤 Usuario encontrado en facturaConfig: Object
+facturacion.js:6596 👤 Tipo de usuario obtenido: object
+facturacion.js:6597 👤 Propiedades del usuario: Array(5)
+facturacion.js:6598 👤 ID de usuario: 17
+facturacion.js:6599 👤 Nombre de usuario: Administrador
+facturacion.js:3079 👤 Usuario actual para documento: Object
+facturacion.js:3116 📝 Observaciones con información de proforma: Convertido desde proforma PROF-202509-000001
+facturacion.js:3210 📋 Datos de documento preparados: Object
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:113 ✅ Contador del sidebar actualizado: 1 usuarios
+sidebarUsuarios.js?v=HjY8tSllvQky2rUCoSmBeLYRl25x-eKhiWsKW-HQgPU:179 ✅ Panel de usuarios conectados (sidebar) actualizado
+facturacion.js:3229 ✅ Documento creado: Object
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()
+web/api/Notificaciones/conteo-no-leidas:1  Failed to load resource: the server responded with a status of 404 ()

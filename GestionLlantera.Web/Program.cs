@@ -103,6 +103,8 @@ builder.Services.AddScoped<IUsuariosService, UsuariosService>();
 builder.Services.AddScoped<IPermisosService, PermisosService>();
 builder.Services.AddScoped<IPermisosGlobalService, PermisosGlobalService>();
 builder.Services.AddScoped<IPermisosInfoService, PermisosInfoService>();
+builder.Services.AddScoped<INotificacionService, NotificacionService>();
+builder.Services.AddScoped<IServiciosService, ServiciosService>();
 
 
 var app = builder.Build();

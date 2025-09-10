@@ -130,7 +130,7 @@ namespace GestionLlantera.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "", int pagina = 1, int tamano = 20)
+        public async Task<IActionResult> ObtenerProductosParaFacturacion(string termino = "")
         {
             try
             {
@@ -158,11 +158,9 @@ namespace GestionLlantera.Web.Controllers
                     ).ToList();
                 }
 
-                // Filtrar solo productos con stock disponible para la venta
+                // Filtrar solo productos con stock disponible para la venta - SIN PAGINACIÓN
                 var productosDisponibles = todosLosProductos
                     .Where(p => p.CantidadEnInventario > 0)
-                    .Skip((pagina - 1) * tamano)
-                    .Take(tamano)
                     .ToList();
 
                 var productos = productosDisponibles.Select(p => new

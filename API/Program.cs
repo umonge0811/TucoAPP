@@ -62,9 +62,16 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowWeb", policyBuilder =>
     {
         policyBuilder
-            .WithOrigins("https://localhost:7038")
+            .WithOrigins(
+                "https://localhost:7038", // Desarrollo local
+                "http://localhost:5000",   // Desarrollo local alternativo
+                "https://www.llantasymastc.com", // Producción web
+                "http://apillantasymast.somee.com", // Producción API
+                "http://www.apillantasymast.somee.com" // Producción alternativa
+            )
             .AllowAnyMethod()
-            .AllowAnyHeader();
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 

@@ -1,0 +1,31 @@
+An unhandled exception occurred while processing the request.
+InvalidOperationException: Unable to resolve service for type 'GestionLlantera.Web.Services.Interfaces.IServiciosService' while attempting to activate 'GestionLlantera.Web.Controllers.ServiciosController'.
+Microsoft.Extensions.DependencyInjection.ActivatorUtilities.GetService(IServiceProvider sp, Type type, Type requiredBy, bool isDefaultParameterRequired)
+
+Stack Query Cookies Headers Routing
+InvalidOperationException: Unable to resolve service for type 'GestionLlantera.Web.Services.Interfaces.IServiciosService' while attempting to activate 'GestionLlantera.Web.Controllers.ServiciosController'.
+Microsoft.Extensions.DependencyInjection.ActivatorUtilities.GetService(IServiceProvider sp, Type type, Type requiredBy, bool isDefaultParameterRequired)
+lambda_method153(Closure , IServiceProvider , object[] )
+Microsoft.AspNetCore.Mvc.Controllers.ControllerFactoryProvider+<>c__DisplayClass6_0.<CreateControllerFactory>g__CreateController|0(ControllerContext controllerContext)
+Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(ref State next, ref Scope scope, ref object state, ref bool isCompleted)
+Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeNextResourceFilter>g__Awaited|25_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, object state, bool isCompleted)
+Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Rethrow(ResourceExecutedContextSealed context)
+Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.Next(ref State next, ref Scope scope, ref object state, ref bool isCompleted)
+Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.InvokeFilterPipelineAsync()
+Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Awaited|17_0(ResourceInvoker invoker, Task task, IDisposable scope)
+Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|6_0(Endpoint endpoint, Task requestTask, ILogger logger)
+GestionLlantera.Web.Middleware.PermisosAuditoriaMiddleware.InvokeAsync(HttpContext context) in PermisosAuditoriaMiddleware.cs
++
+        }
+Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+GestionLlantera.Web.Middleware.JwtClaimsMiddleware.InvokeAsync(HttpContext context) in JwtClaimsMiddleware.cs
++
+        }
+Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+Microsoft.AspNetCore.Session.SessionMiddleware.Invoke(HttpContext context)
+Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+
+Show raw exception details

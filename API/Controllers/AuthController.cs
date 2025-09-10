@@ -641,12 +641,17 @@ public class AuthController : ControllerBase
     /*El usuario despues de dar click en el enlace del correo y poner sus contraseña nueva en el formulario ejecuta este endpoint para asi cambiarla*/
     [HttpPost("restablecer-contrasena")]
     [AllowAnonymous]
-    public async Task<IActionResult> RestablecerContrasena([FromBody] RestablecerContrasenaRequestDTO request)
+    public async Task<IActionResult> RestablecerContrasena([FromBody] RestablecerContrasenaRequestDTO model)
     {
         try
         {
+            // var tokenBytes = Convert.FromBase64String(model.Token);
+            // var token = System.Text.Encoding.UTF8.GetString(tokenBytes);
+            var token = model.Token;
+
+
             var usuario = await _context.Usuarios
-                .FirstOrDefaultAsync(u => u.Token == request.Token &&
+                .FirstOrDefaultAsync(u => u.Token == token &&
                                         u.PropositoToken == PropositoTokenEnum.RecuperacionContrasena);
 
             if (usuario == null)
@@ -657,7 +662,7 @@ public class AuthController : ControllerBase
                     tipoAccion: "Restablecer Contraseña",
                     modulo: "Usuarios",
                     detalle: "Intento fallido de restablecimiento. Token inválido.",
-                    token: request.Token,
+                    token: token,
                     propositoToken: PropositoTokenEnum.RecuperacionContrasena.ToString(),
                     estadoAccion: "Error",
                     errorDetalle: "Token inválido"
@@ -675,7 +680,7 @@ public class AuthController : ControllerBase
                     tipoAccion: "Restablecer Contraseña",
                     modulo: "Usuarios",
                     detalle: "Intento de restablecimiento fallido. Token expirado.",
-                    token: request.Token,
+                    token: token,
                     propositoToken: PropositoTokenEnum.RecuperacionContrasena.ToString(),
                     estadoAccion: "Error",
                     errorDetalle: "Token expirado"
@@ -685,7 +690,7 @@ public class AuthController : ControllerBase
             }
 
             // Actualizar contraseña
-            usuario.Contrasena = HashContrasena.HashearContrasena(request.NuevaContrasena);
+            usuario.Contrasena = HashContrasena.HashearContrasena(model.NuevaContrasena);
 
             // Limpiar token usado
             usuario.Token = null;
@@ -783,4 +788,3 @@ public class AuthController : ControllerBase
 
 
 }
-

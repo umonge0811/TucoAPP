@@ -9,11 +9,12 @@ let estadoOrdenamiento = {
     direccion: 'asc'
 };
 
+// Variables globales para paginación
 let paginacionConfig = {
     paginaActual: 1,
-    productosPorPagina: 25,
+    productosPorPagina: 'all', // Por defecto todos
     totalProductos: 0,
-    totalPaginas: 0,
+    totalPaginas: 1,
     filasVisibles: []
 };
 
@@ -41,7 +42,18 @@ document.addEventListener('DOMContentLoaded', function () {
 function inicializarPaginacion() {
     console.log('📄 Inicializando sistema de paginación');
 
-    // Actualizar total de productos
+    // Configurar el selector de productos por página
+    const $selectorProductosPorPagina = $("#productosPorPagina");
+    if ($selectorProductosPorPagina.length > 0) {
+        // Asegurarse de que 'all' esté seleccionado por defecto
+        if ($selectorProductosPorPagina.val() !== 'all') {
+            $selectorProductosPorPagina.val('all');
+        }
+        // Eliminar la opción de 25 si ya existe para evitar duplicados
+        $selectorProductosPorPagina.find('option[value="25"]').remove();
+    }
+
+    // Actualizar total de productos y filas visibles
     actualizarFilasVisibles();
 
     // Configurar eventos
@@ -283,27 +295,42 @@ function generarNumerosPagina() {
 
     // Agregar puntos suspensivos si es necesario
     if (inicio > 1) {
-        $(`<li class="page-item disabled"><span class="page-link">...</span></li>`).insertAfter($("#btn-anterior"));
+        $(`<li class="page-item disabled"><span class="page-link">...</span></li>`).insertBefore($("#btn-anterior").next('.page-item'));
     }
 
     if (fin < totalPaginas) {
-        $(`<li class="page-item disabled"><span class="page-link">...</span></li>`).insertBefore($("#btn-siguiente"));
+        $(`<li class="page-item disabled"><span class="page-link">...</span></li>`).insertBefore($btnSiguiente);
     }
 }
 
 // Función para actualizar la información de paginación
 function actualizarInformacionPaginacion() {
-    const inicio = paginacionConfig.productosPorPagina === 'all'
-        ? 1
-        : ((paginacionConfig.paginaActual - 1) * paginacionConfig.productosPorPagina) + 1;
+    const $info = $('#paginacion-info');
+    const $inicio = $('#paginacion-inicio');
+    const $fin = $('#paginacion-fin');
+    const $total = $('#paginacion-total');
 
-    const fin = paginacionConfig.productosPorPagina === 'all'
-        ? paginacionConfig.totalProductos
-        : Math.min(paginacionConfig.paginaActual * paginacionConfig.productosPorPagina, paginacionConfig.totalProductos);
+    if (paginacionConfig.totalProductos === 0) {
+        $info.text('No hay productos que mostrar');
+        $inicio.text('0');
+        $fin.text('0');
+        $total.text('0');
+        return;
+    }
 
-    $("#paginacion-inicio").text(paginacionConfig.totalProductos > 0 ? inicio : 0);
-    $("#paginacion-fin").text(fin);
-    $("#paginacion-total").text(paginacionConfig.totalProductos);
+    if (paginacionConfig.productosPorPagina === 'all') {
+        $inicio.text('1');
+        $fin.text(paginacionConfig.totalProductos);
+        $total.text(paginacionConfig.totalProductos);
+    } else {
+        const porPagina = parseInt(paginacionConfig.productosPorPagina);
+        const inicio = (paginacionConfig.paginaActual - 1) * porPagina + 1;
+        const fin = Math.min(inicio + porPagina - 1, paginacionConfig.totalProductos);
+
+        $inicio.text(inicio);
+        $fin.text(fin);
+        $total.text(paginacionConfig.totalProductos);
+    }
 }
 
 // ✅ FUNCIONES GLOBALES DE PRODUCTOS Y MODALES
@@ -1299,19 +1326,20 @@ function ordenarPorColumna(columna, tipo) {
     actualizarIndicadoresOrdenamiento(columna);
 
     // ✅ CORRIGIENDO: Mostrar todas las filas temporalmente para ordenar
-    const tabla = $("table tbody");
+    const tabla = $("table");
+    const tbody = tabla.find("tbody");
 
     // Guardar estado de visibilidad actual
     const estadosVisibilidad = [];
-    tabla.find("tr").each(function (index) {
+    tbody.find("tr").each(function (index) {
         estadosVisibilidad[index] = $(this).is(':visible');
     });
 
     // Mostrar todas las filas temporalmente para el ordenamiento
-    tabla.find("tr").show();
+    tbody.find("tr").show();
 
     // Obtener y ordenar TODAS las filas
-    const filas = tabla.find("tr").get();
+    const filas = tbody.find("tr").get();
 
     filas.sort(function (a, b) {
         return compararValores(a, b, columna, tipo, estadoOrdenamiento.direccion);
@@ -1319,16 +1347,11 @@ function ordenarPorColumna(columna, tipo) {
 
     // Reordenar filas en la tabla
     $.each(filas, function (indice, fila) {
-        tabla.append(fila);
+        tbody.append(fila);
     });
 
     // ✅ CORRIGIENDO: Actualizar paginación sin afectar el conteo total
     actualizarFilasVisibles();
-
-    // REEMPLAZAR CON:
-    if (typeof actualizarFilasVisibles === 'function') {
-        actualizarFilasVisibles();
-    }
 
     renderizarPagina(paginacionConfig.paginaActual);
 
@@ -1546,11 +1569,6 @@ $(document).ready(function () {
     });
 
     $("#cantidad").on('input', function () {
-        $(this).removeClass('is-invalid');
-        $(this).siblings('.invalid-feedback').remove();
-    });
-
-    $("#comentario").on('input', function () {
         $(this).removeClass('is-invalid');
         $(this).siblings('.invalid-feedback').remove();
     });
@@ -1956,7 +1974,8 @@ $(document).ready(function () {
     $("#sortBy").on("change", function () {
         const valor = $(this).val();
         const tabla = $("table");
-        const filas = tabla.find("tbody tr").get();
+        const tbody = tabla.find("tbody");
+        const filas = tbody.find("tr").get();
 
         filas.sort(function (a, b) {
             let valorA, valorB;
@@ -1983,7 +2002,7 @@ $(document).ready(function () {
         });
 
         $.each(filas, function (indice, fila) {
-            tabla.find("tbody").append(fila);
+            tbody.append(fila);
         });
 
         // Actualizar paginación después del ordenamiento

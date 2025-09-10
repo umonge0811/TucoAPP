@@ -1,0 +1,124 @@
+function actualizarResumenVentaModal() {
+    const metodoSeleccionado = $('input[name="metodoPago"]:checked').val() || 'efectivo';
+    const configMetodo = CONFIGURACION_PRECIOS[metodoSeleccionado];
+
+    // Recalcular precios según método de pago seleccionado
+    let subtotal = 0;
+
+    // ===== MOSTRAR RESUMEN DE PRODUCTOS Y SERVICIOS =====
+    let htmlResumen = `
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Producto/Servicio</th>
+                        <th class="text-center">Cant.</th>
+                        <th class="text-end">Precio Unit.</th>
+                        <th class="text-end">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    // ✅ PROCESAR PRODUCTOS
+    productosEnVenta.forEach(producto => {
+        // Calcular precio según método de pago seleccionado
+        const precioAjustado = producto.precioUnitario * configMetodo.multiplicador;
+        const subtotalProducto = precioAjustado * producto.cantidad;
+        subtotal += subtotalProducto;
+
+        // ✅ CONSTRUIR NOMBRE COMPLETO CON MEDIDA DE LLANTA EN EL MODAL (evitar duplicación)
+        let infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+        if (producto.esLlanta && producto.medidaCompleta) {
+            // Verificar si la medida ya está incluida en el nombre del producto
+            if (!producto.nombreProducto.includes(producto.medidaCompleta)) {
+                infoProductoCompleta = `<strong>${producto.medidaCompleta} ${producto.nombreProducto}</strong>`;
+            } else {
+                // Si ya está incluida, solo mostrar el nombre tal como está
+                infoProductoCompleta = `<strong>${producto.nombreProducto}</strong>`;
+            }
+        }
+
+        htmlResumen += `
+            <tr>
+                <td>
+                    ${infoProductoCompleta}
+                </td>
+                <td class="text-center">${producto.cantidad}</td>
+                <td class="text-end">₡${formatearMoneda(precioAjustado)}</td>
+                <td class="text-end">₡${formatearMoneda(subtotalProducto)}</td>
+            </tr>
+        `;
+    });
+
+    // ✅ PROCESAR SERVICIOS
+    if (window.serviciosEnVenta && window.serviciosEnVenta.length > 0) {
+        window.serviciosEnVenta.forEach(servicio => {
+            // Los servicios mantienen su precio base (no se ajustan por método de pago)
+            const precioServicio = servicio.precioUnitario || servicio.precio || 0;
+            const subtotalServicio = precioServicio * servicio.cantidad;
+            subtotal += subtotalServicio;
+
+            // ✅ CONSTRUIR NOMBRE COMPLETO DEL SERVICIO
+            let infoServicioCompleta = `<strong><i class="bi bi-tools me-1 text-success"></i>[SERVICIO] ${servicio.nombreProducto}</strong>`;
+
+            // Agregar tipo de servicio si existe
+            if (servicio.tipoServicio) {
+                infoServicioCompleta += `<br><small class="text-muted">Tipo: ${servicio.tipoServicio}</small>`;
+            }
+
+            // Agregar observaciones si existen
+            if (servicio.observaciones) {
+                infoServicioCompleta += `<br><small class="text-info">Obs: ${servicio.observaciones}</small>`;
+            }
+
+            htmlResumen += `
+                <tr class="table-light">
+                    <td>
+                        ${infoServicioCompleta}
+                    </td>
+                    <td class="text-center">${servicio.cantidad}</td>
+                    <td class="text-end">₡${formatearMoneda(precioServicio)}</td>
+                    <td class="text-end">₡${formatearMoneda(subtotalServicio)}</td>
+                </tr>
+            `;
+        });
+    }
+
+    const iva = subtotal * 0.13;
+    const total = subtotal + iva;
+
+    htmlResumen += `
+                </tbody>
+                <tfoot class="table-light">
+                    <tr>
+                        <th colspan="3" class="text-end">Subtotal:</th>
+                        <th class="text-end">₡${formatearMoneda(subtotal)}</th>
+                    </tr>
+                    <tr>
+                        <th colspan="3" class="text-end">IVA (13%):</th>
+                        <th class="text-end">₡${formatearMoneda(iva)}</th>
+                    </tr>
+                    <tr class="table-success">
+                        <th colspan="3" class="text-end">TOTAL (${configMetodo.nombre}):</th>
+                        <th class="text-end">₡${formatearMoneda(total)}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    `;
+
+    $('#resumenVentaFinal').html(htmlResumen);
+    $('#totalFinalVenta').text(`₡${formatearMoneda(total)}`);
+
+    // Mostrar/ocultar campos según el método de pago
+    if (metodoSeleccionado === 'efectivo') {
+        $('#campoEfectivoRecibido').show();
+        $('#campoCambio').show();
+        $('#efectivoRecibido').val(total.toFixed(2));
+        calcularCambioModal();
+    } else {
+        $('#campoEfectivoRecibido').hide();
+        $('#campoCambio').hide();
+    }
+}

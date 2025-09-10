@@ -104,9 +104,6 @@ namespace API.Controllers
                         UtilidadEnDinero = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
                             ? p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m)
                             : (decimal?)null,
-                        PrecioCalculado = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue)
-                            ? p.Costo.Value + (p.Costo.Value * (p.PorcentajeUtilidad.Value / 100m))
-                            : p.Precio,
                         UsarCalculoAutomatico = (puedeVerCostos && puedeVerUtilidades && p.Costo.HasValue && p.PorcentajeUtilidad.HasValue),
                         p.Precio,
                         p.CantidadEnInventario,
@@ -1149,12 +1146,12 @@ namespace API.Controllers
                         if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                         {
                             // Formato completo: 215/55R16
-                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}/{llanta.Perfil}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault().ToString("0.##")}/{llanta.Perfil?.ToString("0.##")}R{llanta.Diametro}";
                         }
                         else
                         {
                             // Formato sin perfil: 215R16
-                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault().ToString("0.##")}R{llanta.Diametro}";
                         }
 
                         // Agregar medida al nombre: "NombreProducto_215-55R16"
@@ -1365,8 +1362,8 @@ namespace API.Controllers
             [FromQuery] int tamano = 12,
             [FromQuery] string? busqueda = null,
             [FromQuery] string? marca = null,
-            [FromQuery] int? ancho = null,
-            [FromQuery] int? perfil = null,
+            [FromQuery] decimal? ancho = null,
+            [FromQuery] decimal? perfil = null,
             [FromQuery] string? diametro = null)
         {
             try
@@ -1466,8 +1463,8 @@ namespace API.Controllers
                             tipoTerreno = p.Llanta.First().TipoTerreno ?? "",
                             capas = p.Llanta.First().Capas,
                             medidaCompleta = p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
-                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}/R{p.Llanta.First().Diametro}"
-                                : $"{p.Llanta.First().Ancho}/R{p.Llanta.First().Diametro}"
+                                ? $"{(p.Llanta.First().Ancho.HasValue ? p.Llanta.First().Ancho.Value.ToString("0.##") : "0")}/{p.Llanta.First().Perfil.Value.ToString("0.##")}/R{p.Llanta.First().Diametro}"
+                                : $"{(p.Llanta.First().Ancho.HasValue ? p.Llanta.First().Ancho.Value.ToString("0.##") : "0")}/R{p.Llanta.First().Diametro}"
                         } : null,
                         
                         // ✅ CAMPOS ADICIONALES PARA COMPATIBILIDAD
@@ -1475,8 +1472,8 @@ namespace API.Controllers
                         modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         medidaCompleta = p.Llanta.Any() 
                             ? (p.Llanta.First().Perfil.HasValue && p.Llanta.First().Perfil.Value > 0
-                                ? $"{p.Llanta.First().Ancho}/{p.Llanta.First().Perfil}R{p.Llanta.First().Diametro}"
-                                : $"{p.Llanta.First().Ancho}R{p.Llanta.First().Diametro}")
+                                ? $"{(p.Llanta.First().Ancho.HasValue ? p.Llanta.First().Ancho.Value.ToString("0.##") : "0")}/{p.Llanta.First().Perfil.Value.ToString("0.##")}R{p.Llanta.First().Diametro}"
+                                : $"{(p.Llanta.First().Ancho.HasValue ? p.Llanta.First().Ancho.Value.ToString("0.##") : "0")}R{p.Llanta.First().Diametro}")
                             : null
                     })
                     .ToListAsync();
@@ -1543,7 +1540,10 @@ namespace API.Controllers
                             l.Modelo,
                             l.Capas,
                             l.IndiceVelocidad,
-                            l.TipoTerreno
+                            l.TipoTerreno,
+                            MedidaCompleta = l.Perfil.HasValue && l.Perfil.Value > 0
+                                ? (l.Ancho.HasValue ? l.Ancho.Value.ToString("0.##") : "0") + "/" + l.Perfil.Value.ToString("0.##") + "R" + l.Diametro
+                                : (l.Ancho.HasValue ? l.Ancho.Value.ToString("0.##") : "0") + "R" + l.Diametro
                         }).FirstOrDefault()
                     })
                     .FirstOrDefaultAsync();
