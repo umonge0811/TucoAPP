@@ -110,11 +110,11 @@
                                         <div class="spec-value">
                                             @if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                                             {
-                                                @($"{llanta.Ancho}/{llanta.Perfil}/R{llanta.Diametro}")
+                                                @($"{llanta.Ancho?.ToString("0.##")}/{llanta.Perfil?.ToString("0.##")}/R{llanta.Diametro}")
                                             }
                                             else
                                             {
-                                                @($"{llanta.Ancho}/R{llanta.Diametro}")
+                                                @($"{llanta.Ancho?.ToString("0.##")}/R{llanta.Diametro}")
                                             }
                                         </div>
                                     </div>
