@@ -1146,12 +1146,12 @@ namespace API.Controllers
                         if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                         {
                             // Formato completo: 215/55R16
-                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}/{llanta.Perfil}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault().ToString("0.##")}/{llanta.Perfil?.ToString("0.##")}R{llanta.Diametro}";
                         }
                         else
                         {
                             // Formato sin perfil: 215R16
-                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault()}R{llanta.Diametro}";
+                            medidaCompleta = $"{llanta.Ancho.GetValueOrDefault().ToString("0.##")}R{llanta.Diametro}";
                         }
 
                         // Agregar medida al nombre: "NombreProducto_215-55R16"
