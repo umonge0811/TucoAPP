@@ -75,7 +75,7 @@ namespace API.Controllers
                         p.Llanta.Any(l => 
                             l.Marca.Contains(busqueda) ||
                             l.Modelo.Contains(busqueda) ||
-                            (l.Ancho + "/" + l.Perfil + "R" + l.Diametro).Contains(busqueda)
+                            (l.Ancho?.ToString("0.##") + "/" + l.Perfil?.ToString("0.##") + "R" + l.Diametro).Contains(busqueda)
                         )
                     );
                 }
@@ -97,7 +97,7 @@ namespace API.Controllers
                         FechaUltimaActualizacion = p.FechaUltimaActualizacion,
                         EsLlanta = p.Llanta.Any(),
                         MedidaCompleta = p.Llanta.Any() ? 
-                            p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil + "R" + p.Llanta.First().Diametro : null,
+                            p.Llanta.First().Ancho?.ToString("0.##") + "/" + p.Llanta.First().Perfil?.ToString("0.##") + "R" + p.Llanta.First().Diametro : null,
                         Marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
                         Modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         IndiceVelocidad = p.Llanta.Any() ? p.Llanta.First().IndiceVelocidad : null,
@@ -147,7 +147,7 @@ namespace API.Controllers
                         FechaUltimaActualizacion = p.FechaUltimaActualizacion,
                         EsLlanta = p.Llanta.Any(),
                         MedidaCompleta = p.Llanta.Any() ? 
-                            p.Llanta.First().Ancho + "/" + p.Llanta.First().Perfil + "R" + p.Llanta.First().Diametro : null,
+                            p.Llanta.First().Ancho?.ToString("0.##") + "/" + p.Llanta.First().Perfil?.ToString("0.##") + "R" + p.Llanta.First().Diametro : null,
                         Marca = p.Llanta.Any() ? p.Llanta.First().Marca : null,
                         Modelo = p.Llanta.Any() ? p.Llanta.First().Modelo : null,
                         IndiceVelocidad = p.Llanta.Any() ? p.Llanta.First().IndiceVelocidad : null,
@@ -640,7 +640,7 @@ namespace API.Controllers
                                 false : (d.Producto != null && d.Producto.Llanta.Any()),
                             MedidaLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
                                 null : (d.Producto != null && d.Producto.Llanta.Any() ?
-                                    d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "R" + d.Producto.Llanta.First().Diametro : null),
+                                    d.Producto.Llanta.First().Ancho?.ToString("0.##") + "/" + d.Producto.Llanta.First().Perfil?.ToString("0.##") + "R" + d.Producto.Llanta.First().Diametro : null),
                             MarcaLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
                                 null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null),
                             ModeloLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
