@@ -72,10 +72,9 @@
                     <div class="producto-precio">
                         @{
                             decimal precioBase = Model.Precio ?? 0;
-                            decimal precioConIVA = precioBase * 1.13m; // Agregar 13% de IVA
                         }
                         <div class="precio-valor">
-                            <span class="precio-monto">₡@precioConIVA.ToString("N0")</span>
+                            <span class="precio-monto">₡@precioBase.ToString("N0")</span>
                             <small class="precio-ivi">I.V.I.</small>
                         </div>
                         <small class="precio-condiciones">
