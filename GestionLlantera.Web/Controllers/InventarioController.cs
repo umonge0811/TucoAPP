@@ -508,6 +508,7 @@ namespace GestionLlantera.Web.Controllers
                     _logger.LogInformation("📝 Form[{Key}] = '{Value}'", key, Request.Form[key]);
                 }
 
+
                 // Debugging para imágenes a eliminar
                 if (imagenesAEliminar != null && imagenesAEliminar.Any())
                 {

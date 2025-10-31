@@ -708,6 +708,27 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+
+        // MAPEO CORREGIDO SEGÚN LA ESTRUCTURA REAL
+        const tipoTerreno = (() => {
+            // Verificar directamente en producto
+            if (producto.tipoTerreno || producto.TipoTerreno || producto.terreno) {
+                return producto.tipoTerreno || producto.TipoTerreno || producto.terreno;
+            }
+
+            // Verificar en objeto llanta (minúsculas)
+            if (producto.llanta) {
+                return producto.llanta.tipoterreno || producto.llanta.tipoTerreno || producto.llanta.TipoTerreno || '';
+            }
+
+            // Verificar en objeto Llanta array
+            if (producto.Llanta && producto.Llanta[0]) {
+                return producto.Llanta[0].tipoterreno || producto.Llanta[0].tipoTerreno || producto.Llanta[0].TipoTerreno || '';
+            }
+
+            return '';
+        })();
+        console.log('🌍 Tipo de terreno detectado:', tipoTerreno, 'para producto:', nombreProducto);
         // ✅ MAPEO MEJORADO DE MEDIDA DE LLANTA
         let medidaCompleta = null;
         let esLlanta = producto.esLlanta || producto.EsLlanta || false;
@@ -720,8 +741,14 @@ function mostrarResultadosProductos(productos) {
                 const llantaInfo = producto.llanta || producto.Llanta[0];
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
-                        // Formato completo con perfil: 215/55/R16
-                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        // ✅ FORMATEO INTELIGENTE DEL PERFIL
+                        const perfilNum = parseFloat(llantaInfo.perfil);
+                        const perfilFormateado = (perfilNum % 1 === 0) ?
+                            perfilNum.toString() :
+                            perfilNum.toFixed(2);
+
+                        // Formato completo con perfil: 215/55.00/R16 o 215/20/R16
+                        medidaCompleta = `${llantaInfo.ancho}/${perfilFormateado}/R${llantaInfo.diametro}`;
                     } else {
                         // Formato sin perfil: 215/R16
                         medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
@@ -733,7 +760,13 @@ function mostrarResultadosProductos(productos) {
                 // Verificar formatos alternativos que puedan venir del backend
                 if (producto.Ancho && producto.Diametro) {
                     if (producto.Perfil && producto.Perfil > 0) {
-                        medidaCompleta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                        // ✅ FORMATEO INTELIGENTE DEL PERFIL (alternativa)
+                        const perfilNum = parseFloat(producto.Perfil);
+                        const perfilFormateado = (perfilNum % 1 === 0) ?
+                            perfilNum.toString() :
+                            perfilNum.toFixed(2);
+
+                        medidaCompleta = `${producto.Ancho}/${perfilFormateado}/R${producto.Diametro}`;
                     } else {
                         medidaCompleta = `${producto.Ancho}/R${producto.Diametro}`;
                     }
@@ -819,7 +852,8 @@ function mostrarResultadosProductos(productos) {
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
             esLlanta: esLlanta,
-            medidaCompleta: medidaCompleta
+            medidaCompleta: medidaCompleta,
+            tipoTerreno: tipoTerreno  // ✅ Corregido: usar la variable declarada
         };
         // ESCAPAR DATOS
         const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
@@ -835,10 +869,11 @@ function mostrarResultadosProductos(productos) {
         });
         if (productoLimpio.esLlanta && medidaCompleta) {
             infoLlanta = `
-                <div class="info-llanta mb-2">
-                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
-                </div>
-            `;
+        <div class="info-llanta mb-2 d-flex justify-content-between align-items-center">
+            <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
+            ${tipoTerreno ? `<small class="text-muted ms-2">🛞 ${tipoTerreno}</small>` : ''}
+        </div>
+    `;
         }
         html += `
                         <div class="col-md-6 col-lg-4 mb-3">
