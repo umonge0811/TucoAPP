@@ -1705,11 +1705,11 @@ function actualizarTotales() {
         total += item.subtotal || (item.precioUnitario * item.cantidad);
     });
     // El precio ya incluye IVA del 13%, así que extraemos el IVA incluido
-    const subtotal = total / 1.13; // Precio sin IVA
+    const subtotal = total // Precio sin IVA
     const iva = total - subtotal;   // IVA que estaba incluido
     // ✅ AGREGAR SÍMBOLOS DE MONEDA AQUÍ
     $('#subtotalVenta').text('₡' + formatearMoneda(subtotal));
-    $('#ivaVenta').text('₡' + formatearMoneda(iva));
+    //$('#ivaVenta').text('₡' + formatearMoneda(iva));
     $('#totalVenta').text('₡' + formatearMoneda(total));
 }
 
@@ -2005,7 +2005,7 @@ function actualizarResumenVentaModal() {
         });
     }
 
-    const iva = subtotal * 0.13;
+    const iva = subtotal * 0;
     const total = subtotal + iva;
 
     htmlResumen += `
@@ -2014,11 +2014,7 @@ function actualizarResumenVentaModal() {
                     <tr>
                         <th colspan="3" class="text-end">Subtotal:</th>
                         <th class="text-end">₡${formatearMoneda(subtotal)}</th>
-                    </tr>
-                    <tr>
-                        <th colspan="3" class="text-end">IVA (13%):</th>
-                        <th class="text-end">₡${formatearMoneda(iva)}</th>
-                    </tr>
+                    </tr>                    
                     <tr class="table-success">
                         <th colspan="3" class="text-end">TOTAL (${configMetodo.nombre}):</th>
                         <th class="text-end">₡${formatearMoneda(total)}</th>
@@ -2152,7 +2148,7 @@ function configurarModalSegunPermisos() {
 
 
 function calcularCambio() {
-    const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0) * 1.13;
+    const total = productosEnVenta.reduce((sum, p) => sum + (p.precioUnitario * p.cantidad), 0);
     const montoRecibido = parseFloat($('#montoRecibido').val()) || 0;
     const cambio = montoRecibido - total;
 
@@ -2170,7 +2166,7 @@ function calcularCambioModal() {
         subtotal += precioAjustado * producto.cantidad;
     });
 
-    const iva = subtotal * 0.13;
+    const iva = subtotal * 0;
     const total = subtotal + iva;
 
     const efectivoRecibido = parseFloat($('#efectivoRecibido').val()) || 0;
@@ -2416,7 +2412,7 @@ function calcularTotalFactura() {
         subtotal += precioAjustado * producto.cantidad;
     });
 
-    const iva = subtotal * 0.13;
+    const iva = subtotal;
     return subtotal + iva;
 }
 
@@ -2681,7 +2677,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             });
         }
 
-        const iva = subtotal * 0.13;
+        const iva = subtotal;
         const total = subtotal + iva;
 
         // ✅ DETERMINAR ESTADO Y PERMISOS SEGÚN EL TIPO DE DOCUMENTO
@@ -2787,7 +2783,7 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             fechaVencimiento: fechaVencimiento ? fechaVencimiento.toISOString() : null,
             subtotal: subtotal,
             descuentoGeneral: 0,
-            porcentajeImpuesto: 13,
+            porcentajeImpuesto: 0,
             montoImpuesto: iva,
             total: total,
             estado: estadoFactura,
@@ -4909,7 +4905,7 @@ function generarReciboFacturaCompletada(resultadoFactura, productos, metodoPago)
             subtotal += precioAjustado * producto.cantidad;
         });
 
-        const iva = subtotal * 0.13;
+        const iva = subtotal * 0;
         const total = subtotal + iva;
 
         // ✅ CREAR OBJETO DE DATOS COMPLETO PARA EL RECIBO

@@ -309,7 +309,6 @@ function construirSeccionTotales(totales, anchoMaximo) {
     return `
         <div class="seccion-totales-termico">
             <div class="linea-total-termico">${formatearLineaTermica('Subtotal:', `₡${totales.subtotal.toFixed(0)}`, anchoMaximo)}</div>
-            <div class="linea-total-termico">${formatearLineaTermica('IVA (13%):', `₡${totales.iva.toFixed(0)}`, anchoMaximo)}</div>
             <div class="separador-total-termico"></div>
             <div class="total-final-termico">${formatearLineaTermica('TOTAL:', `₡${totales.total.toFixed(0)}`, anchoMaximo)}</div>
         </div>
