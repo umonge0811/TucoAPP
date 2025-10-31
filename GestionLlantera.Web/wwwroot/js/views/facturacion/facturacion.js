@@ -5357,7 +5357,7 @@ function verDetalleProducto(producto) {
     const diametro = producto.diametro || 'N/A';
     const marca = producto.marca || 'N/A';
     const modelo = producto.modelo || 'N/A';
-    const tipoTerreno = producto.tipoTerreno || 'N/A';
+    const tipoTerreno = producto.tipoterreno || 'N/A';
     const indiceVelocidad = producto.indiceVelocidad || 'N/A';
     const capas = producto.capas || 'N/A';
 
