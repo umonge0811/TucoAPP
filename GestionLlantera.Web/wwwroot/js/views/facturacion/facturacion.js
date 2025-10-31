@@ -715,6 +715,7 @@ function mostrarResultadosProductos(productos) {
         const ancho = producto.llanta.ancho || producto.llanta.Ancho || '';
         const perfil = producto.llanta.perfil || producto.llanta.Perfil || '';
         const diametro = producto.llanta.diametro || producto.llanta.Diametro || '';
+        const capas = producto.llanta.capas || producto.llanta.Capas || '';
 
 
         // MAPEO CORREGIDO SEGÚN LA ESTRUCTURA REAL
@@ -868,7 +869,8 @@ function mostrarResultadosProductos(productos) {
             ancho: ancho,
             perfil: perfil,
             diametro: diametro,
-            descripcion: descripcion
+            descripcion: descripcion,
+            capas: capas
         };
         // ESCAPAR DATOS
         const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
@@ -887,6 +889,7 @@ function mostrarResultadosProductos(productos) {
         <div class="info-llanta mb-2 d-flex justify-content-between align-items-center">
             <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
             ${tipoTerreno ? `<small class="text-muted ms-2">🛞 ${tipoTerreno}</small>` : ''}
+            ${capas ? `<small class="text-muted ms-2"> ${capas}PR</small>` : ''}
         </div>
     `;
         }
@@ -5360,6 +5363,7 @@ function verDetalleProducto(producto) {
     const modelo = producto.modelo || 'N/A';
     const tipoTerreno = producto.tipoTerreno || 'N/A';
     const indiceVelocidad = producto.indiceVelocidad || 'N/A';
+    const capas = producto.capas || 'N/A';
 
     // ✅ FORMATEAR PERFIL CORRECTAMENTE
     let perfilFormateado = 'N/A';
@@ -5470,6 +5474,7 @@ function verDetalleProducto(producto) {
                                                             </div>
                                                         </div>
                                                     </div>
+                                                    
                                                 </div>
 
                                                 <!-- Medida Completa Destacada -->
@@ -5513,6 +5518,17 @@ function verDetalleProducto(producto) {
                                                                     <div>
                                                                         <small class="text-muted d-block">Terreno</small>
                                                                         <strong class="small">${tipoTerreno}</strong>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ` : ''}
+                                                        ${capas !== 'N/A' ? `
+                                                            <div class="col-6">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="bi bi-layers-fill text-info me-2"></i>
+                                                                    <div>
+                                                                        <small class="text-muted d-block">Capas</small>
+                                                                        <strong class="small">${capas}</strong>
                                                                     </div>
                                                                 </div>
                                                             </div>
