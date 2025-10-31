@@ -339,24 +339,19 @@ function actualizarInformacionPaginacion() {
 function cargarDetallesProducto(productoId) {
     resetFormularioDetalles();
     $("#productoId").val(productoId);
-
     const fila = $(`button.ver-detalles-btn[data-id="${productoId}"]`).closest("tr");
-
     if (fila.length === 0) {
         mostrarNotificacion("Error", "No se encontró el producto en la tabla", "danger");
         return;
     }
-
     // Datos básicos del producto
     const nombre = fila.find("td:eq(2) strong").text();
     const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción adicional";
     const stock = parseInt(fila.find("td:eq(8)").text().trim().split(' ')[0].replace(/[^\d]/g, '')) || 0;
     const stockMin = parseInt(fila.find("td:eq(9)").text().trim()) || 0;
-
     // Datos de precios
     const precioFinalTexto = fila.find("td:eq(7)").text().trim();
     const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim();
-
     // Cargar información básica en el modal
     $("#nombreProductoVistaRapida").text(nombre);
     $("#descripcionVistaRapida").text(descripcion);
@@ -364,43 +359,44 @@ function cargarDetallesProducto(productoId) {
     $("#stockMinimoVistaRapida").text(stockMin);
     $("#precioProductoVistaRapida").text(precioFinalTexto.split('\n')[0] || "₡0");
     $("#tipoPrecioVistaRapida").text(tipoPrecioTexto || "Precio manual");
-
     // Configurar colores del precio
     if (tipoPrecioTexto === "Calculado") {
         $("#precioProductoVistaRapida").removeClass("text-primary").addClass("text-success");
     } else {
         $("#precioProductoVistaRapida").removeClass("text-success").addClass("text-primary");
     }
-
     // Configurar indicador visual de stock
     configurarIndicadorStock(stock, stockMin);
-
     // Cargar imágenes del producto
     cargarImagenesEnModal(fila, productoId);
-
     // Verificar si es una llanta y mostrar info específica
     const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
     if (esLlanta) {
         $("#infoLlantaVistaRapida").show();
         const medidas = fila.find("td:eq(3) .medida-llanta").text().trim();
-        const marcaModelo = fila.find("td:eq(4) .marca-modelo span").first().text().trim();
+        const marcaModelo = fila.find("td:eq(5) .marca-modelo span").first().text().trim();
+
+        // ✅ OBTENER TIPO DE TERRENO (ajusta el índice según tu tabla)
+        const tipoTerreno = fila.find("td:eq(4)").text().trim(); // Ajusta el índice según la posición de tu columna
 
         $("#medidasVistaRapida").text(medidas !== "N/A" && medidas ? medidas : "No disponible");
         $("#marcaVistaRapida").text(marcaModelo !== "N/A" && marcaModelo ? marcaModelo : "No disponible");
+
+        // ✅ CARGAR TIPO DE TERRENO
+        $("#tipoTerrenoVistaRapida").text(tipoTerreno !== "N/A" && tipoTerreno ? tipoTerreno : "No disponible");
     } else {
         $("#infoLlantaVistaRapida").hide();
     }
-
     // Configurar botones
     $("#btnVerDetallesCompletos").attr("href", `/Inventario/DetalleProducto/${productoId}`);
     $("#btnAjustarStockVistaRapida").data("id", productoId);
-
     // ✅ REORGANIZAR BOTONES PARA MÓVILES
     reorganizarBotonesModal();
-
     // Mostrar el modal
     $("#detallesProductoModal").modal("show");
 }
+
+
 // ✅ NUEVA FUNCIÓN PARA REORGANIZAR BOTONES EN MÓVILES
 function reorganizarBotonesModal() {
     const isMobile = window.innerWidth <= 767;

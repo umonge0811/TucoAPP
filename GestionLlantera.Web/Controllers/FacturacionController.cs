@@ -185,7 +185,8 @@ namespace GestionLlantera.Web.Controllers
                         perfil = p.Llanta.Perfil,
                         diametro = p.Llanta.Diametro,
                         indiceVelocidad = p.Llanta.IndiceVelocidad ?? "",
-                        medidaCompleta = $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}"
+                        medidaCompleta = $"{p.Llanta.Ancho}/{p.Llanta.Perfil}R{p.Llanta.Diametro}",
+                        tipoTerreno = p.Llanta.TipoTerreno
                     } : null
                 }).ToList();
 

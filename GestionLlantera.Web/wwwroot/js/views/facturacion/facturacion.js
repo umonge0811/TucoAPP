@@ -708,6 +708,35 @@ function mostrarResultadosProductos(productos) {
         const precio = producto.precio || producto.Precio || 0;
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
+        const indiceVelocidad = producto.llanta.indiceVelocidad || producto.llanta.indiceVelocidad || '';
+        const marca = producto.llanta.marca || producto.llanta.Marca || 'Marca desconocida';
+        const modelo = producto.llanta.modelo || producto.llanta.Modelo || 'Modelo desconocido';
+        const descripcion = producto.llanta.descripcion || producto.llanta.Descripcion || 'Sin descripción disponible';
+        const ancho = producto.llanta.ancho || producto.llanta.Ancho || '';
+        const perfil = producto.llanta.perfil || producto.llanta.Perfil || '';
+        const diametro = producto.llanta.diametro || producto.llanta.Diametro || '';
+
+
+        // MAPEO CORREGIDO SEGÚN LA ESTRUCTURA REAL
+        const tipoTerreno = (() => {
+            // Verificar directamente en producto
+            if (producto.tipoTerreno || producto.TipoTerreno || producto.terreno) {
+                return producto.tipoTerreno || producto.TipoTerreno || producto.terreno;
+            }
+
+            // Verificar en objeto llanta (minúsculas)
+            if (producto.llanta) {
+                return producto.llanta.tipoterreno || producto.llanta.tipoTerreno || producto.llanta.TipoTerreno || '';
+            }
+
+            // Verificar en objeto Llanta array
+            if (producto.Llanta && producto.Llanta[0]) {
+                return producto.Llanta[0].tipoterreno || producto.Llanta[0].tipoTerreno || producto.Llanta[0].TipoTerreno || '';
+            }
+
+            return '';
+        })();
+        console.log('🌍 Tipo de terreno detectado:', tipoTerreno, 'para producto:', nombreProducto);
         // ✅ MAPEO MEJORADO DE MEDIDA DE LLANTA
         let medidaCompleta = null;
         let esLlanta = producto.esLlanta || producto.EsLlanta || false;
@@ -720,8 +749,14 @@ function mostrarResultadosProductos(productos) {
                 const llantaInfo = producto.llanta || producto.Llanta[0];
                 if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
                     if (llantaInfo.perfil && llantaInfo.perfil > 0) {
-                        // Formato completo con perfil: 215/55/R16
-                        medidaCompleta = `${llantaInfo.ancho}/${llantaInfo.perfil}/R${llantaInfo.diametro}`;
+                        // ✅ FORMATEO INTELIGENTE DEL PERFIL
+                        const perfilNum = parseFloat(llantaInfo.perfil);
+                        const perfilFormateado = (perfilNum % 1 === 0) ?
+                            perfilNum.toString() :
+                            perfilNum.toFixed(2);
+
+                        // Formato completo con perfil: 215/55.00/R16 o 215/20/R16
+                        medidaCompleta = `${llantaInfo.ancho}/${perfilFormateado}/R${llantaInfo.diametro}`;
                     } else {
                         // Formato sin perfil: 215/R16
                         medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
@@ -733,7 +768,13 @@ function mostrarResultadosProductos(productos) {
                 // Verificar formatos alternativos que puedan venir del backend
                 if (producto.Ancho && producto.Diametro) {
                     if (producto.Perfil && producto.Perfil > 0) {
-                        medidaCompleta = `${producto.Ancho}/${producto.Perfil}/R${producto.Diametro}`;
+                        // ✅ FORMATEO INTELIGENTE DEL PERFIL (alternativa)
+                        const perfilNum = parseFloat(producto.Perfil);
+                        const perfilFormateado = (perfilNum % 1 === 0) ?
+                            perfilNum.toString() :
+                            perfilNum.toFixed(2);
+
+                        medidaCompleta = `${producto.Ancho}/${perfilFormateado}/R${producto.Diametro}`;
                     } else {
                         medidaCompleta = `${producto.Ancho}/R${producto.Diametro}`;
                     }
@@ -819,7 +860,15 @@ function mostrarResultadosProductos(productos) {
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: producto.descripcion || producto.Descripcion || '',
             esLlanta: esLlanta,
-            medidaCompleta: medidaCompleta
+            medidaCompleta: medidaCompleta,
+            tipoTerreno: tipoTerreno,  // ✅ Corregido: usar la variable declarada
+            indiceVelocidad: indiceVelocidad,
+            marca: marca,
+            modelo: modelo,
+            ancho: ancho,
+            perfil: perfil,
+            diametro: diametro,
+            descripcion: descripcion
         };
         // ESCAPAR DATOS
         const nombreEscapado = nombreProducto.replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
@@ -835,10 +884,11 @@ function mostrarResultadosProductos(productos) {
         });
         if (productoLimpio.esLlanta && medidaCompleta) {
             infoLlanta = `
-                <div class="info-llanta mb-2">
-                    <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
-                </div>
-            `;
+        <div class="info-llanta mb-2 d-flex justify-content-between align-items-center">
+            <small class="text-primary"><i class="bi bi-tire me-1"></i>${medidaCompleta}</small>
+            ${tipoTerreno ? `<small class="text-muted ms-2">🛞 ${tipoTerreno}</small>` : ''}
+        </div>
+    `;
         }
         html += `
                         <div class="col-md-6 col-lg-4 mb-3">
@@ -5301,117 +5351,256 @@ function cerrarToastModerno(toastId) {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
+    // ✅ OBTENER DATOS CON LOS NOMBRES EXACTOS DE LAS PROPIEDADES
+    const esLlanta = producto.esLlanta || false;
+
+    const ancho = producto.ancho || 'N/A';
+    const diametro = producto.diametro || 'N/A';
+    const marca = producto.marca || 'N/A';
+    const modelo = producto.modelo || 'N/A';
+    const tipoTerreno = producto.tipoTerreno || 'N/A';
+    const indiceVelocidad = producto.indiceVelocidad || 'N/A';
+
+    // ✅ FORMATEAR PERFIL CORRECTAMENTE
+    let perfilFormateado = 'N/A';
+    if (producto.perfil) {
+        const perfilNum = parseFloat(producto.perfil);
+        perfilFormateado = (perfilNum % 1 === 0) ? perfilNum.toString() : perfilNum.toFixed(2);
+    }
+
+    // Medida completa
+    const medidaCompleta = producto.medidaCompleta ||
+        (ancho !== 'N/A' && diametro !== 'N/A' ?
+            `${ancho}/${perfilFormateado}/R${diametro}` : 'N/A');
+
+    // Determinar clase de alerta de stock
+    const stockAlerta = producto.cantidadEnInventario <= 0 ? 'danger' :
+        producto.cantidadEnInventario <= producto.stockMinimo ? 'warning' : 'success';
+
     const modalHtml = `
         <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header bg-info text-white">
-                        <h5 class="modal-title">
-                            <i class="bi bi-info-circle me-2"></i>Detalle del Producto
-                        </h5>
+                    <!-- HEADER COMPACTO -->
+                    <div class="modal-header bg-gradient bg-primary text-white py-3">
+                        <div class="d-flex align-items-center w-100">
+                            <i class="bi bi-info-circle-fill me-2" style="font-size: 1.5rem;"></i>
+                            <div class="flex-grow-1">
+                                <h5 class="mb-0">${producto.nombreProducto}</h5>
+                                <small class="opacity-75">ID: ${producto.productoId}</small>
+                            </div>
+                            <span class="badge bg-${stockAlerta} ms-2">
+                                <i class="bi bi-box-seam me-1"></i>Stock: ${producto.cantidadEnInventario}
+                            </span>
+                        </div>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-4">
-                                <div id="contenedorImagenesDetalles"></div>
 
-                                <!-- Información de stock -->
-                                <div class="mt-3">
-                                    <div class="alert ${producto.cantidadEnInventario <= 0 ? 'alert-danger' :
-            producto.cantidadEnInventario <= producto.stockMinimo ? 'alert-warning' : 'alert-success'}">
-                                        <div class="text-center">
-                                            <i class="bi bi-box-seam display-6"></i>
-                                            <h5 class="mt-2">Stock: ${producto.cantidadEnInventario}</h5>
-                                            <small>Mínimo: ${producto.stockMinimo}</small>
+                    <!-- BODY OPTIMIZADO -->
+                    <div class="modal-body p-3">
+                        <div class="row g-3">
+                            <!-- COLUMNA IZQUIERDA: IMAGEN -->
+                            <div class="col-lg-4">
+                                <div id="contenedorImagenesDetalles" class="mb-3"></div>
+                                
+                                <!-- Stock Badge Compacto -->
+                                <div class="alert alert-${stockAlerta} mb-0 py-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-box-seam me-2"></i>
+                                            <strong>Stock: ${producto.cantidadEnInventario}</strong>
+                                        </div>
+                                        <small class="text-muted">Mín: ${producto.stockMinimo}</small>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 4px;">
+                                        <div class="progress-bar bg-${stockAlerta}" 
+                                             style="width: ${Math.min((producto.cantidadEnInventario / Math.max(producto.stockMinimo, 1)) * 100, 100)}%">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-8">
-                                <h3 class="mb-3">${producto.nombreProducto}</h3>
 
-                                ${producto.descripcion ? `
+                            <!-- COLUMNA DERECHA: INFORMACIÓN -->
+                            <div class="col-lg-8">
+                                <!-- DESCRIPCIÓN (si existe y no es default) -->
+                                ${producto.descripcion && producto.descripcion !== 'Sin descripción disponible' ? `
                                     <div class="mb-3">
-                                        <h6><i class="bi bi-card-text me-2"></i>Descripción:</h6>
-                                        <p class="text-muted">${producto.descripcion}</p>
-                                    </div>
-                                ` : ''}
-
-                                <!-- Tabla de precios -->
-                                <div class="mb-4">
-                                    <h6><i class="bi bi-currency-exchange me-2"></i>Precios por método de pago:</h6>
-                                    <div class="table-responsive">
-                                        <table class="table table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>Método de Pago</th>
-                                                    <th class="text-end">Precio</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
-                const precio = (producto.precio || 0) * config.multiplicador;
-                return `
-                                                        <tr>
-                                                            <td>
-                                                                <i class="bi bi-${metodo === 'tarjeta' ? 'credit-card' : 'cash'} me-2"></i>
-                                                                ${config.nombre}
-                                                                ${metodo === 'tarjeta' ? '<span class="text-muted">(+5%)</span>' : ''}
-                                                            </td>
-                                                            <td class="text-end fw-bold">₡${formatearMoneda(precio)}</td>
-                                                        </tr>
-                                                    `;
-            }).join('')}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-
-                                <!-- Información adicional si es llanta -->
-                                ${producto.llanta ? `
-                                    <div class="mb-3">
-                                        <h6><i class="bi bi-circle me-2"></i>Información de Llanta:</h6>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Marca:</small><br>
-                                                <strong>${producto.llanta.marca || 'N/A'}</strong>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Modelo:</small><br>
-                                                <strong>${producto.llanta.modelo || 'N/A'}</strong>
-                                            </div>
-                                            <div class="col-6 mt-2">
-                                                <small class="text-muted">Medida:</small><br>
-                                                <strong>${producto.llanta.ancho}/${producto.llanta.perfil} R${producto.llanta.diametro}</strong>
-                                            </div>
-                                            <div class="col-6 mt-2">
-                                                <small class="text-muted">Índice de Velocidad:</small><br>
-                                                <strong>${producto.llanta.indiceVelocidad || 'N/A'}</strong>
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-body p-2">
+                                                <small class="text-muted d-block mb-1">
+                                                    <i class="bi bi-card-text me-1"></i>Descripción
+                                                </small>
+                                                <p class="mb-0 small">${producto.descripcion}</p>
                                             </div>
                                         </div>
                                     </div>
                                 ` : ''}
 
-                                <!-- Información del sistema -->
-                                <div class="text-muted small">
-                                    <p class="mb-1"><strong>ID:</strong> ${producto.productoId}</p>
-                                    ${producto.fechaUltimaActualizacion ?
-            `<p class="mb-0"><strong>Última actualización:</strong> ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}</p>`
-            : ''}
+                                <!-- ESPECIFICACIONES DE LLANTA (si aplica) -->
+                                ${esLlanta ? `
+                                    <div class="mb-3">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary bg-opacity-10 py-2">
+                                                <h6 class="mb-0 text-primary">
+                                                    <i class="bi bi-circle me-2"></i>Especificaciones de Llanta
+                                                </h6>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <!-- Fila 1: Marca y Modelo -->
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="bg-primary bg-opacity-10 rounded p-2 me-2">
+                                                                <i class="bi bi-tag-fill text-primary"></i>
+                                                            </div>
+                                                            <div>
+                                                                <small class="text-muted d-block">Marca</small>
+                                                                <strong class="small">${marca}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-6">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="bg-info bg-opacity-10 rounded p-2 me-2">
+                                                                <i class="bi bi-bookmark-fill text-info"></i>
+                                                            </div>
+                                                            <div>
+                                                                <small class="text-muted d-block">Modelo</small>
+                                                                <strong class="small">${modelo}</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Medida Completa Destacada -->
+                                                <div class="bg-info bg-opacity-10 rounded p-3 text-center mb-3">
+                                                    <small class="text-muted d-block mb-1">Medida Completa</small>
+                                                    <h3 class="mb-0 text-info fw-bold">${medidaCompleta}</h3>
+                                                </div>
+
+                                                <!-- Medidas Individuales -->
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-4">
+                                                        <div class="text-center border rounded p-2">
+                                                            <small class="text-muted d-block">Ancho</small>
+                                                            <strong>${ancho}</strong>
+                                                            <small class="text-muted d-block">mm</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="text-center border rounded p-2">
+                                                            <small class="text-muted d-block">Perfil</small>
+                                                            <strong>${perfilFormateado}</strong>
+                                                            <small class="text-muted d-block">%</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-4">
+                                                        <div class="text-center border rounded p-2">
+                                                            <small class="text-muted d-block">Diámetro</small>
+                                                            <strong>R${diametro}</strong>
+                                                            <small class="text-muted d-block">"</small>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Características (si existen) -->
+                                                ${tipoTerreno !== 'N/A' || indiceVelocidad !== 'N/A' ? `
+                                                    <div class="row g-2">
+                                                        ${tipoTerreno !== 'N/A' ? `
+                                                            <div class="col-6">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="bi bi-geo-alt-fill text-success me-2"></i>
+                                                                    <div>
+                                                                        <small class="text-muted d-block">Terreno</small>
+                                                                        <strong class="small">${tipoTerreno}</strong>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ` : ''}
+                                                        ${indiceVelocidad !== 'N/A' ? `
+                                                            <div class="col-6">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="bi bi-speedometer2 text-warning me-2"></i>
+                                                                    <div>
+                                                                        <small class="text-muted d-block">Velocidad</small>
+                                                                        <strong class="small">${indiceVelocidad}</strong>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+
+                                <!-- PRECIOS - TABLA COMPACTA HORIZONTAL -->
+                                <div class="mb-0">
+                                    <h6 class="mb-2">
+                                        <i class="bi bi-currency-exchange me-2"></i>Precios por método de pago
+                                    </h6>
+                                    <table class="table table-sm table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
+        const esTarjeta = metodo === 'tarjeta';
+        const icono = esTarjeta ? 'credit-card' : 'cash-coin';
+        const recargo = esTarjeta ? ' <span class="badge bg-warning text-dark">+9%</span>' : '';
+        return `
+                                                        <th class="text-center py-2">
+                                                            <i class="bi bi-${icono} me-1"></i>${config.nombre}${recargo}
+                                                        </th>
+                                                    `;
+    }).join('')}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                ${Object.entries(CONFIGURACION_PRECIOS).map(([metodo, config]) => {
+        const precio = (producto.precio || 0) * config.multiplicador;
+        const esTarjeta = metodo === 'tarjeta';
+        const colorClase = esTarjeta ? 'primary' : 'success';
+        return `
+                                                        <td class="text-center py-3">
+                                                            <strong class="text-${colorClase} fs-4">₡${formatearMoneda(precio)}</strong>
+                                                        </td>
+                                                    `;
+    }).join('')}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <small class="text-muted d-block mt-2">
+                                        <i class="bi bi-info-circle me-1"></i>Precios incluyen IVA (13%)
+                                    </small>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        ${producto.cantidadEnInventario > 0 ? `
-                            <button type="button" class="btn btn-primary" onclick="mostrarModalSeleccionProducto(${JSON.stringify(producto).replace(/"/g, '&quot;')})">
-                                <i class="bi bi-cart-plus me-1"></i>Agregar a Venta
-                            </button>
-                        ` : ''}
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="bi bi-x-circle me-1"></i>Cerrar
-                        </button>
+
+                    <!-- FOOTER COMPACTO -->
+                    <div class="modal-footer bg-light py-2">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <small class="text-muted">
+                                ${producto.fechaUltimaActualizacion ?
+            `<i class="bi bi-clock-history me-1"></i>Actualizado: ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}`
+            : ''}
+                            </small>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                                    <i class="bi bi-x-circle me-1"></i>Cerrar
+                                </button>
+                                ${producto.cantidadEnInventario > 0 ? `
+                                    <button type="button" class="btn btn-sm btn-primary" onclick="mostrarModalSeleccionProducto(${JSON.stringify(producto).replace(/"/g, '&quot;')})">
+                                        <i class="bi bi-cart-plus me-1"></i>Agregar a Venta
+                                    </button>
+                                ` : `
+                                    <button type="button" class="btn btn-sm btn-secondary" disabled>
+                                        <i class="bi bi-x-circle me-1"></i>Sin Stock
+                                    </button>
+                                `}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -5425,7 +5614,7 @@ function verDetalleProducto(producto) {
     const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
     modal.show();
 
-    // Cargar imágenes después de mostrar el modal usando la función del módulo zoomImagenes.js
+    // Cargar imágenes después de mostrar el modal
     setTimeout(() => {
         if (typeof window.cargarImagenesDetallesProducto === 'function') {
             window.cargarImagenesDetallesProducto(producto);
@@ -5434,6 +5623,7 @@ function verDetalleProducto(producto) {
         }
     }, 100);
 }
+
 
 // ===== GESTIÓN DE CLIENTES =====
 function abrirModalNuevoCliente() {

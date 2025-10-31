@@ -301,6 +301,10 @@
                                     Medidas
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
                                 </th>
+                                <th class="sortable" data-column="TipoTerreno" data-type="text">
+                                    Tipo Terreno
+                                    <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
+                                </th>
                                 <th class="sortable" data-column="marca" data-type="text">
                                     Marca/Modelo
                                     <i class="bi bi-arrow-down-up ms-1 sort-icon opacity-50"></i>
@@ -398,8 +402,14 @@
                                                 {
                                                     @if (producto.Llanta.Perfil.HasValue && producto.Llanta.Perfil.Value > 0)
                                                     {
-                                                        <!-- Formato completo: 225/60/R16 -->
-                                                        @($"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}")
+                                                        // ✅ Variables C# directamente (sin @{ })
+                                                        var perfilNum = producto.Llanta.Perfil.Value;
+                                                        var perfilFormateado = (perfilNum % 1 == 0) ?
+                                                        perfilNum.ToString("0") :
+                                                        perfilNum.ToString("0.00");
+
+                                                        <!-- Formato completo: 225/60/R16 o 225/90.50/R16 -->
+                                                        @($"{producto.Llanta.Ancho}/{perfilFormateado}/R{producto.Llanta.Diametro}")
                                                     }
                                                     else
                                                     {
@@ -412,6 +422,18 @@
                                                     <span>N/A</span>
                                                 }
                                             </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+
+                                    <!-- tipo  -->
+                                    <td>
+                                        @if (producto.Llanta != null && !string.IsNullOrEmpty(producto.Llanta.TipoTerreno))
+                                        {
+                                            <span>@producto.Llanta.TipoTerreno</span>
                                         }
                                         else
                                         {
@@ -1104,6 +1126,10 @@
                                             <div class="col-6">
                                                 <small class="text-muted">Marca:</small><br>
                                                 <span id="marcaVistaRapida">-</span>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Tipo de Terreno:</small><br>
+                                                <span id="tipoTerrenoVistaRapida">-</span>
                                             </div>
                                         </div>
                                     </div>
