@@ -253,6 +253,8 @@ function generarHTMLProductos(productos, tbody) {
         const cantidadInventario = producto.cantidadEnInventario || producto.CantidadEnInventario || 0;
         const stockMinimo = producto.stockMinimo || producto.StockMinimo || 0;
         const descripcion = producto.descripcion || producto.Descripcion || '';
+        const capas = producto.llanta.capas;
+        const tipoTerreno = producto.llanta.tipoTerreno;
 
         // Determinar si es llanta y extraer medidas
         let esLlanta = false;
@@ -307,9 +309,14 @@ function generarHTMLProductos(productos, tbody) {
             imagenesUrls: producto.imagenesUrls || [],
             descripcion: descripcion,
             esLlanta: esLlanta || false,
-            marca: producto.marca || null,
-            modelo: producto.modelo || null,
-            medidaCompleta: medidaLlanta || null
+            marca: producto.llanta.marca || null,
+            modelo: producto.llanta.modelo || null,
+            medidaCompleta: medidaLlanta || null,
+            capas: producto.llanta.capas || null,
+            ancho: producto.llanta.ancho || null,
+            perfil: producto.llanta.perfil || null,
+            diametro: producto.llanta.diametro || null,
+            tipoterreno: producto.llanta.tipoTerreno || null
         };
 
         const productoJson = JSON.stringify(productoLimpio).replace(/"/g, '&quot;');
@@ -318,7 +325,8 @@ function generarHTMLProductos(productos, tbody) {
             <tr class="${rowClass}" 
                 data-producto-id="${productoId}"
                 data-nombre="${nombreProducto.toLowerCase()}"
-                data-descripcion="${descripcion.toLowerCase()}"
+                data-capas="${capas}"
+                data-tipoTerreno="${tipoTerreno}"
                 data-stock="${cantidadInventario}"
                 data-precio-efectivo="${precioEfectivo}"
                 data-precio-tarjeta="${precioTarjeta}"
@@ -329,12 +337,55 @@ function generarHTMLProductos(productos, tbody) {
                     ${esLlanta ? '<span class="badge bg-primary mt-1">Llanta</span>' : ''}
                 </td>
                 <td class="text-center">
-                    ${esLlanta ? `<span class="fw-bold text-primary">${medidaLlanta}</span>` : '<span class="text-muted">N/A</span>'}
+                    ${esLlanta ? (() => {
+                                // Parsear la medida existente
+                                let medidaMostrar = medidaLlanta;
+
+                                try {
+                                    // Si la medida viene en formato "ancho/perfil/Rdiametro"
+                                    const partes = medidaLlanta.split('/');
+
+                                    if (partes.length === 3) {
+                                        const ancho = partes[0];
+                                        const perfil = partes[1];
+                                        const diametro = partes[2]; // Ya incluye la R
+
+                                        // Formatear el perfil
+                                        const perfilNum = parseFloat(perfil);
+                                        if (!isNaN(perfilNum)) {
+                                            const perfilFormateado = (perfilNum % 1 === 0) ?
+                                                perfilNum.toString() :
+                                                perfilNum.toFixed(2);
+
+                                            medidaMostrar = `${ancho}/${perfilFormateado}/${diametro}`;
+                                        }
+                                    }
+                                } catch (error) {
+                                    console.warn('Error formateando medida:', error);
+                                }
+
+                                return `<span class="fw-bold text-primary">${medidaMostrar}</span>`;
+                            })() : '<span class="text-muted">N/A</span>'}
                 </td>
                 <td>
-                    <span class="text-muted" title="${descripcion}">
-                        ${descripcion ? (descripcion.length > 50 ? descripcion.substring(0, 50) + '...' : descripcion) : 'Sin descripción'}
+                    <span class="text-muted" title="${capas}">
+                    ${capas && capas !== 'N/A' && capas !== 0 && capas !== '0' ? `
+                        <div class="col-md-4">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-layers-fill text-info me-2"></i>
+                                <div>
+                                    <small class="text-muted d-block">Capas</small>
+                                    <strong class="small">${capas} PR</strong>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}   
                     </span>
+                </td>
+                <td class="text-center">
+                    ${tipoTerreno && tipoTerreno !== 'N/A' ? `
+                        <span class="badge bg-success">${tipoTerreno}</span>
+                    ` : '<span class="text-muted">-</span>'}
                 </td>
                 <td class="text-center">
                     <div class="d-flex flex-column align-items-center">

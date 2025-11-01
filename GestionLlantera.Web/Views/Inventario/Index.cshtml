@@ -122,20 +122,7 @@
 
                     <!-- Fila 2: Filtros avanzados -->
                     <div class="row g-3 mb-3">
-                        <div class="col-lg-3">
-                            <label for="filterMarca" class="form-label">
-                                <i class="bi bi-award me-1"></i>Marca/Modelo
-                            </label>
-                            <div class="position-relative">
-                                <input type="text" id="filterMarca" class="form-control" placeholder="Buscar marca o modelo..." list="listaMarcas">
-                                <datalist id="listaMarcas">
-                                    <!-- Se llenará dinámicamente -->
-                                </datalist>
-                                <button class="btn btn-outline-secondary btn-sm position-absolute top-50 end-0 translate-middle-y me-1" type="button" id="btnLimpiarMarca" style="display: none;">
-                                    <i class="bi bi-x"></i>
-                                </button>
-                            </div>
-                        </div>
+                      
                         <div class="col-lg-4">
                             <label class="form-label">
                                 <i class="bi bi-currency-dollar me-1"></i>Rango de Precio
@@ -212,25 +199,27 @@
                                 <!-- Se llenará dinámicamente -->
                             </select>
                         </div>
-                        <div class="col-lg-3">
+                        <div class="col-lg-2">
                             <label for="filterTipoTerreno" class="form-label">Tipo de Terreno</label>
                             <select id="filterTipoTerreno" class="form-select form-select-sm">
                                 <option value="">Todos</option>
-                                <option value="carretera">Carretera</option>
-                                <option value="mixto">Mixto</option>
-                                <option value="todoterreno">Todo Terreno</option>
-                                <option value="barro">Barro y Nieve</option>
+                                <!-- Se llenará dinámicamente -->
                             </select>
                         </div>
-                        <div class="col-lg-3">
+                       
+                        <div class="col-lg-2">
                             <label for="filterVelocidad" class="form-label">Índice de Velocidad</label>
                             <select id="filterVelocidad" class="form-select form-select-sm">
                                 <option value="">Todos</option>
-                                <option value="H">H (210 km/h)</option>
-                                <option value="V">V (240 km/h)</option>
-                                <option value="W">W (270 km/h)</option>
-                                <option value="Y">Y (300 km/h)</option>
+                                <!-- Se llenará dinámicamente -->
                             </select>
+                        </div>
+
+                        <!-- Botón para limpiar filtros -->
+                        <div class="col-12 text-end mt-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarFiltrosLlantas">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar Filtros de Llantas
+                            </button>
                         </div>
                     </div>
 
@@ -1151,11 +1140,7 @@
                         <i class="bi bi-x-lg me-1"></i>Cerrar
                     </button>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-success" 
-                                            data-id="" id="btnAjustarStockVistaRapida" asp-permiso="Ajustar Stock">
-                                        <i class="bi bi-plus-slash-minus me-1"></i>
-                                        Ajustar Stock
-                                    </button>
+                        
 
                         <!-- Botones de compartir -->
                         <div class="btn-group">

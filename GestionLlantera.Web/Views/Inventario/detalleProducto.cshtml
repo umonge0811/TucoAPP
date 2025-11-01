@@ -264,76 +264,76 @@
         </div>
 
         <!-- Información específica de llantas y estadísticas -->
-<div class="col-lg-4">
-    @if (Model.Llanta != null && Model.Llanta.LlantaId > 0)
-    {
-        <div class="dashboard-card mb-4">
-            <div class="card-header">
-                <h3>
-                    <i class="bi bi-car-front me-2"></i>
-                    Especificaciones de Llanta
-                </h3>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    @if (!string.IsNullOrEmpty(Model.Llanta.Marca))
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Marca:</span>
-                            <span>@Model.Llanta.Marca</span>
-                        </li>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Llanta.Modelo))
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Modelo:</span>
-                            <span>@Model.Llanta.Modelo</span>
-                        </li>
-                    }
-                    @if (Model.Llanta.Ancho.HasValue)
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Medidas:</span>
-                            <span>
-                                @if (Model.Llanta.Perfil.HasValue && Model.Llanta.Perfil.Value > 0)
-                                {
-                                    @($"{Model.Llanta.Ancho}/{Model.Llanta.Perfil}/R{Model.Llanta.Diametro}")
-                                }
-                                else
-                                {
-                                    @($"{Model.Llanta.Ancho}/R{Model.Llanta.Diametro}")
-                                }
-                            </span>
-                        </li>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Llanta.IndiceVelocidad))
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Índice de Velocidad:</span>
-                            <span>@Model.Llanta.IndiceVelocidad</span>
-                        </li>
-                    }
-                    @if (Model.Llanta.Capas.HasValue)
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Capas:</span>
-                            <span>@Model.Llanta.Capas</span>
-                        </li>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.Llanta.TipoTerreno))
-                    {
-                        <li class="list-group-item d-flex justify-content-between">
-                            <span>Tipo de Terreno:</span>
-                            <span>@Model.Llanta.TipoTerreno</span>
-                        </li>
-                    }
-                </ul>
-            </div>
+        <div class="col-lg-4">
+            @if (Model.Llanta != null && Model.Llanta.LlantaId > 0)
+            {
+                <div class="dashboard-card mb-4">
+                    <div class="card-header">
+                        <h3>
+                            <i class="bi bi-car-front me-2"></i>
+                            Especificaciones de Llanta
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            @if (!string.IsNullOrEmpty(Model.Llanta.Marca))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Marca:</span>
+                                    <span>@Model.Llanta.Marca</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Llanta.Modelo))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Modelo:</span>
+                                    <span>@Model.Llanta.Modelo</span>
+                                </li>
+                            }
+                            @if (Model.Llanta.Ancho.HasValue)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Medidas:</span>
+                                    <span>
+                                        @if (Model.Llanta.Perfil.HasValue && Model.Llanta.Perfil.Value > 0)
+                                        {
+                                            @($"{Model.Llanta.Ancho}/{Model.Llanta.Perfil}/R{Model.Llanta.Diametro}")
+                                        }
+                                        else
+                                        {
+                                            @($"{Model.Llanta.Ancho}/R{Model.Llanta.Diametro}")
+                                        }
+                                    </span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Llanta.IndiceVelocidad))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Índice de Velocidad:</span>
+                                    <span>@Model.Llanta.IndiceVelocidad</span>
+                                </li>
+                            }
+                            @if (Model.Llanta.Capas.HasValue)
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Capas:</span>
+                                    <span>@Model.Llanta.Capas</span>
+                                </li>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Llanta.TipoTerreno))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Tipo de Terreno:</span>
+                                    <span>@Model.Llanta.TipoTerreno</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
         </div>
-    }
-</div>
 
-            <div class="dashboard-card">
+            @* <div class="dashboard-card">
                 <div class="card-header">
                     <h3>
                         <i class="bi bi-graph-up me-2"></i>
@@ -362,7 +362,7 @@
                         </li>
                     </ul>
                 </div>
-            </div>
+            </div> *@
         </div>
     </div>
 </div>
