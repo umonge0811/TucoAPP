@@ -76,7 +76,7 @@ function verificarImagenesProducto() {
 }
 
 // ========================================
-// FUNCIÓN PARA CONSTRUIR URL COMPLETA DE IMAGEN
+// FUNCIÓN CORREGIDA PARA CONSTRUIR URL COMPLETA DE IMAGEN
 // ========================================
 function construirUrlImagenCompleta(url) {
     if (!url || url.trim() === '' || url.includes('no-image.png')) {
@@ -84,73 +84,47 @@ function construirUrlImagenCompleta(url) {
     }
 
     console.log('🔧 construirUrlImagenCompleta - URL recibida:', url);
-    console.log('🔧 Hostname actual:', window.location.hostname);
-    console.log('🔧 Protocol actual:', window.location.protocol);
 
-    // DETECTAR ENTORNO
-    const esDesarrollo = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1' ||
-                       window.location.hostname.includes('localhost') ||
-                       window.location.port === '5000';
+    const hostname = window.location.hostname.toLowerCase();
+    const protocolo = window.location.protocol;
+    const esDesarrollo =
+        hostname.includes('localhost') ||
+        hostname.includes('127.0.0.1') ||
+        window.location.port === '5000' ||
+        window.location.port === '5049';
 
-    const esHTTPS = window.location.protocol === 'https:';
+    const esProduccion = hostname.includes('llantasymastc.com');
+    const apiProduccion = 'https://apillantasymast.somee.com';
 
-    // Si es una URL completa del dominio de producción en desarrollo local, convertirla
-    if (esDesarrollo && url.includes('apillantasymast.somee.com')) {
-        // Extraer solo la parte relativa de la URL
-        const match = url.match(/\/uploads\/productos\/.+$/);
-        if (match) {
-            const rutaRelativa = match[0];
-            // Usar la API local 
-            const urlLocal = `http://localhost:5049${rutaRelativa}`;
-            console.log('🔧 ✅ URL convertida para desarrollo local:', urlLocal);
-            return urlLocal;
-        }
-    }
-
-    // Si ya es una URL completa y estamos en desarrollo local
+    // ✅ Caso 1: si la URL ya es completa, solo aseguremos HTTPS en producción
     if (url.startsWith('http://') || url.startsWith('https://')) {
-        // En desarrollo local con localhost, mantener la URL tal como está
-        if (esDesarrollo && (url.includes('localhost') || url.includes('127.0.0.1'))) {
-            return url;
+        if (esProduccion && url.startsWith('http://')) {
+            const urlHttps = url.replace('http://', 'https://');
+            console.log('🔧 ✅ Convertida a HTTPS:', urlHttps);
+            return urlHttps;
         }
-
-        // En producción, asegurar HTTPS
-        if (!esDesarrollo && url.startsWith('http://')) {
-            const urlHTTPS = url.replace('http://', 'https://');
-            console.log('🔧 ✅ URL convertida a HTTPS:', urlHTTPS);
-            return urlHTTPS;
-        }
-
         return url;
     }
 
-    // Si es una URL relativa que empieza con /uploads/, construir URL completa
+    // ✅ Caso 2: si es relativa y comienza con /uploads/
     if (url.startsWith('/uploads/') || url.startsWith('uploads/')) {
-        // Asegurar que la URL empiece con /
         const urlLimpia = url.startsWith('/') ? url : `/${url}`;
 
-        // Si estamos en producción y es una URL relativa
-        const esProduccionReal = window.location.hostname.includes('llantasymastc.com');
-
-        if (esProduccionReal && (url.startsWith('/uploads/') || url.startsWith('uploads/'))) {
-            const urlLimpia = url.startsWith('/') ? url : `/${url}`;
-            const urlProduccion = `https://apillantasymast.somee.com${urlLimpia}`;
-            console.log('🔧 ✅ URL construida para producción real:', urlProduccion);
-            return urlProduccion;
+        if (esProduccion) {
+            const urlFinal = `${apiProduccion}${urlLimpia}`;
+            console.log('🔧 ✅ URL construida para producción:', urlFinal);
+            return urlFinal;
         }
 
-        // Si estamos en desarrollo y es una URL relativa
-        if (esDesarrollo && (url.startsWith('/uploads/') || url.startsWith('uploads/'))) {
-            const urlLimpia = url.startsWith('/') ? url : `/${url}`;
-            const urlLocal = `http://localhost:8000${urlLimpia}`;
-            console.log('🔧 ✅ URL construida para desarrollo local:', urlLocal);
+        if (esDesarrollo) {
+            const urlLocal = `http://localhost:5049${urlLimpia}`;
+            console.log('🔧 ✅ URL construida para desarrollo:', urlLocal);
             return urlLocal;
         }
     }
 
-    // Si es otro tipo de URL relativa, usar imagen por defecto
-    console.log('🔧 ⚠️ URL no reconocida, usando imagen por defecto');
+    // ✅ Caso 3: Si no encaja, devolvemos imagen por defecto
+    console.warn('⚠️ construirUrlImagenCompleta: URL no reconocida, devolviendo imagen por defecto');
     return '/images/no-image.png';
 }
 
