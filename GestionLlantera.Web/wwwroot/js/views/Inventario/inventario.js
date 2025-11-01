@@ -347,11 +347,11 @@ function cargarDetallesProducto(productoId) {
     // Datos básicos del producto
     const nombre = fila.find("td:eq(2) strong").text();
     const descripcion = fila.find("td:eq(2) .small").text() || "Sin descripción adicional";
-    const stock = parseInt(fila.find("td:eq(8)").text().trim().split(' ')[0].replace(/[^\d]/g, '')) || 0;
-    const stockMin = parseInt(fila.find("td:eq(9)").text().trim()) || 0;
+    const stock = parseInt(fila.find("td:eq(9)").text().trim().split(' ')[0].replace(/[^\d]/g, '')) || 0;
+    const stockMin = parseInt(fila.find("td:eq(10)").text().trim()) || 0;
     // Datos de precios
-    const precioFinalTexto = fila.find("td:eq(7)").text().trim();
-    const tipoPrecioTexto = fila.find("td:eq(7) small").text().trim();
+    const precioFinalTexto = fila.find("td:eq(8)").text().trim();
+    const tipoPrecioTexto = fila.find("td:eq(8) small").text().trim();
     // Cargar información básica en el modal
     $("#nombreProductoVistaRapida").text(nombre);
     $("#descripcionVistaRapida").text(descripcion);
@@ -2263,7 +2263,7 @@ function compartirPorWhatsApp() {
             precio: $("#precioProductoVistaRapida").text(),
             stock: $("#stockProductoVistaRapida").text(),
             urlImagen: fila.find("td:eq(1) img").attr("src"),
-            urlProducto: `${window.appConfig ? window.appConfig.apiBaseUrl : window.location.origin}/Inventario/DetalleProducto/${productoId}`,
+            urlProducto: `https://llantasymastc.com/Public/DetalleProducto/${productoId}`,
             medida: fila.find("td:eq(3) .medida-llanta").text().trim(), // Capturar medida
             marca: fila.find("td:eq(4) .marca-modelo span").first().text().trim() // Capturar marca
         };

@@ -35,11 +35,18 @@ function verificarImagenesProducto() {
             imagenPrincipal.src = urlCorregida;
         }
 
-        // Verificar si la imagen se carga correctamente
-        imagenPrincipal.onerror = function() {
+        imagenPrincipal.onerror = function () {
             console.warn('⚠️ Error cargando imagen principal, usando imagen por defecto');
-            this.src = '/images/no-image.png';
+
+            // Evitar bucle infinito
+            this.onerror = null;
+
+            // Asignar imagen por defecto solo una vez
+            if (!this.src.includes('no-image.png')) {
+                this.src = '/images/no-image.png';
+            }
         };
+
     }
 
     // Verificar miniaturas
@@ -57,11 +64,14 @@ function verificarImagenesProducto() {
             }
         }
 
-        // Verificar si la miniatura se carga correctamente
-        miniatura.onerror = function() {
+        miniatura.onerror = function () {
             console.warn(`⚠️ Error cargando miniatura ${index + 1}, usando imagen por defecto`);
-            this.src = '/images/no-image.png';
+            this.onerror = null;
+            if (!this.src.includes('no-image.png')) {
+                this.src = '/images/no-image.png';
+            }
         };
+
     });
 }
 
@@ -125,7 +135,7 @@ function construirUrlImagenCompleta(url) {
 
         if (esProduccionReal && (url.startsWith('/uploads/') || url.startsWith('uploads/'))) {
             const urlLimpia = url.startsWith('/') ? url : `/${url}`;
-            const urlProduccion = `http://apillantasymast.somee.com${urlLimpia}`;
+            const urlProduccion = `https://apillantasymast.somee.com${urlLimpia}`;
             console.log('🔧 ✅ URL construida para producción real:', urlProduccion);
             return urlProduccion;
         }
@@ -210,6 +220,7 @@ function cambiarImagenPrincipal(imagenUrl, elemento) {
 // ========================================
 function inicializarModalImagen() {
     const imagenPrincipal = document.getElementById('imagenPrincipal');
+
     const modalImagen = document.getElementById('modalImagenGrande');
 
     if (!imagenPrincipal || !modalImagen) return;

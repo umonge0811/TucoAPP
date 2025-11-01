@@ -346,7 +346,7 @@ $(document).ready(function () {
                 medida: contexto.medida || '',
                 marca: contexto.marca || '',
                 urlImagen: contexto.imagenPrincipal || '',
-                urlProducto: `${baseUrl}/Inventario/DetalleProducto/${contexto.id}`
+                urlProducto: `https://llantasymastc.com/Public/DetalleProducto/${productoId}`,
             };
         }
 
@@ -578,7 +578,8 @@ function enviarProductoPorWhatsApp() {
                 medida: contexto.medida || '',
                 marca: contexto.marca || '',
                 urlImagen: imagenPrincipal,
-                urlProducto: `${baseUrl}/Inventario/DetalleProducto/${productoId}`
+                urlProducto: `https://llantasymastc.com/Public/DetalleProducto/${productoId}`,
+
             };
 
             console.log('📦 Producto configurado para compartir:', window.productoParaCompartir);
@@ -663,10 +664,10 @@ function enviarConNumeroEspecifico() {
         mensaje += `Stock: ${producto.stock}\n`;
 
         // Usar URL pública para enlaces
-        const baseUrl = window.appConfig ? window.appConfig.webBaseUrl : window.location.origin;
+        const baseUrl = `https://llantasymastc.com`
         // Asegurarse de que el productoId esté disponible
         const productoId = window.productoContexto?.id || 'unknown';
-        mensaje += `Más detalles: ${baseUrl}/Inventario/DetalleProducto/${productoId}\n\n`;
+        mensaje += `Más detalles: ${baseUrl}/Public/DetalleProducto/${productoId}\n\n`;
 
         if (incluirImagen && producto.urlImagen && !producto.urlImagen.includes('no-image.png')) {
             mensaje += `Imagen: ${window.appConfig ? window.appConfig.apiBaseUrl : baseUrl}${producto.urlImagen}`;
