@@ -737,7 +737,7 @@ function cargarInformacionProductoEnModal(productoId, $fila) {
 
     // Extraer información de la fila
     const nombre = $fila.find("td:eq(2) strong").text().trim() || "Producto sin nombre";
-    const stockActualTexto = $fila.find("td:eq(8)").text().trim();
+    const stockActualTexto = $fila.find("td:eq(9)").text().trim();
     const stockActual = parseInt(stockActualTexto.split(' ')[0].replace(/[^\d]/g, '')) || 0;
 
     console.log('📋 Datos extraídos:', { nombre, stockActual });
@@ -943,8 +943,8 @@ function actualizarFilaProductoEnTabla(productoId, stockNuevo, stockBajo, stockM
         return;
     }
 
-    // Actualizar celda de stock (columna 8, índice 8)
-    const $celdaStock = $fila.find('td:eq(8)');
+    // Actualizar celda de stock (columna 9, índice 9)
+    const $celdaStock = $fila.find('td:eq(9)');
     const $spanStock = $celdaStock.find('span');
 
     if ($spanStock.length > 0) {
