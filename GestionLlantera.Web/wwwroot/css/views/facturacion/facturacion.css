@@ -936,4 +936,20 @@ input[type=number] {
     }
 }
 
+#tablaInventarioFacturacion {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+    #tablaInventarioFacturacion th,
+    #tablaInventarioFacturacion td {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.5rem;
+    }
+
 /* ===== ESTILOS PARA MODAL DE FACTURA PENDIENTE ===== */
