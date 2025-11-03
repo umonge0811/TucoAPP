@@ -43,62 +43,6 @@ let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 let detallesPagoActuales = []; // Array para manejar múltiples pagos
 let esPagoMultiple = false; // Flag para determinar si es pago múltiple
 
-
-// ===== MODAL DE SERVICIOS =====
-let modalServicios = null;
-let modalAgregarServicio = null;
-let serviciosDisponibles = [];
-
-// ===== VARIABLES GLOBALES PARA FILTROS =====
-let productosCargados = []; // Almacenar todos los productos
-let filtrosActivos = {
-    ancho: [],
-    perfil: [],
-    diametro: [],
-    tipoTerreno: []
-};
-
-// ===== EXPORTAR FUNCIONES GLOBALMENTE =====
-if (typeof window !== 'undefined') {
-    window.verDetalleProforma = verDetalleProforma;
-    window.imprimirProforma = imprimirProforma;
-    window.convertirProformaAFactura = convertirProformaAFactura;
-    window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
-    window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
-    //window.abrirModalServicios = abrirModalServicios; // ✅ EXPORTAR FUNCIÓN DE SERVICIOS
-    //window.seleccionarServicio = seleccionarServicio; // ✅ EXPORTAR FUNCIÓN DE SELECCIÓN
-
-    console.log('📋 Funciones de proformas, detalles y servicios exportadas globalmente');
-}
-
-// ===== INICIALIZACIÓN =====
-$(document).ready(function () {
-    console.log('🚀 Inicializando módulo de facturación');
-    inicializarFacturacion();
-    inicializarModalInventario();
-
-    // Toggle de filtros avanzados
-    $('#btnToggleFiltros').on('click', function () {
-        $('#filtrosAvanzados').collapse('toggle');
-    });
-
-    // Aplicar filtros
-    $('#btnAplicarFiltros').on('click', function () {
-        aplicarFiltros();
-    });
-
-    // Limpiar filtros
-    $('#btnLimpiarFiltros').on('click', function () {
-        limpiarFiltros();
-    });
-
-    // Aplicar filtros al cambiar selección (opcional - para aplicar en tiempo real)
-    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').on('change', function () {
-        // Descomentar para aplicar filtros automáticamente
-        // aplicarFiltros();
-    });
-});
-
 // ===== FUNCIÓN AUXILIAR PARA BUSCAR PERMISOS =====
 function buscarPermiso(permisos, nombrePermiso) {
     if (!permisos) return false;
@@ -271,6 +215,60 @@ function configurarInterfazSegunPermisos() {
     }, 100);
 }
 
+// ===== MODAL DE SERVICIOS =====
+let modalServicios = null;
+let modalAgregarServicio = null;
+let serviciosDisponibles = [];
+
+// ===== VARIABLES GLOBALES PARA FILTROS =====
+let productosCargados = []; // Almacenar todos los productos
+let filtrosActivos = {
+    ancho: [],
+    perfil: [],
+    diametro: [],
+    tipoTerreno: []
+};
+
+// ===== EXPORTAR FUNCIONES GLOBALMENTE =====
+if (typeof window !== 'undefined') {
+    window.verDetalleProforma = verDetalleProforma;
+    window.imprimirProforma = imprimirProforma;
+    window.convertirProformaAFactura = convertirProformaAFactura;
+    window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
+    window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
+    //window.abrirModalServicios = abrirModalServicios; // ✅ EXPORTAR FUNCIÓN DE SERVICIOS
+    //window.seleccionarServicio = seleccionarServicio; // ✅ EXPORTAR FUNCIÓN DE SELECCIÓN
+
+    console.log('📋 Funciones de proformas, detalles y servicios exportadas globalmente');
+}
+
+// ===== INICIALIZACIÓN =====
+$(document).ready(function () {
+    console.log('🚀 Inicializando módulo de facturación');
+    inicializarFacturacion();
+    inicializarModalInventario();
+
+    // Toggle de filtros avanzados
+    $('#btnToggleFiltros').on('click', function () {
+        $('#filtrosAvanzados').collapse('toggle');
+    });
+
+    // Aplicar filtros
+    $('#btnAplicarFiltros').on('click', function () {
+        aplicarFiltros();
+    });
+
+    // Limpiar filtros
+    $('#btnLimpiarFiltros').on('click', function () {
+        limpiarFiltros();
+    });
+
+    // Aplicar filtros al cambiar selección (opcional - para aplicar en tiempo real)
+    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').on('change', function () {
+        // Descomentar para aplicar filtros automáticamente
+         aplicarFiltros();
+    });
+});
 
 // ===== FUNCIÓN PARA EXTRAER VALORES ÚNICOS DE MEDIDAS =====
 function extraerValoresUnicos(productos) {
