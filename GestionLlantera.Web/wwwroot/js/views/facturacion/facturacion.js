@@ -43,6 +43,62 @@ let metodoPagoSeleccionado = 'efectivo'; // Método por defecto
 let detallesPagoActuales = []; // Array para manejar múltiples pagos
 let esPagoMultiple = false; // Flag para determinar si es pago múltiple
 
+
+// ===== MODAL DE SERVICIOS =====
+let modalServicios = null;
+let modalAgregarServicio = null;
+let serviciosDisponibles = [];
+
+// ===== VARIABLES GLOBALES PARA FILTROS =====
+let productosCargados = []; // Almacenar todos los productos
+let filtrosActivos = {
+    ancho: [],
+    perfil: [],
+    diametro: [],
+    tipoTerreno: []
+};
+
+// ===== EXPORTAR FUNCIONES GLOBALMENTE =====
+if (typeof window !== 'undefined') {
+    window.verDetalleProforma = verDetalleProforma;
+    window.imprimirProforma = imprimirProforma;
+    window.convertirProformaAFactura = convertirProformaAFactura;
+    window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
+    window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
+    //window.abrirModalServicios = abrirModalServicios; // ✅ EXPORTAR FUNCIÓN DE SERVICIOS
+    //window.seleccionarServicio = seleccionarServicio; // ✅ EXPORTAR FUNCIÓN DE SELECCIÓN
+
+    console.log('📋 Funciones de proformas, detalles y servicios exportadas globalmente');
+}
+
+// ===== INICIALIZACIÓN =====
+$(document).ready(function () {
+    console.log('🚀 Inicializando módulo de facturación');
+    inicializarFacturacion();
+    inicializarModalInventario();
+
+    // Toggle de filtros avanzados
+    $('#btnToggleFiltros').on('click', function () {
+        $('#filtrosAvanzados').collapse('toggle');
+    });
+
+    // Aplicar filtros
+    $('#btnAplicarFiltros').on('click', function () {
+        aplicarFiltros();
+    });
+
+    // Limpiar filtros
+    $('#btnLimpiarFiltros').on('click', function () {
+        limpiarFiltros();
+    });
+
+    // Aplicar filtros al cambiar selección (opcional - para aplicar en tiempo real)
+    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').on('change', function () {
+        // Descomentar para aplicar filtros automáticamente
+        // aplicarFiltros();
+    });
+});
+
 // ===== FUNCIÓN AUXILIAR PARA BUSCAR PERMISOS =====
 function buscarPermiso(permisos, nombrePermiso) {
     if (!permisos) return false;
@@ -215,60 +271,6 @@ function configurarInterfazSegunPermisos() {
     }, 100);
 }
 
-// ===== MODAL DE SERVICIOS =====
-let modalServicios = null;
-let modalAgregarServicio = null;
-let serviciosDisponibles = [];
-
-// ===== VARIABLES GLOBALES PARA FILTROS =====
-let productosCargados = []; // Almacenar todos los productos
-let filtrosActivos = {
-    ancho: [],
-    perfil: [],
-    diametro: [],
-    tipoTerreno: []
-};
-
-// ===== EXPORTAR FUNCIONES GLOBALMENTE =====
-if (typeof window !== 'undefined') {
-    window.verDetalleProforma = verDetalleProforma;
-    window.imprimirProforma = imprimirProforma;
-    window.convertirProformaAFactura = convertirProformaAFactura;
-    window.mostrarDetalleProformaModal = mostrarDetalleProformaModal;
-    window.verDetalleProducto = verDetalleProducto; // ✅ EXPORTAR FUNCIÓN DE VER DETALLE
-    //window.abrirModalServicios = abrirModalServicios; // ✅ EXPORTAR FUNCIÓN DE SERVICIOS
-    //window.seleccionarServicio = seleccionarServicio; // ✅ EXPORTAR FUNCIÓN DE SELECCIÓN
-
-    console.log('📋 Funciones de proformas, detalles y servicios exportadas globalmente');
-}
-
-// ===== INICIALIZACIÓN =====
-$(document).ready(function () {
-    console.log('🚀 Inicializando módulo de facturación');
-    inicializarFacturacion();
-    inicializarModalInventario();
-
-    // Toggle de filtros avanzados
-    $('#btnToggleFiltros').on('click', function () {
-        $('#filtrosAvanzados').collapse('toggle');
-    });
-
-    // Aplicar filtros
-    $('#btnAplicarFiltros').on('click', function () {
-        aplicarFiltros();
-    });
-
-    // Limpiar filtros
-    $('#btnLimpiarFiltros').on('click', function () {
-        limpiarFiltros();
-    });
-
-    // Aplicar filtros al cambiar selección (opcional - para aplicar en tiempo real)
-    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').on('change', function () {
-        // Descomentar para aplicar filtros automáticamente
-        // aplicarFiltros();
-    });
-});
 
 // ===== FUNCIÓN PARA EXTRAER VALORES ÚNICOS DE MEDIDAS =====
 function extraerValoresUnicos(productos) {
@@ -423,8 +425,13 @@ function aplicarFiltros() {
     }
 
     console.log(`✅ Filtrado completo: ${productosFiltrados.length} productos de ${productosCargados.length}`);
-    mostrarResultadosProductos(productosFiltrados);
+
+    // ✅ ORDENAR LOS PRODUCTOS FILTRADOS ANTES DE MOSTRAR
+    const productosOrdenados = ordenarProductosPorMedidasCards(productosFiltrados);
+
+    mostrarResultadosProductos(productosOrdenados);
 }
+
 
 // ===== FUNCIÓN PARA LIMPIAR FILTROS =====
 function limpiarFiltros() {
@@ -440,9 +447,13 @@ function limpiarFiltros() {
     const terminoBusqueda = $('#busquedaProducto').val().trim();
     if (terminoBusqueda.length >= 2) {
         const productosFiltrados = aplicarBusquedaTexto(productosCargados, terminoBusqueda);
-        mostrarResultadosProductos(productosFiltrados);
+        // ✅ ORDENAR ANTES DE MOSTRAR
+        const productosOrdenados = ordenarProductosPorMedidasCards(productosFiltrados);
+        mostrarResultadosProductos(productosOrdenados);
     } else {
-        mostrarResultadosProductos(productosCargados);
+        // ✅ ORDENAR TODOS LOS PRODUCTOS ANTES DE MOSTRAR
+        const productosOrdenados = ordenarProductosPorMedidasCards(productosCargados);
+        mostrarResultadosProductos(productosOrdenados);
     }
 
     console.log('🧹 Filtros limpiados');
@@ -709,6 +720,86 @@ function configurarEventos() {
     });
 }
 
+/**
+ * Ordenar productos por medidas para las cards
+ * @param {Array} productos - Array de productos a ordenar
+ * @returns {Array} - Array ordenado por diámetro > ancho > perfil
+ */
+function ordenarProductosPorMedidasCards(productos) {
+    console.log(`📊 Ordenando ${productos.length} productos por medidas (ascendente)...`);
+
+    // Función para parsear medidas de un producto
+    const parseaMedidaProducto = (producto) => {
+        try {
+            // Verificar si es llanta
+            const esLlanta = producto.esLlanta || producto.EsLlanta ||
+                producto.llanta || (producto.Llanta && producto.Llanta.length > 0);
+
+            if (!esLlanta) {
+                // Los productos que no son llantas van al final
+                return { ancho: 999999, perfil: 999999, diametro: 999999, esLlanta: false };
+            }
+
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+
+            const ancho = parseFloat(llantaInfo.ancho || llantaInfo.Ancho) || 999999;
+            const perfil = parseFloat(llantaInfo.perfil || llantaInfo.Perfil) || 0;
+            const diametro = parseFloat(llantaInfo.diametro || llantaInfo.Diametro) || 999999;
+
+            return { ancho, perfil, diametro, esLlanta: true };
+        } catch (error) {
+            console.warn('⚠️ Error parseando medida:', error);
+            return { ancho: 999999, perfil: 999999, diametro: 999999, esLlanta: false };
+        }
+    };
+
+    // Clonar array para no mutar el original
+    const productosOrdenados = [...productos];
+
+    // Ordenar
+    productosOrdenados.sort((a, b) => {
+        const medidaA = parseaMedidaProducto(a);
+        const medidaB = parseaMedidaProducto(b);
+
+        // Los que no son llantas van al final
+        if (!medidaA.esLlanta && medidaB.esLlanta) return 1;
+        if (medidaA.esLlanta && !medidaB.esLlanta) return -1;
+
+        // 1️⃣ Primero por DIÁMETRO
+        if (medidaA.diametro !== medidaB.diametro) {
+            return medidaA.diametro - medidaB.diametro;
+        }
+
+        // 2️⃣ Luego por ANCHO
+        if (medidaA.ancho !== medidaB.ancho) {
+            return medidaA.ancho - medidaB.ancho;
+        }
+
+        // 3️⃣ Finalmente por PERFIL
+        return medidaA.perfil - medidaB.perfil;
+    });
+
+    // Debug: Mostrar primeras 10 medidas
+    console.log('🔍 Primeras 10 medidas ordenadas (cards):');
+    productosOrdenados.slice(0, 10).forEach((producto, index) => {
+        const llanta = producto.llanta || (producto.Llanta && producto.Llanta[0]);
+        if (llanta) {
+            const perfil = llanta.perfil || llanta.Perfil;
+            const perfilNum = parseFloat(perfil);
+            const perfilFormateado = perfil && perfilNum > 0
+                ? ((perfilNum % 1 === 0) ? perfilNum.toString() : perfilNum.toFixed(2))
+                : null;
+
+            const medida = perfilFormateado
+                ? `${llanta.ancho}/${perfilFormateado}/R${llanta.diametro}`
+                : `${llanta.ancho}/R${llanta.diametro}`;
+            console.log(`  ${index + 1}. ${medida} - ${producto.nombreProducto || producto.NombreProducto}`);
+        }
+    });
+
+    return productosOrdenados;
+}
+
 // ===== BÚSQUEDA DE PRODUCTOS =====
 async function buscarProductos(termino) {
     contadorLlamadasBusqueda++;
@@ -766,10 +857,7 @@ async function buscarProductos(termino) {
             // Aplicar filtros activos
             if (filtrosActivos.ancho.length > 0 || filtrosActivos.perfil.length > 0 ||
                 filtrosActivos.diametro.length > 0 || filtrosActivos.tipoTerreno.length > 0) {
-                // Reutilizar lógica de aplicarFiltros pero sin mostrar resultados
-                productosFiltrados = productosCargados;
-
-                // (aplicar toda la lógica de filtros aquí - copiar de aplicarFiltros)
+                productosFiltrados = aplicarFiltrosActivos(productosCargados);
             }
 
             // Aplicar búsqueda de texto
@@ -778,7 +866,11 @@ async function buscarProductos(termino) {
                 console.log(`🔍 Productos filtrados por término "${termino}": ${productosFiltrados.length}`);
             }
 
-            mostrarResultadosProductos(productosFiltrados);
+            // ✅ ORDENAR POR MEDIDAS ANTES DE MOSTRAR
+            const productosOrdenados = ordenarProductosPorMedidasCards(productosFiltrados);
+
+            // ✅ MOSTRAR PRODUCTOS YA ORDENADOS
+            mostrarResultadosProductos(productosOrdenados);
 
             if (termino === '' && !cargaInicialCompletada) {
                 cargaInicialCompletada = true;
@@ -792,7 +884,6 @@ async function buscarProductos(termino) {
             mostrarResultadosProductos([]);
             mostrarToast('Error', errorMessage, 'danger');
         }
-
     } catch (error) {
         console.error('❌ Error buscando productos:', error);
         mostrarErrorBusqueda('productos', error.message);
@@ -801,7 +892,6 @@ async function buscarProductos(termino) {
         console.log('🔍 === FIN buscarProductos ===');
     }
 }
-
 
 function mostrarResultadosProductos(productos) {
     contadorLlamadasMostrarResultados++;
