@@ -1441,7 +1441,25 @@ function obtenerValorProducto(fila) {
 
 function obtenerValorMedidas(fila) {
     const texto = $(fila).find("td:eq(3)").text().trim();
-    return (texto === "N/A" || texto === "-") ? "" : texto.toLowerCase();
+
+    if (texto === "N/A" || texto === "-" || !texto) {
+        return "ZZZZ"; // Poner al final los productos sin medida
+    }
+
+    // Extraer el RIN (R13, R14, R15, etc.)
+    const rin = texto.match(/R(\d+)/i);
+    const ancho = texto.match(/^(\d+)/);
+
+    if (rin && ancho) {
+        const numeroRin = parseInt(rin[1]);
+        const numeroAncho = parseInt(ancho[1]);
+
+        // Formato: RIN con 2 dígitos + ANCHO con 3 dígitos
+        // Ejemplo: R14 con 185 = "14185"
+        return numeroRin.toString().padStart(2, '0') + numeroAncho.toString().padStart(3, '0');
+    }
+
+    return texto.toLowerCase();
 }
 
 function obtenerValorMarca(fila) {
@@ -2013,6 +2031,9 @@ $(document).ready(function () {
 
     // ✅ INICIALIZAR PAGINACIÓN AL FINAL
     inicializarPaginacion();
+
+    // ✅ ORDENAR POR MEDIDAS AL CARGAR LA PÁGINA
+    ordenarPorColumna('medidas', 'text');
 
     console.log('✅ Inventario - Sistema completo inicializado correctamente');
 

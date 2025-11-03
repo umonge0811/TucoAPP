@@ -1,6 +1,6 @@
 <!-- Modal de Inventario -->
 <div class="modal fade" id="modalInventario" tabindex="-1" aria-labelledby="modalInventarioLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-xxl" style="max-width: 95vw;">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
                 <h5 class="modal-title" id="modalInventarioLabel">
@@ -17,9 +17,9 @@
                                 <span class="input-group-text">
                                     <i class="bi bi-search"></i>
                                 </span>
-                                <input type="text" 
-                                       class="form-control" 
-                                       id="busquedaInventarioModal" 
+                                <input type="text"
+                                       class="form-control"
+                                       id="busquedaInventarioModal"
                                        placeholder="Buscar por nombre o descripción...">
                             </div>
                         </div>
@@ -40,10 +40,61 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <button type="button" 
-                                    class="btn btn-outline-secondary w-100" 
+                            <button type="button"
+                                    class="btn btn-outline-secondary w-100"
                                     id="btnLimpiarFiltrosInventario">
                                 <i class="bi bi-eraser me-1"></i>Limpiar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ✅ FILTROS DE LLANTAS -->
+                    <div class="row g-3 mt-2">
+                        <div class="col-12">
+                            <hr class="my-2">
+                            <h6 class="text-muted mb-3">
+                                <i class="bi bi-car-front me-1"></i>Filtros Específicos para Llantas
+                            </h6>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterAncho" class="form-label small">Ancho</label>
+                            <select id="filterAncho" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterPerfil" class="form-label small">Perfil</label>
+                            <select id="filterPerfil" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterDiametro" class="form-label small">Diámetro</label>
+                            <select id="filterDiametro" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterTipoTerreno" class="form-label small">Tipo de Terreno</label>
+                            <select id="filterTipoTerreno" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterMarca" class="form-label small">Marca</label>
+                            <select id="filterMarca" class="form-select form-select-sm">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label for="filterVelocidad" class="form-label small">Índice Velocidad</label>
+                            <select id="filterVelocidad" class="form-select form-select-sm">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarFiltrosLlantas">
+                                <i class="bi bi-x-circle me-1"></i>Limpiar Filtros de Llantas
                             </button>
                         </div>
                     </div>
@@ -59,78 +110,54 @@
                     </div>
                 </div>
 
-                <!-- Contenido del modal -->
-                <div id="inventarioModalContent" class="p-3" style="min-height: 400px;">
-                    <!-- Tabla de productos -->
-                    <div class="table-responsive">
-                        <table id="tablaInventarioModal" class="table table-hover table-striped">
-                            <thead class="table-dark">
+                <!-- ✅ TABLA CON SCROLL -->
+                <div id="inventarioModalContent" style="display: none;">
+                    <!-- Info de resultados -->
+                    <div class="p-3 bg-light border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div id="infoCantidadProductos" class="text-muted">
+                                <i class="bi bi-box-seam me-2"></i>
+                                <span id="cantidadProductosTexto">0 productos</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ TABLA CON ALTURA FIJA Y SCROLL -->
+                    <!-- ✅ TABLA CON ALTURA FIJA Y SCROLL (Corregida y mejorada) -->
+                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto; overflow-x: hidden;">
+                        <table id="tablaInventarioFacturacion" class="table table-hover table-striped align-middle">
+                            <thead class="table-dark" style="position: sticky; top: 0; z-index: 2;">
                                 <tr>
-                                    <th class="sortable" data-column="nombre" style="cursor: pointer;">
-                                        Producto
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 220px; cursor: pointer;" data-column="nombre" class="sortable">
+                                        Producto <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th class="sortable" data-column="medida" style="cursor: pointer;">
-                                        Medida
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 130px; cursor: pointer;" data-column="medida" class="sortable">
+                                        Medida <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th class="sortable" data-column="capas" style="cursor: pointer;">
-                                        Capas
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 90px; cursor: pointer;" data-column="capas" class="sortable">
+                                        Capas <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th class="sortable" data-column="tipoTerreno" style="cursor: pointer;">
-                                        Tipo Terreno
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 120px; cursor: pointer;" data-column="tipoTerreno" class="sortable">
+                                        Tipo Terreno <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th class="sortable" data-column="stock" style="cursor: pointer; width: 100px;">
-                                        Stock
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 80px; cursor: pointer;" data-column="stock" class="sortable">
+                                        Stock <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th class="sortable" data-column="precioEfectivo" style="cursor: pointer; width: 120px;">
-                                        Precio Efectivo
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 120px; cursor: pointer;" data-column="precioEfectivo" class="sortable">
+                                        Precio Efectivo <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th class="sortable" data-column="precioTarjeta" style="cursor: pointer; width: 120px;">
-                                        Precio Tarjeta
-                                        <i class="bi bi-arrow-down-up ms-1"></i>
+                                    <th style="width: 120px; cursor: pointer;" data-column="precioTarjeta" class="sortable">
+                                        Precio Tarjeta <i class="bi bi-arrow-down-up ms-1"></i>
                                     </th>
-                                    <th style="width: 120px;">Acciones</th>
+                                    <th style="width: 90px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody id="inventarioModalProductos">
-                                <!-- Los productos se cargarán dinámicamente aquí -->
+                                <!-- Productos dinámicos -->
                             </tbody>
                         </table>
                     </div>
-                <!-- Controles de paginación -->
-                    <div class="mt-4 border-top pt-3">
-                        <div class="row align-items-center mb-3">
-                            <div class="col-md-6">
-                                <div id="infoPaginacionInventario" class="text-muted small">
-                                    <!-- Se llena dinámicamente -->
-                                </div>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <div class="d-flex align-items-center justify-content-end gap-2">
-                                    <small class="text-muted">Productos por página:</small>
-                                    <select class="form-select form-select-sm" style="width: auto;" onchange="cambiarProductosPorPagina(this.value)">
-                                        <option value="10">10</option>
-                                        <option value="20" selected>20</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-12">
-                                <div id="paginacionInventarioModal" class="d-flex justify-content-center">
-                                    <!-- Se llena dinámicamente con controles de paginación -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
             <div class="modal-footer">
