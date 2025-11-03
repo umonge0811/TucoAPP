@@ -122,40 +122,41 @@
                         </div>
                     </div>
 
-                    <!-- ✅ TABLA CON ALTURA FIJA Y SCROLL -->
                     <!-- ✅ TABLA CON ALTURA FIJA Y SCROLL (Corregida y mejorada) -->
                     <div class="table-responsive" style="max-height: 600px; overflow-y: auto; overflow-x: hidden;">
-                        <table id="tablaInventarioFacturacion" class="table table-hover table-striped align-middle">
-                            <thead class="table-dark" style="position: sticky; top: 0; z-index: 2;">
-                                <tr>
-                                    <th style="width: 220px; cursor: pointer;" data-column="nombre" class="sortable">
-                                        Producto <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 130px; cursor: pointer;" data-column="medida" class="sortable">
-                                        Medida <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 90px; cursor: pointer;" data-column="capas" class="sortable">
-                                        Capas <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 120px; cursor: pointer;" data-column="tipoTerreno" class="sortable">
-                                        Tipo Terreno <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 80px; cursor: pointer;" data-column="stock" class="sortable">
-                                        Stock <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 120px; cursor: pointer;" data-column="precioEfectivo" class="sortable">
-                                        Precio Efectivo <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 120px; cursor: pointer;" data-column="precioTarjeta" class="sortable">
-                                        Precio Tarjeta <i class="bi bi-arrow-down-up ms-1"></i>
-                                    </th>
-                                    <th style="width: 90px;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="inventarioModalProductos">
-                                <!-- Productos dinámicos -->
-                            </tbody>
-                        </table>
+                        <div class="tabla-inventario-wrapper">
+                            <table id="tablaInventarioFacturacion" class="table table-hover table-striped align-middle">
+                                <thead class="table-dark" style="position: sticky; top: 0; z-index: 2;">
+                                    <tr>
+                                        <th style="width: 220px; cursor: pointer;" data-column="nombre" class="sortable">
+                                            Producto <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 130px; cursor: pointer;" data-column="medida" class="sortable">
+                                            Medida <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 90px; cursor: pointer;" data-column="capas" class="sortable">
+                                            Capas <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 120px; cursor: pointer;" data-column="tipoTerreno" class="sortable">
+                                            Tipo Terreno <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 80px; cursor: pointer;" data-column="stock" class="sortable">
+                                            Stock <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 120px; cursor: pointer;" data-column="precioEfectivo" class="sortable">
+                                            Precio Efectivo <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 120px; cursor: pointer;" data-column="precioTarjeta" class="sortable">
+                                            Precio Tarjeta <i class="bi bi-arrow-down-up ms-1"></i>
+                                        </th>
+                                        <th style="width: 90px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventarioModalProductos">
+                                    <!-- Productos dinámicos -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                 </div>

@@ -324,6 +324,9 @@ async function cargarInventarioCompleto() {
     }
 }
 
+/**
+ * Mostrar productos en el modal de inventario (SIN PAGINACIÓN)
+ */
 function mostrarProductosInventario(productos) {
     console.log('📦 === MOSTRANDO PRODUCTOS INVENTARIO ===');
     console.log('📦 Productos totales:', productos?.length || 0);
@@ -351,20 +354,100 @@ function mostrarProductosInventario(productos) {
         return;
     }
 
+    // ✅ ORDENAR POR MEDIDAS POR DEFECTO (MENOR A MAYOR)
+    const productosOrdenados = ordenarProductosPorMedidas(productos, true);
+
     // Actualizar productos filtrados globalmente
-    productosFiltrados = productos;
+    productosFiltrados = productosOrdenados;
 
     // Actualizar contador
-    cantidadTexto.text(`${productos.length} producto${productos.length !== 1 ? 's' : ''}`);
+    cantidadTexto.text(`${productosOrdenados.length} producto${productosOrdenados.length !== 1 ? 's' : ''}`);
 
-    console.log(`📦 Generando HTML para ${productos.length} productos...`);
+    console.log(`📦 Generando HTML para ${productosOrdenados.length} productos ordenados por medida...`);
 
     // ✅ GENERAR HTML PARA TODOS LOS PRODUCTOS
-    generarHTMLProductos(productos, tbody);
+    generarHTMLProductos(productosOrdenados, tbody);
 
     $('#inventarioModalContent').show();
-    console.log('✅ Productos de inventario mostrados');
+
+    // ✅ MARCAR LA COLUMNA MEDIDA COMO ORDENADA ASCENDENTE
+    $('.sortable').removeClass('sorted-asc sorted-desc');
+    $('.sortable[data-column="medida"]').addClass('sorted-asc');
+    $('.sortable i').removeClass('bi-arrow-up bi-arrow-down').addClass('bi-arrow-down-up');
+    $('.sortable[data-column="medida"] i').removeClass('bi-arrow-down-up').addClass('bi-arrow-up');
+
+    console.log('✅ Productos de inventario mostrados y ordenados por medida (ascendente)');
 }
+
+/**
+ * Función auxiliar para ordenar productos por medidas
+ * @param {Array} productos - Array de productos a ordenar
+ * @param {Boolean} ascendente - true para ascendente, false para descendente
+ * @returns {Array} - Array ordenado
+ */
+function ordenarProductosPorMedidas(productos, ascendente = true) {
+    console.log(`📊 Ordenando ${productos.length} productos por medidas (${ascendente ? 'ascendente' : 'descendente'})...`);
+
+    // Función para parsear medidas de un producto
+    const parseaMedidaProducto = (producto) => {
+        try {
+            if (!producto.llanta && (!producto.Llanta || producto.Llanta.length === 0)) {
+                return { ancho: 999999, perfil: 999999, diametro: 999999 };
+            }
+
+            const llantaInfo = producto.llanta || producto.Llanta[0];
+
+            const ancho = parseFloat(llantaInfo.ancho) || 999999;
+            const perfil = parseFloat(llantaInfo.perfil) || 0;
+            const diametro = parseFloat(llantaInfo.diametro) || 999999;
+
+            return { ancho, perfil, diametro };
+        } catch (error) {
+            console.warn('⚠️ Error parseando medida:', error);
+            return { ancho: 999999, perfil: 999999, diametro: 999999 };
+        }
+    };
+
+    // Clonar array para no mutar el original
+    const productosOrdenados = [...productos];
+
+    // Ordenar
+    productosOrdenados.sort((a, b) => {
+        const medidaA = parseaMedidaProducto(a);
+        const medidaB = parseaMedidaProducto(b);
+
+        // 1️⃣ Primero por DIÁMETRO
+        if (medidaA.diametro !== medidaB.diametro) {
+            const resultado = medidaA.diametro - medidaB.diametro;
+            return ascendente ? resultado : -resultado;
+        }
+
+        // 2️⃣ Luego por ANCHO
+        if (medidaA.ancho !== medidaB.ancho) {
+            const resultado = medidaA.ancho - medidaB.ancho;
+            return ascendente ? resultado : -resultado;
+        }
+
+        // 3️⃣ Finalmente por PERFIL
+        const resultado = medidaA.perfil - medidaB.perfil;
+        return ascendente ? resultado : -resultado;
+    });
+
+    // Debug: Mostrar primeras 10 medidas
+    console.log('🔍 Primeras 10 medidas ordenadas:');
+    productosOrdenados.slice(0, 10).forEach((producto, index) => {
+        const llanta = producto.llanta || (producto.Llanta && producto.Llanta[0]);
+        if (llanta) {
+            const medida = llanta.perfil && llanta.perfil > 0
+                ? `${llanta.ancho}/${llanta.perfil}/R${llanta.diametro}`
+                : `${llanta.ancho}/R${llanta.diametro}`;
+            console.log(`  ${index + 1}. ${medida} - ${producto.nombreProducto}`);
+        }
+    });
+
+    return productosOrdenados;
+}
+
 
 /**
  * Generar HTML de productos
@@ -1086,9 +1169,7 @@ function limpiarFiltrosInventario() {
     $('#stockInventarioModal').val('');
     $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
 
-    // Reiniciar a la primera página
-    paginacionConfig.paginaActual = 1;
-
+    // ✅ MOSTRAR TODOS (ya se ordenará por defecto)
     mostrarProductosInventario(productosInventarioCompleto);
 }
 

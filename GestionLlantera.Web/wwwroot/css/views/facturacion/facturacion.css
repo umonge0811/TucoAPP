@@ -877,7 +877,7 @@ input[type=number] {
 
 
 /* ===== ESTILOS PARA PAGINACIÓN DEL MODAL INVENTARIO ===== */
-#paginacionInventarioModal .pagination {
+/*#paginacionInventarioModal .pagination {
     margin-bottom: 0;
     justify-content: center;
 }
@@ -917,10 +917,10 @@ input[type=number] {
     font-size: 0.85rem;
     font-weight: 500;
     color: #6c757d;
-}
+}*/
 
 /* Responsive para paginación en móviles */
-@media (max-width: 768px) {
+/*@media (max-width: 768px) {
     #paginacionInventarioModal .page-link {
         padding: 0.4rem 0.6rem;
         font-size: 0.8rem;
@@ -934,9 +934,9 @@ input[type=number] {
     .col-md-6:last-child .d-flex {
         justify-content: center !important;
     }
-}
+}*/
 
-#tablaInventarioFacturacion {
+/*#tablaInventarioFacturacion {
     table-layout: fixed;
     width: 100%;
     border-collapse: collapse;
@@ -951,5 +951,45 @@ input[type=number] {
         text-overflow: ellipsis;
         padding: 0.5rem;
     }
+*/
 
-/* ===== ESTILOS PARA MODAL DE FACTURA PENDIENTE ===== */
+
+/* === CONTENEDOR RESPONSIVE DE LA TABLA === */
+.tabla-inventario-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* === AJUSTES GENERALES === */
+#tablaInventarioFacturacion {
+    table-layout: auto; /* Permite mejor ajuste en móviles */
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px; /* Evita que se encoja demasiado */
+}
+
+    #tablaInventarioFacturacion th,
+    #tablaInventarioFacturacion td {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0.6rem;
+        font-size: 0.9rem;
+    }
+
+/* === OPTIMIZAR VISUAL EN MÓVILES === */
+@media (max-width: 768px) {
+    #tablaInventarioFacturacion th,
+    #tablaInventarioFacturacion td {
+        font-size: 0.8rem;
+        padding: 0.4rem;
+    }
+
+    .modal-dialog.modal-xxl {
+        max-width: 100vw !important;
+        margin: 0;
+    }
+}
