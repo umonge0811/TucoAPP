@@ -242,7 +242,7 @@ if (typeof window !== 'undefined') {
     console.log('📋 Funciones de proformas, detalles y servicios exportadas globalmente');
 }
 
-// ===== INICIALIZACIÓN =====
+// ===== INICIALIZACIÓN HÍBRIDA (RECOMENDADA) =====
 $(document).ready(function () {
     console.log('🚀 Inicializando módulo de facturación');
     inicializarFacturacion();
@@ -253,22 +253,85 @@ $(document).ready(function () {
         $('#filtrosAvanzados').collapse('toggle');
     });
 
-    // Aplicar filtros
+    // ✅ APLICAR FILTROS - Botón principal
     $('#btnAplicarFiltros').on('click', function () {
+        console.log('🔘 Usuario hizo clic en Aplicar Filtros');
         aplicarFiltros();
     });
 
-    // Limpiar filtros
+    // ✅ LIMPIAR FILTROS
     $('#btnLimpiarFiltros').on('click', function () {
+        console.log('🧹 Usuario hizo clic en Limpiar Filtros');
         limpiarFiltros();
     });
 
-    // Aplicar filtros al cambiar selección (opcional - para aplicar en tiempo real)
-    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').on('change', function () {
-        // Descomentar para aplicar filtros automáticamente
-         aplicarFiltros();
+    // ✅ FILTROS EN CASCADA - Solo actualizar opciones, NO aplicar automáticamente
+    $('#filtroAncho').on('change', function () {
+        const valorSeleccionado = $(this).val();
+        console.log('🔄 Ancho cambiado:', valorSeleccionado);
+        actualizarFiltrosCascada();
+
+        // Opcional: Mostrar indicador visual de que hay cambios sin aplicar
+        $('#btnAplicarFiltros').addClass('btn-warning').removeClass('btn-primary');
+        $('#btnAplicarFiltros').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
+    });
+
+    $('#filtroPerfil').on('change', function () {
+        const valorSeleccionado = $(this).val();
+        console.log('🔄 Perfil cambiado:', valorSeleccionado);
+        actualizarFiltrosCascada();
+
+        // Indicador visual
+        $('#btnAplicarFiltros').addClass('btn-warning').removeClass('btn-primary');
+        $('#btnAplicarFiltros').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
+    });
+
+    $('#filtroDiametro').on('change', function () {
+        const valorSeleccionado = $(this).val();
+        console.log('🔄 Diámetro cambiado:', valorSeleccionado);
+        actualizarFiltrosCascada();
+
+        // Indicador visual
+        $('#btnAplicarFiltros').addClass('btn-warning').removeClass('btn-primary');
+        $('#btnAplicarFiltros').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
+    });
+
+    $('#filtroTipoTerreno').on('change', function () {
+        const valorSeleccionado = $(this).val();
+        console.log('🔄 Tipo de terreno cambiado:', valorSeleccionado);
+
+        // Indicador visual
+        $('#btnAplicarFiltros').addClass('btn-warning').removeClass('btn-primary');
+        $('#btnAplicarFiltros').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
     });
 });
+//// ===== INICIALIZACIÓN =====
+//$(document).ready(function () {
+//    console.log('🚀 Inicializando módulo de facturación');
+//    inicializarFacturacion();
+//    inicializarModalInventario();
+
+//    // Toggle de filtros avanzados
+//    $('#btnToggleFiltros').on('click', function () {
+//        $('#filtrosAvanzados').collapse('toggle');
+//    });
+
+//    // Aplicar filtros
+//    $('#btnAplicarFiltros').on('click', function () {
+//        aplicarFiltros();
+//    });
+
+//    // Limpiar filtros
+//    $('#btnLimpiarFiltros').on('click', function () {
+//        limpiarFiltros();
+//    });
+
+//    // Aplicar filtros al cambiar selección (opcional - para aplicar en tiempo real)
+//    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').on('change', function () {
+//        // Descomentar para aplicar filtros automáticamente
+//         aplicarFiltros();
+//    });
+//});
 
 // ===== FUNCIÓN PARA EXTRAER VALORES ÚNICOS DE MEDIDAS =====
 function extraerValoresUnicos(productos) {
@@ -320,23 +383,57 @@ function extraerValoresUnicos(productos) {
     return valores;
 }
 
+//// ===== FUNCIÓN PARA POBLAR FILTROS =====
+//function poblarFiltros(productos) {
+//    console.log('📊 Poblando filtros con', productos.length, 'productos');
+
+//    const valores = extraerValoresUnicos(productos);
+
+//    // Poblar Ancho
+//    const anchos = Array.from(valores.anchos).sort((a, b) => parseFloat(a) - parseFloat(b));
+//    $('#filtroAncho').html('<option value="">Todos</option>' +
+//        anchos.map(ancho => `<option value="${ancho}">${ancho} mm</option>`).join(''));
+
+//    // Poblar Perfil
+//    const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+//    $('#filtroPerfil').html('<option value="">Todos</option>' +
+//        perfiles.map(perfil => `<option value="${perfil}">${perfil}</option>`).join(''));
+
+//    // Poblar Diámetro
+//    const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+//    $('#filtroDiametro').html('<option value="">Todos</option>' +
+//        diametros.map(diametro => `<option value="${diametro}">R${diametro}"</option>`).join(''));
+
+//    // Poblar Tipo de Terreno
+//    const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+//    $('#filtroTipoTerreno').html('<option value="">Todos</option>' +
+//        tiposTerreno.map(tipo => `<option value="${tipo}">${tipo}</option>`).join(''));
+
+//    console.log('✅ Filtros poblados:', {
+//        anchos: anchos.length,
+//        perfiles: perfiles.length,
+//        diametros: diametros.length,
+//        tiposTerreno: tiposTerreno.length
+//    });
+//}
+
 // ===== FUNCIÓN PARA POBLAR FILTROS =====
 function poblarFiltros(productos) {
     console.log('📊 Poblando filtros con', productos.length, 'productos');
 
     const valores = extraerValoresUnicos(productos);
 
-    // Poblar Ancho
+    // Poblar Ancho (siempre muestra todos)
     const anchos = Array.from(valores.anchos).sort((a, b) => parseFloat(a) - parseFloat(b));
     $('#filtroAncho').html('<option value="">Todos</option>' +
         anchos.map(ancho => `<option value="${ancho}">${ancho} mm</option>`).join(''));
 
-    // Poblar Perfil
+    // Poblar Perfil (inicialmente muestra todos)
     const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
     $('#filtroPerfil').html('<option value="">Todos</option>' +
         perfiles.map(perfil => `<option value="${perfil}">${perfil}</option>`).join(''));
 
-    // Poblar Diámetro
+    // Poblar Diámetro (inicialmente muestra todos)
     const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
     $('#filtroDiametro').html('<option value="">Todos</option>' +
         diametros.map(diametro => `<option value="${diametro}">R${diametro}"</option>`).join(''));
@@ -428,8 +525,38 @@ function aplicarFiltros() {
     const productosOrdenados = ordenarProductosPorMedidasCards(productosFiltrados);
 
     mostrarResultadosProductos(productosOrdenados);
+
+    // ✅ RESETEAR BOTÓN APLICAR FILTROS
+    $('#btnAplicarFiltros').removeClass('btn-warning').addClass('btn-primary');
+    $('#btnAplicarFiltros').html('<i class="bi bi-check-circle me-1"></i>Aplicar Filtros');
 }
 
+
+//// ===== FUNCIÓN PARA LIMPIAR FILTROS =====
+//function limpiarFiltros() {
+//    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').val('');
+//    filtrosActivos = {
+//        ancho: [],
+//        perfil: [],
+//        diametro: [],
+//        tipoTerreno: []
+//    };
+
+//    // Aplicar solo búsqueda de texto si existe
+//    const terminoBusqueda = $('#busquedaProducto').val().trim();
+//    if (terminoBusqueda.length >= 2) {
+//        const productosFiltrados = aplicarBusquedaTexto(productosCargados, terminoBusqueda);
+//        // ✅ ORDENAR ANTES DE MOSTRAR
+//        const productosOrdenados = ordenarProductosPorMedidasCards(productosFiltrados);
+//        mostrarResultadosProductos(productosOrdenados);
+//    } else {
+//        // ✅ ORDENAR TODOS LOS PRODUCTOS ANTES DE MOSTRAR
+//        const productosOrdenados = ordenarProductosPorMedidasCards(productosCargados);
+//        mostrarResultadosProductos(productosOrdenados);
+//    }
+
+//    console.log('🧹 Filtros limpiados');
+//}
 
 // ===== FUNCIÓN PARA LIMPIAR FILTROS =====
 function limpiarFiltros() {
@@ -440,21 +567,22 @@ function limpiarFiltros() {
         diametro: [],
         tipoTerreno: []
     };
-
+    
+    // ✅ RESTABLECER TODOS LOS FILTROS A SU ESTADO INICIAL
+    poblarFiltros(productosCargados);
+    
     // Aplicar solo búsqueda de texto si existe
     const terminoBusqueda = $('#busquedaProducto').val().trim();
     if (terminoBusqueda.length >= 2) {
         const productosFiltrados = aplicarBusquedaTexto(productosCargados, terminoBusqueda);
-        // ✅ ORDENAR ANTES DE MOSTRAR
         const productosOrdenados = ordenarProductosPorMedidasCards(productosFiltrados);
         mostrarResultadosProductos(productosOrdenados);
     } else {
-        // ✅ ORDENAR TODOS LOS PRODUCTOS ANTES DE MOSTRAR
         const productosOrdenados = ordenarProductosPorMedidasCards(productosCargados);
         mostrarResultadosProductos(productosOrdenados);
     }
-
-    console.log('🧹 Filtros limpiados');
+    
+    console.log('🧹 Filtros limpiados y restablecidos');
 }
 
 // ===== FUNCIÓN AUXILIAR PARA BÚSQUEDA DE TEXTO =====
@@ -473,6 +601,115 @@ function aplicarBusquedaTexto(productos, termino) {
 
         return cumpleBusqueda;
     });
+}
+
+/**
+ * Actualizar filtros en cascada según selecciones previas
+ */
+function actualizarFiltrosCascada() {
+    console.log('🔄 Actualizando filtros en cascada...');
+
+    // Obtener selecciones actuales
+    const anchoSeleccionado = $('#filtroAncho').val() || [];
+    const perfilSeleccionado = $('#filtroPerfil').val() || [];
+    const diametroSeleccionado = $('#filtroDiametro').val() || [];
+
+    // Filtrar productos según selecciones
+    let productosFiltrados = [...productosCargados];
+
+    // Filtrar por ancho si está seleccionado
+    if (anchoSeleccionado.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const ancho = String(llantaInfo.ancho || '');
+            return anchoSeleccionado.includes(ancho);
+        });
+    }
+
+    // Filtrar por perfil si está seleccionado
+    if (perfilSeleccionado.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const perfil = llantaInfo.perfil || 0;
+            const perfilNum = parseFloat(perfil);
+            const perfilFormateado = (perfilNum % 1 === 0) ?
+                perfilNum.toString() :
+                perfilNum.toFixed(2);
+            return perfilSeleccionado.includes(perfilFormateado);
+        });
+    }
+
+    // Extraer valores únicos de los productos filtrados
+    const valores = {
+        perfiles: new Set(),
+        diametros: new Set(),
+        tiposTerreno: new Set()
+    };
+
+    productosFiltrados.forEach(producto => {
+        const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]);
+
+        if (llantaInfo) {
+            // Extraer perfiles
+            if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                const perfilNum = parseFloat(llantaInfo.perfil);
+                const perfilFormateado = (perfilNum % 1 === 0) ?
+                    perfilNum.toString() :
+                    perfilNum.toFixed(2);
+                valores.perfiles.add(perfilFormateado);
+            }
+
+            // Extraer diámetros
+            if (llantaInfo.diametro) {
+                const diametroNum = parseFloat(llantaInfo.diametro);
+                const diametroFormateado = (diametroNum % 1 === 0) ?
+                    diametroNum.toString() :
+                    diametroNum.toFixed(1);
+                valores.diametros.add(diametroFormateado);
+            }
+
+            // Extraer tipo de terreno
+            const tipoTerreno = llantaInfo.tipoTerreno || llantaInfo.tipoterreno;
+            if (tipoTerreno && tipoTerreno !== 'N/A' && tipoTerreno !== '-') {
+                const tipoNormalizado = String(tipoTerreno).trim().toUpperCase();
+                valores.tiposTerreno.add(tipoNormalizado);
+            }
+        }
+    });
+
+    // Actualizar select de Perfil (solo si hay ancho seleccionado)
+    if (anchoSeleccionado.length > 0) {
+        const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+        const opcionesPerfiles = perfiles.map(perfil =>
+            `<option value="${perfil}" ${perfilSeleccionado.includes(perfil) ? 'selected' : ''}>${perfil}</option>`
+        ).join('');
+        $('#filtroPerfil').html('<option value="">Todos</option>' + opcionesPerfiles);
+
+        console.log(`✅ Perfil actualizado: ${perfiles.length} opciones disponibles`);
+    }
+
+    // Actualizar select de Diámetro (solo si hay ancho o perfil seleccionado)
+    if (anchoSeleccionado.length > 0 || perfilSeleccionado.length > 0) {
+        const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+        const opcionesDiametros = diametros.map(diametro =>
+            `<option value="${diametro}" ${diametroSeleccionado.includes(diametro) ? 'selected' : ''}>R${diametro}"</option>`
+        ).join('');
+        $('#filtroDiametro').html('<option value="">Todos</option>' + opcionesDiametros);
+
+        console.log(`✅ Diámetro actualizado: ${diametros.length} opciones disponibles`);
+    }
+
+    // Actualizar Tipo de Terreno
+    if (anchoSeleccionado.length > 0 || perfilSeleccionado.length > 0 || diametroSeleccionado.length > 0) {
+        const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+        const tipoTerrenoSeleccionado = $('#filtroTipoTerreno').val() || [];
+        const opcionesTipoTerreno = tiposTerreno.map(tipo =>
+            `<option value="${tipo}" ${tipoTerrenoSeleccionado.includes(tipo) ? 'selected' : ''}>${tipo}</option>`
+        ).join('');
+        $('#filtroTipoTerreno').html('<option value="">Todos</option>' + opcionesTipoTerreno);
+
+        console.log(`✅ Tipo Terreno actualizado: ${tiposTerreno.length} opciones disponibles`);
+    }
 }
 
 function inicializarFacturacion() {
