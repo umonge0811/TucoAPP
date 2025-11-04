@@ -141,9 +141,12 @@
         user-select: none;
         -webkit-tap-highlight-color: rgba(0, 123, 255, 0.1);
         min-height: 44px;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
+        vertical-align: middle;
+    }
+
+    .sortable .sort-icon {
+        vertical-align: middle;
+        margin-left: 0.25rem;
     }
 
     /* Indicador visual de scroll horizontal */
