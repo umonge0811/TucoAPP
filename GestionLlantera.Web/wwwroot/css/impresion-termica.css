@@ -119,6 +119,13 @@ body {
     font-weight: bold;
 }
 
+.producto-info-adicional-termico {
+    font-size: 14px !important;
+    margin-bottom: 0.5mm;
+    color: #333;
+    font-style: italic;
+}
+
 .producto-detalle-termico {
     font-size: 16px !important;
     font-weight: bold !important;
