@@ -294,8 +294,8 @@ function construirSeccionProductos(productos, anchoMaximo) {
 
             if (capas || tipoTerreno) {
                 const partes = [];
-                if (capas) partes.push(`Capas: ${capas}`);
-                if (tipoTerreno) partes.push(`Terreno: ${tipoTerreno}`);
+                if (capas) partes.push(`${capas}PR`);
+                if (tipoTerreno) partes.push(`${tipoTerreno}`);
                 infoAdicionalLlanta = `<div class="producto-info-adicional-termico">${partes.join(' | ')}</div>`;
             }
         }
