@@ -1692,4 +1692,36 @@
         font-size: 1rem;
         margin-bottom: 0.5rem;
     }
+
+
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    #resultadosBusqueda .col-lg-4,
+    #resultadosBusqueda .col-md-6,
+    #resultadosBusqueda .col-sm-6 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+@media (max-width: 991.98px) {
+    /* Convertir el row principal en flex column-reverse para invertir el orden */
+    .container-fluid > .row {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+        /* Asegurar que ambas columnas ocupen ancho completo en mobile */
+        .container-fluid > .row > .col-lg-7,
+        .container-fluid > .row > .col-lg-5 {
+            width: 100%;
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
+
+        /* Agregar margen inferior al carrito para separarlo de los productos */
+        .container-fluid > .row > .col-lg-5 {
+            margin-bottom: 1rem;
+        }
 }
