@@ -4249,7 +4249,13 @@ async function imprimirProforma(proformaId) {
         const productosParaRecibo = proforma.detallesFactura ? proforma.detallesFactura.map(detalle => ({
             nombreProducto: detalle.nombreProducto || 'Producto',
             cantidad: detalle.cantidad || 1,
-            precioUnitario: detalle.precioUnitario || 0
+            precioUnitario: detalle.precioUnitario || 0,
+            esLlanta: detalle.esLlanta || false,
+            medidaCompleta: detalle.medidaCompleta || detalle.medidaLlanta || null,
+            capas: detalle.capas || null,
+            Capas: detalle.Capas || null,
+            tipoTerreno: detalle.tipoTerreno || null,
+            TipoTerreno: detalle.TipoTerreno || null
         })) : [];
 
         const totalesRecibo = {
@@ -5080,7 +5086,11 @@ async function reimprimirFacturaDesdeModal(facturaId, numeroFactura, datosFactur
                 cantidad: detalle.cantidad || 1,
                 precioUnitario: detalle.precioUnitario || 0,
                 esLlanta: detalle.esLlanta || false,
-                medidaCompleta: detalle.medidaCompleta || null
+                medidaCompleta: detalle.medidaCompleta || detalle.medidaLlanta || null,
+                capas: detalle.capas || null,
+                Capas: detalle.Capas || null,
+                tipoTerreno: detalle.tipoTerreno || null,
+                TipoTerreno: detalle.TipoTerreno || null
             })) : [];
 
             // Preparar totales
