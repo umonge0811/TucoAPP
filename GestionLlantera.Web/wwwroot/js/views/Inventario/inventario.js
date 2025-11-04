@@ -2453,3 +2453,22 @@ Saludos.`;
         mostrarNotificacion("Error al compartir por Email", "danger");
     }
 }
+// ✅ MANEJO DEL SCROLL HORIZONTAL EN MOBILE
+$(document).ready(function () {
+    const $tableContainer = $('.table-container');
+
+    if ($tableContainer.length > 0) {
+        // Detectar primer scroll y ocultar indicador
+        $tableContainer.one('scroll', function () {
+            $(this).addClass('scrolled');
+            console.log('📱 Usuario scrolleó la tabla - ocultando indicador');
+        });
+
+        // Detectar si estamos en un dispositivo móvil
+        const isMobile = window.matchMedia("(max-width: 992px)").matches;
+
+        if (isMobile) {
+            console.log('📱 Vista móvil detectada - tabla con scroll horizontal habilitado');
+        }
+    }
+});
