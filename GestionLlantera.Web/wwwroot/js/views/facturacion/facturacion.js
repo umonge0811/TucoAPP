@@ -585,23 +585,86 @@ function limpiarFiltros() {
     console.log('🧹 Filtros limpiados y restablecidos');
 }
 
-// ===== FUNCIÓN AUXILIAR PARA BÚSQUEDA DE TEXTO =====
+// ===== FUNCIÓN AUXILIAR PARA BÚSQUEDA DE TEXTO CON MEDIDAS =====
 function aplicarBusquedaTexto(productos, termino) {
-    const terminoBusqueda = termino.toLowerCase();
+    const terminoBusqueda = termino.toLowerCase().trim();
+
+    console.log('🔍 Aplicando búsqueda de texto:', terminoBusqueda);
 
     return productos.filter(producto => {
-        const nombre = (producto.nombreProducto || producto.nombre || '').toLowerCase();
+        const nombre = (producto.nombreProducto || producto.NombreProducto || '').toLowerCase();
         const descripcion = (producto.descripcion || producto.Descripcion || '').toLowerCase();
 
-        // Buscar en nombre y descripción
-        let cumpleBusqueda = nombre.includes(terminoBusqueda) || descripcion.includes(terminoBusqueda);
+        // ✅ BÚSQUEDA EN NOMBRE Y DESCRIPCIÓN
+        let cumpleBusqueda = nombre.includes(terminoBusqueda) ||
+            descripcion.includes(terminoBusqueda);
 
-        // Tu lógica existente de búsqueda en medidas...
-        // (copiar tu código existente de búsqueda de medidas aquí)
+        // ✅ BÚSQUEDA EN MEDIDAS DE LLANTAS (IGUAL QUE INVENTARIO)
+        if (!cumpleBusqueda) {
+            try {
+                // Verificar si es llanta
+                const esLlanta = producto.llanta ||
+                    (producto.Llanta && producto.Llanta.length > 0);
+
+                if (esLlanta) {
+                    const llantaInfo = producto.llanta || producto.Llanta[0];
+
+                    if (llantaInfo && llantaInfo.ancho && llantaInfo.diametro) {
+                        // Construir múltiples formatos de medida para búsqueda
+                        let medidaParaBusqueda = '';
+
+                        if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                            // Con perfil: "175/70/R12"
+                            const perfilNum = parseFloat(llantaInfo.perfil);
+                            const perfilFormateado = (perfilNum % 1 === 0) ?
+                                perfilNum.toString() :
+                                perfilNum.toFixed(2);
+
+                            const medida = `${llantaInfo.ancho}/${perfilFormateado}/R${llantaInfo.diametro}`;
+
+                            // Crear múltiples formatos para búsqueda flexible
+                            medidaParaBusqueda = [
+                                medida,                                           // 175/70/R12
+                                `${llantaInfo.ancho}/${perfilFormateado}`,       // 175/70
+                                `${llantaInfo.ancho}x${perfilFormateado}x${llantaInfo.diametro}`, // 175x70x12
+                                `${llantaInfo.ancho}`,                           // 175
+                                `${perfilFormateado}`,                           // 70
+                                `${llantaInfo.diametro}`,                        // 12
+                                `r${llantaInfo.diametro}`,                       // r12
+                                `R${llantaInfo.diametro}`                        // R12
+                            ].join(' ').toLowerCase();
+
+                        } else {
+                            // Sin perfil: "700/R16"
+                            const medida = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
+
+                            // Crear múltiples formatos para búsqueda flexible
+                            medidaParaBusqueda = [
+                                medida,                                           // 700/R16
+                                `${llantaInfo.ancho}`,                           // 700
+                                `${llantaInfo.diametro}`,                        // 16
+                                `r${llantaInfo.diametro}`,                       // r16
+                                `R${llantaInfo.diametro}`                        // R16
+                            ].join(' ').toLowerCase();
+                        }
+
+                        // Verificar si el término de búsqueda está en algún formato
+                        cumpleBusqueda = medidaParaBusqueda.includes(terminoBusqueda);
+
+                        if (cumpleBusqueda) {
+                            console.log(`✅ Coincidencia encontrada en medida para: ${nombre}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Error procesando medida para búsqueda:', error);
+            }
+        }
 
         return cumpleBusqueda;
     });
 }
+
 
 /**
  * Actualizar filtros en cascada según selecciones previas
@@ -766,7 +829,7 @@ function inicializarModales() {
 }
 
 function configurarEventos() {
-    // ===== BÚSQUEDA DE PRODUCTOS =====
+    // ===== BÚSQUEDA DE PRODUCTOS (ACTUALIZADA CON BÚSQUEDA POR MEDIDAS) =====
     let ultimoEventoInput = 0; // Para throttling adicional
 
     $('#busquedaProducto').on('input keyup paste', function () {
@@ -908,27 +971,6 @@ function configurarEventos() {
     $('#btnProformas').on('click', function () {
         abrirProformas();
     });
-
-    //// ===== BOTÓN SERVICIOS =====
-    //$('#btnServicios').on('click', function (e) {
-    //    e.preventDefault();
-    //    e.stopPropagation();
-    //    console.log('🛠️ Botón servicios clickeado');
-    //    abrirModalServicios();
-    //});
-
-    //// ✅ CONFIGURACIÓN ALTERNATIVA DIRECTA
-    //const btnServicios = document.getElementById('btnServicios');
-    //if (btnServicios) {
-    //    btnServicios.addEventListener('click', function(e) {
-    //        e.preventDefault();
-    //        console.log('🛠️ Event listener directo - Botón servicios clickeado');
-    //        abrirModalServicios();
-    //    });
-    //    console.log('✅ Event listener directo configurado para botón servicios');
-    //} else {
-    //    console.warn('⚠️ No se encontró el botón servicios en el DOM');
-    //}
 
     // ===== MODAL FINALIZAR VENTA =====
     $('#metodoPago').on('change', function () {
@@ -1126,6 +1168,56 @@ async function buscarProductos(termino) {
         busquedaEnProceso = false;
         console.log('🔍 === FIN buscarProductos ===');
     }
+}
+
+// ===== FUNCIÓN AUXILIAR PARA APLICAR SOLO FILTROS =====
+function aplicarFiltrosActivos(productos) {
+    let productosFiltrados = [...productos];
+
+    // Aplicar filtro de ancho
+    if (filtrosActivos.ancho.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const ancho = String(llantaInfo.ancho || producto.Ancho || '');
+            return filtrosActivos.ancho.includes(ancho);
+        });
+    }
+
+    // Aplicar filtro de perfil
+    if (filtrosActivos.perfil.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const perfil = llantaInfo.perfil || producto.Perfil;
+            if (!perfil) return false;
+
+            const perfilNum = parseFloat(perfil);
+            const perfilFormateado = (perfilNum % 1 === 0) ?
+                perfilNum.toString() :
+                perfilNum.toFixed(2);
+
+            return filtrosActivos.perfil.includes(perfilFormateado);
+        });
+    }
+
+    // Aplicar filtro de diámetro
+    if (filtrosActivos.diametro.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const diametro = String(llantaInfo.diametro || producto.Diametro || '').replace('R', '');
+            return filtrosActivos.diametro.includes(diametro);
+        });
+    }
+
+    // Aplicar filtro de tipo de terreno
+    if (filtrosActivos.tipoTerreno.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const tipoTerreno = producto.tipoTerreno || llantaInfo.tipoterreno || llantaInfo.tipoTerreno;
+            return filtrosActivos.tipoTerreno.includes(tipoTerreno);
+        });
+    }
+
+    return productosFiltrados;
 }
 
 function mostrarResultadosProductos(productos) {
