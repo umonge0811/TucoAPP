@@ -16,6 +16,162 @@ let filtrosInventarioActivos = {
 };
 
 /**
+ * Actualizar filtros en cascada según selecciones previas (Modal Inventario)
+ */
+function actualizarFiltrosCascadaInventario() {
+    console.log('🔄 Actualizando filtros en cascada (Modal Inventario)...');
+
+    // Obtener selecciones actuales
+    const anchoSeleccionado = $('#filterAncho').val() || '';
+    const perfilSeleccionado = $('#filterPerfil').val() || '';
+    const diametroSeleccionado = $('#filterDiametro').val() || '';
+
+    // Filtrar productos según selecciones
+    let productosFiltrados = [...productosInventarioCompleto];
+
+    // Filtrar por ancho si está seleccionado
+    if (anchoSeleccionado) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]);
+            if (!llantaInfo) return false;
+            const ancho = String(llantaInfo.ancho || '');
+            return ancho === anchoSeleccionado;
+        });
+    }
+
+    // Filtrar por perfil si está seleccionado
+    if (perfilSeleccionado) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]);
+            if (!llantaInfo || !llantaInfo.perfil) return false;
+
+            const perfilNum = parseFloat(llantaInfo.perfil);
+            const perfilFormateado = (perfilNum % 1 === 0) ?
+                perfilNum.toString() :
+                perfilNum.toFixed(2);
+
+            return perfilFormateado === perfilSeleccionado;
+        });
+    }
+
+    // Extraer valores únicos de los productos filtrados
+    const valores = {
+        perfiles: new Set(),
+        diametros: new Set(),
+        tiposTerreno: new Set(),
+        marcas: new Set(),
+        velocidades: new Set()
+    };
+
+    productosFiltrados.forEach(producto => {
+        const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]);
+
+        if (llantaInfo) {
+            // Extraer perfiles
+            if (llantaInfo.perfil && llantaInfo.perfil > 0) {
+                const perfilNum = parseFloat(llantaInfo.perfil);
+                const perfilFormateado = (perfilNum % 1 === 0) ?
+                    perfilNum.toString() :
+                    perfilNum.toFixed(2);
+                valores.perfiles.add(perfilFormateado);
+            }
+
+            // Extraer diámetros
+            if (llantaInfo.diametro) {
+                const diametroNum = parseFloat(llantaInfo.diametro);
+                const diametroFormateado = (diametroNum % 1 === 0) ?
+                    diametroNum.toString() :
+                    diametroNum.toFixed(1);
+                valores.diametros.add(diametroFormateado);
+            }
+
+            // Extraer tipo de terreno
+            const tipoTerreno = llantaInfo.tipoTerreno || llantaInfo.tipoterreno;
+            if (tipoTerreno && tipoTerreno !== 'N/A' && tipoTerreno !== '-') {
+                const tipoNormalizado = String(tipoTerreno).trim().toUpperCase();
+                valores.tiposTerreno.add(tipoNormalizado);
+            }
+
+            // Extraer marca
+            if (llantaInfo.marca && llantaInfo.marca !== 'N/A' && llantaInfo.marca !== '-') {
+                const marcaNormalizada = String(llantaInfo.marca).trim().toUpperCase();
+                valores.marcas.add(marcaNormalizada);
+            }
+
+            // Extraer velocidad
+            if (llantaInfo.indiceVelocidad && llantaInfo.indiceVelocidad !== 'N/A') {
+                valores.velocidades.add(llantaInfo.indiceVelocidad.toUpperCase());
+            }
+        }
+    });
+
+    // Actualizar select de Perfil (solo si hay ancho seleccionado)
+    if (anchoSeleccionado) {
+        const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+        const opcionesPerfiles = perfiles.map(perfil =>
+            `<option value="${perfil}" ${perfilSeleccionado === perfil ? 'selected' : ''}>${perfil}</option>`
+        ).join('');
+        $('#filterPerfil').html('<option value="">Todos</option>' + opcionesPerfiles);
+
+        console.log(`✅ Perfil actualizado: ${perfiles.length} opciones disponibles`);
+    }
+
+    // Actualizar select de Diámetro (solo si hay ancho o perfil seleccionado)
+    if (anchoSeleccionado || perfilSeleccionado) {
+        const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+        const opcionesDiametros = diametros.map(diametro =>
+            `<option value="${diametro}" ${diametroSeleccionado === diametro ? 'selected' : ''}>R${diametro}"</option>`
+        ).join('');
+        $('#filterDiametro').html('<option value="">Todos</option>' + opcionesDiametros);
+
+        console.log(`✅ Diámetro actualizado: ${diametros.length} opciones disponibles`);
+    }
+
+    // Actualizar Tipo de Terreno
+    if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
+        const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+        const tipoTerrenoSeleccionado = $('#filterTipoTerreno').val() || '';
+        const opcionesTipoTerreno = tiposTerreno.map(tipo =>
+            `<option value="${tipo}" ${tipoTerrenoSeleccionado === tipo ? 'selected' : ''}>${tipo}</option>`
+        ).join('');
+        $('#filterTipoTerreno').html('<option value="">Todos</option>' + opcionesTipoTerreno);
+
+        console.log(`✅ Tipo Terreno actualizado: ${tiposTerreno.length} opciones disponibles`);
+    }
+
+    // Actualizar Marca
+    if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
+        const marcas = Array.from(valores.marcas).sort();
+        const marcaSeleccionada = $('#filterMarca').val() || '';
+        const opcionesMarcas = marcas.map(marca =>
+            `<option value="${marca}" ${marcaSeleccionada === marca ? 'selected' : ''}>${marca}</option>`
+        ).join('');
+        $('#filterMarca').html('<option value="">Todas</option>' + opcionesMarcas);
+
+        console.log(`✅ Marca actualizada: ${marcas.length} opciones disponibles`);
+    }
+
+    // Actualizar Velocidad
+    if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
+        const velocidades = Array.from(valores.velocidades).sort();
+        const velocidadSeleccionada = $('#filterVelocidad').val() || '';
+        if (velocidades.length > 0) {
+            const opcionesVelocidades = velocidades.map(vel =>
+                `<option value="${vel}" ${velocidadSeleccionada === vel ? 'selected' : ''}>${vel}</option>`
+            ).join('');
+            $('#filterVelocidad').html('<option value="">Todos</option>' + opcionesVelocidades);
+
+            console.log(`✅ Velocidad actualizada: ${velocidades.length} opciones disponibles`);
+        }
+    }
+
+    // ✅ INDICADOR VISUAL DE CAMBIOS PENDIENTES
+    $('#btnAplicarFiltrosInventario').addClass('btn-warning').removeClass('btn-primary');
+    $('#btnAplicarFiltrosInventario').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
+}
+
+
+/**
  * Inicializar modal de inventario para facturación
  */
 function inicializarModalInventario() {
@@ -195,28 +351,54 @@ function configurarFiltrosInventario() {
         aplicarFiltrosInventario();
     });
 
-    // ✅ FILTROS ESPECÍFICOS DE LLANTAS
-    const filtrosLlantas = ['#filterAncho', '#filterPerfil', '#filterDiametro', '#filterTipoTerreno', '#filterMarca', '#filterVelocidad'];
+    // ✅ FILTROS ESPECÍFICOS DE LLANTAS CON CASCADA
+    $('#filterAncho').off('change').on('change', function () {
+        const valor = $(this).val();
+        console.log('🔄 Ancho cambiado (Modal):', valor);
+        actualizarFiltrosCascadaInventario();
+    });
 
-    filtrosLlantas.forEach(selector => {
-        $(selector).off('change').on('change', function () {
-            let campo = selector.replace('#filter', '').toLowerCase();
+    $('#filterPerfil').off('change').on('change', function () {
+        const valor = $(this).val();
+        console.log('🔄 Perfil cambiado (Modal):', valor);
+        actualizarFiltrosCascadaInventario();
+    });
 
-            const valor = $(this).val();
-            filtrosInventarioActivos[campo] = valor;
+    $('#filterDiametro').off('change').on('change', function () {
+        const valor = $(this).val();
+        console.log('🔄 Diámetro cambiado (Modal):', valor);
+        actualizarFiltrosCascadaInventario();
+    });
 
-            console.log('🔧 Filtro de llanta actualizado:', {
-                campo: campo,
-                valor: valor
-            });
+    $('#filterTipoTerreno, #filterMarca, #filterVelocidad').off('change').on('change', function () {
+        console.log('🔄 Filtro de llanta cambiado (Modal)');
+        $('#btnAplicarFiltrosInventario').addClass('btn-warning').removeClass('btn-primary');
+        $('#btnAplicarFiltrosInventario').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
+    });
 
-            aplicarFiltrosInventario();
-        });
+    // ✅ BOTÓN APLICAR FILTROS
+    $('#btnAplicarFiltrosInventario').off('click').on('click', function () {
+        console.log('🔘 Usuario hizo clic en Aplicar Filtros (Modal)');
+
+        // Obtener valores de filtros
+        filtrosInventarioActivos.ancho = $('#filterAncho').val() || '';
+        filtrosInventarioActivos.perfil = $('#filterPerfil').val() || '';
+        filtrosInventarioActivos.diametro = $('#filterDiametro').val() || '';
+        filtrosInventarioActivos.tipoterreno = $('#filterTipoTerreno').val() || '';
+        filtrosInventarioActivos.marca = $('#filterMarca').val() || '';
+        filtrosInventarioActivos.velocidad = $('#filterVelocidad').val() || '';
+
+        // Aplicar filtros
+        aplicarFiltrosInventario();
+
+        // ✅ RESETEAR BOTÓN
+        $(this).removeClass('btn-warning').addClass('btn-primary');
+        $(this).html('<i class="bi bi-check-circle me-1"></i>Aplicar Filtros');
     });
 
     // ✅ BOTÓN LIMPIAR FILTROS DE LLANTAS
     $('#btnLimpiarFiltrosLlantas').off('click').on('click', function () {
-        console.log('🧹 Limpiando filtros de llantas...');
+        console.log('🧹 Limpiando filtros de llantas (Modal)...');
 
         // Limpiar selectores
         $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
@@ -229,8 +411,15 @@ function configurarFiltrosInventario() {
         filtrosInventarioActivos.marca = '';
         filtrosInventarioActivos.velocidad = '';
 
-        // Reaplicar filtros
+        // Repoblar filtros con todas las opciones
+        poblarFiltrosLlantasInventario();
+
+        // Reaplicar solo filtros generales (búsqueda, categoría, stock)
         aplicarFiltrosInventario();
+
+        // Resetear botón
+        $('#btnAplicarFiltrosInventario').removeClass('btn-warning').addClass('btn-primary');
+        $('#btnAplicarFiltrosInventario').html('<i class="bi bi-check-circle me-1"></i>Aplicar Filtros');
 
         // Mostrar notificación
         mostrarToast('Filtros Limpiados', 'Se han limpiado todos los filtros de llantas', 'success');
@@ -240,8 +429,7 @@ function configurarFiltrosInventario() {
     $('#btnLimpiarFiltrosInventario').off('click').on('click', function () {
         limpiarFiltrosInventario();
     });
-}
-/**
+}/**
  * Abrir modal de inventario
  */
 function consultarInventario() {
@@ -1169,8 +1357,16 @@ function limpiarFiltrosInventario() {
     $('#stockInventarioModal').val('');
     $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
 
-    // ✅ MOSTRAR TODOS (ya se ordenará por defecto)
-    mostrarProductosInventario(productosInventarioCompleto);
+    // ✅ RESTABLECER TODOS LOS FILTROS A SU ESTADO INICIAL
+    poblarFiltrosLlantasInventario();
+
+    // ✅ RESETEAR BOTÓN
+    $('#btnAplicarFiltrosInventario').removeClass('btn-warning').addClass('btn-primary');
+    $('#btnAplicarFiltrosInventario').html('<i class="bi bi-check-circle me-1"></i>Aplicar Filtros');
+
+    // Mostrar todos los productos ordenados
+    const productosOrdenados = ordenarProductosPorMedidas(productosInventarioCompleto, true);
+    mostrarProductosInventario(productosOrdenados);
 }
 
 /**
