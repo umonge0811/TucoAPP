@@ -1957,6 +1957,8 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
         // ✅ CAPTURAR INFORMACIÓN DE LLANTA
         let esLlanta = producto.esLlanta || producto.EsLlanta || false;
         let medidaCompleta = null;
+        let capas = null;
+        let tipoTerreno = null;
 
         try {
             // Primero verificar si ya viene la medida completa
@@ -1976,6 +1978,10 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
                         medidaCompleta = `${llantaInfo.ancho}/R${llantaInfo.diametro}`;
                     }
                 }
+
+                // ✅ CAPTURAR CAPAS Y TIPO DE TERRENO
+                capas = llantaInfo.capas || llantaInfo.Capas || null;
+                tipoTerreno = llantaInfo.tipoTerreno || llantaInfo.TipoTerreno || null;
             }
 
             // Si aún no tenemos medida, verificar propiedades alternativas del backend
@@ -1990,9 +1996,17 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
                     esLlanta = true;
                 }
             }
+
+            // ✅ CAPTURAR CAPAS Y TIPO DE TERRENO SI NO SE CAPTURARON ANTES
+            if (!capas && !tipoTerreno && esLlanta) {
+                capas = producto.capas || producto.Capas || null;
+                tipoTerreno = producto.tipoTerreno || producto.TipoTerreno || null;
+            }
         } catch (error) {
             console.warn('⚠️ Error procesando información de llanta en agregarProductoAVenta:', error);
             medidaCompleta = null;
+            capas = null;
+            tipoTerreno = null;
         }
 
         productosEnVenta.push({
@@ -2004,7 +2018,11 @@ function agregarProductoAVenta(producto, cantidad = 1, precioUnitario = null, me
             metodoPago: metodoPago,
             imagenUrl: imagenUrl,
             esLlanta: esLlanta,
-            medidaCompleta: medidaCompleta
+            medidaCompleta: medidaCompleta,
+            capas: capas,
+            Capas: capas,
+            tipoTerreno: tipoTerreno,
+            TipoTerreno: tipoTerreno
         });
 
         /* mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la venta`, 'success');*/
@@ -4488,7 +4506,11 @@ async function convertirProformaAFactura(proformaEscapada) {
                         imagenUrl: null,
                         esServicio: false,
                         esLlanta: detalle.esLlanta || false,
-                        medidaCompleta: detalle.medidaCompleta || null
+                        medidaCompleta: detalle.medidaCompleta || detalle.medidaLlanta || null,
+                        capas: detalle.capas || null,
+                        Capas: detalle.Capas || null,
+                        tipoTerreno: detalle.tipoTerreno || null,
+                        TipoTerreno: detalle.TipoTerreno || null
                     };
 
                     productosEnVenta.push(producto);
@@ -8590,6 +8612,9 @@ async function procesarFacturaPendiente(facturaEscapada) {
                     let esLlanta = false;
                     let medidaCompleta = null;
 
+                    let capas = null;
+                    let tipoTerreno = null;
+
                     try {
                         // Verificar si el producto es llanta y obtener su medida
                         if (detalle.esLlanta || detalle.EsLlanta) {
@@ -8601,6 +8626,10 @@ async function procesarFacturaPendiente(facturaEscapada) {
                                 detalle.medidaLlanta ||
                                 detalle.MedidaLlanta;
 
+                            // ✅ CAPTURAR CAPAS Y TIPO DE TERRENO
+                            capas = detalle.capas || detalle.Capas || null;
+                            tipoTerreno = detalle.tipoTerreno || detalle.TipoTerreno || null;
+
                             // Si no tiene medida completa pero tiene datos de llanta, construirla
                             if (!medidaCompleta && detalle.llanta) {
                                 const llanta = detalle.llanta;
@@ -8611,6 +8640,9 @@ async function procesarFacturaPendiente(facturaEscapada) {
                                         medidaCompleta = `${llanta.ancho}/R${llanta.diametro}`;
                                     }
                                 }
+                                // ✅ CAPTURAR DESDE OBJETO LLANTA SI NO SE CAPTURARON ANTES
+                                if (!capas) capas = llanta.capas || llanta.Capas || null;
+                                if (!tipoTerreno) tipoTerreno = llanta.tipoTerreno || llanta.TipoTerreno || null;
                             }
 
                             // Si aún no tenemos medida, verificar propiedades alternativas
@@ -8631,6 +8663,8 @@ async function procesarFacturaPendiente(facturaEscapada) {
                     } catch (error) {
                         console.warn('⚠️ Error procesando información de llanta en factura pendiente:', error);
                         medidaCompleta = null;
+                        capas = null;
+                        tipoTerreno = null;
                     }
 
                     productosEnVenta.push({
@@ -8642,7 +8676,11 @@ async function procesarFacturaPendiente(facturaEscapada) {
                         facturaId: factura.facturaId,
                         metodoPago: 'efectivo',
                         esLlanta: esLlanta,
-                        medidaCompleta: medidaCompleta
+                        medidaCompleta: medidaCompleta,
+                        capas: capas,
+                        Capas: capas,
+                        tipoTerreno: tipoTerreno,
+                        TipoTerreno: tipoTerreno
                     });
                 });
             }
@@ -8691,7 +8729,13 @@ async function procesarFacturaPendiente(facturaEscapada) {
                         cantidad: detalle.cantidad,
                         stockDisponible: detalle.stockDisponible || 999,
                         facturaId: factura.facturaId,
-                        metodoPago: 'efectivo'
+                        metodoPago: 'efectivo',
+                        esLlanta: detalle.esLlanta || false,
+                        medidaCompleta: detalle.medidaCompleta || detalle.medidaLlanta || null,
+                        capas: detalle.capas || null,
+                        Capas: detalle.Capas || null,
+                        tipoTerreno: detalle.tipoTerreno || null,
+                        TipoTerreno: detalle.TipoTerreno || null
                     });
                 });
             }
@@ -8856,7 +8900,13 @@ function cargarFacturaPendienteEnCarrito(factura) {
                 stockDisponible: 999, // Asumir stock suficiente para facturas pendientes
                 metodoPago: factura.metodoPago || 'efectivo',
                 imagenUrl: null,
-                facturaId: factura.facturaId // Marcar como factura existente
+                facturaId: factura.facturaId, // Marcar como factura existente
+                esLlanta: detalle.esLlanta || false,
+                medidaCompleta: detalle.medidaCompleta || detalle.medidaLlanta || null,
+                capas: detalle.capas || null,
+                Capas: detalle.Capas || null,
+                tipoTerreno: detalle.tipoTerreno || null,
+                TipoTerreno: detalle.TipoTerreno || null
             });
         });
     }
