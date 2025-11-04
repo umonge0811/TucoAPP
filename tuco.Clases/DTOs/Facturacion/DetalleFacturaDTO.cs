@@ -41,6 +41,8 @@ namespace Tuco.Clases.DTOs.Facturacion
         public string? MedidaLlanta { get; set; }
         public string? MarcaLlanta { get; set; }
         public string? ModeloLlanta { get; set; }
+        public int? Capas { get; set; }
+        public string? TipoTerreno { get; set; }
 
         // Propiedades calculadas
         public decimal SubtotalSinDescuento => Cantidad * PrecioUnitario;
