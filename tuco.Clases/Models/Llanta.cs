@@ -25,7 +25,5 @@ public partial class Llanta
 
     public string? TipoTerreno { get; set; }
 
-    public string? TipoVehiculo { get; set; }
-
     public virtual Producto? Producto { get; set; }
 }

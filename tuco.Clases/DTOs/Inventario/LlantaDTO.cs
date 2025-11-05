@@ -31,8 +31,5 @@ namespace Tuco.Clases.DTOs.Inventario
 
         [StringLength(50, ErrorMessage = "El tipo de terreno no puede tener más de 50 caracteres")]
         public string? TipoTerreno { get; set; }
-
-        [StringLength(20, ErrorMessage = "El tipo de vehículo no puede tener más de 20 caracteres")]
-        public string? TipoVehiculo { get; set; }
     }
 }

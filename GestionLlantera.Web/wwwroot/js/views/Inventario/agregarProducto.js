@@ -33,16 +33,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const hiddenPorcentajeUtilidad = document.getElementById('hiddenPorcentajeUtilidad');
     const hiddenPrecio = document.getElementById('hiddenPrecio');
 
-    // Verificar si los elementos crï¿½ticos existen
+    // Verificar si los elementos críticos existen
     if (!form) {
-        console.error('Error crï¿½tico: No se encontrï¿½ el formulario con ID "formProducto"');
+        console.error('Error crítico: No se encontró el formulario con ID "formProducto"');
         return;
     }
 
     console.log('Referencias a elementos obtenidas correctamente');
 
-    // DIAGNï¿½STICO - Verificar elementos de utilidad
-    console.log('=== DIAGNï¿½STICO DE ELEMENTOS DE UTILIDAD ===');
+    // DIAGNÓSTICO - Verificar elementos de utilidad
+    console.log('=== DIAGNÓSTICO DE ELEMENTOS DE UTILIDAD ===');
     console.log('modoAutomaticoRadio:', !!modoAutomaticoRadio);
     console.log('modoManualRadio:', !!modoManualRadio);
     console.log('inputCosto:', !!inputCosto);
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('desglosePrecio:', !!desglosePrecio);
     console.log('textoResumen:', !!textoResumen);
 
-    // Configuraciï¿½n de toastr
+    // Configuración de toastr
     if (typeof toastr !== 'undefined') {
         toastr.options = {
             "closeButton": true,
@@ -65,26 +65,26 @@ document.addEventListener('DOMContentLoaded', function () {
     // FUNCIONES AUXILIARES
     // ========================================
 
-    // Funciï¿½n para normalizar texto a MAYï¿½SCULAS
+    // Función para normalizar texto a MAYÚSCULAS
     function normalizarAMayusculas(texto) {
         if (!texto || typeof texto !== 'string') return '';
 
-        // Solo convertir a mayï¿½sculas, mantener espacios internos
+        // Solo convertir a mayúsculas, mantener espacios internos
         // Solo eliminar espacios al inicio y final cuando sea el evento blur, no en tiempo real
         return texto.toUpperCase();
     }
 
-    // Funciï¿½n para normalizar texto a MAYï¿½SCULAS (alias para compatibilidad)
+    // Función para normalizar texto a MAYÚSCULAS (alias para compatibilidad)
     function normalizarTextoInteligente(texto) {
         return normalizarAMayusculas(texto);
     }
 
-    // Funciï¿½n para normalizar texto a MAYï¿½SCULAS (alias para compatibilidad)
+    // Función para normalizar texto a MAYÚSCULAS (alias para compatibilidad)
     function normalizarAPascalCase(texto) {
         return normalizarAMayusculas(texto);
     }
 
-    // Funciï¿½n para aplicar normalizaciï¿½n a un input
+    // Función para aplicar normalización a un input
     function aplicarNormalizacionAInput(input, tipoNormalizacion = 'mayuscula') {
         if (!input) return;
 
@@ -94,11 +94,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (valorActual !== valorNormalizado) {
                 input.value = valorNormalizado;
-                console.log(`?? Texto normalizado a MAYï¿½SCULAS: "${valorActual}" ? "${valorNormalizado}"`);
+                console.log(`?? Texto normalizado a MAYÚSCULAS: "${valorActual}" ? "${valorNormalizado}"`);
             }
         };
 
-        // Funciï¿½n para aplicar normalizaciï¿½n final (con trim)
+        // Función para aplicar normalización final (con trim)
         const aplicarNormalizacionFinal = () => {
             const valorActual = input.value;
             const valorNormalizado = valorActual.toUpperCase().trim(); // Trim solo al final
@@ -109,38 +109,38 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        // Aplicar normalizaciï¿½n final al salir del campo (blur) - con trim
+        // Aplicar normalización final al salir del campo (blur) - con trim
         input.addEventListener('blur', aplicarNormalizacionFinal);
 
-        // Tambiï¿½n al presionar Enter
+        // También al presionar Enter
         input.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 aplicarNormalizacionFinal();
             }
         });
 
-        // Normalizaciï¿½n en tiempo real - solo mayï¿½sculas, SIN trim
+        // Normalización en tiempo real - solo mayúsculas, SIN trim
         input.addEventListener('input', function () {
             const valorActual = this.value;
-            const valorNormalizado = valorActual.toUpperCase(); // Solo mayï¿½sculas, mantener espacios
+            const valorNormalizado = valorActual.toUpperCase(); // Solo mayúsculas, mantener espacios
 
             if (valorActual !== valorNormalizado) {
-                // Guardar posiciï¿½n del cursor
+                // Guardar posición del cursor
                 const cursorPos = this.selectionStart;
                 this.value = valorNormalizado;
-                // Restaurar posiciï¿½n del cursor
+                // Restaurar posición del cursor
                 this.setSelectionRange(cursorPos, cursorPos);
             }
         });
     }
 
-    // Funciï¿½n para configurar normalizaciï¿½n en todos los inputs de texto relevantes
+    // Función para configurar normalización en todos los inputs de texto relevantes
     function configurarNormalizacionInputs() {
-        console.log('?? Configurando normalizaciï¿½n MAYï¿½SCULAS en todos los inputs...');
+        console.log('?? Configurando normalización MAYÚSCULAS en todos los inputs...');
 
-        // TODOS los inputs de texto se normalizarï¿½n a MAYï¿½SCULAS
+        // TODOS los inputs de texto se normalizarán a MAYÚSCULAS
         const todosLosInputsTexto = [
-            // Informaciï¿½n bï¿½sica
+            // Información básica
             '[name="NombreProducto"]',
             '[name="Descripcion"]',
             '#descripcionLlanta',
@@ -156,16 +156,16 @@ document.addEventListener('DOMContentLoaded', function () {
             '#indiceVelocidadInput'
         ];
 
-        // Aplicar normalizaciï¿½n a MAYï¿½SCULAS a todos los inputs de texto
+        // Aplicar normalización a MAYÚSCULAS a todos los inputs de texto
         todosLosInputsTexto.forEach(selector => {
             const input = document.querySelector(selector);
             if (input) {
                 aplicarNormalizacionAInput(input, 'mayuscula');
-                console.log(`? Normalizaciï¿½n MAYï¿½SCULAS configurada para: ${selector}`);
+                console.log(`? Normalización MAYÚSCULAS configurada para: ${selector}`);
             }
         });
 
-        console.log('? Normalizaciï¿½n MAYï¿½SCULAS configurada en todos los inputs de texto');
+        console.log('? Normalización MAYÚSCULAS configurada en todos los inputs de texto');
     }
 
     function marcarCamposObligatorios() {
@@ -199,41 +199,41 @@ document.addEventListener('DOMContentLoaded', function () {
     function esCampoVisible(campo) {
         const informacionBasica = document.getElementById('informacionBasica');
 
-        // ? NUEVO: Si estamos en modo llanta, ignorar TODOS los campos de informaciï¿½n bï¿½sica
+        // ? NUEVO: Si estamos en modo llanta, ignorar TODOS los campos de información básica
         if (esLlantaCheckbox && esLlantaCheckbox.checked && informacionBasica && informacionBasica.contains(campo)) {
-            console.log(`? Campo ${campo.name || campo.id} en Informaciï¿½n Bï¿½sica - ignorado en modo llanta`);
+            console.log(`? Campo ${campo.name || campo.id} en Información Básica - ignorado en modo llanta`);
             return false;
         }
 
-        // Si el campo es de llanta y el checkbox no estï¿½ marcado, ignorar
+        // Si el campo es de llanta y el checkbox no está marcado, ignorar
         if ((!esLlantaCheckbox || !esLlantaCheckbox.checked) && llantaFields && llantaFields.contains(campo)) {
             console.log(`? Campo ${campo.name || campo.id} en Llanta - ignorado en modo general`);
             return false;
         }
 
         // Resto de validaciones...
-        console.log(`? Campo ${campo.name || campo.id} - validaciï¿½n activa`);
+        console.log(`? Campo ${campo.name || campo.id} - validación activa`);
         return true;
     }
 
 
     // ========================================
-    // INICIALIZACIï¿½N
+    // INICIALIZACIÓN
     // ========================================
 
     marcarCamposObligatorios();
     configurarNormalizacionInputs();
 
     // ========================================
-    // GESTIï¿½N DE TIPO DE PRODUCTO (LLANTA)
+    // GESTIÓN DE TIPO DE PRODUCTO (LLANTA)
     // ========================================
 
-    // NUEVA FUNCIï¿½N: Sincronizar campos de llanta a campos principales
-    // FUNCIï¿½N MEJORADA: Sincronizar campos de llanta
+    // NUEVA FUNCIÓN: Sincronizar campos de llanta a campos principales
+    // FUNCIÓN MEJORADA: Sincronizar campos de llanta
     function sincronizarCamposLlanta() {
-        console.log('?? Configurando sincronizaciï¿½n de campos de llanta...');
+        console.log('?? Configurando sincronización de campos de llanta...');
 
-        // ? NO sincronizar nombre - se generarï¿½ automï¿½ticamente
+        // ? NO sincronizar nombre - se generará automáticamente
         const cantidadLlanta = document.getElementById('cantidadInventarioLlanta');
         const stockLlanta = document.getElementById('stockMinimoLlanta');
         const descripcionLlanta = document.getElementById('descripcionLlanta');
@@ -242,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const hiddenStock = document.getElementById('hiddenStockMinimo');
         const hiddenDescripcion = document.getElementById('hiddenDescripcion');
 
-        // Sincronizaciï¿½n en tiempo real (sin nombre)
+        // Sincronización en tiempo real (sin nombre)
         if (cantidadLlanta && hiddenCantidad) {
             cantidadLlanta.addEventListener('input', () => {
                 hiddenCantidad.value = cantidadLlanta.value;
@@ -260,15 +260,15 @@ document.addEventListener('DOMContentLoaded', function () {
         if (descripcionLlanta && hiddenDescripcion) {
             descripcionLlanta.addEventListener('input', () => {
                 hiddenDescripcion.value = descripcionLlanta.value;
-                console.log(`Sincronizado descripciï¿½n: ${descripcionLlanta.value}`);
+                console.log(`Sincronizado descripción: ${descripcionLlanta.value}`);
             });
         }
 
-        console.log('? Sincronizaciï¿½n configurada (sin nombre del producto)');
+        console.log('? Sincronización configurada (sin nombre del producto)');
     }
 
     function prepararFormularioParaEnvio() {
-        console.log('?? === PREPARANDO FORMULARIO PARA ENVï¿½O ===');
+        console.log('?? === PREPARANDO FORMULARIO PARA ENVÍO ===');
 
         // ? SINCRONIZAR EsLlanta
         const esLlantaHidden = document.querySelector('[name="EsLlanta"]');
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (esLlantaCheckbox && esLlantaCheckbox.checked) {
             console.log('?? Modo llanta detectado - procesando...');
 
-            // ? LIMPIAR CAMPOS DE INFORMACIï¿½N Bï¿½SICA PARA QUE NO INTERFIERAN
+            // ? LIMPIAR CAMPOS DE INFORMACIÓN BÁSICA PARA QUE NO INTERFIERAN
             const nombreBasico = document.querySelector('[name="NombreProducto"]');
             const cantidadBasica = document.querySelector('[name="CantidadEnInventario"]');
             const stockBasico = document.querySelector('[name="StockMinimo"]');
@@ -298,18 +298,12 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log(`?? VALORES DE LLANTA CAPTURADOS:`);
             console.log(`- Cantidad: "${valorCantidad}"`);
             console.log(`- Stock: "${valorStock}"`);
-            console.log(`- Descripciï¿½n: "${valorDescripcion}"`);
+            console.log(`- Descripción: "${valorDescripcion}"`);
 
-            // ? GENERAR NOMBRE AUTOMï¿½TICO
+            // ? GENERAR NOMBRE AUTOMÁTICO
             const marca = document.querySelector('[name="Llanta.Marca"]')?.value || '';
             const modelo = document.querySelector('[name="Llanta.Modelo"]')?.value || '';
-            const tipoVehiculo = document.querySelector('[name="Llanta.TipoVehiculo"]')?.value || '';
-
             let nombreGenerado = 'Llanta';
-            // Agregar tipo de vehï¿½culo si es MOTO
-            if (tipoVehiculo === 'MOTO') {
-                nombreGenerado += ' MOTO';
-            }
             if (marca) nombreGenerado += ` ${marca}`;
             if (modelo) nombreGenerado += ` ${modelo}`;
 
@@ -331,7 +325,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (descripcionBasica) {
                 descripcionBasica.value = valorDescripcion;
-                console.log(`? Descripciï¿½n establecida: "${valorDescripcion}"`);
+                console.log(`? Descripción establecida: "${valorDescripcion}"`);
             }
 
             console.log('? Campos principales sincronizados desde llanta');
@@ -340,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // FUNCIï¿½N MEJORADA: Limpiar campos de llanta
+    // FUNCIÓN MEJORADA: Limpiar campos de llanta
     function sincronizarCamposBasicos() {
         const cantidadLlanta = document.getElementById('cantidadInventarioLlanta');
         const stockLlanta = document.getElementById('stockMinimoLlanta');
@@ -351,7 +345,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (stockLlanta) stockLlanta.value = '';
         if (descripcionLlanta) descripcionLlanta.value = '';
 
-        // Limpiar campos ocultos tambiï¿½n
+        // Limpiar campos ocultos también
         const hiddenCantidad = document.getElementById('hiddenCantidadInventario');
         const hiddenStock = document.getElementById('hiddenStockMinimo');
         const hiddenDescripcion = document.getElementById('hiddenDescripcion');
@@ -364,7 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (esLlantaCheckbox && llantaFields && tipoProductoInfo && textoTipoProducto) {
-        // AGREGAR ESTA Lï¿½NEA - Referencia al card de informaciï¿½n bï¿½sica
+        // AGREGAR ESTA LÍNEA - Referencia al card de información básica
         const informacionBasica = document.getElementById('informacionBasica');
 
         function actualizarTipoProducto() {
@@ -380,11 +374,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 // MOSTRAR campos de llanta
                 llantaFields.style.display = 'block';
 
-                // OCULTAR informaciï¿½n bï¿½sica
+                // OCULTAR información básica
                 if (informacionBasica) {
                     informacionBasica.style.display = 'none';
 
-                    // REMOVER required de campos de informaciï¿½n bï¿½sica
+                    // REMOVER required de campos de información básica
                     const camposInformacionBasica = informacionBasica.querySelectorAll('[required]');
                     camposInformacionBasica.forEach(campo => {
                         campo.removeAttribute('required');
@@ -405,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     document.querySelector('[name="Llanta.Marca"]'),
                     document.querySelector('[name="Llanta.Ancho"]'),
                     document.querySelector('[name="Llanta.Diametro"]'),
-                    // Campos de informaciï¿½n general de llanta (SIN nombre del producto)
+                    // Campos de información general de llanta (SIN nombre del producto)
                     document.getElementById('cantidadInventarioLlanta'),
                     document.getElementById('stockMinimoLlanta')
                 ];
@@ -419,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
 
-                // Hacer el perfil opcional explï¿½citamente
+                // Hacer el perfil opcional explícitamente
                 const perfilField = document.querySelector('[name="Llanta.Perfil"]');
                 if (perfilField) {
                     perfilField.removeAttribute('required');
@@ -443,11 +437,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 // OCULTAR campos de llanta
                 llantaFields.style.display = 'none';
 
-                // MOSTRAR informaciï¿½n bï¿½sica
+                // MOSTRAR información básica
                 if (informacionBasica) {
                     informacionBasica.style.display = 'block';
 
-                    // RESTAURAR required en campos de informaciï¿½n bï¿½sica
+                    // RESTAURAR required en campos de información básica
                     //const nombreProducto = informacionBasica.querySelector('[name="NombreProducto"]');
                     const cantidadInventario = informacionBasica.querySelector('[name="CantidadEnInventario"]');
                     const stockMinimo = informacionBasica.querySelector('[name="StockMinimo"]');
@@ -470,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 tipoProductoInfo.className = 'alert alert-info d-flex align-items-center mb-0';
                 textoTipoProducto.innerHTML = '<i class="bi bi-box me-1"></i> Producto general - informacion basica';
 
-                // Quitar validaciï¿½n de campos de llanta
+                // Quitar validación de campos de llanta
                 const llantaInputs = llantaFields.querySelectorAll('input, select');
                 llantaInputs.forEach(input => {
                     input.removeAttribute('required');
@@ -483,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // NUEVA FUNCIONALIDAD: Limpiar campos de llanta
                 sincronizarCamposBasicos();
 
-                console.log('? Modo producto general activado - Validaciones restauradas en informaciï¿½n bï¿½sica');
+                console.log('? Modo producto general activado - Validaciones restauradas en información básica');
             }
         }
 
@@ -495,7 +489,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // GESTIï¿½N DE PRECIO Y UTILIDAD
+    // GESTIÓN DE PRECIO Y UTILIDAD
     // ========================================
 
     if (modoAutomaticoRadio && modoManualRadio) {
@@ -514,7 +508,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // ========================================
-        // FUNCIONES DE Cï¿½LCULO MEJORADAS
+        // FUNCIONES DE CÁLCULO MEJORADAS
         // ========================================
 
         let calculandoPrecio = false; // Para evitar loops infinitos
@@ -595,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function actualizarVisualizacionPrecio(costo, precioFinal, utilidadDinero, margenPorcentaje) {
-            // Animaciï¿½n suave
+            // Animación suave
             if (precioCalculado) {
                 precioCalculado.style.transform = 'scale(1.05)';
                 setTimeout(() => {
@@ -650,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (hiddenPrecio) hiddenPrecio.value = '';
         }
 
-        // Funciï¿½n de compatibilidad - mantiene la lï¿½gica antigua si se usa el campo de utilidad
+        // Función de compatibilidad - mantiene la lógica antigua si se usa el campo de utilidad
         function calcularPrecio() {
             if (!modoAutomaticoRadio.checked || !inputCosto || !precioCalculado) {
                 console.log('No se puede calcular precio - elementos faltantes o modo manual activo');
@@ -664,15 +658,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Si hay un precio de venta, calcular desde ahï¿½
+            // Si hay un precio de venta, calcular desde ahí
             if (inputPrecioVenta && inputPrecioVenta.value) {
                 calcularDesdePrecioVenta();
             }
-            // Si hay un margen, calcular desde ahï¿½
+            // Si hay un margen, calcular desde ahí
             else if (inputMargenPorcentaje && inputMargenPorcentaje.value) {
                 calcularDesdeMargenPorcentaje();
             }
-            // Si hay utilidad (campo legacy), calcular desde ahï¿½
+            // Si hay utilidad (campo legacy), calcular desde ahí
             else if (inputUtilidad && inputUtilidad.value) {
                 const porcentajeUtilidad = parseFloat(inputUtilidad.value) || 0;
                 const utilidadDinero = costo * (porcentajeUtilidad / 100);
@@ -691,7 +685,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Eventos para cambio de modo
         modoAutomaticoRadio.addEventListener('change', function () {
             if (this.checked) {
-                console.log('Cambiando a modo automï¿½tico');
+                console.log('Cambiando a modo automático');
                 if (camposAutomaticos) camposAutomaticos.style.display = 'block';
                 if (campoManual) campoManual.style.display = 'none';
 
@@ -721,7 +715,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Eventos para cï¿½lculo en tiempo real - MEJORADOS
+        // Eventos para cálculo en tiempo real - MEJORADOS
         if (inputCosto) {
             inputCosto.addEventListener('input', function () {
                 // Cuando cambia el costo, recalcular todo
@@ -817,7 +811,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // ========================================
-        // BOTï¿½N PARA LIMPIAR CAMPOS DE PRECIO
+        // BOTÓN PARA LIMPIAR CAMPOS DE PRECIO
         // ========================================
 
         const btnLimpiarPrecios = document.getElementById('btnLimpiarPrecios');
@@ -853,7 +847,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     inputPrecioManual.classList.remove('is-valid', 'is-invalid');
                 }
 
-                // Limpiar visualizaciï¿½n
+                // Limpiar visualización
                 limpiarCalculos();
 
                 // Mostrar feedback visual
@@ -864,10 +858,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('? Campos de precio limpiados correctamente');
             });
 
-            console.log('? Botï¿½n limpiar precios configurado');
+            console.log('? Botón limpiar precios configurado');
         }
 
-        // Inicializar estilos y cï¿½lculo
+        // Inicializar estilos y cálculo
         actualizarEstilosTarjetas();
         calcularPrecio();
 
@@ -879,7 +873,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // GESTIï¿½N DE IMï¿½GENES
+    // GESTIÓN DE IMÁGENES
     // ========================================
 
     if (dropArea && fileInput && selectImagesBtn && previewContainer) {
@@ -931,14 +925,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (!file.type.match('image.*')) {
                     if (typeof toastr !== 'undefined') {
-                        toastr.error(`${file.name} no es un archivo de imagen vï¿½lido`);
+                        toastr.error(`${file.name} no es un archivo de imagen válido`);
                     }
                     continue;
                 }
 
                 if (file.size > 5 * 1024 * 1024) {
                     if (typeof toastr !== 'undefined') {
-                        toastr.error(`${file.name} excede el tamaï¿½o mï¿½ximo permitido (5MB)`);
+                        toastr.error(`${file.name} excede el tamaño máximo permitido (5MB)`);
                     }
                     continue;
                 }
@@ -988,12 +982,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 dataTransfer.items.add(file);
             });
             fileInput.files = dataTransfer.files;
-            console.log(`Archivos vï¿½lidos para subir: ${validFiles.length}`);
+            console.log(`Archivos válidos para subir: ${validFiles.length}`);
         }
     }
 
     // ========================================
-    // VALIDACIï¿½N Y ENVï¿½O DEL FORMULARIO
+    // VALIDACIÓN Y ENVÍO DEL FORMULARIO
     // ========================================
 
     if (form && submitButton) {
@@ -1022,29 +1016,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (input.hasAttribute('required') && esCampoVisible(input)) {
                     if (!validarCampo(input)) {
                         esValido = false;
-                        console.log(`? Campo invï¿½lido: ${input.name || input.id}`);
+                        console.log(`? Campo inválido: ${input.name || input.id}`);
                     } else {
-                        console.log(`? Campo vï¿½lido: ${input.name || input.id}`);
+                        console.log(`? Campo válido: ${input.name || input.id}`);
                     }
                 }
             });
 
-            // Validar precio segï¿½n el modo seleccionado - MEJORADO
+            // Validar precio según el modo seleccionado - MEJORADO
             if (modoAutomaticoRadio && modoAutomaticoRadio.checked) {
                 // Validar costo (siempre requerido)
                 if (!inputCosto || !inputCosto.value || parseFloat(inputCosto.value) <= 0) {
                     if (inputCosto) inputCosto.classList.add('is-invalid');
                     esValido = false;
-                    console.log(`? Costo invï¿½lido`);
+                    console.log(`? Costo inválido`);
                 }
 
-                // Validar que al menos uno de los mï¿½todos de precio estï¿½ configurado
+                // Validar que al menos uno de los métodos de precio esté configurado
                 const tienePrecioVenta = inputPrecioVenta && inputPrecioVenta.value && parseFloat(inputPrecioVenta.value) > 0;
                 const tieneMargen = inputMargenPorcentaje && inputMargenPorcentaje.value && parseFloat(inputMargenPorcentaje.value) >= 0;
                 const tieneUtilidadLegacy = inputUtilidad && inputUtilidad.value && parseFloat(inputUtilidad.value) >= 0;
 
                 if (!tienePrecioVenta && !tieneMargen && !tieneUtilidadLegacy) {
-                    // Marcar como invï¿½lidos los campos de precio
+                    // Marcar como inválidos los campos de precio
                     if (inputPrecioVenta) inputPrecioVenta.classList.add('is-invalid');
                     if (inputMargenPorcentaje) inputMargenPorcentaje.classList.add('is-invalid');
                     if (inputUtilidad) inputUtilidad.classList.add('is-invalid');
@@ -1059,32 +1053,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!inputPrecioManual || !inputPrecioManual.value || parseFloat(inputPrecioManual.value) <= 0) {
                     if (inputPrecioManual) inputPrecioManual.classList.add('is-invalid');
                     esValido = false;
-                    console.log(`? Precio manual invï¿½lido`);
+                    console.log(`? Precio manual inválido`);
                 }
             }
 
-            console.log(`Validaciï¿½n completa: ${esValido ? 'Vï¿½LIDO' : 'INVï¿½LIDO'}`);
+            console.log(`Validación completa: ${esValido ? 'VÁLIDO' : 'INVÁLIDO'}`);
             return esValido;
         }
 
         form.onsubmit = function (e) {
             e.preventDefault();
-            console.log('Formulario enviado - iniciando validaciï¿½n');
+            console.log('Formulario enviado - iniciando validación');
 
             // ? NUEVO: Preparar formulario antes de validar
             prepararFormularioParaEnvio();
 
             if (!validarFormularioCompleto()) {
-                console.log('Formulario invï¿½lido - campos con errores');
+                console.log('Formulario inválido - campos con errores');
                 if (typeof toastr !== 'undefined') {
                     toastr.error('Por favor, complete todos los campos requeridos correctamente');
                 }
                 return false;
             }
 
-            console.log('Formulario vï¿½lido - preparando para enviar');
+            console.log('Formulario válido - preparando para enviar');
 
-            // ? NUEVO: Preparar una vez mï¿½s justo antes del envï¿½o (por seguridad)
+            // ? NUEVO: Preparar una vez más justo antes del envío (por seguridad)
             prepararFormularioParaEnvio();
 
             submitButton.disabled = true;
@@ -1152,15 +1146,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // AUTOCOMPLETADO INTELIGENTE DE MARCA
     // ========================================
 
-    let timeoutBusqueda = null; // Para evitar mï¿½ltiples peticiones
+    let timeoutBusqueda = null; // Para evitar múltiples peticiones
 
-    // Funciï¿½n principal para inicializar autocompletado
+    // Función principal para inicializar autocompletado
     function inicializarAutocompletado() {
         console.log('?? Inicializando autocompletado inteligente...');
         configurarAutocompletadoMarca();
     }
 
-    // Configurar autocompletado para marca con bï¿½squeda en tiempo real
+    // Configurar autocompletado para marca con búsqueda en tiempo real
     function configurarAutocompletadoMarca() {
         const marcaInput = document.getElementById('marcaInput');
         const marcaSuggestions = document.getElementById('marcaSuggestions');
@@ -1175,20 +1169,20 @@ document.addEventListener('DOMContentLoaded', function () {
         // Evento principal: cuando el usuario escribe
         marcaInput.addEventListener('input', function () {
             const valor = this.value.trim();
-            console.log(`?? Usuario escribiï¿½: "${valor}"`);
+            console.log(`?? Usuario escribió: "${valor}"`);
 
             // Limpiar timeout anterior
             if (timeoutBusqueda) {
                 clearTimeout(timeoutBusqueda);
             }
 
-            // Si estï¿½ vacï¿½o, ocultar sugerencias
+            // Si está vacío, ocultar sugerencias
             if (valor.length === 0) {
                 ocultarSugerencias(marcaSuggestions);
                 return;
             }
 
-            // Si es muy corto, esperar mï¿½s caracteres
+            // Si es muy corto, esperar más caracteres
             if (valor.length < 2) {
                 mostrarMensaje(marcaSuggestions, '?? Escriba al menos 2 caracteres...');
                 return;
@@ -1197,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Mostrar indicador de carga
             mostrarCargando(marcaSuggestions);
 
-            // Hacer bï¿½squeda con delay para evitar spam de peticiones
+            // Hacer búsqueda con delay para evitar spam de peticiones
             timeoutBusqueda = setTimeout(() => {
                 buscarMarcasEnTiempoReal(valor, marcaSuggestions, marcaInput);
             }, 300); // 300ms de delay
@@ -1224,15 +1218,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Funciï¿½n para buscar marcas en tiempo real
+    // Función para buscar marcas en tiempo real
     async function buscarMarcasEnTiempoReal(filtro, container, input) {
         try {
             console.log(`?? Buscando marcas con filtro: "${filtro}"`);
 
-            // Realizar peticiï¿½n AJAX
+            // Realizar petición AJAX
             const response = await fetch(`/Inventario/BuscarMarcas?filtro=${encodeURIComponent(filtro)}`, {
                 method: 'GET',
-                credentials: 'include', // Incluir cookies de autenticaciï¿½n
+                credentials: 'include', // Incluir cookies de autenticación
                 headers: {
                     'Content-Type': 'application/json'
                 }
@@ -1256,14 +1250,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Funciï¿½n para mostrar las sugerencias de marca
+    // Función para mostrar las sugerencias de marca
     function mostrarSugerenciasMarca(container, marcas, valorBuscado, input) {
         console.log(`?? Mostrando ${marcas.length} sugerencias`);
 
         container.innerHTML = '';
 
         if (marcas.length === 0) {
-            // No hay resultados existentes - mostrar opciï¿½n para crear nueva
+            // No hay resultados existentes - mostrar opción para crear nueva
             const nuevoItem = crearItemSugerencia(
                 `<i class="bi bi-plus-circle me-2 text-success"></i>Crear nueva marca: "<strong>${valorBuscado}</strong>"`,
                 'suggestion-new',
@@ -1281,7 +1275,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(item);
             });
 
-            // Agregar opciï¿½n para crear nueva al final si el texto no coincide exactamente
+            // Agregar opción para crear nueva al final si el texto no coincide exactamente
             const coincidenciaExacta = marcas.some(m => m.toLowerCase() === valorBuscado.toLowerCase());
             if (!coincidenciaExacta) {
                 const separador = document.createElement('div');
@@ -1301,7 +1295,7 @@ document.addEventListener('DOMContentLoaded', function () {
         mostrarContainer(container);
     }
 
-    // Funciï¿½n auxiliar para crear elementos de sugerencia
+    // Función auxiliar para crear elementos de sugerencia
     function crearItemSugerencia(contenidoHTML, claseCSS, onClickCallback) {
         const item = document.createElement('div');
         item.className = `suggestion-item ${claseCSS}`;
@@ -1319,11 +1313,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return item;
     }
 
-    // Funciï¿½n para seleccionar una marca
+    // Función para seleccionar una marca
     function seleccionarMarca(marca, input, container, esNueva) {
         console.log(`? Marca seleccionada: "${marca}" (Nueva: ${esNueva})`);
 
-        // Normalizar la marca a MAYï¿½SCULAS antes de asignarla
+        // Normalizar la marca a MAYÚSCULAS antes de asignarla
         const marcaNormalizada = normalizarAMayusculas(marca);
         input.value = marcaNormalizada;
         ocultarSugerencias(container);
@@ -1334,12 +1328,12 @@ document.addEventListener('DOMContentLoaded', function () {
             input.classList.remove('input-success');
         }, 1000);
 
-        // Mostrar notificaciï¿½n
+        // Mostrar notificación
         if (esNueva && typeof toastr !== 'undefined') {
-            toastr.info(`Nueva marca "${marcaNormalizada}" serï¿½ agregada al guardar el producto`);
+            toastr.info(`Nueva marca "${marcaNormalizada}" será agregada al guardar el producto`);
         }
 
-        // Trigger evento para que otros sistemas sepan que cambiï¿½
+        // Trigger evento para que otros sistemas sepan que cambió
         input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
@@ -1387,7 +1381,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ocultarSugerencias(container);
             event.preventDefault();
         }
-        // Aquï¿½ podrï¿½as agregar navegaciï¿½n con flechas en el futuro
+        // Aquí podrías agregar navegación con flechas en el futuro
     }
 
     // ========================================
@@ -1411,20 +1405,20 @@ document.addEventListener('DOMContentLoaded', function () {
             const valor = this.value.trim();
             const marcaSeleccionada = marcaInput ? marcaInput.value.trim() : '';
 
-            console.log(`?? Usuario escribiï¿½ modelo: "${valor}", marca actual: "${marcaSeleccionada}"`);
+            console.log(`?? Usuario escribió modelo: "${valor}", marca actual: "${marcaSeleccionada}"`);
 
             // Limpiar timeout anterior
             if (timeoutBusqueda) {
                 clearTimeout(timeoutBusqueda);
             }
 
-            // Si estï¿½ vacï¿½o, ocultar sugerencias
+            // Si está vacío, ocultar sugerencias
             if (valor.length === 0) {
                 ocultarSugerencias(modeloSuggestions);
                 return;
             }
 
-            // Si es muy corto, esperar mï¿½s caracteres
+            // Si es muy corto, esperar más caracteres
             if (valor.length < 2) {
                 mostrarMensaje(modeloSuggestions, '?? Escriba al menos 2 caracteres...');
                 return;
@@ -1433,7 +1427,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Mostrar indicador de carga
             mostrarCargando(modeloSuggestions);
 
-            // Hacer bï¿½squeda con delay
+            // Hacer búsqueda con delay
             timeoutBusqueda = setTimeout(() => {
                 buscarModelosEnTiempoReal(valor, marcaSeleccionada, modeloSuggestions, modeloInput);
             }, 300);
@@ -1451,7 +1445,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Limpiar modelo cuando cambie la marca
         if (marcaInput) {
             marcaInput.addEventListener('change', function () {
-                console.log('?? Marca cambiï¿½, limpiando modelo');
+                console.log('?? Marca cambió, limpiando modelo');
                 modeloInput.value = '';
                 ocultarSugerencias(modeloSuggestions);
             });
@@ -1470,12 +1464,12 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Funciï¿½n para buscar modelos
+    // Función para buscar modelos
     async function buscarModelosEnTiempoReal(filtro, marca, container, input) {
         try {
             console.log(`?? Buscando modelos con filtro: "${filtro}", marca: "${marca}"`);
 
-            // Construir URL con parï¿½metros
+            // Construir URL con parámetros
             let url = `/Inventario/BuscarModelos?filtro=${encodeURIComponent(filtro)}`;
             if (marca) {
                 url += `&marca=${encodeURIComponent(marca)}`;
@@ -1508,7 +1502,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // AUTOCOMPLETADO PARA ï¿½NDICE DE VELOCIDAD
+    // AUTOCOMPLETADO PARA ÍNDICE DE VELOCIDAD
     // ========================================
 
     function configurarAutocompletadoIndiceVelocidad() {
@@ -1516,11 +1510,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const suggestions = document.getElementById('indiceVelocidadSuggestions');
 
         if (!input || !suggestions) {
-            console.warn('?? Elementos de autocompletado para ï¿½ndice de velocidad no encontrados');
+            console.warn('?? Elementos de autocompletado para índice de velocidad no encontrados');
             return;
         }
 
-        console.log('? Configurando autocompletado para ï¿½ndice de velocidad');
+        console.log('? Configurando autocompletado para índice de velocidad');
 
         configurarAutocompletadoGenerico(input, suggestions, 'indices de velocidad', '/Inventario/BuscarIndicesVelocidad');
     }
@@ -1544,36 +1538,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // FUNCIï¿½N GENï¿½RICA PARA AUTOCOMPLETADO
+    // FUNCIÓN GENÉRICA PARA AUTOCOMPLETADO
     // ========================================
 
     function configurarAutocompletadoGenerico(input, suggestions, nombreCampo, url) {
         // Evento principal: cuando el usuario escribe
         input.addEventListener('input', function () {
             const valor = this.value.trim();
-            console.log(`?? Usuario escribiï¿½ ${nombreCampo}: "${valor}"`);
+            console.log(`?? Usuario escribió ${nombreCampo}: "${valor}"`);
 
             // Limpiar timeout anterior
             if (timeoutBusqueda) {
                 clearTimeout(timeoutBusqueda);
             }
 
-            // Si estï¿½ vacï¿½o, ocultar sugerencias
+            // Si está vacío, ocultar sugerencias
             if (valor.length === 0) {
                 ocultarSugerencias(suggestions);
                 return;
             }
 
-            // Si es muy corto, esperar mï¿½s caracteres
+            // Si es muy corto, esperar más caracteres
             if (valor.length < 1) {
-                mostrarMensaje(suggestions, '?? Escriba al menos 1 carï¿½cter...');
+                mostrarMensaje(suggestions, '?? Escriba al menos 1 carácter...');
                 return;
             }
 
             // Mostrar indicador de carga
             mostrarCargando(suggestions);
 
-            // Hacer bï¿½squeda con delay
+            // Hacer búsqueda con delay
             timeoutBusqueda = setTimeout(() => {
                 buscarGenericoEnTiempoReal(valor, suggestions, input, nombreCampo, url);
             }, 300);
@@ -1600,7 +1594,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Funciï¿½n para bï¿½squeda genï¿½rica
+    // Función para búsqueda genérica
     async function buscarGenericoEnTiempoReal(filtro, container, input, nombreCampo, url) {
         try {
             console.log(`?? Buscando ${nombreCampo} con filtro: "${filtro}"`);
@@ -1634,7 +1628,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // FUNCIï¿½N PARA MOSTRAR SUGERENCIAS GENï¿½RICAS
+    // FUNCIÓN PARA MOSTRAR SUGERENCIAS GENÉRICAS
     // ========================================
 
     function mostrarSugerenciasGenericas(container, resultados, valorBuscado, input, nombreCampo) {
@@ -1643,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', function () {
         container.innerHTML = '';
 
         if (resultados.length === 0) {
-            // No hay resultados existentes - mostrar opciï¿½n para crear nueva
+            // No hay resultados existentes - mostrar opción para crear nueva
             const nuevoItem = crearItemSugerencia(
                 `<i class="bi bi-plus-circle me-2 text-success"></i>Crear nuevo ${nombreCampo}: "<strong>${valorBuscado}</strong>"`,
                 'suggestion-new',
@@ -1662,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(item);
             });
 
-            // Agregar opciï¿½n para crear nueva al final si no coincide exactamente
+            // Agregar opción para crear nueva al final si no coincide exactamente
             const coincidenciaExacta = resultados.some(r => r.toLowerCase() === valorBuscado.toLowerCase());
             if (!coincidenciaExacta) {
                 const separador = document.createElement('div');
@@ -1682,7 +1676,7 @@ document.addEventListener('DOMContentLoaded', function () {
         mostrarContainer(container);
     }
 
-    // Funciï¿½n para obtener ï¿½cono segï¿½n el tipo
+    // Función para obtener ícono según el tipo
     function obtenerIconoPorTipo(nombreCampo) {
         switch (nombreCampo) {
             case 'modelo': return 'bi-car-front';
@@ -1692,11 +1686,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Funciï¿½n para seleccionar valor genï¿½rico
+    // Función para seleccionar valor genérico
     function seleccionarValorGenerico(valor, input, container, esNuevo, nombreCampo) {
         console.log(`? ${nombreCampo} seleccionado: "${valor}" (Nuevo: ${esNuevo})`);
 
-        // TODOS los valores se normalizan a MAYï¿½SCULAS
+        // TODOS los valores se normalizan a MAYÚSCULAS
         const valorNormalizado = normalizarAMayusculas(valor);
 
         input.value = valorNormalizado;
@@ -1708,9 +1702,9 @@ document.addEventListener('DOMContentLoaded', function () {
             input.classList.remove('input-success');
         }, 1000);
 
-        // Mostrar notificaciï¿½n
+        // Mostrar notificación
         if (esNuevo && typeof toastr !== 'undefined') {
-            toastr.info(`Nuevo ${nombreCampo} "${valorNormalizado}" serï¿½ agregado al guardar el producto`);
+            toastr.info(`Nuevo ${nombreCampo} "${valorNormalizado}" será agregado al guardar el producto`);
         }
 
         // Trigger evento
@@ -1718,10 +1712,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ========================================
-    // ACTUALIZAR FUNCIï¿½N PRINCIPAL DE INICIALIZACIï¿½N
+    // ACTUALIZAR FUNCIÓN PRINCIPAL DE INICIALIZACIÓN
     // ========================================
 
-    // Funciï¿½n principal para inicializar autocompletado (MODIFICAR LA EXISTENTE)
+    // Función principal para inicializar autocompletado (MODIFICAR LA EXISTENTE)
     function inicializarAutocompletado() {
         console.log('?? Inicializando autocompletado inteligente completo...');
         configurarAutocompletadoMarca();
