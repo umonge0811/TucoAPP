@@ -564,7 +564,15 @@ namespace API.Controllers
                             PrecioUnitario = d.PrecioUnitario,
                             PorcentajeDescuento = d.PorcentajeDescuento,
                             MontoDescuento = d.MontoDescuento,
-                            Subtotal = d.Subtotal
+                            Subtotal = d.Subtotal,
+                            StockDisponible = (int)(d.Producto != null ? d.Producto.CantidadEnInventario ?? 0 : 0),
+                            EsLlanta = d.Producto != null && d.Producto.Llanta.Any(),
+                            MedidaLlanta = d.Producto != null && d.Producto.Llanta.Any() ?
+                                (d.Producto.Llanta.First().Ancho.HasValue ? d.Producto.Llanta.First().Ancho.Value.ToString("0.##") : "0") + "/" + (d.Producto.Llanta.First().Perfil.HasValue ? d.Producto.Llanta.First().Perfil.Value.ToString("0.##") : "0") + "R" + d.Producto.Llanta.First().Diametro : null,
+                            MarcaLlanta = d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
+                            ModeloLlanta = d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null,
+                            Capas = d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Capas : null,
+                            TipoTerreno = d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().TipoTerreno : null
                         }).ToList()
                     })
                     .FirstOrDefaultAsync();
@@ -644,7 +652,11 @@ namespace API.Controllers
                             MarcaLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
                                 null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null),
                             ModeloLlanta = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
-                                null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null)
+                                null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null),
+                            Capas = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
+                                null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Capas : null),
+                            TipoTerreno = d.ServicioId.HasValue && d.ServicioId.Value > 0 ?
+                                null : (d.Producto != null && d.Producto.Llanta.Any() ? d.Producto.Llanta.First().TipoTerreno : null)
                         }).ToList()
                     })
                     .FirstOrDefaultAsync();
@@ -929,10 +941,12 @@ namespace API.Controllers
                             Subtotal = d.Subtotal,
                             StockDisponible = (int)(d.Producto.CantidadEnInventario ?? 0),
                             EsLlanta = d.Producto.Llanta.Any(),
-                            MedidaLlanta = d.Producto.Llanta.Any() ? 
+                            MedidaLlanta = d.Producto.Llanta.Any() ?
                                 d.Producto.Llanta.First().Ancho + "/" + d.Producto.Llanta.First().Perfil + "/R" + d.Producto.Llanta.First().Diametro : null,
                             MarcaLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Marca : null,
-                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null
+                            ModeloLlanta = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Modelo : null,
+                            Capas = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().Capas : null,
+                            TipoTerreno = d.Producto.Llanta.Any() ? d.Producto.Llanta.First().TipoTerreno : null
                         }).ToList()
                     })
                     .ToListAsync();
@@ -1319,7 +1333,7 @@ namespace API.Controllers
                 {
                     // Recalcular totales
                     var nuevoSubtotal = detallesRestantes.Sum(d => d.Subtotal);
-                    var nuevoImpuesto = nuevoSubtotal * (factura.PorcentajeImpuesto ?? 0.13m);
+                    var nuevoImpuesto = nuevoSubtotal * (factura.PorcentajeImpuesto ?? 0);
                     var nuevoTotal = nuevoSubtotal + nuevoImpuesto;
 
                     factura.Subtotal = nuevoSubtotal;

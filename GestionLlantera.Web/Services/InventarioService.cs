@@ -131,8 +131,7 @@ namespace GestionLlantera.Web.Services
                             PorcentajeUtilidad = item.porcentajeUtilidad != null ? (decimal?)item.porcentajeUtilidad : null,
 
                             // Precio - usar el precio calculado de la API o el precio normal
-                            Precio = item.precioCalculado != null ? (decimal?)item.precioCalculado :
-                                     item.precio != null ? (decimal?)item.precio : null,
+                            Precio = item.precio ,
 
                             CantidadEnInventario = (int)item.cantidadEnInventario,
                             StockMinimo = (int)item.stockMinimo,
