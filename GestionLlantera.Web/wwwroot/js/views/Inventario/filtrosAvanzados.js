@@ -137,6 +137,136 @@ function poblarSelectoresDinamicos() {
     console.log('🎯 Selectores dinámicos poblados');
 }
 
+// ✅ FUNCIÓN PARA ACTUALIZAR FILTROS EN CASCADA
+function actualizarFiltrosCascada() {
+    console.log('🔄 Actualizando filtros en cascada...');
+
+    // Obtener selecciones actuales
+    const anchoSeleccionado = $('#filterAncho').val() || '';
+    const perfilSeleccionado = $('#filterPerfil').val() || '';
+    const diametroSeleccionado = $('#filterDiametro').val() || '';
+
+    // Si no hay ningún filtro seleccionado, restaurar todos los valores originales
+    if (!anchoSeleccionado && !perfilSeleccionado && !diametroSeleccionado) {
+        poblarSelectoresDinamicos();
+        console.log('🔄 Sin filtros activos - restaurando todas las opciones');
+        return;
+    }
+
+    // Conjuntos para almacenar valores únicos de las filas que cumplen los filtros
+    const valores = {
+        anchos: new Set(),
+        perfiles: new Set(),
+        diametros: new Set(),
+        tiposTerreno: new Set(),
+        marcas: new Set(),
+        velocidades: new Set()
+    };
+
+    // Recorrer todas las filas de llantas
+    $("tbody tr").each(function () {
+        const $fila = $(this);
+
+        // Verificar si es una llanta
+        const esLlanta = $fila.find("td:eq(2) .badge").text() === "Llanta";
+        if (!esLlanta) return;
+
+        // Obtener las medidas de la fila
+        const medidasTexto = $fila.find("td:eq(3)").text().trim();
+        if (!medidasTexto || medidasTexto === "N/A" || medidasTexto === "-") return;
+
+        // Parsear formato: 225/45/R17
+        const match = medidasTexto.match(/(\d+)\/(\d+)\/R?(\d+)/);
+        if (!match) return;
+
+        const ancho = match[1];
+        const perfil = match[2];
+        const diametro = match[3];
+
+        // Verificar si la fila cumple con los filtros seleccionados
+        let cumpleFiltros = true;
+
+        if (anchoSeleccionado && ancho !== anchoSeleccionado) cumpleFiltros = false;
+        if (perfilSeleccionado && perfil !== perfilSeleccionado) cumpleFiltros = false;
+        if (diametroSeleccionado && diametro !== diametroSeleccionado) cumpleFiltros = false;
+
+        // Si cumple con los filtros, agregar sus valores a los conjuntos
+        if (cumpleFiltros) {
+            valores.anchos.add(ancho);
+            valores.perfiles.add(perfil);
+            valores.diametros.add(diametro);
+
+            // Extraer tipo de terreno (columna 5)
+            const tipoTerreno = $fila.find("td:eq(4)").text().trim();
+            if (tipoTerreno && tipoTerreno !== "N/A" && tipoTerreno !== "-") {
+                valores.tiposTerreno.add(tipoTerreno);
+            }
+
+            // Extraer marca (columna 6)
+            const marcaTexto = $fila.find("td:eq(5)").text().trim();
+            if (marcaTexto && marcaTexto !== "N/A" && marcaTexto !== "Sin información") {
+                // Dividir marca/modelo y agregar ambos
+                const partes = marcaTexto.split('/');
+                partes.forEach(parte => {
+                    if (parte.trim()) {
+                        valores.marcas.add(parte.trim());
+                    }
+                });
+            }
+
+            // Extraer velocidad si está disponible (necesitarías ajustar el índice según tu tabla)
+            // const velocidad = $fila.find("td:eq(X)").text().trim();
+            // if (velocidad && velocidad !== "N/A") {
+            //     valores.velocidades.add(velocidad);
+            // }
+        }
+    });
+
+    // Actualizar select de Ancho (siempre mostrar todos los anchos disponibles originalmente)
+    if (!anchoSeleccionado) {
+        const anchos = Array.from(valores.anchos).sort((a, b) => parseInt(a) - parseInt(b));
+        const $selectAncho = $('#filterAncho');
+        const anchoActual = $selectAncho.val();
+        $selectAncho.html('<option value="">Todos</option>' +
+            anchos.map(a => `<option value="${a}" ${anchoActual === a ? 'selected' : ''}>${a}</option>`).join(''));
+    }
+
+    // Actualizar select de Perfil (solo las opciones válidas según ancho seleccionado)
+    if (anchoSeleccionado || !perfilSeleccionado) {
+        const perfiles = Array.from(valores.perfiles).sort((a, b) => parseInt(a) - parseInt(b));
+        const $selectPerfil = $('#filterPerfil');
+        const perfilActual = $selectPerfil.val();
+        $selectPerfil.html('<option value="">Todos</option>' +
+            perfiles.map(p => `<option value="${p}" ${perfilActual === p ? 'selected' : ''}>${p}</option>`).join(''));
+
+        console.log(`✅ Perfil actualizado: ${perfiles.length} opciones disponibles`);
+    }
+
+    // Actualizar select de Diámetro (solo las opciones válidas según ancho/perfil seleccionados)
+    if (anchoSeleccionado || perfilSeleccionado || !diametroSeleccionado) {
+        const diametros = Array.from(valores.diametros).sort((a, b) => parseInt(a) - parseInt(b));
+        const $selectDiametro = $('#filterDiametro');
+        const diametroActual = $selectDiametro.val();
+        $selectDiametro.html('<option value="">Todos</option>' +
+            diametros.map(d => `<option value="${d}" ${diametroActual === d ? 'selected' : ''}>R${d}"</option>`).join(''));
+
+        console.log(`✅ Diámetro actualizado: ${diametros.length} opciones disponibles`);
+    }
+
+    // Actualizar Tipo de Terreno si hay filtros activos
+    if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
+        const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+        const $selectTipo = $('#filterTipoTerreno');
+        const tipoActual = $selectTipo.val();
+        $selectTipo.html('<option value="">Todos</option>' +
+            tiposTerreno.map(t => `<option value="${t}" ${tipoActual === t ? 'selected' : ''}>${t}</option>`).join(''));
+
+        console.log(`✅ Tipo Terreno actualizado: ${tiposTerreno.length} opciones disponibles`);
+    }
+
+    console.log('✅ Filtros en cascada actualizados correctamente');
+}
+
 // Función para configurar todos los eventos de filtros
 function configurarEventosFiltros() {
     // Filtro de búsqueda de texto con debounce
@@ -203,11 +333,51 @@ function configurarEventosFiltros() {
         });
     });
 
-    // En el event listener de los filtros, agregar logs
-    // Event listeners para filtros de llantas
-    const filtrosLlantas = ['#filterAncho', '#filterPerfil', '#filterDiametro', '#filterTipoTerreno', '#filterMarca', '#filterVelocidad'];
+    // ✅ Event listeners para filtros de llantas CON CASCADA
+    // Filtros principales de medidas (con cascada)
+    $('#filterAncho').on("change", function () {
+        const valor = $(this).val();
+        console.log('🔧 Ancho cambiado:', valor);
 
-    filtrosLlantas.forEach(selector => {
+        filtrosConfig.activos.ancho = valor;
+
+        // Actualizar filtros en cascada
+        actualizarFiltrosCascada();
+
+        // Aplicar filtros
+        aplicarTodosLosFiltros();
+    });
+
+    $('#filterPerfil').on("change", function () {
+        const valor = $(this).val();
+        console.log('🔧 Perfil cambiado:', valor);
+
+        filtrosConfig.activos.perfil = valor;
+
+        // Actualizar filtros en cascada
+        actualizarFiltrosCascada();
+
+        // Aplicar filtros
+        aplicarTodosLosFiltros();
+    });
+
+    $('#filterDiametro').on("change", function () {
+        const valor = $(this).val();
+        console.log('🔧 Diámetro cambiado:', valor);
+
+        filtrosConfig.activos.diametro = valor;
+
+        // Actualizar filtros en cascada
+        actualizarFiltrosCascada();
+
+        // Aplicar filtros
+        aplicarTodosLosFiltros();
+    });
+
+    // Filtros secundarios de llantas (sin cascada)
+    const filtrosLlantasSecundarios = ['#filterTipoTerreno', '#filterMarca', '#filterVelocidad'];
+
+    filtrosLlantasSecundarios.forEach(selector => {
         $(selector).on("change", function () {
             let campo = selector.replace('#filter', '').toLowerCase();
 
@@ -246,6 +416,9 @@ function configurarEventosFiltros() {
         filtrosConfig.activos.tipoterreno = '';
         filtrosConfig.activos.marca = '';
         filtrosConfig.activos.velocidad = '';
+
+        // Restaurar todas las opciones originales
+        poblarSelectoresDinamicos();
 
         // Reaplicar filtros (mostrará todos)
         aplicarTodosLosFiltros();

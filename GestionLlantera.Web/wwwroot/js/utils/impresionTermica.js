@@ -285,12 +285,27 @@ function construirSeccionProductos(productos, anchoMaximo) {
         
         const nombreTruncado = truncarTextoTermico(nombreCompleto, 28);
         const subtotalProducto = producto.precioUnitario * producto.cantidad;
-        
+
+        // Construir información adicional de llantas (Capas y TipoTerreno)
+        let infoAdicionalLlanta = '';
+        if (esLlanta) {
+            const capas = producto.capas || producto.Capas;
+            const tipoTerreno = producto.tipoTerreno || producto.TipoTerreno;
+
+            if (capas || tipoTerreno) {
+                const partes = [];
+                if (capas) partes.push(`${capas}PR`);
+                if (tipoTerreno) partes.push(`${tipoTerreno}`);
+                infoAdicionalLlanta = `<div class="producto-info-adicional-termico">${partes.join(' | ')}</div>`;
+            }
+        }
+
         html += `
             <div class="producto-item-termico">
                 <div class="producto-nombre-termico">${nombreTruncado}</div>
+                ${infoAdicionalLlanta}
                 <div class="producto-detalle-termico">${formatearLineaTermica(
-                    `${producto.cantidad} x ₡${producto.precioUnitario.toFixed(0)}`, 
+                    `${producto.cantidad} x ₡${producto.precioUnitario.toFixed(0)}`,
                     `₡${subtotalProducto.toFixed(0)}`,
                     anchoMaximo
                 )}</div>
