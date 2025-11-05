@@ -459,7 +459,8 @@ namespace GestionLlantera.Web.Services
                         modelo = producto.Llanta.Modelo ?? string.Empty,
                         capas = producto.Llanta.Capas ?? 0,
                         indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
-                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
+                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty,
+                        tipoVehiculo = producto.Llanta.TipoVehiculo ?? string.Empty
                     } : null,
                     Imagenes = new List<object>()
                 };
@@ -613,7 +614,8 @@ namespace GestionLlantera.Web.Services
                         modelo = producto.Llanta.Modelo ?? string.Empty,
                         capas = producto.Llanta.Capas ?? 0,
                         indiceVelocidad = producto.Llanta.IndiceVelocidad ?? string.Empty,
-                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty
+                        tipoTerreno = producto.Llanta.TipoTerreno ?? string.Empty,
+                        tipoVehiculo = producto.Llanta.TipoVehiculo ?? string.Empty
                     } : null
                 };
 
