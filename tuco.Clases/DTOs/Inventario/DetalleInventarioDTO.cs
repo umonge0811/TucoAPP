@@ -29,6 +29,8 @@ namespace Tuco.Clases.DTOs.Inventario
         public string? MedidasLlanta { get; set; }
         public string? MarcaLlanta { get; set; }
         public string? ModeloLlanta { get; set; }
+        public string? TipoTerrenoLlanta { get; set; }
+        public int? CapasLlanta { get; set; }
 
         // Estados calculados
         public string EstadoConteo { get; set; } = "Pendiente";

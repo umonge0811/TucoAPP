@@ -850,7 +850,9 @@ namespace API.Controllers
                         l.Modelo,
                         l.Ancho,
                         l.Perfil,
-                        l.Diametro
+                        l.Diametro,
+                        l.TipoTerreno,
+                        l.Capas
                     })
                     .ToListAsync();
 
@@ -948,6 +950,8 @@ namespace API.Controllers
                             dto.MarcaLlanta = llanta?.Marca ?? "";
                             dto.ModeloLlanta = llanta?.Modelo ?? "";
                             dto.MedidasLlanta = medidasLlanta ?? "";
+                            dto.TipoTerrenoLlanta = llanta?.TipoTerreno ?? "";
+                            dto.CapasLlanta = llanta?.Capas;
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
                             dto.ImagenUrl = imagen?.PrimeraImagen ?? "";
@@ -982,6 +986,8 @@ namespace API.Controllers
                                 MarcaLlanta = "",
                                 ModeloLlanta = "",
                                 MedidasLlanta = "",
+                                TipoTerrenoLlanta = "",
+                                CapasLlanta = null,
                                 ImagenUrl = "",
                                 NombreUsuarioConteo = ""
                             };
