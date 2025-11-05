@@ -64,12 +64,34 @@
                                     Active esta opción si el producto es una llanta para habilitar campos específicos
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="alert alert-info d-flex align-items-center mb-0" id="tipoProductoInfo">
-                                    <i class="bi bi-info-circle me-2"></i>
-                                    <span id="textoTipoProducto">Producto general - informacion basica</span>
+
+                            <!-- ✅ NUEVA SECCIÓN: Selector de tipo de llanta -->
+                            <div class="col-md-6" id="tipoLlantaContainer" style="display: none;">
+                                <div class="mb-3">
+                                    <label for="tipoLlanta" class="form-label fw-bold">
+                                        <i class="bi bi-sliders me-2 text-info"></i>
+                                        Tipo de Llanta
+                                    </label>
+                                    <select id="tipoLlanta" asp-for="TipoLlanta" class="form-select">
+                                        <option value="">-- Seleccionar tipo --</option>
+                                        <option value="AUTO">🚗 Auto</option>
+                                        <option value="MOTO">🏍️ Moto</option>
+                                        <option value="CAMIÓN">🚛 Camión</option>
+                                        <option value="COMERCIAL">📦 Comercial</option>
+                                        <option value="DEPORTIVO">🏁 Deportivo</option>
+                                        <option value="TODO TERRENO">🏞️ Todo Terreno</option>
+                                    </select>
+                                    <small class="form-text text-muted d-block mt-2">
+                                        <i class="bi bi-lightbulb me-1"></i>
+                                        Se agregará automáticamente al nombre del producto
+                                    </small>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="alert alert-info d-flex align-items-center mt-3" id="tipoProductoInfo">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span id="textoTipoProducto">📦 Producto general - información básica</span>
                         </div>
                     </div>
                 </div>

@@ -761,6 +761,16 @@ namespace GestionLlantera.Web.Controllers
                     return RedirectToAction("Login", "Account");
                 }
 
+                // ✅ El ProductoDTO ya recibe TipoLlanta automáticamente del formulario
+                var tipoLlanta = producto.TipoLlanta;
+
+                // Si es llanta, el nombre se genera en el JavaScript
+                // Pero puedes validar/ajustar en backend si necesitas
+                if (producto.EsLlanta && !string.IsNullOrEmpty(tipoLlanta))
+                {
+                    _logger.LogInformation("🛞 Producto llanta del tipo: {TipoLlanta}", tipoLlanta);
+                }
+
                 // Obtener las imágenes
                 var imagenes = Request.Form.Files.GetFiles("imagenes").ToList();
                 _logger.LogInformation($"Recibidas {imagenes.Count} imágenes");

@@ -69,6 +69,30 @@
                                     }
                                 </div>
                             </div>
+                            <!-- ✅ NUEVO: Campo para tipo de llanta en edición -->
+                            @if (Model.EsLlanta)
+                            {
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="tipoLlantaEditar" class="form-label fw-bold">
+                                            <i class="bi bi-sliders me-2 text-info"></i>
+                                            Tipo de Llanta
+                                        </label>
+                                        <select id="tipoLlantaEditar" asp-for="TipoLlanta" class="form-select">
+                                            <option value="">-- Seleccionar tipo --</option>
+                                            <option value="AUTO" selected="@(Model.TipoLlanta == "AUTO")">Auto</option>
+                                            <option value="MOTO" selected="@(Model.TipoLlanta == "MOTO")">Moto</option>
+                                            <option value="CAMIÓN" selected="@(Model.TipoLlanta == "CAMIÓN")">Camión</option>
+                                            <option value="COMERCIAL" selected="@(Model.TipoLlanta == "COMERCIAL")">Comercial</option>
+                                            <option value="DEPORTIVO" selected="@(Model.TipoLlanta == "DEPORTIVO")">Deportivo</option>
+                                            <option value="TODO TERRENO" selected="@(Model.TipoLlanta == "TODO TERRENO")">Todo Terreno</option>
+                                        </select>
+                                        <small class="form-text text-muted">
+                                            Cambiar el tipo actualizará automáticamente el nombre del producto
+                                        </small>
+                                    </div>
+                                </div>
+                            }
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="cantidadInput" class="form-label">Cantidad en Inventario</label>
