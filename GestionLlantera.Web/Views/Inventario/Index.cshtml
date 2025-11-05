@@ -496,7 +496,7 @@
                                         @if (producto.UsarCalculoAutomatico)
                                         {
                                             <!-- Precio calculado automáticamente -->
-                                            <span class="text-success">₡@((producto.PrecioCalculado ?? 0).ToString("N0"))</span>
+                                            <span class="text-success">₡@((producto.Precio?? 0).ToString("N0"))</span>
                                             <small class="d-block text-success">Calculado</small>
                                         }
                                         else

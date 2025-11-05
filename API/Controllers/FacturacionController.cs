@@ -1333,7 +1333,7 @@ namespace API.Controllers
                 {
                     // Recalcular totales
                     var nuevoSubtotal = detallesRestantes.Sum(d => d.Subtotal);
-                    var nuevoImpuesto = nuevoSubtotal * (factura.PorcentajeImpuesto ?? 0.13m);
+                    var nuevoImpuesto = nuevoSubtotal * (factura.PorcentajeImpuesto ?? 0);
                     var nuevoTotal = nuevoSubtotal + nuevoImpuesto;
 
                     factura.Subtotal = nuevoSubtotal;
