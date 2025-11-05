@@ -850,7 +850,9 @@ namespace API.Controllers
                         l.Modelo,
                         l.Ancho,
                         l.Perfil,
-                        l.Diametro
+                        l.Diametro,
+                        l.TipoTerreno,
+                        l.Capas
                     })
                     .ToListAsync();
 
@@ -904,16 +906,37 @@ namespace API.Controllers
                         var usuario = detalle.UsuarioConteoId.HasValue && usuarios.Any() ?
                             usuarios.FirstOrDefault(u => ((dynamic)u).UsuarioId == detalle.UsuarioConteoId.Value) : null;
 
-                        // ✅ CONSTRUIR MEDIDAS DE LLANTA CON VALIDACIÓN COMPLETA
+                        // ✅ CONSTRUIR MEDIDAS DE LLANTA CON LA MISMA LÓGICA DEL INDEX DE INVENTARIO
                         string? medidasLlanta = null;
                         if (llanta != null &&
                             llanta.Ancho.HasValue && llanta.Ancho.Value > 0 &&
-                            llanta.Perfil.HasValue && llanta.Perfil.Value > 0 &&
                             !string.IsNullOrWhiteSpace(llanta.Diametro))
                         {
                             try
                             {
-                                medidasLlanta = $"{llanta.Ancho.Value}/{llanta.Perfil.Value}R{llanta.Diametro.Trim()}";
+                                // Formatear el ancho: si es entero sin decimales, si no con 2 decimales
+                                var anchoNum = llanta.Ancho.Value;
+                                var anchoFormateado = (anchoNum % 1 == 0) ?
+                                    anchoNum.ToString("0") :
+                                    anchoNum.ToString("0.00");
+
+                                // Si tiene perfil y el perfil es mayor a 0
+                                if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                                {
+                                    // Formatear el perfil: si es entero sin decimales, si no con 2 decimales
+                                    var perfilNum = llanta.Perfil.Value;
+                                    var perfilFormateado = (perfilNum % 1 == 0) ?
+                                        perfilNum.ToString("0") :
+                                        perfilNum.ToString("0.00");
+
+                                    // Formato completo: 225/60/R16 o 225/90.50/R16
+                                    medidasLlanta = $"{anchoFormateado}/{perfilFormateado}/R{llanta.Diametro.Trim()}";
+                                }
+                                else
+                                {
+                                    // Formato sin perfil: 225/R16
+                                    medidasLlanta = $"{anchoFormateado}/R{llanta.Diametro.Trim()}";
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -948,6 +971,8 @@ namespace API.Controllers
                             dto.MarcaLlanta = llanta?.Marca ?? "";
                             dto.ModeloLlanta = llanta?.Modelo ?? "";
                             dto.MedidasLlanta = medidasLlanta ?? "";
+                            dto.TipoTerrenoLlanta = llanta?.TipoTerreno ?? "";
+                            dto.CapasLlanta = llanta?.Capas;
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
                             dto.ImagenUrl = imagen?.PrimeraImagen ?? "";
@@ -982,6 +1007,8 @@ namespace API.Controllers
                                 MarcaLlanta = "",
                                 ModeloLlanta = "",
                                 MedidasLlanta = "",
+                                TipoTerrenoLlanta = "",
+                                CapasLlanta = null,
                                 ImagenUrl = "",
                                 NombreUsuarioConteo = ""
                             };

@@ -3424,11 +3424,15 @@ function crearFilaProducto(producto, numero) {
         infoLlanta = `
             <div class="small text-muted">
                 <i class="bi bi-car-front me-1"></i>
-                ${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''} 
-                ${producto.medidasLlanta || ''}
+                ${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''}
             </div>
         `;
     }
+
+    // Obtener los datos de la llanta para las nuevas columnas
+    const medidas = producto.esLlanta && producto.medidasLlanta ? producto.medidasLlanta : '-';
+    const tipoTerreno = producto.esLlanta && producto.tipoTerrenoLlanta ? producto.tipoTerrenoLlanta : '-';
+    const capas = producto.esLlanta && producto.capasLlanta ? producto.capasLlanta : '-';
 
     // ✅ NUEVA COLUMNA DE ESTADO CON MÚLTIPLES BADGES
     const estadoBadges = crearBadgesEstado(producto);
@@ -3449,6 +3453,9 @@ function crearFilaProducto(producto, numero) {
                 <div class="small text-muted">${producto.descripcionProducto || ''}</div>
                 ${infoLlanta}
             </td>
+            <td>${medidas}</td>
+            <td>${tipoTerreno}</td>
+            <td class="text-center">${capas}</td>
             <td class="text-center">
                 <span class="badge bg-primary fs-6">${producto.cantidadSistema}</span>
             </td>

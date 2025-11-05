@@ -17,6 +17,7 @@ namespace Tuco.Clases.DTOs.Inventario
         public string? Modelo { get; set; }
         public string? IndiceVelocidad { get; set; }
         public string? TipoTerreno { get; set; }
+        public int? Capas { get; set; }
 
         public string MedidaCompleta =>
             Ancho.HasValue && Perfil.HasValue && !string.IsNullOrEmpty(Diametro)
