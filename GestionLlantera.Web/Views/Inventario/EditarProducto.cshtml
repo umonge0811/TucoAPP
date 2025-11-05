@@ -58,13 +58,13 @@
                             <div class="col-12">
                                 <div class="mb-3">
                                     <label asp-for="NombreProducto" class="form-label">Nombre del Producto</label>
-                                    <input asp-for="NombreProducto" class="form-control" readonly="@Model.EsLlanta" />
+                                    <input asp-for="NombreProducto" class="form-control" id="nombreProductoInput" />
                                     <span asp-validation-for="NombreProducto" class="text-danger"></span>
                                     @if (Model.EsLlanta)
                                     {
                                         <div class="form-text text-info">
                                             <i class="bi bi-info-circle me-1"></i>
-                                            El nombre se genera automáticamente para las llantas
+                                            El nombre se actualiza automáticamente al cambiar marca, modelo o tipo de moto. También puede editarlo manualmente.
                                         </div>
                                     }
                                 </div>
@@ -175,6 +175,20 @@
                                             <input asp-for="Llanta.Diametro" class="form-control" />
                                             <span class="input-group-text">pulgadas</span>
                                         </div>
+                                    </div>
+                                </div>
+
+                                <!-- Checkbox Es Moto -->
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="esMotoCheckbox">
+                                            <label class="form-check-label fw-bold" for="esMotoCheckbox">
+                                                <i class="bi bi-motorcycle me-2 text-danger"></i>
+                                                ¿Es llanta de moto?
+                                            </label>
+                                        </div>
+                                        <div class="form-text">Active esta opción si la llanta es para motocicleta (actualizará el nombre del producto)</div>
                                     </div>
                                 </div>
 
