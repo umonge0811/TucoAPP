@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const previewContainer = document.getElementById('previewContainer');
     const selectImagesBtn = document.getElementById('selectImagesBtn');
 
+    // Referencias para campos de llanta (para actualización automática del nombre)
+    const marcaInput = document.querySelector('[name="Llanta.Marca"]');
+    const modeloInput = document.querySelector('[name="Llanta.Modelo"]');
+    const tipoVehiculoSelect = document.getElementById('tipoVehiculoSelect');
+    const nombreProductoInput = document.querySelector('[name="NombreProducto"]');
+
     // Elementos para gestión de precio
     const modoAutomaticoRadio = document.getElementById('modoAutomatico');
     const modoManualRadio = document.getElementById('modoManual');
@@ -39,6 +45,56 @@ document.addEventListener('DOMContentLoaded', function () {
     let nuevasImagenes = [];
     // Array para tracking de imágenes a eliminar
     let imagenesAEliminar = [];
+
+    // ========================================
+    // ACTUALIZACIÓN AUTOMÁTICA DEL NOMBRE PARA LLANTAS
+    // ========================================
+
+    /**
+     * Genera automáticamente el nombre del producto basado en los datos de llanta
+     */
+    function actualizarNombreProducto() {
+        // Solo actualizar si existen todos los campos de llanta
+        if (!marcaInput || !modeloInput || !tipoVehiculoSelect || !nombreProductoInput) {
+            return;
+        }
+
+        console.log('🔄 Actualizando nombre del producto...');
+
+        const marca = marcaInput.value || '';
+        const modelo = modeloInput.value || '';
+        const tipoVehiculo = tipoVehiculoSelect.value || '';
+
+        let nombreGenerado = 'Llanta';
+
+        // Agregar tipo de vehículo si es MOTO
+        if (tipoVehiculo === 'MOTO') {
+            nombreGenerado += ' MOTO';
+        }
+
+        if (marca) nombreGenerado += ` ${marca}`;
+        if (modelo) nombreGenerado += ` ${modelo}`;
+
+        // Actualizar el campo de nombre
+        nombreProductoInput.value = nombreGenerado;
+
+        console.log(`✅ Nombre actualizado: "${nombreGenerado}"`);
+    }
+
+    // Agregar event listeners para actualizar el nombre cuando cambien los campos
+    if (marcaInput && modeloInput && tipoVehiculoSelect && nombreProductoInput) {
+        console.log('🔗 Configurando listeners para actualización automática del nombre');
+
+        marcaInput.addEventListener('input', actualizarNombreProducto);
+        marcaInput.addEventListener('blur', actualizarNombreProducto);
+
+        modeloInput.addEventListener('input', actualizarNombreProducto);
+        modeloInput.addEventListener('blur', actualizarNombreProducto);
+
+        tipoVehiculoSelect.addEventListener('change', actualizarNombreProducto);
+
+        console.log('✅ Listeners configurados para actualización automática');
+    }
 
     // ========================================
     // GESTIÓN DE PRECIO Y UTILIDAD
