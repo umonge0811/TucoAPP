@@ -914,6 +914,12 @@ namespace API.Controllers
                         {
                             try
                             {
+                                // Formatear el ancho: si es entero sin decimales, si no con 2 decimales
+                                var anchoNum = llanta.Ancho.Value;
+                                var anchoFormateado = (anchoNum % 1 == 0) ?
+                                    anchoNum.ToString("0") :
+                                    anchoNum.ToString("0.00");
+
                                 // Si tiene perfil y el perfil es mayor a 0
                                 if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                                 {
@@ -924,12 +930,12 @@ namespace API.Controllers
                                         perfilNum.ToString("0.00");
 
                                     // Formato completo: 225/60/R16 o 225/90.50/R16
-                                    medidasLlanta = $"{llanta.Ancho.Value}/{perfilFormateado}/R{llanta.Diametro.Trim()}";
+                                    medidasLlanta = $"{anchoFormateado}/{perfilFormateado}/R{llanta.Diametro.Trim()}";
                                 }
                                 else
                                 {
                                     // Formato sin perfil: 225/R16
-                                    medidasLlanta = $"{llanta.Ancho.Value}/R{llanta.Diametro.Trim()}";
+                                    medidasLlanta = $"{anchoFormateado}/R{llanta.Diametro.Trim()}";
                                 }
                             }
                             catch (Exception ex)
