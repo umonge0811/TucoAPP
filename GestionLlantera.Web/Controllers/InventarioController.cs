@@ -991,8 +991,38 @@ namespace GestionLlantera.Web.Controllers
                 // Crear el documento (usando clases directas sin alias)
                 var document = new Document(PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
 
-                // Obtener PdfWriter
-                writer = PdfWriter.GetInstance(document, memoryStream);
+                // Obtener PdfWriter con reintentos (solución para error de inicialización de iTextSharp)
+                int intentos = 0;
+                int maxIntentos = 3;
+                Exception ultimoError = null;
+
+                while (writer == null && intentos < maxIntentos)
+                {
+                    try
+                    {
+                        intentos++;
+                        writer = PdfWriter.GetInstance(document, memoryStream);
+                        _logger.LogInformation($"PdfWriter creado exitosamente en intento {intentos}");
+                    }
+                    catch (NullReferenceException ex)
+                    {
+                        ultimoError = ex;
+                        _logger.LogWarning($"Error de inicialización de iTextSharp en intento {intentos}/{maxIntentos}: {ex.Message}");
+
+                        if (intentos < maxIntentos)
+                        {
+                            // Esperar un momento antes de reintentar
+                            System.Threading.Thread.Sleep(100);
+                        }
+                    }
+                }
+
+                // Si después de los reintentos no se pudo crear el writer, lanzar error
+                if (writer == null)
+                {
+                    _logger.LogError(ultimoError, "No se pudo inicializar PdfWriter después de {Intentos} intentos", maxIntentos);
+                    throw new InvalidOperationException($"No se pudo inicializar el generador de PDF después de {maxIntentos} intentos. Por favor, intente nuevamente.", ultimoError);
+                }
 
                 // Agregar eventos de encabezado y pie de página
                 writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
