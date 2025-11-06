@@ -933,7 +933,12 @@ namespace GestionLlantera.Web.Controllers
                 // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Igual que en Index
                 productos = productos.OrderBy(p =>
                 {
-                    if (p.Llanta != null && p.Llanta.Diametro != null && p.Llanta.Ancho.HasValue)
+                    if (p.Llanta == null || p.Llanta.Diametro == null || !p.Llanta.Ancho.HasValue)
+                    {
+                        return "ZZZZZ"; // Productos sin medidas al final
+                    }
+
+                    try
                     {
                         // Extraer número del RIN (ej: "14" de "R14" o "14")
                         int rin = 0;
@@ -950,10 +955,16 @@ namespace GestionLlantera.Web.Controllers
                         int ancho = (int)p.Llanta.Ancho.Value;
 
                         // Formato: RIN (2 dígitos) + ANCHO (3 dígitos)
+                        // Ejemplo: R14 con 185 = "14185"
                         return rin.ToString("D2") + ancho.ToString("D3");
                     }
-                    return "99999"; // Productos sin llanta o sin medidas al final
-                }).ToList();
+                    catch
+                    {
+                        return "ZZZZZ"; // En caso de error, al final
+                    }
+                })
+                .ThenBy(p => p.ProductoId) // Ordenamiento secundario por ID para consistencia
+                .ToList();
 
                 // Identificador único para el inventario
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
@@ -1485,7 +1496,12 @@ namespace GestionLlantera.Web.Controllers
                 // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Igual que en Index
                 productos = productos.OrderBy(p =>
                 {
-                    if (p.Llanta != null && p.Llanta.Diametro != null && p.Llanta.Ancho.HasValue)
+                    if (p.Llanta == null || p.Llanta.Diametro == null || !p.Llanta.Ancho.HasValue)
+                    {
+                        return "ZZZZZ"; // Productos sin medidas al final
+                    }
+
+                    try
                     {
                         // Extraer número del RIN (ej: "14" de "R14" o "14")
                         int rin = 0;
@@ -1502,10 +1518,16 @@ namespace GestionLlantera.Web.Controllers
                         int ancho = (int)p.Llanta.Ancho.Value;
 
                         // Formato: RIN (2 dígitos) + ANCHO (3 dígitos)
+                        // Ejemplo: R14 con 185 = "14185"
                         return rin.ToString("D2") + ancho.ToString("D3");
                     }
-                    return "99999"; // Productos sin llanta o sin medidas al final
-                }).ToList();
+                    catch
+                    {
+                        return "ZZZZZ"; // En caso de error, al final
+                    }
+                })
+                .ThenBy(p => p.ProductoId) // Ordenamiento secundario por ID para consistencia
+                .ToList();
 
 
                 // Configurar licencia de EPPlus
