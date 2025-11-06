@@ -930,6 +930,31 @@ namespace GestionLlantera.Web.Controllers
                 // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
                 var productos = await _inventarioService.ObtenerProductosAsync(token);
 
+                // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Igual que en Index
+                productos = productos.OrderBy(p =>
+                {
+                    if (p.Llanta != null && p.Llanta.Diametro != null && p.Llanta.Ancho.HasValue)
+                    {
+                        // Extraer número del RIN (ej: "14" de "R14" o "14")
+                        int rin = 0;
+                        string diametroStr = p.Llanta.Diametro.Trim();
+                        if (diametroStr.StartsWith("R", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int.TryParse(diametroStr.Substring(1), out rin);
+                        }
+                        else
+                        {
+                            int.TryParse(diametroStr, out rin);
+                        }
+
+                        int ancho = (int)p.Llanta.Ancho.Value;
+
+                        // Formato: RIN (2 dígitos) + ANCHO (3 dígitos)
+                        return rin.ToString("D2") + ancho.ToString("D3");
+                    }
+                    return "99999"; // Productos sin llanta o sin medidas al final
+                }).ToList();
+
                 // Identificador único para el inventario
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
@@ -1045,9 +1070,9 @@ namespace GestionLlantera.Web.Controllers
                 document.Add(instructionsTable);
 
                 // Tabla de productos
-                PdfPTable productTable = new PdfPTable(11);
+                PdfPTable productTable = new PdfPTable(13);
                 productTable.WidthPercentage = 100;
-                productTable.SetWidths(new float[] { 0.6f, 0.8f, 2.2f, 1.0f, 1.0f, 1.2f, 0.8f, 0.8f, 0.8f, 0.8f, 2.0f });
+                productTable.SetWidths(new float[] { 0.5f, 0.7f, 2.0f, 0.9f, 0.9f, 0.9f, 0.6f, 1.1f, 0.7f, 0.7f, 0.7f, 0.7f, 1.8f });
                 productTable.SpacingAfter = 15f;
 
                 // Encabezados de tabla
@@ -1056,6 +1081,8 @@ namespace GestionLlantera.Web.Controllers
                 productTable.AddCell(CreateHeaderCell("Producto", headerFont));
                 productTable.AddCell(CreateHeaderCell("Medidas", headerFont));
                 productTable.AddCell(CreateHeaderCell("Marca/Modelo", headerFont));
+                productTable.AddCell(CreateHeaderCell("Tipo de Terreno", headerFont));
+                productTable.AddCell(CreateHeaderCell("Capas", headerFont));
                 productTable.AddCell(CreateHeaderCell("Ubicación", headerFont));
                 productTable.AddCell(CreateHeaderCell("Cantidad Sistema", headerFont));
                 productTable.AddCell(CreateHeaderCell("Cantidad Física", headerFont));
@@ -1099,13 +1126,24 @@ namespace GestionLlantera.Web.Controllers
                     productNameCell.HorizontalAlignment = IText.Element.ALIGN_LEFT;
                     productTable.AddCell(productNameCell);
 
-                    // Medidas (para llantas)
+                    // Medidas (para llantas) - Soportar formato con y sin perfil
                     string medidas = "N/A";
-                    if (producto.Llanta != null && producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue)
+                    if (producto.Llanta != null && producto.Llanta.Ancho.HasValue)
                     {
-                        // Asegúrate de que Diametro sea un número válido o usa un valor predeterminado
                         string diametro = producto.Llanta.Diametro ?? "0";
-                        medidas = $"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{diametro}";
+                        if (producto.Llanta.Perfil.HasValue)
+                        {
+                            // Formatear perfil con dos decimales si tiene parte decimal
+                            string perfilFormateado = (producto.Llanta.Perfil.Value % 1 == 0)
+                                ? producto.Llanta.Perfil.Value.ToString("0")
+                                : producto.Llanta.Perfil.Value.ToString("0.00");
+                            medidas = $"{producto.Llanta.Ancho}/{perfilFormateado}/R{diametro}";
+                        }
+                        else
+                        {
+                            // Formato sin perfil: 205/R14
+                            medidas = $"{producto.Llanta.Ancho}/R{diametro}";
+                        }
                     }
                     productTable.AddCell(CreateDataCell(medidas, tableFont, rowColor));
 
@@ -1127,6 +1165,22 @@ namespace GestionLlantera.Web.Controllers
                         }
                     }
                     productTable.AddCell(CreateDataCell(marcaModelo, tableFont, rowColor));
+
+                    // Tipo de Terreno
+                    string tipoTerreno = "N/A";
+                    if (producto.Llanta != null && !string.IsNullOrEmpty(producto.Llanta.TipoTerreno))
+                    {
+                        tipoTerreno = producto.Llanta.TipoTerreno;
+                    }
+                    productTable.AddCell(CreateDataCell(tipoTerreno, tableFont, rowColor));
+
+                    // Capas
+                    string capas = "N/A";
+                    if (producto.Llanta != null && producto.Llanta.Capas.HasValue)
+                    {
+                        capas = producto.Llanta.Capas.Value.ToString();
+                    }
+                    productTable.AddCell(CreateDataCell(capas, tableFont, rowColor));
 
                     // Ubicación
                     productTable.AddCell(CreateDataCell(ubicacion, tableFont, rowColor));
@@ -1428,6 +1482,31 @@ namespace GestionLlantera.Web.Controllers
                 // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
                 var productos = await _inventarioService.ObtenerProductosAsync(token);
 
+                // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Igual que en Index
+                productos = productos.OrderBy(p =>
+                {
+                    if (p.Llanta != null && p.Llanta.Diametro != null && p.Llanta.Ancho.HasValue)
+                    {
+                        // Extraer número del RIN (ej: "14" de "R14" o "14")
+                        int rin = 0;
+                        string diametroStr = p.Llanta.Diametro.Trim();
+                        if (diametroStr.StartsWith("R", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int.TryParse(diametroStr.Substring(1), out rin);
+                        }
+                        else
+                        {
+                            int.TryParse(diametroStr, out rin);
+                        }
+
+                        int ancho = (int)p.Llanta.Ancho.Value;
+
+                        // Formato: RIN (2 dígitos) + ANCHO (3 dígitos)
+                        return rin.ToString("D2") + ancho.ToString("D3");
+                    }
+                    return "99999"; // Productos sin llanta o sin medidas al final
+                }).ToList();
+
 
                 // Configurar licencia de EPPlus
                 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -1445,13 +1524,13 @@ namespace GestionLlantera.Web.Controllers
 
                 // Crear título del reporte
                 worksheet.Cells[1, 1].Value = "FORMATO PARA TOMA DE INVENTARIO FÍSICO";
-                worksheet.Cells[1, 1, 1, 13].Merge = true;
-                worksheet.Cells[1, 1, 1, 13].Style.Font.Size = 16;
-                worksheet.Cells[1, 1, 1, 13].Style.Font.Bold = true;
-                worksheet.Cells[1, 1, 1, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-                worksheet.Cells[1, 1, 1, 13].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[1, 1, 1, 13].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.FromArgb(48, 84, 150));
-                worksheet.Cells[1, 1, 1, 13].Style.Font.Color.SetColor(SystemDrawing.Color.White);
+                worksheet.Cells[1, 1, 1, 15].Merge = true;
+                worksheet.Cells[1, 1, 1, 15].Style.Font.Size = 16;
+                worksheet.Cells[1, 1, 1, 15].Style.Font.Bold = true;
+                worksheet.Cells[1, 1, 1, 15].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[1, 1, 1, 15].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[1, 1, 1, 15].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.FromArgb(48, 84, 150));
+                worksheet.Cells[1, 1, 1, 15].Style.Font.Color.SetColor(SystemDrawing.Color.White);
 
                 // Información del inventario
                 var currentRow = 3;
@@ -1469,8 +1548,8 @@ namespace GestionLlantera.Web.Controllers
 
                 worksheet.Cells[currentRow, 10].Value = "Total Productos:";
                 worksheet.Cells[currentRow, 10].Style.Font.Bold = true;
-                worksheet.Cells[currentRow, 11, currentRow, 13].Value = productos.Count;
-                worksheet.Cells[currentRow, 11, currentRow, 13].Merge = true;
+                worksheet.Cells[currentRow, 11, currentRow, 15].Value = productos.Count;
+                worksheet.Cells[currentRow, 11, currentRow, 15].Merge = true;
 
                 currentRow++;
 
@@ -1486,8 +1565,8 @@ namespace GestionLlantera.Web.Controllers
 
                 worksheet.Cells[currentRow, 10].Value = "Ubicación:";
                 worksheet.Cells[currentRow, 10].Style.Font.Bold = true;
-                worksheet.Cells[currentRow, 11, currentRow, 13].Value = "Almacén Principal";
-                worksheet.Cells[currentRow, 11, currentRow, 13].Merge = true;
+                worksheet.Cells[currentRow, 11, currentRow, 15].Value = "Almacén Principal";
+                worksheet.Cells[currentRow, 11, currentRow, 15].Merge = true;
 
                 currentRow++;
 
@@ -1506,24 +1585,24 @@ namespace GestionLlantera.Web.Controllers
                 // Instrucciones
                 worksheet.Cells[currentRow, 1].Value = "INSTRUCCIONES:";
                 worksheet.Cells[currentRow, 1].Style.Font.Bold = true;
-                worksheet.Cells[currentRow, 1, currentRow, 13].Merge = true;
-                worksheet.Cells[currentRow, 1, currentRow, 13].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                worksheet.Cells[currentRow, 1, currentRow, 13].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightGray);
+                worksheet.Cells[currentRow, 1, currentRow, 15].Merge = true;
+                worksheet.Cells[currentRow, 1, currentRow, 15].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                worksheet.Cells[currentRow, 1, currentRow, 15].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightGray);
 
                 currentRow++;
 
                 worksheet.Cells[currentRow, 1].Value = "1. Verifique la cantidad física de cada producto y anótela en la columna 'Cantidad Física'.";
-                worksheet.Cells[currentRow, 1, currentRow, 13].Merge = true;
+                worksheet.Cells[currentRow, 1, currentRow, 15].Merge = true;
 
                 currentRow++;
 
                 worksheet.Cells[currentRow, 1].Value = "2. En caso de discrepancias, anote las observaciones en la columna correspondiente.";
-                worksheet.Cells[currentRow, 1, currentRow, 13].Merge = true;
+                worksheet.Cells[currentRow, 1, currentRow, 15].Merge = true;
 
                 currentRow++;
 
                 worksheet.Cells[currentRow, 1].Value = "3. Los productos marcados en rojo tienen un stock por debajo del mínimo requerido.";
-                worksheet.Cells[currentRow, 1, currentRow, 13].Merge = true;
+                worksheet.Cells[currentRow, 1, currentRow, 15].Merge = true;
 
                 currentRow += 2;
 
@@ -1536,15 +1615,17 @@ namespace GestionLlantera.Web.Controllers
                 worksheet.Cells[headerRow, 3, headerRow, 5].Merge = true;
                 worksheet.Cells[headerRow, 6].Value = "Medidas";
                 worksheet.Cells[headerRow, 7].Value = "Marca/Modelo";
-                worksheet.Cells[headerRow, 8].Value = "Ubicación";
-                worksheet.Cells[headerRow, 9].Value = "Cantidad Sistema";
-                worksheet.Cells[headerRow, 10].Value = "Cantidad Física";
-                worksheet.Cells[headerRow, 11].Value = "Diferencia";
-                worksheet.Cells[headerRow, 12].Value = "Estado";
-                worksheet.Cells[headerRow, 13].Value = "Observaciones";
+                worksheet.Cells[headerRow, 8].Value = "Tipo de Terreno";
+                worksheet.Cells[headerRow, 9].Value = "Capas";
+                worksheet.Cells[headerRow, 10].Value = "Ubicación";
+                worksheet.Cells[headerRow, 11].Value = "Cantidad Sistema";
+                worksheet.Cells[headerRow, 12].Value = "Cantidad Física";
+                worksheet.Cells[headerRow, 13].Value = "Diferencia";
+                worksheet.Cells[headerRow, 14].Value = "Estado";
+                worksheet.Cells[headerRow, 15].Value = "Observaciones";
 
                 // Estilo para encabezados
-                var headerRange = worksheet.Cells[headerRow, 1, headerRow, 13];
+                var headerRange = worksheet.Cells[headerRow, 1, headerRow, 15];
                 headerRange.Style.Font.Bold = true;
                 headerRange.Style.Fill.PatternType = ExcelFillStyle.Solid;
                 headerRange.Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.FromArgb(48, 84, 150));
@@ -1578,10 +1659,22 @@ namespace GestionLlantera.Web.Controllers
                     worksheet.Cells[row, 3, row, 5].Value = producto.NombreProducto;
                     worksheet.Cells[row, 3, row, 5].Merge = true;
 
-                    // Medidas (para llantas)
-                    if (producto.Llanta != null && producto.Llanta.Ancho.HasValue && producto.Llanta.Perfil.HasValue)
+                    // Medidas (para llantas) - Soportar formato con y sin perfil
+                    if (producto.Llanta != null && producto.Llanta.Ancho.HasValue)
                     {
-                        worksheet.Cells[row, 6].Value = $"{producto.Llanta.Ancho}/{producto.Llanta.Perfil}/R{producto.Llanta.Diametro}";
+                        if (producto.Llanta.Perfil.HasValue)
+                        {
+                            // Formatear perfil con dos decimales si tiene parte decimal
+                            string perfilFormateado = (producto.Llanta.Perfil.Value % 1 == 0)
+                                ? producto.Llanta.Perfil.Value.ToString("0")
+                                : producto.Llanta.Perfil.Value.ToString("0.00");
+                            worksheet.Cells[row, 6].Value = $"{producto.Llanta.Ancho}/{perfilFormateado}/R{producto.Llanta.Diametro}";
+                        }
+                        else
+                        {
+                            // Formato sin perfil: 205/R14
+                            worksheet.Cells[row, 6].Value = $"{producto.Llanta.Ancho}/R{producto.Llanta.Diametro}";
+                        }
                     }
                     else
                     {
@@ -1613,38 +1706,58 @@ namespace GestionLlantera.Web.Controllers
                         worksheet.Cells[row, 7].Value = "N/A";
                     }
 
-                    worksheet.Cells[row, 8].Value = ubicacion;
-                    worksheet.Cells[row, 9].Value = producto.CantidadEnInventario;
-                    worksheet.Cells[row, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    // Tipo de Terreno
+                    if (producto.Llanta != null && !string.IsNullOrEmpty(producto.Llanta.TipoTerreno))
+                    {
+                        worksheet.Cells[row, 8].Value = producto.Llanta.TipoTerreno;
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, 8].Value = "N/A";
+                    }
+
+                    // Capas
+                    if (producto.Llanta != null && producto.Llanta.Capas.HasValue)
+                    {
+                        worksheet.Cells[row, 9].Value = producto.Llanta.Capas.Value;
+                    }
+                    else
+                    {
+                        worksheet.Cells[row, 9].Value = "N/A";
+                    }
+
+                    worksheet.Cells[row, 10].Value = ubicacion;
+                    worksheet.Cells[row, 11].Value = producto.CantidadEnInventario;
+                    worksheet.Cells[row, 11].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                     // Dejar en blanco para llenar manualmente
-                    worksheet.Cells[row, 10].Value = "";
-                    worksheet.Cells[row, 10].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 10].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightYellow);
+                    worksheet.Cells[row, 12].Value = "";
+                    worksheet.Cells[row, 12].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 12].Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightYellow);
 
                     // Fórmula para calcular diferencia
-                    worksheet.Cells[row, 11].Formula = $"J{row}-I{row}";
-                    worksheet.Cells[row, 11].Style.Numberformat.Format = "+##;-##;0";
+                    worksheet.Cells[row, 13].Formula = $"L{row}-K{row}";
+                    worksheet.Cells[row, 13].Style.Numberformat.Format = "+##;-##;0";
 
                     // Estado de inventario (stock bajo o normal)
                     if (producto.CantidadEnInventario <= producto.StockMinimo)
                     {
-                        worksheet.Cells[row, 12].Value = "STOCK BAJO";
-                        worksheet.Cells[row, 12].Style.Font.Color.SetColor(SystemDrawing.Color.Red);
-                        worksheet.Cells[row, 12].Style.Font.Bold = true;
+                        worksheet.Cells[row, 14].Value = "STOCK BAJO";
+                        worksheet.Cells[row, 14].Style.Font.Color.SetColor(SystemDrawing.Color.Red);
+                        worksheet.Cells[row, 14].Style.Font.Bold = true;
                     }
                     else
                     {
-                        worksheet.Cells[row, 12].Value = "Normal";
+                        worksheet.Cells[row, 14].Value = "Normal";
                     }
 
                     // Dejar en blanco para observaciones
-                    worksheet.Cells[row, 13].Value = "";
+                    worksheet.Cells[row, 15].Value = "";
 
                     // Resaltar filas con stock bajo
                     if (producto.CantidadEnInventario <= producto.StockMinimo)
                     {
-                        var rowStyle = worksheet.Cells[row, 1, row, 13];
+                        var rowStyle = worksheet.Cells[row, 1, row, 15];
                         rowStyle.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         rowStyle.Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.LightPink);
                     }
@@ -1652,13 +1765,13 @@ namespace GestionLlantera.Web.Controllers
                     // Alternar colores de fila para mejor legibilidad
                     if (i % 2 == 0 && producto.CantidadEnInventario > producto.StockMinimo)
                     {
-                        var rowStyle = worksheet.Cells[row, 1, row, 13];
+                        var rowStyle = worksheet.Cells[row, 1, row, 15];
                         rowStyle.Style.Fill.PatternType = ExcelFillStyle.Solid;
                         rowStyle.Style.Fill.BackgroundColor.SetColor(SystemDrawing.Color.WhiteSmoke);
                     }
 
                     // Aplicar bordes a todas las celdas
-                    var rowRange = worksheet.Cells[row, 1, row, 13];
+                    var rowRange = worksheet.Cells[row, 1, row, 15];
                     rowRange.Style.Border.Top.Style = ExcelBorderStyle.Thin;
                     rowRange.Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
                     rowRange.Style.Border.Left.Style = ExcelBorderStyle.Thin;
@@ -1670,21 +1783,21 @@ namespace GestionLlantera.Web.Controllers
                 // Agregar totales
                 currentRow = lastDataRow + 2;
 
-                worksheet.Cells[currentRow, 8].Value = "TOTAL UNIDADES:";
-                worksheet.Cells[currentRow, 8].Style.Font.Bold = true;
-                worksheet.Cells[currentRow, 8].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
-
-                worksheet.Cells[currentRow, 9].Formula = $"SUM(I{dataStartRow}:I{lastDataRow})";
-                worksheet.Cells[currentRow, 9].Style.Font.Bold = true;
-                worksheet.Cells[currentRow, 9].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-
-                worksheet.Cells[currentRow, 10].Formula = $"SUM(J{dataStartRow}:J{lastDataRow})";
+                worksheet.Cells[currentRow, 10].Value = "TOTAL UNIDADES:";
                 worksheet.Cells[currentRow, 10].Style.Font.Bold = true;
-                worksheet.Cells[currentRow, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                worksheet.Cells[currentRow, 10].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
 
                 worksheet.Cells[currentRow, 11].Formula = $"SUM(K{dataStartRow}:K{lastDataRow})";
                 worksheet.Cells[currentRow, 11].Style.Font.Bold = true;
                 worksheet.Cells[currentRow, 11].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                worksheet.Cells[currentRow, 12].Formula = $"SUM(L{dataStartRow}:L{lastDataRow})";
+                worksheet.Cells[currentRow, 12].Style.Font.Bold = true;
+                worksheet.Cells[currentRow, 12].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                worksheet.Cells[currentRow, 13].Formula = $"SUM(M{dataStartRow}:M{lastDataRow})";
+                worksheet.Cells[currentRow, 13].Style.Font.Bold = true;
+                worksheet.Cells[currentRow, 13].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
 
                 // Agregar sección para firmas
                 currentRow += 3;
@@ -1729,8 +1842,8 @@ namespace GestionLlantera.Web.Controllers
                 // Desproteger las celdas que el usuario debe completar
                 for (int i = dataStartRow; i <= lastDataRow; i++)
                 {
-                    worksheet.Cells[i, 10].Style.Locked = false; // Cantidad física
-                    worksheet.Cells[i, 13].Style.Locked = false; // Observaciones
+                    worksheet.Cells[i, 12].Style.Locked = false; // Cantidad física
+                    worksheet.Cells[i, 15].Style.Locked = false; // Observaciones
                 }
 
                 // Autoajustar columnas
@@ -1738,8 +1851,10 @@ namespace GestionLlantera.Web.Controllers
 
                 // Establecer anchos mínimos para algunas columnas
                 worksheet.Column(3).Width = 30; // Producto
-                worksheet.Column(8).Width = 25; // Ubicación
-                worksheet.Column(13).Width = 30; // Observaciones
+                worksheet.Column(8).Width = 15; // Tipo de Terreno
+                worksheet.Column(9).Width = 10; // Capas
+                worksheet.Column(10).Width = 25; // Ubicación
+                worksheet.Column(15).Width = 30; // Observaciones
 
                 // Establecer zoom de la hoja
                 worksheet.View.ZoomScale = 100;
@@ -1751,8 +1866,8 @@ namespace GestionLlantera.Web.Controllers
                 worksheet.PrinterSettings.FitToHeight = 0;
 
                 // En lugar de usar new ExcelAddress(), especificar las filas como enteros
-                worksheet.PrinterSettings.RepeatRows = worksheet.Cells[headerRow, 1, headerRow, 13];
-                worksheet.PrinterSettings.PrintArea = worksheet.Cells[1, 1, currentRow, 13];
+                worksheet.PrinterSettings.RepeatRows = worksheet.Cells[headerRow, 1, headerRow, 15];
+                worksheet.PrinterSettings.PrintArea = worksheet.Cells[1, 1, currentRow, 15];
 
                 // Generar el archivo en memoria
                 var stream = new MemoryStream();
