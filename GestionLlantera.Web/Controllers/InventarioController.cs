@@ -898,6 +898,9 @@ namespace GestionLlantera.Web.Controllers
         [HttpGet]
         public async Task<IActionResult> ExportarPDF(string responsable = "", string solicitante = "", string fechaLimite = "")
         {
+            MemoryStream memoryStream = null;
+            iTextSharp.text.pdf.PdfWriter writer = null;
+
             try
             {
                 // ✅ RESTRICCIÓN PARA EXPORTAR
@@ -985,26 +988,16 @@ namespace GestionLlantera.Web.Controllers
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
                 // Crear documento PDF con inicialización explícita
-                var memoryStream = new MemoryStream();
+                memoryStream = new MemoryStream();
 
                 // Crear el documento con PageSize usando la referencia completa
                 var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
 
                 // Obtener PdfWriter con referencia explícita
-                iTextSharp.text.pdf.PdfWriter writer = null;
-                try
-                {
-                    writer = iTextSharp.text.pdf.PdfWriter.GetInstance(document, memoryStream);
+                writer = iTextSharp.text.pdf.PdfWriter.GetInstance(document, memoryStream);
 
-                    // Agregar eventos de encabezado y pie de página
-                    writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error al crear PdfWriter para inventario PDF");
-                    memoryStream?.Dispose();
-                    throw;
-                }
+                // Agregar eventos de encabezado y pie de página
+                writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
 
                 // Metadatos
                 document.AddTitle("Formato para Toma Física de Inventario");
