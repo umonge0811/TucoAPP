@@ -3384,11 +3384,19 @@ function renderizarProductos() {
             });
 
             productosFiltrados = productosInventario;
+
+            // ✅ ORDENAR POR MEDIDAS AL CARGAR
+            ordenarProductosPorMedidas();
         }
 
         $('#loadingProductos').hide();
         $('#productosLista').show();
         $('#estadoVacio').hide();
+
+        // ✅ POBLAR FILTROS DE LLANTAS AL CARGAR
+        setTimeout(() => {
+            poblarFiltrosLlantas();
+        }, 500);
 
         console.log('✅ Productos renderizados correctamente con filtros preservados');
 
@@ -3993,6 +4001,11 @@ function limpiarFiltros() {
 
     // Aplicar filtros vacíos
     filtrarProductos('', '', '');
+
+    // ✅ ORDENAR POR MEDIDAS DESPUÉS DE LIMPIAR
+    setTimeout(() => {
+        ordenarProductosPorMedidas();
+    }, 100);
 
     console.log('🧹 Filtros limpiados');
 }
@@ -7537,7 +7550,7 @@ function aplicarFiltrosLlantas() {
 
             // Filtro de tipo de terreno
             if (filtrosLlantasActivos.tipoTerreno) {
-                if (!tipoTerreno || tipoTerreno === '-' || tipoTerreno === 'N/A' || 
+                if (!tipoTerreno || tipoTerreno === '-' || tipoTerreno === 'N/A' ||
                     tipoTerreno !== filtrosLlantasActivos.tipoTerreno) {
                     mostrar = false;
                 }
@@ -7549,6 +7562,11 @@ function aplicarFiltrosLlantas() {
                 $fila.hide();
             }
         });
+
+        // ✅ MANTENER ORDENAMIENTO DESPUÉS DE FILTRAR
+        setTimeout(() => {
+            ordenarProductosPorMedidas();
+        }, 50);
 
         const visibles = $('#tablaProductosBody tr:visible').length;
         console.log(`✅ Filtros aplicados. Productos visibles: ${visibles}`);
@@ -7562,22 +7580,7 @@ function aplicarFiltrosLlantas() {
 // =====================================
 
 $(document).ready(function () {
-    // Mostrar/ocultar filtros de llantas según el tipo
-    $('#filtroTipo').on('change', function () {
-        const tipo = $(this).val();
-        if (tipo === 'llanta') {
-            $('#filtrosLlantas').slideDown();
-            poblarFiltrosLlantas();
-        } else {
-            $('#filtrosLlantas').slideUp();
-            // Limpiar filtros de llantas
-            filtrosLlantasActivos = { ancho: '', perfil: '', diametro: '', tipoTerreno: '' };
-            $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno').val('');
-            $('#tablaProductosBody tr').show();
-        }
-    });
-
-    // Event listeners para filtros en cascada
+    // ✅ Event listeners para filtros en cascada (siempre activos)
     $('#filterAncho').on('change', function () {
         filtrosLlantasActivos.ancho = $(this).val();
         actualizarFiltrosCascada();
@@ -7607,6 +7610,12 @@ $(document).ready(function () {
         $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno').val('');
         poblarFiltrosLlantas();
         $('#tablaProductosBody tr').show();
+
+        // ✅ REORDENAR DESPUÉS DE LIMPIAR
+        setTimeout(() => {
+            ordenarProductosPorMedidas();
+        }, 100);
+
         console.log('🧹 Filtros de llantas limpiados');
     });
 });
