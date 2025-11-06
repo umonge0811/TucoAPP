@@ -2,19 +2,17 @@ using GestionLlantera.Web.Extensions;
 using GestionLlantera.Web.Models.ViewModels;
 using GestionLlantera.Web.Services;
 using GestionLlantera.Web.Services.Interfaces;
+using iTextSharp.text;
 using iTextSharp.text.html.simpleparser;
 using iTextSharp.text.pdf;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Security.Claims;
 using Tuco.Clases.DTOs.Inventario;
-using Tuco.Clases.DTOs.Inventario;
-using IText = iTextSharp.text; // Renombrado para evitar ambigüedades
-using SystemDrawing = System.Drawing; // Renombrado para evitar ambigüedades
+using SystemDrawing = System.Drawing; // Renombrado solo para System.Drawing
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using OfficeOpenXml;
@@ -987,14 +985,14 @@ namespace GestionLlantera.Web.Controllers
                 // Identificador único para el inventario
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
-                // Crear documento PDF con inicialización explícita
+                // Crear documento PDF
                 memoryStream = new MemoryStream();
 
-                // Crear el documento con PageSize usando la referencia completa
-                var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
+                // Crear el documento (usando clases directas sin alias)
+                var document = new Document(PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
 
-                // Obtener PdfWriter con referencia explícita
-                writer = iTextSharp.text.pdf.PdfWriter.GetInstance(document, memoryStream);
+                // Obtener PdfWriter
+                writer = PdfWriter.GetInstance(document, memoryStream);
 
                 // Agregar eventos de encabezado y pie de página
                 writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
@@ -1011,29 +1009,29 @@ namespace GestionLlantera.Web.Controllers
                 document.Open();
 
                 // Fuentes
-                var titleFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 16, new IText.BaseColor(255, 255, 255));
-                var subtitleFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 12, IText.BaseColor.BLACK);
-                var normalFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 10, IText.BaseColor.BLACK);
-                var smallFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 8, IText.BaseColor.BLACK);
-                var headerFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 10, new IText.BaseColor(255, 255, 255));
-                var tableFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 9, IText.BaseColor.BLACK);
-                var tableBoldFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 9, IText.BaseColor.BLACK);
-                var alertFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 9, IText.BaseColor.RED);
+                var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 16, new BaseColor(255, 255, 255));
+                var subtitleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.BLACK);
+                var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 10, BaseColor.BLACK);
+                var smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
+                var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, new BaseColor(255, 255, 255));
+                var tableFont = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
+                var tableBoldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
+                var alertFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.RED);
 
                 // Colores
-                IText.BaseColor headerColor = new IText.BaseColor(48, 84, 150);
-                IText.BaseColor lightGrayColor = new IText.BaseColor(240, 240, 240);
-                IText.BaseColor lightPinkColor = new IText.BaseColor(255, 200, 200);
-                IText.BaseColor lightYellowColor = new IText.BaseColor(255, 255, 200);
+                BaseColor headerColor = new BaseColor(48, 84, 150);
+                BaseColor lightGrayColor = new BaseColor(240, 240, 240);
+                BaseColor lightPinkColor = new BaseColor(255, 200, 200);
+                BaseColor lightYellowColor = new BaseColor(255, 255, 200);
 
                 // Título principal con fondo
                 PdfPTable titleTable = new PdfPTable(1);
                 titleTable.WidthPercentage = 100;
                 titleTable.SpacingAfter = 10f;
 
-                PdfPCell titleCell = new PdfPCell(new IText.Phrase("FORMATO PARA TOMA DE INVENTARIO FÍSICO", titleFont));
+                PdfPCell titleCell = new PdfPCell(new Phrase("FORMATO PARA TOMA DE INVENTARIO FÍSICO", titleFont));
                 titleCell.BackgroundColor = headerColor;
-                titleCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                titleCell.HorizontalAlignment = Element.ALIGN_CENTER;
                 titleCell.PaddingTop = 10f;
                 titleCell.PaddingBottom = 10f;
                 titleCell.BorderWidth = 0;
@@ -1078,7 +1076,7 @@ namespace GestionLlantera.Web.Controllers
                 instructionsTable.WidthPercentage = 100;
                 instructionsTable.SpacingAfter = 15f;
 
-                PdfPCell instructionsTitleCell = new PdfPCell(new IText.Phrase("INSTRUCCIONES", tableBoldFont));
+                PdfPCell instructionsTitleCell = new PdfPCell(new Phrase("INSTRUCCIONES", tableBoldFont));
                 instructionsTitleCell.BackgroundColor = lightGrayColor;
                 instructionsTitleCell.PaddingTop = 5f;
                 instructionsTitleCell.PaddingBottom = 5f;
@@ -1091,11 +1089,11 @@ namespace GestionLlantera.Web.Controllers
                 instructionsCell.PaddingLeft = 5f;
                 instructionsCell.PaddingRight = 5f;
 
-                IText.Paragraph instructions = new IText.Paragraph();
-                instructions.Add(new IText.Chunk("1. Verifique la cantidad física de cada producto y anótela en la columna 'Cantidad Física'.\n", tableFont));
-                instructions.Add(new IText.Chunk("2. En caso de discrepancias, anote las observaciones en la columna correspondiente.\n", tableFont));
-                instructions.Add(new IText.Chunk("3. Los productos marcados en rojo tienen un stock por debajo del mínimo requerido.\n", tableFont));
-                instructions.Add(new IText.Chunk("4. Al finalizar el conteo, firme el documento y entreguelo al supervisor correspondiente.", tableFont));
+                Paragraph instructions = new Paragraph();
+                instructions.Add(new Chunk("1. Verifique la cantidad física de cada producto y anótela en la columna 'Cantidad Física'.\n", tableFont));
+                instructions.Add(new Chunk("2. En caso de discrepancias, anote las observaciones en la columna correspondiente.\n", tableFont));
+                instructions.Add(new Chunk("3. Los productos marcados en rojo tienen un stock por debajo del mínimo requerido.\n", tableFont));
+                instructions.Add(new Chunk("4. Al finalizar el conteo, firme el documento y entreguelo al supervisor correspondiente.", tableFont));
 
                 instructionsCell.AddElement(instructions);
                 instructionsTable.AddCell(instructionsCell);
@@ -1128,7 +1126,7 @@ namespace GestionLlantera.Web.Controllers
                 foreach (var producto in productos)
                 {
                     // Determinar si la fila debe tener fondo alternado
-                    IText.BaseColor rowColor = null;
+                    BaseColor rowColor = null;
                     if (producto.CantidadEnInventario <= producto.StockMinimo)
                     {
                         rowColor = lightPinkColor;
@@ -1156,7 +1154,7 @@ namespace GestionLlantera.Web.Controllers
 
                     // Nombre del producto
                     PdfPCell productNameCell = CreateDataCell(producto.NombreProducto, tableBoldFont, rowColor);
-                    productNameCell.HorizontalAlignment = IText.Element.ALIGN_LEFT;
+                    productNameCell.HorizontalAlignment = Element.ALIGN_LEFT;
                     productTable.AddCell(productNameCell);
 
                     // Medidas (para llantas) - Soportar formato con y sin perfil
@@ -1220,22 +1218,22 @@ namespace GestionLlantera.Web.Controllers
 
                     // Cantidad en sistema
                     PdfPCell stockCell = CreateDataCell(producto.CantidadEnInventario.ToString(), tableFont, rowColor);
-                    stockCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                    stockCell.HorizontalAlignment = Element.ALIGN_CENTER;
                     productTable.AddCell(stockCell);
 
                     // Cantidad física (en blanco para llenar manualmente)
                     PdfPCell fisicaCell = CreateDataCell("_______", tableFont, lightYellowColor);
-                    fisicaCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                    fisicaCell.HorizontalAlignment = Element.ALIGN_CENTER;
                     productTable.AddCell(fisicaCell);
 
                     // Diferencia (en blanco para calcular manualmente)
                     PdfPCell diffCell = CreateDataCell("_______", tableFont, rowColor);
-                    diffCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                    diffCell.HorizontalAlignment = Element.ALIGN_CENTER;
                     productTable.AddCell(diffCell);
 
                     // Estado
                     string estado = producto.CantidadEnInventario <= producto.StockMinimo ? "STOCK BAJO" : "Normal";
-                    IText.Font estadoFont = producto.CantidadEnInventario <= producto.StockMinimo ? alertFont : tableFont;
+                    Font estadoFont = producto.CantidadEnInventario <= producto.StockMinimo ? alertFont : tableFont;
                     productTable.AddCell(CreateDataCell(estado, estadoFont, rowColor));
 
                     // Observaciones (celda en blanco)
@@ -1247,7 +1245,7 @@ namespace GestionLlantera.Web.Controllers
                 // Sección de totales
                 PdfPTable totalsTable = new PdfPTable(6);
                 totalsTable.WidthPercentage = 60;
-                totalsTable.HorizontalAlignment = IText.Element.ALIGN_RIGHT;
+                totalsTable.HorizontalAlignment = Element.ALIGN_RIGHT;
                 totalsTable.SpacingAfter = 20f;
 
                 totalsTable.AddCell(CreateInfoCell("Total Productos:", tableBoldFont));
@@ -1269,76 +1267,76 @@ namespace GestionLlantera.Web.Controllers
                 signaturesTable.WidthPercentage = 100;
                 signaturesTable.SpacingBefore = 30f;
 
-                PdfPCell elaboradoTitle = new PdfPCell(new IText.Phrase("ELABORADO POR:", tableBoldFont));
-                elaboradoTitle.Border = IText.Rectangle.NO_BORDER;
-                elaboradoTitle.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell elaboradoTitle = new PdfPCell(new Phrase("ELABORADO POR:", tableBoldFont));
+                elaboradoTitle.Border = Rectangle.NO_BORDER;
+                elaboradoTitle.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(elaboradoTitle);
 
-                PdfPCell revisadoTitle = new PdfPCell(new IText.Phrase("REVISADO POR:", tableBoldFont));
-                revisadoTitle.Border = IText.Rectangle.NO_BORDER;
-                revisadoTitle.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell revisadoTitle = new PdfPCell(new Phrase("REVISADO POR:", tableBoldFont));
+                revisadoTitle.Border = Rectangle.NO_BORDER;
+                revisadoTitle.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(revisadoTitle);
 
-                PdfPCell aprobadoTitle = new PdfPCell(new IText.Phrase("APROBADO POR:", tableBoldFont));
-                aprobadoTitle.Border = IText.Rectangle.NO_BORDER;
-                aprobadoTitle.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell aprobadoTitle = new PdfPCell(new Phrase("APROBADO POR:", tableBoldFont));
+                aprobadoTitle.Border = Rectangle.NO_BORDER;
+                aprobadoTitle.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(aprobadoTitle);
 
                 // Espacio para firmas
-                PdfPCell elaboradoSpace = new PdfPCell(new IText.Phrase(" "));
-                elaboradoSpace.Border = IText.Rectangle.NO_BORDER;
+                PdfPCell elaboradoSpace = new PdfPCell(new Phrase(" "));
+                elaboradoSpace.Border = Rectangle.NO_BORDER;
                 elaboradoSpace.FixedHeight = 40f;
                 signaturesTable.AddCell(elaboradoSpace);
 
-                PdfPCell revisadoSpace = new PdfPCell(new IText.Phrase(" "));
-                revisadoSpace.Border = IText.Rectangle.NO_BORDER;
+                PdfPCell revisadoSpace = new PdfPCell(new Phrase(" "));
+                revisadoSpace.Border = Rectangle.NO_BORDER;
                 revisadoSpace.FixedHeight = 40f;
                 signaturesTable.AddCell(revisadoSpace);
 
-                PdfPCell aprobadoSpace = new PdfPCell(new IText.Phrase(" "));
-                aprobadoSpace.Border = IText.Rectangle.NO_BORDER;
+                PdfPCell aprobadoSpace = new PdfPCell(new Phrase(" "));
+                aprobadoSpace.Border = Rectangle.NO_BORDER;
                 aprobadoSpace.FixedHeight = 40f;
                 signaturesTable.AddCell(aprobadoSpace);
 
                 // Líneas para firma
-                PdfPCell elaboradoLine = new PdfPCell(new IText.Phrase("_______________________"));
-                elaboradoLine.Border = IText.Rectangle.NO_BORDER;
-                elaboradoLine.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell elaboradoLine = new PdfPCell(new Phrase("_______________________"));
+                elaboradoLine.Border = Rectangle.NO_BORDER;
+                elaboradoLine.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(elaboradoLine);
 
-                PdfPCell revisadoLine = new PdfPCell(new IText.Phrase("_______________________"));
-                revisadoLine.Border = IText.Rectangle.NO_BORDER;
-                revisadoLine.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell revisadoLine = new PdfPCell(new Phrase("_______________________"));
+                revisadoLine.Border = Rectangle.NO_BORDER;
+                revisadoLine.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(revisadoLine);
 
-                PdfPCell aprobadoLine = new PdfPCell(new IText.Phrase("_______________________"));
-                aprobadoLine.Border = IText.Rectangle.NO_BORDER;
-                aprobadoLine.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell aprobadoLine = new PdfPCell(new Phrase("_______________________"));
+                aprobadoLine.Border = Rectangle.NO_BORDER;
+                aprobadoLine.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(aprobadoLine);
 
                 // Nombre y firma
-                PdfPCell elaboradoName = new PdfPCell(new IText.Phrase("Nombre y Firma", smallFont));
-                elaboradoName.Border = IText.Rectangle.NO_BORDER;
-                elaboradoName.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell elaboradoName = new PdfPCell(new Phrase("Nombre y Firma", smallFont));
+                elaboradoName.Border = Rectangle.NO_BORDER;
+                elaboradoName.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(elaboradoName);
 
-                PdfPCell revisadoName = new PdfPCell(new IText.Phrase("Nombre y Firma", smallFont));
-                revisadoName.Border = IText.Rectangle.NO_BORDER;
-                revisadoName.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell revisadoName = new PdfPCell(new Phrase("Nombre y Firma", smallFont));
+                revisadoName.Border = Rectangle.NO_BORDER;
+                revisadoName.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(revisadoName);
 
-                PdfPCell aprobadoName = new PdfPCell(new IText.Phrase("Nombre y Firma", smallFont));
-                aprobadoName.Border = IText.Rectangle.NO_BORDER;
-                aprobadoName.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell aprobadoName = new PdfPCell(new Phrase("Nombre y Firma", smallFont));
+                aprobadoName.Border = Rectangle.NO_BORDER;
+                aprobadoName.HorizontalAlignment = Element.ALIGN_CENTER;
                 signaturesTable.AddCell(aprobadoName);
 
                 document.Add(signaturesTable);
 
                 // Aviso de pie de página
-                IText.Paragraph disclaimer = new IText.Paragraph();
+                Paragraph disclaimer = new Paragraph();
                 disclaimer.SpacingBefore = 50f;
-                disclaimer.Add(new IText.Chunk("Este documento es oficial para la toma física de inventario. Cualquier alteración o falsificación constituye una falta grave.", smallFont));
-                disclaimer.Alignment = IText.Element.ALIGN_CENTER;
+                disclaimer.Add(new Chunk("Este documento es oficial para la toma física de inventario. Cualquier alteración o falsificación constituye una falta grave.", smallFont));
+                disclaimer.Alignment = Element.ALIGN_CENTER;
                 document.Add(disclaimer);
 
                 // Cerrar documento antes de leer el stream
@@ -1380,12 +1378,12 @@ namespace GestionLlantera.Web.Controllers
         }
 
         // Métodos de ayuda para crear celdas - actualizados con los nuevos tipos
-        private PdfPCell CreateHeaderCell(string text, IText.Font font)
+        private PdfPCell CreateHeaderCell(string text, Font font)
         {
-            PdfPCell cell = new PdfPCell(new IText.Phrase(text, font));
-            cell.BackgroundColor = new IText.BaseColor(48, 84, 150);
-            cell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
-            cell.VerticalAlignment = IText.Element.ALIGN_MIDDLE;
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
+            cell.BackgroundColor = new BaseColor(48, 84, 150);
+            cell.HorizontalAlignment = Element.ALIGN_CENTER;
+            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
             cell.PaddingTop = 5f;
             cell.PaddingBottom = 5f;
             cell.PaddingLeft = 3f;
@@ -1393,15 +1391,15 @@ namespace GestionLlantera.Web.Controllers
             return cell;
         }
 
-        private PdfPCell CreateDataCell(string text, IText.Font font, IText.BaseColor backgroundColor = null)
+        private PdfPCell CreateDataCell(string text, Font font, BaseColor backgroundColor = null)
         {
-            PdfPCell cell = new PdfPCell(new IText.Phrase(text, font));
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
             if (backgroundColor != null)
             {
                 cell.BackgroundColor = backgroundColor;
             }
-            cell.HorizontalAlignment = IText.Element.ALIGN_LEFT;
-            cell.VerticalAlignment = IText.Element.ALIGN_MIDDLE;
+            cell.HorizontalAlignment = Element.ALIGN_LEFT;
+            cell.VerticalAlignment = Element.ALIGN_MIDDLE;
             cell.PaddingTop = 4f;
             cell.PaddingBottom = 4f;
             cell.PaddingLeft = 3f;
@@ -1409,11 +1407,11 @@ namespace GestionLlantera.Web.Controllers
             return cell;
         }
 
-        private PdfPCell CreateInfoCell(string text, IText.Font font)
+        private PdfPCell CreateInfoCell(string text, Font font)
         {
-            PdfPCell cell = new PdfPCell(new IText.Phrase(text, font));
-            cell.Border = IText.Rectangle.BOX;
-            cell.BorderColor = IText.BaseColor.LIGHT_GRAY;
+            PdfPCell cell = new PdfPCell(new Phrase(text, font));
+            cell.Border = Rectangle.BOX;
+            cell.BorderColor = BaseColor.LIGHT_GRAY;
             cell.BorderWidth = 0.5f;
             cell.PaddingTop = 5f;
             cell.PaddingBottom = 5f;
@@ -1428,8 +1426,8 @@ namespace GestionLlantera.Web.Controllers
             private readonly string _responsable;
             private readonly string _solicitante;
             private readonly string _idInventario;
-            private readonly IText.Font _smallFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA, 8, IText.BaseColor.DARK_GRAY);
-            private readonly IText.Font _headerFont = IText.FontFactory.GetFont(IText.FontFactory.HELVETICA_BOLD, 8, IText.BaseColor.DARK_GRAY);
+            private readonly Font _smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8, BaseColor.DARK_GRAY);
+            private readonly Font _headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.DARK_GRAY);
 
             public InventarioPdfPageEvent(string responsable, string solicitante, string idInventario)
             {
@@ -1438,7 +1436,7 @@ namespace GestionLlantera.Web.Controllers
                 _idInventario = idInventario;
             }
 
-            public override void OnEndPage(PdfWriter writer, IText.Document document)
+            public override void OnEndPage(PdfWriter writer, Document document)
             {
                 // Encabezado
                 /*
@@ -1446,7 +1444,7 @@ namespace GestionLlantera.Web.Controllers
                 string logoPath = Path.Combine(_webHostEnvironment.WebRootPath, "images", "logo.png");
                 if (File.Exists(logoPath))
                 {
-                    IText.Image logo = IText.Image.GetInstance(logoPath);
+                    Image logo = Image.GetInstance(logoPath);
                     logo.ScaleToFit(100f, 40f);
                     logo.SetAbsolutePosition(document.LeftMargin, document.PageSize.Height - 50);
                     writer.DirectContent.AddImage(logo);
@@ -1455,20 +1453,20 @@ namespace GestionLlantera.Web.Controllers
 
                 PdfPTable headerTable = new PdfPTable(3);
                 headerTable.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
-                headerTable.DefaultCell.Border = IText.Rectangle.NO_BORDER;
+                headerTable.DefaultCell.Border = Rectangle.NO_BORDER;
 
-                PdfPCell logoCell = new PdfPCell(new IText.Phrase("LLANTERA XYZ", _headerFont));
-                logoCell.Border = IText.Rectangle.NO_BORDER;
+                PdfPCell logoCell = new PdfPCell(new Phrase("LLANTERA XYZ", _headerFont));
+                logoCell.Border = Rectangle.NO_BORDER;
                 headerTable.AddCell(logoCell);
 
-                PdfPCell titleCell = new PdfPCell(new IText.Phrase("FORMATO PARA TOMA FÍSICA DE INVENTARIO", _headerFont));
-                titleCell.Border = IText.Rectangle.NO_BORDER;
-                titleCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell titleCell = new PdfPCell(new Phrase("FORMATO PARA TOMA FÍSICA DE INVENTARIO", _headerFont));
+                titleCell.Border = Rectangle.NO_BORDER;
+                titleCell.HorizontalAlignment = Element.ALIGN_CENTER;
                 headerTable.AddCell(titleCell);
 
-                PdfPCell pageCell = new PdfPCell(new IText.Phrase($"Página {writer.PageNumber}", _smallFont));
-                pageCell.Border = IText.Rectangle.NO_BORDER;
-                pageCell.HorizontalAlignment = IText.Element.ALIGN_RIGHT;
+                PdfPCell pageCell = new PdfPCell(new Phrase($"Página {writer.PageNumber}", _smallFont));
+                pageCell.Border = Rectangle.NO_BORDER;
+                pageCell.HorizontalAlignment = Element.ALIGN_RIGHT;
                 headerTable.AddCell(pageCell);
 
                 headerTable.WriteSelectedRows(0, -1, document.LeftMargin, document.PageSize.Height - 10, writer.DirectContent);
@@ -1476,20 +1474,20 @@ namespace GestionLlantera.Web.Controllers
                 // Pie de página
                 PdfPTable footerTable = new PdfPTable(3);
                 footerTable.TotalWidth = document.PageSize.Width - document.LeftMargin - document.RightMargin;
-                footerTable.DefaultCell.Border = IText.Rectangle.NO_BORDER;
+                footerTable.DefaultCell.Border = Rectangle.NO_BORDER;
 
-                PdfPCell idCell = new PdfPCell(new IText.Phrase($"ID Inventario: {_idInventario}", _smallFont));
-                idCell.Border = IText.Rectangle.NO_BORDER;
+                PdfPCell idCell = new PdfPCell(new Phrase($"ID Inventario: {_idInventario}", _smallFont));
+                idCell.Border = Rectangle.NO_BORDER;
                 footerTable.AddCell(idCell);
 
-                PdfPCell responsableCell = new PdfPCell(new IText.Phrase($"Responsable: {_responsable}", _smallFont));
-                responsableCell.Border = IText.Rectangle.NO_BORDER;
-                responsableCell.HorizontalAlignment = IText.Element.ALIGN_CENTER;
+                PdfPCell responsableCell = new PdfPCell(new Phrase($"Responsable: {_responsable}", _smallFont));
+                responsableCell.Border = Rectangle.NO_BORDER;
+                responsableCell.HorizontalAlignment = Element.ALIGN_CENTER;
                 footerTable.AddCell(responsableCell);
 
-                PdfPCell dateCell = new PdfPCell(new IText.Phrase($"Fecha: {DateTime.Now:dd/MM/yyyy}", _smallFont));
-                dateCell.Border = IText.Rectangle.NO_BORDER;
-                dateCell.HorizontalAlignment = IText.Element.ALIGN_RIGHT;
+                PdfPCell dateCell = new PdfPCell(new Phrase($"Fecha: {DateTime.Now:dd/MM/yyyy}", _smallFont));
+                dateCell.Border = Rectangle.NO_BORDER;
+                dateCell.HorizontalAlignment = Element.ALIGN_RIGHT;
                 footerTable.AddCell(dateCell);
 
                 footerTable.WriteSelectedRows(0, -1, document.LeftMargin, document.BottomMargin, writer.DirectContent);
