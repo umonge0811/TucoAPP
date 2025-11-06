@@ -930,40 +930,55 @@ namespace GestionLlantera.Web.Controllers
                 // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
                 var productos = await _inventarioService.ObtenerProductosAsync(token);
 
-                // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Igual que en Index
+                // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Replicando lógica JavaScript de Index
                 productos = productos.OrderBy(p =>
                 {
-                    if (p.Llanta == null || p.Llanta.Diametro == null || !p.Llanta.Ancho.HasValue)
-                    {
-                        return "ZZZZZ"; // Productos sin medidas al final
-                    }
+                    // Construir el texto de medidas exactamente como se muestra en la tabla
+                    string texto = "";
 
-                    try
+                    if (p.Llanta != null && p.Llanta.Ancho.HasValue)
                     {
-                        // Extraer número del RIN (ej: "14" de "R14" o "14")
-                        int rin = 0;
-                        string diametroStr = p.Llanta.Diametro.Trim();
-                        if (diametroStr.StartsWith("R", StringComparison.OrdinalIgnoreCase))
+                        if (p.Llanta.Perfil.HasValue)
                         {
-                            int.TryParse(diametroStr.Substring(1), out rin);
+                            string perfilFormateado = (p.Llanta.Perfil.Value % 1 == 0)
+                                ? p.Llanta.Perfil.Value.ToString("0")
+                                : p.Llanta.Perfil.Value.ToString("0.00");
+                            texto = $"{p.Llanta.Ancho}/{perfilFormateado}/R{p.Llanta.Diametro}";
                         }
                         else
                         {
-                            int.TryParse(diametroStr, out rin);
+                            texto = $"{p.Llanta.Ancho}/R{p.Llanta.Diametro}";
                         }
+                    }
+                    else
+                    {
+                        texto = "N/A";
+                    }
 
-                        int ancho = (int)p.Llanta.Ancho.Value;
+                    // Aplicar la misma lógica del JavaScript obtenerValorMedidas()
+                    if (texto == "N/A" || texto == "-" || string.IsNullOrWhiteSpace(texto))
+                    {
+                        return "ZZZZ"; // Productos sin medidas al final (4 Z's como en JS)
+                    }
+
+                    // Extraer RIN y ANCHO usando regex como en JavaScript
+                    var rinMatch = System.Text.RegularExpressions.Regex.Match(texto, @"R(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    var anchoMatch = System.Text.RegularExpressions.Regex.Match(texto, @"^(\d+)");
+
+                    if (rinMatch.Success && anchoMatch.Success)
+                    {
+                        int numeroRin = int.Parse(rinMatch.Groups[1].Value);
+                        int numeroAncho = int.Parse(anchoMatch.Groups[1].Value);
 
                         // Formato: RIN (2 dígitos) + ANCHO (3 dígitos)
                         // Ejemplo: R14 con 185 = "14185"
-                        return rin.ToString("D2") + ancho.ToString("D3");
+                        return numeroRin.ToString("D2") + numeroAncho.ToString("D3");
                     }
-                    catch
-                    {
-                        return "ZZZZZ"; // En caso de error, al final
-                    }
+
+                    // Si no se puede parsear, retornar el texto en minúsculas (igual que JS)
+                    return texto.ToLower();
                 })
-                .ThenBy(p => p.ProductoId) // Ordenamiento secundario por ID para consistencia
+                .ThenBy(p => p.ProductoId) // Ordenamiento secundario por ID
                 .ToList();
 
                 // Identificador único para el inventario
@@ -1493,40 +1508,55 @@ namespace GestionLlantera.Web.Controllers
                 // 📤 OBTENER LOS DATOS DE PRODUCTOS CON TOKEN
                 var productos = await _inventarioService.ObtenerProductosAsync(token);
 
-                // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Igual que en Index
+                // 🔄 ORDENAR PRODUCTOS POR MEDIDAS (RIN y Ancho) - Replicando lógica JavaScript de Index
                 productos = productos.OrderBy(p =>
                 {
-                    if (p.Llanta == null || p.Llanta.Diametro == null || !p.Llanta.Ancho.HasValue)
-                    {
-                        return "ZZZZZ"; // Productos sin medidas al final
-                    }
+                    // Construir el texto de medidas exactamente como se muestra en la tabla
+                    string texto = "";
 
-                    try
+                    if (p.Llanta != null && p.Llanta.Ancho.HasValue)
                     {
-                        // Extraer número del RIN (ej: "14" de "R14" o "14")
-                        int rin = 0;
-                        string diametroStr = p.Llanta.Diametro.Trim();
-                        if (diametroStr.StartsWith("R", StringComparison.OrdinalIgnoreCase))
+                        if (p.Llanta.Perfil.HasValue)
                         {
-                            int.TryParse(diametroStr.Substring(1), out rin);
+                            string perfilFormateado = (p.Llanta.Perfil.Value % 1 == 0)
+                                ? p.Llanta.Perfil.Value.ToString("0")
+                                : p.Llanta.Perfil.Value.ToString("0.00");
+                            texto = $"{p.Llanta.Ancho}/{perfilFormateado}/R{p.Llanta.Diametro}";
                         }
                         else
                         {
-                            int.TryParse(diametroStr, out rin);
+                            texto = $"{p.Llanta.Ancho}/R{p.Llanta.Diametro}";
                         }
+                    }
+                    else
+                    {
+                        texto = "N/A";
+                    }
 
-                        int ancho = (int)p.Llanta.Ancho.Value;
+                    // Aplicar la misma lógica del JavaScript obtenerValorMedidas()
+                    if (texto == "N/A" || texto == "-" || string.IsNullOrWhiteSpace(texto))
+                    {
+                        return "ZZZZ"; // Productos sin medidas al final (4 Z's como en JS)
+                    }
+
+                    // Extraer RIN y ANCHO usando regex como en JavaScript
+                    var rinMatch = System.Text.RegularExpressions.Regex.Match(texto, @"R(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                    var anchoMatch = System.Text.RegularExpressions.Regex.Match(texto, @"^(\d+)");
+
+                    if (rinMatch.Success && anchoMatch.Success)
+                    {
+                        int numeroRin = int.Parse(rinMatch.Groups[1].Value);
+                        int numeroAncho = int.Parse(anchoMatch.Groups[1].Value);
 
                         // Formato: RIN (2 dígitos) + ANCHO (3 dígitos)
                         // Ejemplo: R14 con 185 = "14185"
-                        return rin.ToString("D2") + ancho.ToString("D3");
+                        return numeroRin.ToString("D2") + numeroAncho.ToString("D3");
                     }
-                    catch
-                    {
-                        return "ZZZZZ"; // En caso de error, al final
-                    }
+
+                    // Si no se puede parsear, retornar el texto en minúsculas (igual que JS)
+                    return texto.ToLower();
                 })
-                .ThenBy(p => p.ProductoId) // Ordenamiento secundario por ID para consistencia
+                .ThenBy(p => p.ProductoId) // Ordenamiento secundario por ID
                 .ToList();
 
 
