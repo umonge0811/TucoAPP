@@ -3384,11 +3384,19 @@ function renderizarProductos() {
             });
 
             productosFiltrados = productosInventario;
+
+            // ✅ ORDENAR POR MEDIDAS AL CARGAR
+            ordenarProductosPorMedidas();
         }
 
         $('#loadingProductos').hide();
         $('#productosLista').show();
         $('#estadoVacio').hide();
+
+        // ✅ POBLAR FILTROS DE LLANTAS AL CARGAR
+        setTimeout(() => {
+            poblarFiltrosLlantas();
+        }, 500);
 
         console.log('✅ Productos renderizados correctamente con filtros preservados');
 
@@ -3915,11 +3923,71 @@ function renderizarProductosFiltrados() {
         $('#productosLista').show();
         $('#estadoVacio').hide();
 
+        // ✅ ORDENAR POR MEDIDAS AL RENDERIZAR
+        ordenarProductosPorMedidas();
+
         console.log(`✅ Renderizados ${productosFiltrados.length} productos filtrados`);
 
     } catch (error) {
         console.error('❌ Error renderizando productos filtrados:', error);
     }
+}
+
+/**
+ * ✅ FUNCIÓN: Ordenar productos por medidas (igual que Index de Inventario)
+ */
+function ordenarProductosPorMedidas() {
+    try {
+        const tbody = $('#tablaProductosBody');
+        const filas = tbody.find('tr').toArray();
+
+        // Ordenar filas
+        filas.sort(function(a, b) {
+            const valorA = obtenerValorMedidas($(a));
+            const valorB = obtenerValorMedidas($(b));
+
+            return valorA.localeCompare(valorB);
+        });
+
+        // Reinsertar filas ordenadas
+        tbody.empty();
+        filas.forEach((fila, index) => {
+            // Actualizar el número de orden
+            $(fila).find('td:first').text(index + 1);
+            tbody.append(fila);
+        });
+
+        console.log('✅ Productos ordenados por medidas');
+    } catch (error) {
+        console.error('❌ Error ordenando productos:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Obtener valor de medidas para ordenamiento
+ */
+function obtenerValorMedidas(fila) {
+    // Obtener el texto de la columna de medidas (columna 3)
+    const texto = $(fila).find("td:eq(2)").text().trim();
+
+    if (texto === "N/A" || texto === "-" || !texto) {
+        return "ZZZZ"; // Poner al final los productos sin medida
+    }
+
+    // Extraer el RIN (R13, R14, R15, etc.)
+    const rin = texto.match(/R(\d+)/i);
+    const ancho = texto.match(/^(\d+)/);
+
+    if (rin && ancho) {
+        const numeroRin = parseInt(rin[1]);
+        const numeroAncho = parseInt(ancho[1]);
+
+        // Formato: RIN con 2 dígitos + ANCHO con 3 dígitos
+        // Ejemplo: R14 con 185 = "14185"
+        return numeroRin.toString().padStart(2, '0') + numeroAncho.toString().padStart(3, '0');
+    }
+
+    return texto.toLowerCase();
 }
 
 /**
@@ -3933,6 +4001,11 @@ function limpiarFiltros() {
 
     // Aplicar filtros vacíos
     filtrarProductos('', '', '');
+
+    // ✅ ORDENAR POR MEDIDAS DESPUÉS DE LIMPIAR
+    setTimeout(() => {
+        ordenarProductosPorMedidas();
+    }, 100);
 
     console.log('🧹 Filtros limpiados');
 }
@@ -7224,3 +7297,325 @@ window.verEstadoActual = function () {
     console.log('  ajustesPendientes:', ajustesPendientes ? ajustesPendientes.length : 'undefined');
     console.log('  estadisticasActuales:', estadisticasActuales);
 };
+// =====================================
+// FILTROS EN CASCADA PARA LLANTAS
+// =====================================
+
+// Variables globales para filtros de llantas
+let filtrosLlantasActivos = {
+    ancho: '',
+    perfil: '',
+    diametro: '',
+    tipoTerreno: ''
+};
+
+/**
+ * ✅ FUNCIÓN: Poblar filtros de llantas desde la tabla
+ */
+function poblarFiltrosLlantas() {
+    try {
+        console.log('📊 Poblando filtros de llantas...');
+
+        const valores = {
+            anchos: new Set(),
+            perfiles: new Set(),
+            diametros: new Set(),
+            tiposTerreno: new Set()
+        };
+
+        // Recorrer todas las filas de la tabla
+        $('#tablaProductosBody tr').each(function () {
+            const $fila = $(this);
+            
+            // Obtener el texto de la columna de medidas (columna 3: #, Producto, Medidas)
+            const medidasTexto = $fila.find('td:eq(2)').text().trim();
+
+            if (medidasTexto && medidasTexto !== '-' && medidasTexto !== 'N/A') {
+                // Parsear formato CON perfil: 175/70/R12
+                let match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+
+                if (match) {
+                    const [, ancho, perfil, diametro] = match;
+                    
+                    if (ancho) {
+                        const anchoNum = parseFloat(ancho);
+                        valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
+                    }
+                    
+                    if (perfil) {
+                        const perfilNum = parseFloat(perfil);
+                        valores.perfiles.add((perfilNum % 1 === 0) ? perfilNum.toString() : perfil);
+                    }
+                    
+                    if (diametro) {
+                        const diametroNum = parseFloat(diametro);
+                        valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
+                    }
+                } else {
+                    // Parsear formato SIN perfil: 700/R16
+                    match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                    
+                    if (match) {
+                        const [, ancho, diametro] = match;
+                        
+                        if (ancho) {
+                            const anchoNum = parseFloat(ancho);
+                            valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
+                        }
+                        
+                        if (diametro) {
+                            const diametroNum = parseFloat(diametro);
+                            valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
+                        }
+                    }
+                }
+            }
+
+            // Extraer Tipo de Terreno (columna 4)
+            const tipoTerreno = $fila.find('td:eq(3)').text().trim();
+            if (tipoTerreno && tipoTerreno !== '-' && tipoTerreno !== 'N/A') {
+                valores.tiposTerreno.add(tipoTerreno);
+            }
+        });
+
+        // Poblar selectores
+        const anchos = Array.from(valores.anchos).sort((a, b) => parseFloat(a) - parseFloat(b));
+        $('#filterAncho').html('<option value="">Todos</option>' +
+            anchos.map(ancho => `<option value="${ancho}">${ancho}</option>`).join(''));
+
+        const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+        $('#filterPerfil').html('<option value="">Todos</option>' +
+            perfiles.map(perfil => `<option value="${perfil}">${perfil}</option>`).join(''));
+
+        const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+        $('#filterDiametro').html('<option value="">Todos</option>' +
+            diametros.map(diametro => `<option value="${diametro}">R${diametro}"</option>`).join(''));
+
+        const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+        $('#filterTipoTerreno').html('<option value="">Todos</option>' +
+            tiposTerreno.map(tipo => `<option value="${tipo}">${tipo}</option>`).join(''));
+
+        console.log('✅ Filtros poblados:', {
+            anchos: anchos.length,
+            perfiles: perfiles.length,
+            diametros: diametros.length,
+            tiposTerreno: tiposTerreno.length
+        });
+    } catch (error) {
+        console.error('❌ Error poblando filtros:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Actualizar filtros en cascada
+ */
+function actualizarFiltrosCascada() {
+    try {
+        console.log('🔄 Actualizando filtros en cascada...');
+
+        const anchoSel = filtrosLlantasActivos.ancho;
+        const perfilSel = filtrosLlantasActivos.perfil;
+        const diametroSel = filtrosLlantasActivos.diametro;
+
+        // Si no hay filtros, restaurar todos
+        if (!anchoSel && !perfilSel && !diametroSel) {
+            poblarFiltrosLlantas();
+            return;
+        }
+
+        const valores = {
+            anchos: new Set(),
+            perfiles: new Set(),
+            diametros: new Set(),
+            tiposTerreno: new Set()
+        };
+
+        // Recorrer filas visibles
+        $('#tablaProductosBody tr:visible').each(function () {
+            const $fila = $(this);
+            const medidasTexto = $fila.find('td:eq(2)').text().trim();
+
+            if (!medidasTexto || medidasTexto === '-' || medidasTexto === 'N/A') return;
+
+            let match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+            let ancho, perfil, diametro;
+
+            if (match) {
+                [, ancho, perfil, diametro] = match;
+            } else {
+                match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                if (match) {
+                    [, ancho, diametro] = match;
+                    perfil = null;
+                }
+            }
+
+            // Verificar si cumple filtros
+            let cumple = true;
+            if (anchoSel && ancho != anchoSel) cumple = false;
+            if (perfilSel && perfil != perfilSel) cumple = false;
+            if (diametroSel && diametro != diametroSel) cumple = false;
+
+            if (cumple) {
+                if (ancho) {
+                    const anchoNum = parseFloat(ancho);
+                    valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
+                }
+                if (perfil) {
+                    const perfilNum = parseFloat(perfil);
+                    valores.perfiles.add((perfilNum % 1 === 0) ? perfilNum.toString() : perfil);
+                }
+                if (diametro) {
+                    const diametroNum = parseFloat(diametro);
+                    valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
+                }
+
+                const tipoTerreno = $fila.find('td:eq(3)').text().trim();
+                if (tipoTerreno && tipoTerreno !== '-') {
+                    valores.tiposTerreno.add(tipoTerreno);
+                }
+            }
+        });
+
+        // Actualizar selectores
+        if (!anchoSel) {
+            const anchos = Array.from(valores.anchos).sort((a, b) => parseFloat(a) - parseFloat(b));
+            $('#filterAncho').html('<option value="">Todos</option>' +
+                anchos.map(a => `<option value="${a}">${a}</option>`).join(''));
+        }
+
+        if (anchoSel || !perfilSel) {
+            const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+            $('#filterPerfil').html('<option value="">Todos</option>' +
+                perfiles.map(p => `<option value="${p}">${p}</option>`).join(''));
+            $('#filterPerfil').val(perfilSel);
+        }
+
+        if (anchoSel || perfilSel || !diametroSel) {
+            const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+            $('#filterDiametro').html('<option value="">Todos</option>' +
+                diametros.map(d => `<option value="${d}">R${d}"</option>`).join(''));
+            $('#filterDiametro').val(diametroSel);
+        }
+
+        if (anchoSel || perfilSel || diametroSel) {
+            const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+            $('#filterTipoTerreno').html('<option value="">Todos</option>' +
+                tiposTerreno.map(t => `<option value="${t}">${t}</option>`).join(''));
+        }
+
+        console.log('✅ Filtros en cascada actualizados');
+    } catch (error) {
+        console.error('❌ Error actualizando cascada:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Aplicar filtros de llantas
+ */
+function aplicarFiltrosLlantas() {
+    try {
+        console.log('🔍 Aplicando filtros de llantas:', filtrosLlantasActivos);
+
+        $('#tablaProductosBody tr').each(function () {
+            const $fila = $(this);
+            const medidasTexto = $fila.find('td:eq(2)').text().trim();
+            const tipoTerreno = $fila.find('td:eq(3)').text().trim();
+
+            let mostrar = true;
+
+            // Filtros de medidas
+            if (filtrosLlantasActivos.ancho || filtrosLlantasActivos.perfil || filtrosLlantasActivos.diametro) {
+                if (!medidasTexto || medidasTexto === '-' || medidasTexto === 'N/A') {
+                    mostrar = false;
+                } else {
+                    let match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                    let ancho, perfil, diametro;
+
+                    if (match) {
+                        [, ancho, perfil, diametro] = match;
+                    } else {
+                        match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                        if (match) {
+                            [, ancho, diametro] = match;
+                            perfil = null;
+                        }
+                    }
+
+                    if (filtrosLlantasActivos.ancho && ancho != filtrosLlantasActivos.ancho) mostrar = false;
+                    if (filtrosLlantasActivos.perfil && perfil != filtrosLlantasActivos.perfil) mostrar = false;
+                    if (filtrosLlantasActivos.diametro && diametro != filtrosLlantasActivos.diametro) mostrar = false;
+                }
+            }
+
+            // Filtro de tipo de terreno
+            if (filtrosLlantasActivos.tipoTerreno) {
+                if (!tipoTerreno || tipoTerreno === '-' || tipoTerreno === 'N/A' ||
+                    tipoTerreno !== filtrosLlantasActivos.tipoTerreno) {
+                    mostrar = false;
+                }
+            }
+
+            if (mostrar) {
+                $fila.show();
+            } else {
+                $fila.hide();
+            }
+        });
+
+        // ✅ MANTENER ORDENAMIENTO DESPUÉS DE FILTRAR
+        setTimeout(() => {
+            ordenarProductosPorMedidas();
+        }, 50);
+
+        const visibles = $('#tablaProductosBody tr:visible').length;
+        console.log(`✅ Filtros aplicados. Productos visibles: ${visibles}`);
+    } catch (error) {
+        console.error('❌ Error aplicando filtros:', error);
+    }
+}
+
+// =====================================
+// EVENT LISTENERS PARA FILTROS DE LLANTAS
+// =====================================
+
+$(document).ready(function () {
+    // ✅ Event listeners para filtros en cascada (siempre activos)
+    $('#filterAncho').on('change', function () {
+        filtrosLlantasActivos.ancho = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterPerfil').on('change', function () {
+        filtrosLlantasActivos.perfil = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterDiametro').on('change', function () {
+        filtrosLlantasActivos.diametro = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterTipoTerreno').on('change', function () {
+        filtrosLlantasActivos.tipoTerreno = $(this).val();
+        aplicarFiltrosLlantas();
+    });
+
+    // Limpiar filtros de llantas
+    $('#btnLimpiarFiltrosLlantas').on('click', function () {
+        filtrosLlantasActivos = { ancho: '', perfil: '', diametro: '', tipoTerreno: '' };
+        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno').val('');
+        poblarFiltrosLlantas();
+        $('#tablaProductosBody tr').show();
+
+        // ✅ REORDENAR DESPUÉS DE LIMPIAR
+        setTimeout(() => {
+            ordenarProductosPorMedidas();
+        }, 100);
+
+        console.log('🧹 Filtros de llantas limpiados');
+    });
+});
