@@ -984,13 +984,27 @@ namespace GestionLlantera.Web.Controllers
                 // Identificador único para el inventario
                 string idInventario = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(1000, 9999)}";
 
-                // Crear documento PDF
-                using var memoryStream = new MemoryStream();
-                var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
-                var writer = PdfWriter.GetInstance(document, memoryStream);
+                // Crear documento PDF con inicialización explícita
+                var memoryStream = new MemoryStream();
 
-                // Agregar eventos de encabezado y pie de página
-                writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
+                // Crear el documento con PageSize usando la referencia completa
+                var document = new IText.Document(IText.PageSize.A4.Rotate(), 10f, 10f, 10f, 10f);
+
+                // Obtener PdfWriter con referencia explícita
+                iTextSharp.text.pdf.PdfWriter writer = null;
+                try
+                {
+                    writer = iTextSharp.text.pdf.PdfWriter.GetInstance(document, memoryStream);
+
+                    // Agregar eventos de encabezado y pie de página
+                    writer.PageEvent = new InventarioPdfPageEvent(responsable, solicitante, idInventario);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error al crear PdfWriter para inventario PDF");
+                    memoryStream?.Dispose();
+                    throw;
+                }
 
                 // Metadatos
                 document.AddTitle("Formato para Toma Física de Inventario");
@@ -1334,23 +1348,40 @@ namespace GestionLlantera.Web.Controllers
                 disclaimer.Alignment = IText.Element.ALIGN_CENTER;
                 document.Add(disclaimer);
 
-                // Cerrar documento
+                // Cerrar documento antes de leer el stream
                 document.Close();
-                writer.Close();
+
+                // Obtener los bytes del PDF antes de cerrar el writer
+                byte[] pdfBytes = memoryStream.ToArray();
+
+                // Ahora sí cerrar el writer
+                writer?.Close();
 
                 // Nombre del archivo
                 string fileName = $"Inventario_Fisico_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
 
                 _logger.LogInformation($"Exportación a PDF de inventario físico completada: {fileName}");
 
+                // Cerrar el MemoryStream
+                memoryStream?.Close();
+                memoryStream?.Dispose();
+
                 // Devolver el archivo
-                return File(memoryStream.ToArray(), "application/pdf", fileName);
+                return File(pdfBytes, "application/pdf", fileName);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al exportar a PDF para toma física de inventario");
+
+                // Limpiar recursos en caso de error
+                try
+                {
+                    memoryStream?.Dispose();
+                }
+                catch { }
+
                 // En caso de error, redireccionar con mensaje
-                TempData["Error"] = "No se pudo generar el archivo PDF. Inténtelo nuevamente.";
+                TempData["Error"] = $"No se pudo generar el archivo PDF: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
         }
