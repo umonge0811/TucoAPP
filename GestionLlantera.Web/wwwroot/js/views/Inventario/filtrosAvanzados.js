@@ -269,14 +269,17 @@ function actualizarFiltrosCascada() {
 
 // Función para configurar todos los eventos de filtros
 function configurarEventosFiltros() {
-    // Filtro de búsqueda de texto con debounce
-    let timeoutBusqueda;
+    // Filtro de búsqueda de texto - solo actualiza el valor, NO aplica filtros automáticamente
     $("#searchText").on("input", function () {
-        clearTimeout(timeoutBusqueda);
-        timeoutBusqueda = setTimeout(() => {
-            filtrosConfig.activos.texto = $(this).val().toLowerCase();
+        filtrosConfig.activos.texto = $(this).val().toLowerCase();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
+    });
+
+    // Permitir aplicar filtros con Enter en el campo de búsqueda
+    $("#searchText").on("keypress", function (e) {
+        if (e.which === 13) { // Enter key
             aplicarTodosLosFiltros();
-        }, 300); // Esperar 300ms después de que el usuario deje de escribir
+        }
     });
 
     // Botón limpiar búsqueda
@@ -286,18 +289,18 @@ function configurarEventosFiltros() {
         aplicarTodosLosFiltros();
     });
 
-    // Filtros de selección básicos
+    // Filtros de selección básicos - solo actualizan el valor, NO aplican filtros automáticamente
     $("#filterCategory").on("change", function () {
         filtrosConfig.activos.categoria = $(this).val();
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $("#filterStock").on("change", function () {
         filtrosConfig.activos.stock = $(this).val();
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
-    // Filtro de marca con autocompletado
+    // Filtro de marca - solo actualiza el valor, NO aplica filtros automáticamente
     $("#filterMarca").on("input", function () {
         const valor = $(this).val();
         filtrosConfig.activos.marca = valor.toLowerCase();
@@ -309,7 +312,7 @@ function configurarEventosFiltros() {
             $("#btnLimpiarMarca").hide();
         }
 
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $("#btnLimpiarMarca").on("click", function () {
@@ -319,33 +322,29 @@ function configurarEventosFiltros() {
         aplicarTodosLosFiltros();
     });
 
-    // Filtros de rango con debounce
-    let timeoutRangos;
+    // Filtros de rango - solo actualizan el valor, NO aplican filtros automáticamente
     const filtrosRango = ['#precioMin', '#precioMax', '#stockMin', '#stockMax', '#utilidadMin', '#utilidadMax'];
 
     filtrosRango.forEach(selector => {
         $(selector).on("input", function () {
-            clearTimeout(timeoutRangos);
-            timeoutRangos = setTimeout(() => {
-                actualizarFiltrosRango();
-                aplicarTodosLosFiltros();
-            }, 500);
+            actualizarFiltrosRango();
+            // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
         });
     });
 
     // ✅ Event listeners para filtros de llantas CON CASCADA
     // Filtros principales de medidas (con cascada)
+    // IMPORTANTE: Solo actualizan la cascada, NO aplican filtros automáticamente
     $('#filterAncho').on("change", function () {
         const valor = $(this).val();
         console.log('🔧 Ancho cambiado:', valor);
 
         filtrosConfig.activos.ancho = valor;
 
-        // Actualizar filtros en cascada
+        // Actualizar filtros en cascada (para mostrar opciones disponibles)
         actualizarFiltrosCascada();
 
-        // Aplicar filtros
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $('#filterPerfil').on("change", function () {
@@ -354,11 +353,10 @@ function configurarEventosFiltros() {
 
         filtrosConfig.activos.perfil = valor;
 
-        // Actualizar filtros en cascada
+        // Actualizar filtros en cascada (para mostrar opciones disponibles)
         actualizarFiltrosCascada();
 
-        // Aplicar filtros
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $('#filterDiametro').on("change", function () {
@@ -367,11 +365,10 @@ function configurarEventosFiltros() {
 
         filtrosConfig.activos.diametro = valor;
 
-        // Actualizar filtros en cascada
+        // Actualizar filtros en cascada (para mostrar opciones disponibles)
         actualizarFiltrosCascada();
 
-        // Aplicar filtros
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     // Filtros secundarios de llantas (sin cascada)
@@ -398,8 +395,14 @@ function configurarEventosFiltros() {
 
             console.log('📊 Estado actual de filtros:', filtrosConfig.activos);
 
-            aplicarTodosLosFiltros();
+            // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
         });
+    });
+
+    // ✅ BOTÓN FILTRAR
+    $('#btnFiltrar').on('click', function () {
+        console.log('🔍 Aplicando filtros desde botón Filtrar...');
+        aplicarTodosLosFiltros();
     });
 
     // ✅ BOTÓN LIMPIAR FILTROS DE LLANTAS
