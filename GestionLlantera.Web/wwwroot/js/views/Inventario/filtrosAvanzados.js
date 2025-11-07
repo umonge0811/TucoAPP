@@ -82,12 +82,19 @@ function extraerDatosUnicos() {
         if (esLlanta) {
             const medidasTexto = $fila.find("td:eq(3)").text().trim();
             if (medidasTexto && medidasTexto !== "N/A" && medidasTexto !== "-") {
-                // Parsear formato: 225/45/R17
-                const match = medidasTexto.match(/(\d+)\/(\d+)\/R?(\d+)/);
+                // Parsear formato: 225/45/R17 o 225/45.50/R17 o 225/R16 (sin perfil)
+                // Soporta decimales en todas las medidas
+                const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
                 if (match) {
-                    anchosSet.add(match[1]);
-                    perfilesSet.add(match[2]);
-                    diametrosSet.add(match[3]);
+                    const ancho = match[1];
+                    const perfil = match[2]; // Puede ser undefined si no tiene perfil
+                    const diametro = match[3];
+
+                    anchosSet.add(ancho);
+                    if (perfil) {
+                        perfilesSet.add(perfil);
+                    }
+                    diametrosSet.add(diametro);
                 }
             }
         }
@@ -175,25 +182,28 @@ function actualizarFiltrosCascada() {
         const medidasTexto = $fila.find("td:eq(3)").text().trim();
         if (!medidasTexto || medidasTexto === "N/A" || medidasTexto === "-") return;
 
-        // Parsear formato: 225/45/R17
-        const match = medidasTexto.match(/(\d+)\/(\d+)\/R?(\d+)/);
+        // Parsear formato: 225/45/R17 o 225/45.50/R17 o 225/R16 (sin perfil)
+        // Soporta decimales en todas las medidas
+        const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
         if (!match) return;
 
         const ancho = match[1];
-        const perfil = match[2];
+        const perfil = match[2]; // Puede ser undefined si no tiene perfil
         const diametro = match[3];
 
         // Verificar si la fila cumple con los filtros seleccionados
         let cumpleFiltros = true;
 
         if (anchoSeleccionado && ancho !== anchoSeleccionado) cumpleFiltros = false;
-        if (perfilSeleccionado && perfil !== perfilSeleccionado) cumpleFiltros = false;
+        if (perfilSeleccionado && (!perfil || perfil !== perfilSeleccionado)) cumpleFiltros = false;
         if (diametroSeleccionado && diametro !== diametroSeleccionado) cumpleFiltros = false;
 
         // Si cumple con los filtros, agregar sus valores a los conjuntos
         if (cumpleFiltros) {
             valores.anchos.add(ancho);
-            valores.perfiles.add(perfil);
+            if (perfil) {
+                valores.perfiles.add(perfil);
+            }
             valores.diametros.add(diametro);
 
             // Extraer tipo de terreno (columna 5)
@@ -866,20 +876,13 @@ function cumpleFiltrosLlantas($fila) {
 
     // ✅ EXTRAER MEDIDAS (Columna 3)
     const medidasTexto = $fila.find("td:eq(3)").text().trim();
-    const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/) ||
-        medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+    // Parsear formato: 225/45/R17 o 225/45.50/R17 o 225/R16 (sin perfil)
+    const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
 
     if (match) {
-        let ancho, perfil, diametro;
-
-        if (match.length === 4) {
-            // Con perfil
-            [, ancho, perfil, diametro] = match;
-        } else {
-            // Sin perfil
-            [, ancho, diametro] = match;
-            perfil = null;
-        }
+        const ancho = match[1];
+        const perfil = match[2]; // Puede ser undefined si no tiene perfil
+        const diametro = match[3];
 
         // FILTRO DE ANCHO
         if (filtrosConfig.activos.ancho && ancho !== filtrosConfig.activos.ancho) {
@@ -888,28 +891,14 @@ function cumpleFiltrosLlantas($fila) {
 
         // FILTRO DE PERFIL
         if (filtrosConfig.activos.perfil) {
-            if (!perfil) return false;
-
-            const perfilNum = parseFloat(perfil);
-            const perfilFormateado = (perfilNum % 1 === 0) ?
-                perfilNum.toString() :
-                perfilNum.toFixed(2);
-
-            if (perfilFormateado !== filtrosConfig.activos.perfil) {
+            if (!perfil || perfil !== filtrosConfig.activos.perfil) {
                 return false;
             }
         }
 
         // FILTRO DE DIÁMETRO
-        if (filtrosConfig.activos.diametro) {
-            const diametroNum = parseFloat(diametro);
-            const diametroFormateado = (diametroNum % 1 === 0) ?
-                diametroNum.toString() :
-                diametroNum.toFixed(1);
-
-            if (diametroFormateado !== filtrosConfig.activos.diametro) {
-                return false;
-            }
+        if (filtrosConfig.activos.diametro && diametro !== filtrosConfig.activos.diametro) {
+            return false;
         }
     }
 
@@ -1378,25 +1367,22 @@ function cumpleFiltrosLlantasCard($card) {
         medidasTexto = $card.find('[class*="medida"]').text();
     }
 
-    // ✅ PARSEAR MEDIDAS (soporta formato con y sin R)
-    const match = medidasTexto.match(/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+)/);
+    // ✅ PARSEAR MEDIDAS (soporta formato: 225/45/R17 o 225/45.50/R17 o 225/R16 sin perfil)
+    const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
 
     if (match) {
-        const [, ancho, perfil, diametro] = match;
+        const ancho = match[1];
+        const perfil = match[2]; // Puede ser undefined si no tiene perfil
+        const diametro = match[3];
 
         // ✅ VERIFICAR FILTRO DE ANCHO
         if (filtrosConfig.activos.ancho && ancho !== filtrosConfig.activos.ancho) {
             return false;
         }
 
-        // ✅ VERIFICAR FILTRO DE PERFIL (con formato correcto: 90.50 vs 20)
+        // ✅ VERIFICAR FILTRO DE PERFIL
         if (filtrosConfig.activos.perfil) {
-            const perfilNum = parseFloat(perfil);
-            const perfilFormateado = (perfilNum % 1 === 0) ?
-                perfilNum.toString() :
-                perfilNum.toFixed(2);
-
-            if (perfilFormateado !== filtrosConfig.activos.perfil) {
+            if (!perfil || perfil !== filtrosConfig.activos.perfil) {
                 return false;
             }
         }
