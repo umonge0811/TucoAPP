@@ -1191,12 +1191,21 @@ namespace API.Controllers
 
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {
+            // PRIORIDAD 1: Si el usuario especificó un precio de venta, usarlo directamente
+            if (dto.Precio.HasValue && dto.Precio.Value > 0)
+            {
+                return dto.Precio.Value;
+            }
+
+            // PRIORIDAD 2: Si tiene costo Y utilidad, calcular automáticamente
             if (dto.Costo.HasValue && dto.PorcentajeUtilidad.HasValue)
             {
                 var utilidad = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
                 return dto.Costo.Value + utilidad;
             }
-            return dto.Precio.GetValueOrDefault(0m);
+
+            // FALLBACK: Precio mínimo
+            return 0.01m;
         }
 
         // =====================================
