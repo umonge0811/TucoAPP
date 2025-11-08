@@ -5988,10 +5988,22 @@ async function finalizarInventarioCompleto() {
         const stats = estadisticasActuales;
         const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
 
-        // ✅ VALIDACIONES FINALES
-        if (stats.pendientes > 0) {
-            mostrarError(`No se puede finalizar: quedan ${stats.pendientes} productos sin contar`);
-            return;
+        // ✅ VALIDACIONES FINALES SEGÚN TIPO DE INVENTARIO
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: requiere 100% contado
+            if (stats.pendientes > 0) {
+                mostrarError(`No se puede finalizar inventario COMPLETO: quedan ${stats.pendientes} productos sin contar`);
+                return;
+            }
+        } else {
+            // Inventario Parcial/Cíclico: requiere al menos 1 contado
+            if (stats.contados === 0) {
+                mostrarError(`No se puede finalizar: debes contar al menos 1 producto`);
+                return;
+            }
         }
 
         // ✅ CONFIRMACIÓN CON RESUMEN DETALLADO
@@ -5999,11 +6011,18 @@ async function finalizarInventarioCompleto() {
         let htmlConfirmacion = `
             <div class="text-start">
                 <h5 class="text-primary mb-3">📋 Resumen del Inventario</h5>
+                <div class="alert alert-info mb-3">
+                    <strong>Tipo:</strong> ${tipoInventario}
+                </div>
                 <div class="row mb-3">
                     <div class="col-6"><strong>Total productos:</strong></div>
                     <div class="col-6">${stats.total}</div>
                     <div class="col-6"><strong>Productos contados:</strong></div>
                     <div class="col-6 text-success">${stats.contados}</div>
+                    ${!esInventarioCompleto ? `
+                    <div class="col-6"><strong>Productos NO contados:</strong></div>
+                    <div class="col-6 text-muted">${stats.pendientes} (se ignorarán)</div>
+                    ` : ''}
                     <div class="col-6"><strong>Discrepancias encontradas:</strong></div>
                     <div class="col-6 text-warning">${stats.discrepancias}</div>
                     <div class="col-6"><strong>Ajustes pendientes:</strong></div>
