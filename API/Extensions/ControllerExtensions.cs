@@ -222,7 +222,14 @@ namespace API.Extensions
                 throw new UnauthorizedAccessException("Usuario no autenticado");
             }
 
-            return permisosService.ObtenerUsuarioId(controller.User);
+            var usuarioId = permisosService.ObtenerUsuarioId(controller.User);
+
+            if (!usuarioId.HasValue)
+            {
+                throw new UnauthorizedAccessException("No se pudo obtener el ID del usuario");
+            }
+
+            return usuarioId.Value;
         }
     }
 }
