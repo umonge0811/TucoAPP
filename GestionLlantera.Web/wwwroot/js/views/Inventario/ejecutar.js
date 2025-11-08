@@ -3397,6 +3397,7 @@ function renderizarProductos() {
         // ✅ POBLAR FILTROS DE LLANTAS AL CARGAR
         setTimeout(() => {
             poblarFiltrosLlantas();
+            verificarMovimientosPostCorte(); // Verificar movimientos post-corte
         }, 500);
 
         console.log('✅ Productos renderizados correctamente con filtros preservados');
@@ -3454,9 +3455,35 @@ function crearFilaProducto(producto, numero) {
         `<i class="bi bi-clock-history text-warning" data-bs-toggle="tooltip" title="Tiene ajustes pendientes"></i>` :
         '';
 
+    // ✅ CELDA DE MOVIMIENTOS POST-CORTE
+    const movimientosPostCorte = producto.movimientosPostCorte || 0;
+    const tieneMovimientos = movimientosPostCorte !== 0;
+    let celdaMovimientos = '';
+
+    if (tieneMovimientos) {
+        const colorBadge = movimientosPostCorte < 0 ? 'bg-danger' : 'bg-success';
+        const iconoMovimiento = movimientosPostCorte < 0 ? 'bi-arrow-down' : 'bi-arrow-up';
+        celdaMovimientos = `
+            <div class="d-flex flex-column align-items-center gap-1">
+                <span class="badge ${colorBadge}">
+                    <i class="bi ${iconoMovimiento}"></i> ${movimientosPostCorte > 0 ? '+' : ''}${movimientosPostCorte}
+                </span>
+                <button class="btn btn-warning btn-sm"
+                        onclick="actualizarLineaIndividual(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Actualizar con movimientos post-corte">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        `;
+    } else {
+        celdaMovimientos = '<span class="text-muted">-</span>';
+    }
+
     return $(`
         <tr class="producto-row ${estadoClass}"
             data-producto-id="${producto.productoId}"
+            data-movimientos="${movimientosPostCorte}"
             ${producto.esLlanta && producto.capasLlanta ? `data-capas="${producto.capasLlanta}"` : ''}>
             <td class="text-center fw-bold">${numero}</td>
             <td>
@@ -3467,6 +3494,7 @@ function crearFilaProducto(producto, numero) {
             <td>${medidas}</td>
             <td>${tipoTerreno}</td>
             <td class="text-center">${capas}</td>
+            <td class="text-center">${celdaMovimientos}</td>
             <td class="text-center">
                 <span class="badge bg-primary fs-6">${producto.cantidadSistema}</span>
             </td>
@@ -7632,10 +7660,214 @@ function aplicarFiltrosLlantas() {
 }
 
 // =====================================
+// FUNCIONES DE MOVIMIENTOS POST-CORTE
+// =====================================
+
+/**
+ * Actualiza una línea individual procesando sus movimientos post-corte
+ */
+async function actualizarLineaIndividual(productoId) {
+    try {
+        console.log(`🔄 Actualizando línea individual para producto ${productoId}`);
+
+        const resultado = await Swal.fire({
+            title: '¿Actualizar línea?',
+            html: `
+                <div class="text-start">
+                    <p>Esta acción actualizará la cantidad del sistema con los movimientos registrados después del corte.</p>
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>
+                    Si el producto ya fue contado, se recalculará la diferencia automáticamente.</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!resultado.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando...',
+            html: 'Procesando movimientos post-corte',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const usuarioId = window.inventarioConfig?.usuarioId || 0;
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+
+        const response = await fetch('/api/MovimientosPostCorte/actualizar-linea', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                inventarioProgramadoId: inventarioId,
+                productoId: productoId,
+                usuarioId: usuarioId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Recargar productos
+            await cargarProductosInventario(inventarioId);
+            verificarMovimientosPostCorte();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'No se pudo actualizar la línea'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando línea:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al actualizar la línea'
+        });
+    }
+}
+
+/**
+ * Actualiza todas las líneas con movimientos post-corte pendientes
+ */
+async function actualizarTodasLineas() {
+    try {
+        console.log('🔄 Actualizando todas las líneas con movimientos');
+
+        const resultado = await Swal.fire({
+            title: '¿Actualizar todas las líneas?',
+            html: `
+                <div class="text-start">
+                    <p>Esta acción actualizará TODAS las líneas que tienen movimientos post-corte pendientes.</p>
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>
+                    Las cantidades del sistema se ajustarán y las diferencias se recalcularán automáticamente.</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar todas',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!resultado.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando líneas...',
+            html: 'Procesando movimientos post-corte',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const usuarioId = window.inventarioConfig?.usuarioId || 0;
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+
+        const response = await fetch('/api/MovimientosPostCorte/actualizar-masivo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                inventarioProgramadoId: inventarioId,
+                usuarioId: usuarioId,
+                productoIds: [] // Vacío = todas las líneas con movimientos
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                html: `
+                    <p>${data.message}</p>
+                    <p class="small text-muted">
+                        Líneas actualizadas: ${data.data.lineasActualizadas}<br>
+                        Movimientos procesados: ${data.data.movimientosProcesados}
+                    </p>
+                `,
+                timer: 3000
+            });
+
+            // Recargar productos
+            await cargarProductosInventario(inventarioId);
+            verificarMovimientosPostCorte();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'No se pudieron actualizar las líneas'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando líneas:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al actualizar las líneas'
+        });
+    }
+}
+
+/**
+ * Verifica si hay productos con movimientos post-corte y actualiza la UI
+ */
+function verificarMovimientosPostCorte() {
+    try {
+        // Contar productos con movimientos
+        const productosConMovimientos = productosInventario.filter(p => (p.movimientosPostCorte || 0) !== 0);
+        const totalConMovimientos = productosConMovimientos.length;
+
+        console.log(`📊 Productos con movimientos post-corte: ${totalConMovimientos}`);
+
+        // Actualizar contador y mostrar/ocultar botón
+        const $btnActualizar = $('#btnActualizarTodasLineas');
+        const $contador = $('#contadorLineasConMovimientos');
+
+        if (totalConMovimientos > 0) {
+            $contador.text(totalConMovimientos);
+            $btnActualizar.show();
+        } else {
+            $btnActualizar.hide();
+        }
+    } catch (error) {
+        console.error('❌ Error verificando movimientos post-corte:', error);
+    }
+}
+
+// =====================================
 // EVENT LISTENERS PARA FILTROS DE LLANTAS
 // =====================================
 
 $(document).ready(function () {
+    // ✅ Event listener para botón de actualizar todas las líneas
+    $('#btnActualizarTodasLineas').on('click', actualizarTodasLineas);
+
     // ✅ Event listeners para filtros en cascada (siempre activos)
     $('#filterAncho').on('change', function () {
         filtrosLlantasActivos.ancho = $(this).val();
