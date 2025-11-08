@@ -505,18 +505,25 @@
                 <!-- Botones de acción rápida -->
                 <div class="row mt-3">
                     <div class="col-12">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button class="btn btn-outline-primary btn-sm" id="btnMostrarTodos">
-                                <i class="bi bi-list-ul me-1"></i>
-                                Mostrar Todos
-                            </button>
-                            <button class="btn btn-outline-warning btn-sm" id="btnSoloPendientes">
-                                <i class="bi bi-clock me-1"></i>
-                                Solo Pendientes
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" id="btnSoloDiscrepancias">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                Solo Discrepancias
+                        <div class="d-flex gap-2 flex-wrap justify-content-between">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-outline-primary btn-sm" id="btnMostrarTodos">
+                                    <i class="bi bi-list-ul me-1"></i>
+                                    Mostrar Todos
+                                </button>
+                                <button class="btn btn-outline-warning btn-sm" id="btnSoloPendientes">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Solo Pendientes
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" id="btnSoloDiscrepancias">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Solo Discrepancias
+                                </button>
+                            </div>
+                            <button class="btn btn-warning btn-sm" id="btnActualizarTodasLineas" style="display: none;">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Actualizar Líneas con Movimientos
+                                <span class="badge bg-danger ms-1" id="contadorLineasConMovimientos">0</span>
                             </button>
                         </div>
                     </div>
@@ -568,6 +575,10 @@
                                     <th width="10%">Medidas</th>
                                     <th width="8%">Tipo Terreno</th>
                                     <th width="5%" class="text-center">Capas</th>
+                                    <th width="7%" class="text-center">
+                                        <i class="bi bi-arrow-left-right text-warning" data-bs-toggle="tooltip" title="Movimientos después del corte"></i>
+                                        Mov.
+                                    </th>
                                     <th width="7%" class="text-center">Sistema</th>
                                     <th width="7%" class="text-center">Físico</th>
                                     <th width="7%" class="text-center">Diferencia</th>
