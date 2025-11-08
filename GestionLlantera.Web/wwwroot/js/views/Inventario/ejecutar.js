@@ -3394,6 +3394,7 @@ async function cargarAlertasPostCorte() {
         const response = await fetch(`/api/Inventario/inventarios-programados/${inventarioId}/alertas?soloNoLeidas=false`, {
             method: 'GET',
             headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
@@ -3495,6 +3496,7 @@ async function marcarAlertaLeida(alertaId) {
         const response = await fetch(`/api/Inventario/alertas/${alertaId}/marcar-leida`, {
             method: 'PUT',
             headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
@@ -3526,6 +3528,7 @@ async function marcarTodasAlertasLeidas() {
         const response = await fetch(`/api/Inventario/inventarios-programados/${inventarioId}/alertas/marcar-todas-leidas`, {
             method: 'PUT',
             headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
@@ -7757,6 +7760,7 @@ async function actualizarLineaIndividual(productoId) {
         const response = await fetch('/api/MovimientosPostCorte/actualizar-linea', {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
