@@ -21,7 +21,7 @@ let filtrosConfig = {
         perfil: '',
         diametro: '',
         tipoTerreno: '',
-        velocidad: ''
+        capas: ''
     },
     marcasDisponibles: [],
     medidasDisponibles: {
@@ -82,12 +82,19 @@ function extraerDatosUnicos() {
         if (esLlanta) {
             const medidasTexto = $fila.find("td:eq(3)").text().trim();
             if (medidasTexto && medidasTexto !== "N/A" && medidasTexto !== "-") {
-                // Parsear formato: 225/45/R17
-                const match = medidasTexto.match(/(\d+)\/(\d+)\/R?(\d+)/);
+                // Parsear formato: 225/45/R17 o 225/45.50/R17 o 225/R16 (sin perfil)
+                // Soporta decimales en todas las medidas
+                const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
                 if (match) {
-                    anchosSet.add(match[1]);
-                    perfilesSet.add(match[2]);
-                    diametrosSet.add(match[3]);
+                    const ancho = match[1];
+                    const perfil = match[2]; // Puede ser undefined si no tiene perfil
+                    const diametro = match[3];
+
+                    anchosSet.add(ancho);
+                    if (perfil) {
+                        perfilesSet.add(perfil);
+                    }
+                    diametrosSet.add(diametro);
                 }
             }
         }
@@ -160,7 +167,7 @@ function actualizarFiltrosCascada() {
         diametros: new Set(),
         tiposTerreno: new Set(),
         marcas: new Set(),
-        velocidades: new Set()
+        capas: new Set()
     };
 
     // Recorrer todas las filas de llantas
@@ -175,25 +182,28 @@ function actualizarFiltrosCascada() {
         const medidasTexto = $fila.find("td:eq(3)").text().trim();
         if (!medidasTexto || medidasTexto === "N/A" || medidasTexto === "-") return;
 
-        // Parsear formato: 225/45/R17
-        const match = medidasTexto.match(/(\d+)\/(\d+)\/R?(\d+)/);
+        // Parsear formato: 225/45/R17 o 225/45.50/R17 o 225/R16 (sin perfil)
+        // Soporta decimales en todas las medidas
+        const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
         if (!match) return;
 
         const ancho = match[1];
-        const perfil = match[2];
+        const perfil = match[2]; // Puede ser undefined si no tiene perfil
         const diametro = match[3];
 
         // Verificar si la fila cumple con los filtros seleccionados
         let cumpleFiltros = true;
 
         if (anchoSeleccionado && ancho !== anchoSeleccionado) cumpleFiltros = false;
-        if (perfilSeleccionado && perfil !== perfilSeleccionado) cumpleFiltros = false;
+        if (perfilSeleccionado && (!perfil || perfil !== perfilSeleccionado)) cumpleFiltros = false;
         if (diametroSeleccionado && diametro !== diametroSeleccionado) cumpleFiltros = false;
 
         // Si cumple con los filtros, agregar sus valores a los conjuntos
         if (cumpleFiltros) {
             valores.anchos.add(ancho);
-            valores.perfiles.add(perfil);
+            if (perfil) {
+                valores.perfiles.add(perfil);
+            }
             valores.diametros.add(diametro);
 
             // Extraer tipo de terreno (columna 5)
@@ -214,11 +224,11 @@ function actualizarFiltrosCascada() {
                 });
             }
 
-            // Extraer velocidad si está disponible (necesitarías ajustar el índice según tu tabla)
-            // const velocidad = $fila.find("td:eq(X)").text().trim();
-            // if (velocidad && velocidad !== "N/A") {
-            //     valores.velocidades.add(velocidad);
-            // }
+            // Extraer capas (desde data attribute)
+            const capas = $fila.data('capas') || $fila.attr('data-capas');
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== '' && capas !== null) {
+                valores.capas.add(String(capas));
+            }
         }
     });
 
@@ -264,19 +274,40 @@ function actualizarFiltrosCascada() {
         console.log(`✅ Tipo Terreno actualizado: ${tiposTerreno.length} opciones disponibles`);
     }
 
+    // Actualizar Capas si hay filtros activos
+    if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
+        const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+        const $selectCapas = $('#filterCapas');
+        const capasActual = $selectCapas.val();
+
+        if (capas.length > 0) {
+            $selectCapas.html('<option value="">Todas</option>' +
+                capas.map(c => `<option value="${c}" ${capasActual === c ? 'selected' : ''}>${c} capas</option>`).join(''));
+
+            console.log(`✅ Capas actualizado: ${capas.length} opciones disponibles`);
+        } else {
+            // Si no hay capas, solo mostrar "Todas"
+            $selectCapas.html('<option value="">Todas</option>');
+            console.log(`✅ Capas actualizado: sin opciones disponibles`);
+        }
+    }
+
     console.log('✅ Filtros en cascada actualizados correctamente');
 }
 
 // Función para configurar todos los eventos de filtros
 function configurarEventosFiltros() {
-    // Filtro de búsqueda de texto con debounce
-    let timeoutBusqueda;
+    // Filtro de búsqueda de texto - solo actualiza el valor, NO aplica filtros automáticamente
     $("#searchText").on("input", function () {
-        clearTimeout(timeoutBusqueda);
-        timeoutBusqueda = setTimeout(() => {
-            filtrosConfig.activos.texto = $(this).val().toLowerCase();
+        filtrosConfig.activos.texto = $(this).val().toLowerCase();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
+    });
+
+    // Permitir aplicar filtros con Enter en el campo de búsqueda
+    $("#searchText").on("keypress", function (e) {
+        if (e.which === 13) { // Enter key
             aplicarTodosLosFiltros();
-        }, 300); // Esperar 300ms después de que el usuario deje de escribir
+        }
     });
 
     // Botón limpiar búsqueda
@@ -286,18 +317,18 @@ function configurarEventosFiltros() {
         aplicarTodosLosFiltros();
     });
 
-    // Filtros de selección básicos
+    // Filtros de selección básicos - solo actualizan el valor, NO aplican filtros automáticamente
     $("#filterCategory").on("change", function () {
         filtrosConfig.activos.categoria = $(this).val();
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $("#filterStock").on("change", function () {
         filtrosConfig.activos.stock = $(this).val();
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
-    // Filtro de marca con autocompletado
+    // Filtro de marca - solo actualiza el valor, NO aplica filtros automáticamente
     $("#filterMarca").on("input", function () {
         const valor = $(this).val();
         filtrosConfig.activos.marca = valor.toLowerCase();
@@ -309,7 +340,7 @@ function configurarEventosFiltros() {
             $("#btnLimpiarMarca").hide();
         }
 
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $("#btnLimpiarMarca").on("click", function () {
@@ -319,33 +350,29 @@ function configurarEventosFiltros() {
         aplicarTodosLosFiltros();
     });
 
-    // Filtros de rango con debounce
-    let timeoutRangos;
+    // Filtros de rango - solo actualizan el valor, NO aplican filtros automáticamente
     const filtrosRango = ['#precioMin', '#precioMax', '#stockMin', '#stockMax', '#utilidadMin', '#utilidadMax'];
 
     filtrosRango.forEach(selector => {
         $(selector).on("input", function () {
-            clearTimeout(timeoutRangos);
-            timeoutRangos = setTimeout(() => {
-                actualizarFiltrosRango();
-                aplicarTodosLosFiltros();
-            }, 500);
+            actualizarFiltrosRango();
+            // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
         });
     });
 
     // ✅ Event listeners para filtros de llantas CON CASCADA
     // Filtros principales de medidas (con cascada)
+    // IMPORTANTE: Solo actualizan la cascada, NO aplican filtros automáticamente
     $('#filterAncho').on("change", function () {
         const valor = $(this).val();
         console.log('🔧 Ancho cambiado:', valor);
 
         filtrosConfig.activos.ancho = valor;
 
-        // Actualizar filtros en cascada
+        // Actualizar filtros en cascada (para mostrar opciones disponibles)
         actualizarFiltrosCascada();
 
-        // Aplicar filtros
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $('#filterPerfil').on("change", function () {
@@ -354,11 +381,10 @@ function configurarEventosFiltros() {
 
         filtrosConfig.activos.perfil = valor;
 
-        // Actualizar filtros en cascada
+        // Actualizar filtros en cascada (para mostrar opciones disponibles)
         actualizarFiltrosCascada();
 
-        // Aplicar filtros
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     $('#filterDiametro').on("change", function () {
@@ -367,15 +393,14 @@ function configurarEventosFiltros() {
 
         filtrosConfig.activos.diametro = valor;
 
-        // Actualizar filtros en cascada
+        // Actualizar filtros en cascada (para mostrar opciones disponibles)
         actualizarFiltrosCascada();
 
-        // Aplicar filtros
-        aplicarTodosLosFiltros();
+        // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
     });
 
     // Filtros secundarios de llantas (sin cascada)
-    const filtrosLlantasSecundarios = ['#filterTipoTerreno', '#filterMarca', '#filterVelocidad'];
+    const filtrosLlantasSecundarios = ['#filterTipoTerreno', '#filterMarca', '#filterCapas'];
 
     filtrosLlantasSecundarios.forEach(selector => {
         $(selector).on("change", function () {
@@ -398,8 +423,14 @@ function configurarEventosFiltros() {
 
             console.log('📊 Estado actual de filtros:', filtrosConfig.activos);
 
-            aplicarTodosLosFiltros();
+            // NO aplicar filtros automáticamente - el usuario debe hacer clic en "Filtrar"
         });
+    });
+
+    // ✅ BOTÓN FILTRAR
+    $('#btnFiltrar').on('click', function () {
+        console.log('🔍 Aplicando filtros desde botón Filtrar...');
+        aplicarTodosLosFiltros();
     });
 
     // ✅ BOTÓN LIMPIAR FILTROS DE LLANTAS
@@ -407,7 +438,7 @@ function configurarEventosFiltros() {
         console.log('🧹 Limpiando filtros de llantas...');
 
         // Limpiar selectores
-        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
+        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterCapas').val('');
 
         // Limpiar filtros activos
         filtrosConfig.activos.ancho = '';
@@ -415,7 +446,7 @@ function configurarEventosFiltros() {
         filtrosConfig.activos.diametro = '';
         filtrosConfig.activos.tipoterreno = '';
         filtrosConfig.activos.marca = '';
-        filtrosConfig.activos.velocidad = '';
+        filtrosConfig.activos.capas = '';
 
         // Restaurar todas las opciones originales
         poblarSelectoresDinamicos();
@@ -857,26 +888,19 @@ function cumpleFiltrosLlantas($fila) {
     if (!esLlanta) {
         const hayFiltrosLlanta = filtrosConfig.activos.ancho || filtrosConfig.activos.perfil ||
             filtrosConfig.activos.diametro || filtrosConfig.activos.tipoterreno ||
-            filtrosConfig.activos.marca || filtrosConfig.activos.velocidad;
+            filtrosConfig.activos.marca || filtrosConfig.activos.capas;
         return !hayFiltrosLlanta;
     }
 
     // ✅ EXTRAER MEDIDAS (Columna 3)
     const medidasTexto = $fila.find("td:eq(3)").text().trim();
-    const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/) ||
-        medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+    // Parsear formato: 225/45/R17 o 225/45.50/R17 o 225/R16 (sin perfil)
+    const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
 
     if (match) {
-        let ancho, perfil, diametro;
-
-        if (match.length === 4) {
-            // Con perfil
-            [, ancho, perfil, diametro] = match;
-        } else {
-            // Sin perfil
-            [, ancho, diametro] = match;
-            perfil = null;
-        }
+        const ancho = match[1];
+        const perfil = match[2]; // Puede ser undefined si no tiene perfil
+        const diametro = match[3];
 
         // FILTRO DE ANCHO
         if (filtrosConfig.activos.ancho && ancho !== filtrosConfig.activos.ancho) {
@@ -885,28 +909,14 @@ function cumpleFiltrosLlantas($fila) {
 
         // FILTRO DE PERFIL
         if (filtrosConfig.activos.perfil) {
-            if (!perfil) return false;
-
-            const perfilNum = parseFloat(perfil);
-            const perfilFormateado = (perfilNum % 1 === 0) ?
-                perfilNum.toString() :
-                perfilNum.toFixed(2);
-
-            if (perfilFormateado !== filtrosConfig.activos.perfil) {
+            if (!perfil || perfil !== filtrosConfig.activos.perfil) {
                 return false;
             }
         }
 
         // FILTRO DE DIÁMETRO
-        if (filtrosConfig.activos.diametro) {
-            const diametroNum = parseFloat(diametro);
-            const diametroFormateado = (diametroNum % 1 === 0) ?
-                diametroNum.toString() :
-                diametroNum.toFixed(1);
-
-            if (diametroFormateado !== filtrosConfig.activos.diametro) {
-                return false;
-            }
+        if (filtrosConfig.activos.diametro && diametro !== filtrosConfig.activos.diametro) {
+            return false;
         }
     }
 
@@ -955,15 +965,15 @@ function cumpleFiltrosLlantas($fila) {
     }
 
 
-    // ✅ FILTRO DE ÍNDICE DE VELOCIDAD
-    if (filtrosConfig.activos.velocidad) {
-        const velocidad = $fila.data('indice-velocidad') || $fila.attr('data-indice-velocidad');
+    // ✅ FILTRO DE CAPAS
+    if (filtrosConfig.activos.capas) {
+        const capas = $fila.data('capas') || $fila.attr('data-capas');
 
-        if (!velocidad || velocidad === 'N/A' || velocidad === '-') {
+        if (!capas || capas === 'N/A' || capas === '-') {
             return false;
         }
 
-        if (velocidad.toUpperCase() !== filtrosConfig.activos.velocidad.toUpperCase()) {
+        if (String(capas) !== String(filtrosConfig.activos.capas)) {
             return false;
         }
     }
@@ -1014,10 +1024,10 @@ function actualizarIndicadoresFiltros() {
     }
 
     // Filtros de llantas con iconos
-    const iconosLlantas = { ancho: '↔️', perfil: '📏', diametro: '⭕', tipoTerreno: '🌍', velocidad: '⚡' };
-    ['ancho', 'perfil', 'diametro', 'tipoTerreno', 'velocidad'].forEach(campo => {
+    const iconosLlantas = { ancho: '↔️', perfil: '📏', diametro: '⭕', tipoTerreno: '🌍', capas: '🔢' };
+    ['ancho', 'perfil', 'diametro', 'tipoTerreno', 'capas'].forEach(campo => {
         if (filtrosConfig.activos[campo]) {
-            const nombres = { ancho: 'Ancho', perfil: 'Perfil', diametro: 'Diámetro', tipoTerreno: 'Terreno', velocidad: 'Velocidad' };
+            const nombres = { ancho: 'Ancho', perfil: 'Perfil', diametro: 'Diámetro', tipoTerreno: 'Terreno', capas: 'Capas' };
             filtrosActivos.push(`${iconosLlantas[campo]} ${nombres[campo]}: ${filtrosConfig.activos[campo]}`);
         }
     });
@@ -1058,7 +1068,7 @@ function limpiarTodosLosFiltros() {
     $("#filterStock").val('');
     $("#filterMarca").val('');
     $("#precioMin, #precioMax, #stockMin, #stockMax, #utilidadMin, #utilidadMax").val('');
-    $("#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterVelocidad").val('');
+    $("#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterCapas").val('');
 
     // Ocultar botones de limpiar
     $("#btnLimpiarMarca").hide();
@@ -1079,7 +1089,7 @@ function limpiarTodosLosFiltros() {
         perfil: '',
         diametro: '',
         tipoTerreno: '',
-        velocidad: ''
+        capas: ''
     };
 
     // Aplicar filtros (esto mostrará todos los productos)
@@ -1195,7 +1205,7 @@ function poblarFiltrosLlantas() {
         diametros: new Set(),
         tiposTerreno: new Set(),
         marcas: new Set(),
-        velocidades: new Set()
+        capas: new Set()
     };
 
     // Recorrer todas las filas de la tabla
@@ -1271,10 +1281,10 @@ function poblarFiltrosLlantas() {
                 valores.marcas.add(marcaNormalizada);
             }
 
-            // ✅ EXTRAER ÍNDICE DE VELOCIDAD (si existe en data attribute)
-            const velocidad = $fila.data('indice-velocidad') || $fila.attr('data-indice-velocidad');
-            if (velocidad && velocidad !== 'N/A' && velocidad !== '-') {
-                valores.velocidades.add(velocidad.toUpperCase());
+            // ✅ EXTRAER CAPAS (si existe en data attribute)
+            const capas = $fila.data('capas') || $fila.attr('data-capas');
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== '' && capas !== null) {
+                valores.capas.add(String(capas));
             }
         }
     });
@@ -1285,7 +1295,7 @@ function poblarFiltrosLlantas() {
         diametros: Array.from(valores.diametros),
         tiposTerreno: Array.from(valores.tiposTerreno),
         marcas: Array.from(valores.marcas),
-        velocidades: Array.from(valores.velocidades)
+        capas: Array.from(valores.capas)
     });
 
     // ✅ POBLAR SELECTORES
@@ -1309,10 +1319,10 @@ function poblarFiltrosLlantas() {
     $('#filterMarca').html('<option value="">Todas</option>' +
         marcas.map(marca => `<option value="${marca}">${marca}</option>`).join(''));
 
-    const velocidades = Array.from(valores.velocidades).sort();
-    if (velocidades.length > 0) {
-        $('#filterVelocidad').html('<option value="">Todos</option>' +
-            velocidades.map(vel => `<option value="${vel}">${vel}</option>`).join(''));
+    const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+    if (capas.length > 0) {
+        $('#filterCapas').html('<option value="">Todas</option>' +
+            capas.map(capa => `<option value="${capa}">${capa} capas</option>`).join(''));
     }
 
     console.log('✅ Filtros de llantas poblados:', {
@@ -1321,7 +1331,7 @@ function poblarFiltrosLlantas() {
         diametros: diametros.length,
         tiposTerreno: tiposTerreno.length,
         marcas: marcas.length,
-        velocidades: velocidades.length
+        capas: capas.length
     });
 }
 
@@ -1360,7 +1370,7 @@ function cumpleFiltrosLlantasCard($card) {
     if (!tieneInfoLlanta) {
         const hayFiltrosLlanta = filtrosConfig.activos.ancho || filtrosConfig.activos.perfil ||
             filtrosConfig.activos.diametro || filtrosConfig.activos.tipoterreno ||
-            filtrosConfig.activos.velocidad;
+            filtrosConfig.activos.capas;
         return !hayFiltrosLlanta;
     }
 
@@ -1375,25 +1385,22 @@ function cumpleFiltrosLlantasCard($card) {
         medidasTexto = $card.find('[class*="medida"]').text();
     }
 
-    // ✅ PARSEAR MEDIDAS (soporta formato con y sin R)
-    const match = medidasTexto.match(/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+)/);
+    // ✅ PARSEAR MEDIDAS (soporta formato: 225/45/R17 o 225/45.50/R17 o 225/R16 sin perfil)
+    const match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(?:(\d+(?:\.\d+)?)\/)?R?(\d+(?:\.\d+)?)$/);
 
     if (match) {
-        const [, ancho, perfil, diametro] = match;
+        const ancho = match[1];
+        const perfil = match[2]; // Puede ser undefined si no tiene perfil
+        const diametro = match[3];
 
         // ✅ VERIFICAR FILTRO DE ANCHO
         if (filtrosConfig.activos.ancho && ancho !== filtrosConfig.activos.ancho) {
             return false;
         }
 
-        // ✅ VERIFICAR FILTRO DE PERFIL (con formato correcto: 90.50 vs 20)
+        // ✅ VERIFICAR FILTRO DE PERFIL
         if (filtrosConfig.activos.perfil) {
-            const perfilNum = parseFloat(perfil);
-            const perfilFormateado = (perfilNum % 1 === 0) ?
-                perfilNum.toString() :
-                perfilNum.toFixed(2);
-
-            if (perfilFormateado !== filtrosConfig.activos.perfil) {
+            if (!perfil || perfil !== filtrosConfig.activos.perfil) {
                 return false;
             }
         }
@@ -1452,21 +1459,21 @@ function cumpleFiltrosLlantasCard($card) {
         }
     }
 
-    // ✅ VERIFICAR FILTRO DE ÍNDICE DE VELOCIDAD
-    if (filtrosConfig.activos.velocidad) {
+    // ✅ VERIFICAR FILTRO DE CAPAS
+    if (filtrosConfig.activos.capas) {
         // Intentar extraer del data attribute o del DOM
-        let velocidad = $card.data('indice-velocidad') || $card.attr('data-indice-velocidad');
+        let capas = $card.data('capas') || $card.attr('data-capas');
 
-        if (!velocidad) {
+        if (!capas) {
             // Buscar en el DOM
-            velocidad = $card.find('[class*="velocidad"]').text().trim();
+            capas = $card.find('[class*="capas"]').text().trim();
         }
 
-        if (!velocidad || velocidad === 'N/A' || velocidad === '-') {
+        if (!capas || capas === 'N/A' || capas === '-') {
             return false;
         }
 
-        if (velocidad.toUpperCase() !== filtrosConfig.activos.velocidad.toUpperCase()) {
+        if (String(capas) !== String(filtrosConfig.activos.capas)) {
             return false;
         }
     }
