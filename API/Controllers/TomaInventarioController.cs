@@ -799,7 +799,10 @@ namespace API.Controllers
                         Diferencia = d.Diferencia,            // ✅ PUEDE SER NULL
                         Observaciones = d.Observaciones ?? string.Empty,// ✅ PUEDE SER NULL
                         UsuarioConteoId = d.UsuarioConteoId,       // ✅ PUEDE SER NULL
-                        FechaConteo = d.FechaConteo            // ✅ PUEDE SER NULL
+                        FechaConteo = d.FechaConteo,            // ✅ PUEDE SER NULL
+                        MovimientosPostCorte = d.MovimientosPostCorte,  // ✅ Movimientos post-corte
+                        UltimaActualizacion = d.UltimaActualizacion,
+                        UsuarioActualizacionId = d.UsuarioActualizacionId
                     })
                     .ToListAsync();
 
@@ -976,6 +979,11 @@ namespace API.Controllers
 
                             // ✅ IMAGEN PRINCIPAL CON PROTECCIÓN CONTRA NULL
                             dto.ImagenUrl = imagen?.PrimeraImagen ?? "";
+
+                            // ✅ INFORMACIÓN DE MOVIMIENTOS POST-CORTE
+                            dto.MovimientosPostCorte = detalle.MovimientosPostCorte;
+                            dto.UltimaActualizacion = detalle.UltimaActualizacion;
+                            dto.UsuarioActualizacionId = detalle.UsuarioActualizacionId;
 
                             // ✅ ESTADOS CALCULADOS CON VALIDACIONES
                             dto.EstadoConteo = detalle.CantidadFisica.HasValue ? "Contado" : "Pendiente";

@@ -30,6 +30,13 @@ namespace tuco.Clases.Models
 
         public DateTime? FechaConteo { get; set; }
 
+        // Campos para tracking de movimientos post-corte
+        public int? MovimientosPostCorte { get; set; } // Total de movimientos no procesados
+
+        public DateTime? UltimaActualizacion { get; set; }
+
+        public int? UsuarioActualizacionId { get; set; }
+
         // Relaciones
         [ForeignKey("InventarioProgramadoId")]
         public virtual InventarioProgramado InventarioProgramado { get; set; }
@@ -39,5 +46,8 @@ namespace tuco.Clases.Models
 
         [ForeignKey("UsuarioConteoId")]
         public virtual Usuario? UsuarioConteo { get; set; }
+
+        [ForeignKey("UsuarioActualizacionId")]
+        public virtual Usuario? UsuarioActualizacion { get; set; }
     }
 }

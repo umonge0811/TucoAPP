@@ -1321,13 +1321,30 @@ function mostrarPanelesSegunProgreso() {
     // ✅ VERIFICAR CONDICIONES BÁSICAS
     const todoContado = stats.pendientes === 0;
     const hayProductos = stats.total > 0;
+    const hayProductosContados = stats.contados > 0;
     const tienePermisosConteo = permisosInventarioActual.puedeContar || false;
     const tienePermisosValidacion = permisosInventarioActual.puedeValidar || false;
     const esAdmin = permisosInventarioActual.esAdmin || false;
 
+    // ✅ DETERMINAR SI PUEDE MOSTRAR PANEL SEGÚN TIPO DE INVENTARIO
+    const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+    const esInventarioCompleto = tipoInventario === 'Completo';
+
+    let puedeFinalizarPanel;
+    if (esInventarioCompleto) {
+        // Inventario Completo: requiere que TODO esté contado
+        puedeFinalizarPanel = todoContado && hayProductos;
+    } else {
+        // Inventario Parcial/Cíclico: solo requiere al menos algo contado
+        puedeFinalizarPanel = hayProductosContados && hayProductos;
+    }
+
     console.log('🔍 === CONDICIONES BÁSICAS ===');
     console.log('📊 Todo contado:', todoContado, '(pendientes:', stats.pendientes, ')');
     console.log('📦 Hay productos:', hayProductos, '(total:', stats.total, ')');
+    console.log('🔢 Productos contados:', stats.contados);
+    console.log('📋 Tipo inventario:', tipoInventario);
+    console.log('✅ Puede finalizar panel:', puedeFinalizarPanel);
     console.log('📝 Tiene permisos conteo:', tienePermisosConteo);
     console.log('✅ Tiene permisos validación:', tienePermisosValidacion);
     console.log('👑 Es admin:', esAdmin);
@@ -1339,7 +1356,7 @@ function mostrarPanelesSegunProgreso() {
     console.log('🎛️ Panel finalización existe:', !!panelFinalizacionExiste);
     console.log('🎛️ Panel conteo completado existe:', !!panelConteoCompletadoExiste);
 
-    if (todoContado && hayProductos) {
+    if (puedeFinalizarPanel) {
         console.log('✅ === INVENTARIO LISTO PARA PROCESAR ===');
 
         // ✅ DECIDIR QUÉ PANEL MOSTRAR SEGÚN PERMISOS
@@ -1391,8 +1408,10 @@ function mostrarPanelesSegunProgreso() {
         if (panelConteoCompletadoExiste) $('#conteoCompletadoPanel').hide();
 
         // ✅ MOSTRAR RAZÓN ESPECÍFICA
-        if (!todoContado) {
-            console.log('🚫 Razón: Aún hay productos pendientes de contar');
+        if (esInventarioCompleto && !todoContado) {
+            console.log('🚫 Razón: Inventario COMPLETO - Aún hay productos pendientes de contar');
+        } else if (!esInventarioCompleto && !hayProductosContados) {
+            console.log('🚫 Razón: Inventario PARCIAL/CÍCLICO - No has contado ningún producto aún');
         }
         if (!hayProductos) {
             console.log('🚫 Razón: No hay productos en el inventario');
@@ -3255,6 +3274,7 @@ async function cargarInformacionInventario(inventarioId) {
                 inventarioProgramadoId: window.inventarioConfig.inventarioId,
                 titulo: document.querySelector('h1')?.textContent?.replace('🔲', '').trim() || 'Inventario',
                 estado: 'En Progreso', // Ya sabemos que está en progreso porque llegamos aquí
+                tipoInventario: window.inventarioConfig.tipoInventario || 'Completo', // Default a Completo si no está definido
                 permisos: window.inventarioConfig.permisos
             };
 
@@ -3396,6 +3416,7 @@ function renderizarProductos() {
         // ✅ POBLAR FILTROS DE LLANTAS AL CARGAR
         setTimeout(() => {
             poblarFiltrosLlantas();
+            verificarMovimientosPostCorte(); // Verificar movimientos post-corte
         }, 500);
 
         console.log('✅ Productos renderizados correctamente con filtros preservados');
@@ -3453,9 +3474,35 @@ function crearFilaProducto(producto, numero) {
         `<i class="bi bi-clock-history text-warning" data-bs-toggle="tooltip" title="Tiene ajustes pendientes"></i>` :
         '';
 
+    // ✅ CELDA DE MOVIMIENTOS POST-CORTE
+    const movimientosPostCorte = producto.movimientosPostCorte || 0;
+    const tieneMovimientos = movimientosPostCorte !== 0;
+    let celdaMovimientos = '';
+
+    if (tieneMovimientos) {
+        const colorBadge = movimientosPostCorte < 0 ? 'bg-danger' : 'bg-success';
+        const iconoMovimiento = movimientosPostCorte < 0 ? 'bi-arrow-down' : 'bi-arrow-up';
+        celdaMovimientos = `
+            <div class="d-flex flex-column align-items-center gap-1">
+                <span class="badge ${colorBadge}">
+                    <i class="bi ${iconoMovimiento}"></i> ${movimientosPostCorte > 0 ? '+' : ''}${movimientosPostCorte}
+                </span>
+                <button class="btn btn-warning btn-sm"
+                        onclick="actualizarLineaIndividual(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Actualizar con movimientos post-corte">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        `;
+    } else {
+        celdaMovimientos = '<span class="text-muted">-</span>';
+    }
+
     return $(`
         <tr class="producto-row ${estadoClass}"
             data-producto-id="${producto.productoId}"
+            data-movimientos="${movimientosPostCorte}"
             ${producto.esLlanta && producto.capasLlanta ? `data-capas="${producto.capasLlanta}"` : ''}>
             <td class="text-center fw-bold">${numero}</td>
             <td>
@@ -3466,6 +3513,7 @@ function crearFilaProducto(producto, numero) {
             <td>${medidas}</td>
             <td>${tipoTerreno}</td>
             <td class="text-center">${capas}</td>
+            <td class="text-center">${celdaMovimientos}</td>
             <td class="text-center">
                 <span class="badge bg-primary fs-6">${producto.cantidadSistema}</span>
             </td>
@@ -5885,8 +5933,22 @@ function actualizarPanelFinalizacion() {
         }
 
         // ✅ HABILITAR/DESHABILITAR BOTÓN DE FINALIZAR
-        const puedeFinalizarSinAjustes = todoContado && !hayAjustes;
-        const puedeFinalizarConAjustes = todoContado && hayAjustes;
+        // Determinar si puede finalizar según el tipo de inventario
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+        const hayProductosContados = stats.contados > 0; // Al menos un producto contado
+
+        let puedeFinalizarSinAjustes, puedeFinalizarConAjustes;
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: Requiere que TODO esté contado
+            puedeFinalizarSinAjustes = todoContado && !hayAjustes;
+            puedeFinalizarConAjustes = todoContado && hayAjustes;
+        } else {
+            // Inventario Parcial/Cíclico: Permite finalizar con productos pendientes, pero debe haber al menos algo contado
+            puedeFinalizarSinAjustes = hayProductosContados && !hayAjustes;
+            puedeFinalizarConAjustes = hayProductosContados && hayAjustes;
+        }
 
         const $btnFinalizar = $('#btnFinalizarInventario');
 
@@ -5908,178 +5970,10 @@ function actualizarPanelFinalizacion() {
                 .addClass('btn-secondary');
         }
 
-        console.log(`✅ Panel de finalización actualizado - Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
+        console.log(`✅ Panel de finalización actualizado - Tipo: ${tipoInventario}, Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
 
     } catch (error) {
         console.error('❌ Error actualizando panel de finalización:', error);
-    }
-}
-
-/**
- * ✅ NUEVA FUNCIÓN: Finalizar inventario con aplicación de ajustes
- */
-async function finalizarInventarioCompleto() {
-    try {
-        console.log('🏁 === INICIANDO FINALIZACIÓN DE INVENTARIO ===');
-
-        const inventarioId = window.inventarioConfig.inventarioId;
-        const stats = estadisticasActuales;
-        const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
-
-        // ✅ VALIDACIONES FINALES
-        if (stats.pendientes > 0) {
-            mostrarError(`No se puede finalizar: quedan ${stats.pendientes} productos sin contar`);
-            return;
-        }
-
-        // ✅ CONFIRMACIÓN CON RESUMEN DETALLADO
-        const tieneAjustes = totalAjustes > 0;
-        let htmlConfirmacion = `
-            <div class="text-start">
-                <h5 class="text-primary mb-3">📋 Resumen del Inventario</h5>
-                <div class="row mb-3">
-                    <div class="col-6"><strong>Total productos:</strong></div>
-                    <div class="col-6">${stats.total}</div>
-                    <div class="col-6"><strong>Productos contados:</strong></div>
-                    <div class="col-6 text-success">${stats.contados}</div>
-                    <div class="col-6"><strong>Discrepancias encontradas:</strong></div>
-                    <div class="col-6 text-warning">${stats.discrepancias}</div>
-                    <div class="col-6"><strong>Ajustes pendientes:</strong></div>
-                    <div class="col-6 text-info">${totalAjustes}</div>
-                </div>
-        `;
-
-        if (tieneAjustes) {
-            htmlConfirmacion += `
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>¡Atención!</strong> Se aplicarán ${totalAjustes} ajustes al stock del sistema.
-                    <br><small>Esta acción es <strong>irreversible</strong>.</small>
-                </div>
-            `;
-        } else {
-            htmlConfirmacion += `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle me-2"></i>
-                    No hay ajustes pendientes. El inventario se marcará como completado.
-                </div>
-            `;
-        }
-
-        htmlConfirmacion += `</div>`;
-
-        const confirmacion = await Swal.fire({
-            title: '🏁 ¿Finalizar Inventario?',
-            html: htmlConfirmacion,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: tieneAjustes ? '#ffc107' : '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: tieneAjustes ? 'Sí, Finalizar y Aplicar Ajustes' : 'Sí, Finalizar Inventario',
-            cancelButtonText: 'Cancelar',
-            width: '600px'
-        });
-
-        if (!confirmacion.isConfirmed) return;
-
-        // ✅ CAMBIAR ESTADO DEL BOTÓN
-        const $btn = $('#btnFinalizarInventario');
-        $btn.prop('disabled', true);
-        $btn.find('.normal-state').hide();
-        $btn.find('.loading-state').show();
-
-        try {
-            let mensaje = '';
-
-            if (tieneAjustes) {
-                // ✅ PASO 1: Aplicar ajustes pendientes
-                console.log('📝 Aplicando ajustes pendientes...');
-
-                const responseAjustes = await fetch(`/TomaInventario/AplicarAjustesPendientes/${inventarioId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!responseAjustes.ok) {
-                    throw new Error(`Error aplicando ajustes: ${responseAjustes.status}`);
-                }
-
-                const resultadoAjustes = await responseAjustes.json();
-
-                if (!resultadoAjustes.success) {
-                    throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
-                }
-
-                console.log('✅ Ajustes aplicados exitosamente');
-                mensaje += `✅ ${totalAjustes} ajustes aplicados al stock.\n`;
-            }
-
-            // ✅ PASO 2: Completar inventario
-            console.log('🏁 Completando inventario...');
-
-            const responseCompletar = await fetch(`/TomaInventario/CompletarInventario/${inventarioId}`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!responseCompletar.ok) {
-                throw new Error(`Error completando inventario: ${responseCompletar.status}`);
-            }
-
-            const resultadoCompletar = await responseCompletar.json();
-
-            if (!resultadoCompletar.success) {
-                throw new Error(resultadoCompletar.message || 'Error al completar inventario');
-            }
-
-            console.log('🎉 === INVENTARIO FINALIZADO EXITOSAMENTE ===');
-
-            // ✅ MOSTRAR MENSAJE DE ÉXITO
-            mensaje += `🎉 Inventario completado exitosamente.\n`;
-            mensaje += `📊 Total productos: ${stats.total}\n`;
-            if (stats.discrepancias > 0) {
-                mensaje += `⚠️ Discrepancias resueltas: ${stats.discrepancias}`;
-            }
-
-            await Swal.fire({
-                title: '🎉 ¡Inventario Completado!',
-                text: mensaje,
-                icon: 'success',
-                confirmButtonColor: '#28a745',
-                confirmButtonText: 'Entendido'
-            });
-
-            // ✅ ACTUALIZAR UI FINAL
-            await cargarInformacionInventario(inventarioId);
-            await cargarProductosInventario(inventarioId);
-            await cargarAjustesPendientes(inventarioId);
-
-            // ✅ OCULTAR PANELES DE GESTIÓN
-            $('#ajustesPendientesPanel').slideUp();
-            $('#finalizacionPanel').slideUp();
-
-            // ✅ MOSTRAR MENSAJE EN LA INTERFAZ
-            mostrarInventarioCompletado();
-
-        } catch (error) {
-            console.error('💥 Error durante la finalización:', error);
-            mostrarError(`Error finalizando inventario: ${error.message}`);
-        } finally {
-            // ✅ RESTAURAR BOTÓN
-            $btn.prop('disabled', false);
-            $btn.find('.loading-state').hide();
-            $btn.find('.normal-state').show();
-        }
-
-    } catch (error) {
-        console.error('💥 Error crítico en finalización:', error);
-        mostrarError('Error crítico al finalizar inventario');
     }
 }
 
@@ -6251,25 +6145,38 @@ async function ejecutarValidacionesPreFinalizacion(inventarioId, stats, totalAju
             informacion: []
         };
 
-        // ✅ VALIDACIÓN 1: Productos sin contar
-        if (stats.pendientes > 0) {
-            validaciones.puedeFinalizarse = false;
-            validaciones.mensaje = `No se puede finalizar: quedan ${stats.pendientes} productos sin contar.`;
-            return validaciones;
+        // ✅ VALIDACIÓN 1: Productos sin contar (SEGÚN TIPO DE INVENTARIO)
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+
+        console.log(`📋 Tipo de inventario: ${tipoInventario}`);
+        console.log(`📊 Productos contados: ${stats.contados}, Pendientes: ${stats.pendientes}`);
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: requiere 100% contado
+            if (stats.pendientes > 0) {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `No se puede finalizar inventario COMPLETO: quedan ${stats.pendientes} productos sin contar.`;
+                return validaciones;
+            }
+        } else {
+            // Inventario Parcial/Cíclico: requiere al menos 1 contado
+            if (stats.contados === 0) {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `No se puede finalizar: debes contar al menos 1 producto.`;
+                return validaciones;
+            }
+            // Si hay productos pendientes en inventario Parcial/Cíclico, agregar información
+            if (stats.pendientes > 0) {
+                validaciones.informacion.push(`Inventario ${tipoInventario}: ${stats.pendientes} productos no contados serán ignorados.`);
+            }
         }
 
         // ✅ VALIDACIÓN 2: Verificar estado del inventario
-        const inventarioResponse = await fetch(`/TomaInventario/ObtenerInventario/${inventarioId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-
-        if (inventarioResponse.ok) {
-            const inventarioData = await inventarioResponse.json();
-            if (inventarioData.estado !== 'En Progreso') {
-                validaciones.puedeFinalizarse = false;
-                validaciones.mensaje = `El inventario está en estado '${inventarioData.estado}' y no se puede finalizar.`;
-                return validaciones;
-            }
+        if (inventarioActual && inventarioActual.estado !== 'En Progreso') {
+            validaciones.puedeFinalizarse = false;
+            validaciones.mensaje = `El inventario está en estado '${inventarioActual.estado}' y no se puede finalizar.`;
+            return validaciones;
         }
 
         // ✅ VALIDACIÓN 3: Revisar ajustes pendientes
@@ -6360,20 +6267,32 @@ async function verificarProductosCriticos(inventarioId) {
  * ✅ FUNCIÓN: Mostrar confirmación detallada de finalización
  */
 async function mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones) {
+    const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+    const esInventarioCompleto = tipoInventario === 'Completo';
+
     let htmlConfirmacion = `
         <div class="text-start">
             <h5 class="text-primary mb-3">📋 Resumen Final del Inventario</h5>
-            
+
+            <div class="alert alert-info mb-3">
+                <strong>📝 Tipo de Inventario:</strong> ${tipoInventario}
+            </div>
+
             <div class="row mb-3">
                 <div class="col-6"><strong>📦 Total productos:</strong></div>
                 <div class="col-6">${stats.total}</div>
-                
+
                 <div class="col-6"><strong>✅ Productos contados:</strong></div>
                 <div class="col-6 text-success">${stats.contados}</div>
-                
+
+                ${!esInventarioCompleto && stats.pendientes > 0 ? `
+                <div class="col-6"><strong>⏸️ Productos NO contados:</strong></div>
+                <div class="col-6 text-muted">${stats.pendientes} <small>(se ignorarán)</small></div>
+                ` : ''}
+
                 <div class="col-6"><strong>⚠️ Discrepancias encontradas:</strong></div>
                 <div class="col-6 text-warning">${stats.discrepancias}</div>
-                
+
                 <div class="col-6"><strong>🔄 Ajustes a aplicar:</strong></div>
                 <div class="col-6 text-info">${totalAjustes}</div>
             </div>
@@ -7617,10 +7536,214 @@ function aplicarFiltrosLlantas() {
 }
 
 // =====================================
+// FUNCIONES DE MOVIMIENTOS POST-CORTE
+// =====================================
+
+/**
+ * Actualiza una línea individual procesando sus movimientos post-corte
+ */
+async function actualizarLineaIndividual(productoId) {
+    try {
+        console.log(`🔄 Actualizando línea individual para producto ${productoId}`);
+
+        const resultado = await Swal.fire({
+            title: '¿Actualizar línea?',
+            html: `
+                <div class="text-start">
+                    <p>Esta acción actualizará la cantidad del sistema con los movimientos registrados después del corte.</p>
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>
+                    Si el producto ya fue contado, se recalculará la diferencia automáticamente.</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!resultado.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando...',
+            html: 'Procesando movimientos post-corte',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const usuarioId = window.inventarioConfig?.usuarioId || 0;
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+
+        const response = await fetch('/api/MovimientosPostCorte/actualizar-linea', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                inventarioProgramadoId: inventarioId,
+                productoId: productoId,
+                usuarioId: usuarioId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Recargar productos
+            await cargarProductosInventario(inventarioId);
+            verificarMovimientosPostCorte();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'No se pudo actualizar la línea'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando línea:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al actualizar la línea'
+        });
+    }
+}
+
+/**
+ * Actualiza todas las líneas con movimientos post-corte pendientes
+ */
+async function actualizarTodasLineas() {
+    try {
+        console.log('🔄 Actualizando todas las líneas con movimientos');
+
+        const resultado = await Swal.fire({
+            title: '¿Actualizar todas las líneas?',
+            html: `
+                <div class="text-start">
+                    <p>Esta acción actualizará TODAS las líneas que tienen movimientos post-corte pendientes.</p>
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>
+                    Las cantidades del sistema se ajustarán y las diferencias se recalcularán automáticamente.</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar todas',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!resultado.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando líneas...',
+            html: 'Procesando movimientos post-corte',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const usuarioId = window.inventarioConfig?.usuarioId || 0;
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+
+        const response = await fetch('/api/MovimientosPostCorte/actualizar-masivo', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                inventarioProgramadoId: inventarioId,
+                usuarioId: usuarioId,
+                productoIds: [] // Vacío = todas las líneas con movimientos
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                html: `
+                    <p>${data.message}</p>
+                    <p class="small text-muted">
+                        Líneas actualizadas: ${data.data.lineasActualizadas}<br>
+                        Movimientos procesados: ${data.data.movimientosProcesados}
+                    </p>
+                `,
+                timer: 3000
+            });
+
+            // Recargar productos
+            await cargarProductosInventario(inventarioId);
+            verificarMovimientosPostCorte();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'No se pudieron actualizar las líneas'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando líneas:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al actualizar las líneas'
+        });
+    }
+}
+
+/**
+ * Verifica si hay productos con movimientos post-corte y actualiza la UI
+ */
+function verificarMovimientosPostCorte() {
+    try {
+        // Contar productos con movimientos
+        const productosConMovimientos = productosInventario.filter(p => (p.movimientosPostCorte || 0) !== 0);
+        const totalConMovimientos = productosConMovimientos.length;
+
+        console.log(`📊 Productos con movimientos post-corte: ${totalConMovimientos}`);
+
+        // Actualizar contador y mostrar/ocultar botón
+        const $btnActualizar = $('#btnActualizarTodasLineas');
+        const $contador = $('#contadorLineasConMovimientos');
+
+        if (totalConMovimientos > 0) {
+            $contador.text(totalConMovimientos);
+            $btnActualizar.show();
+        } else {
+            $btnActualizar.hide();
+        }
+    } catch (error) {
+        console.error('❌ Error verificando movimientos post-corte:', error);
+    }
+}
+
+// =====================================
 // EVENT LISTENERS PARA FILTROS DE LLANTAS
 // =====================================
 
 $(document).ready(function () {
+    // ✅ Event listener para botón de actualizar todas las líneas
+    $('#btnActualizarTodasLineas').on('click', actualizarTodasLineas);
+
     // ✅ Event listeners para filtros en cascada (siempre activos)
     $('#filterAncho').on('change', function () {
         filtrosLlantasActivos.ancho = $(this).val();

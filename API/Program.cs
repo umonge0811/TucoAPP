@@ -26,6 +26,8 @@ builder.Services.AddScoped<INotificacionService, NotificacionService>();
 builder.Services.AddScoped<ITomaInventarioService, TomaInventarioService>();
 // ✅ AGREGAR ESTA LÍNEA
 builder.Services.AddScoped<IAjustesInventarioPendientesService, AjustesInventarioPendientesService>();
+// ✅ AGREGAR SERVICIO DE MOVIMIENTOS POST-CORTE
+builder.Services.AddScoped<IMovimientosPostCorteService, MovimientosPostCorteService>();
 // ✅ AGREGAR SERVICIOS DE REPORTES
 builder.Services.AddScoped<IReporteInventarioService, ReporteInventarioService>();
 builder.Services.AddScoped<IReportePedidosService, ReportePedidosService>();
@@ -182,6 +184,7 @@ builder.Services.AddScoped<TomaInventarioService>();
 builder.Services.AddScoped<ReporteInventarioService>();
 builder.Services.AddScoped<ReportePedidosService>();
 builder.Services.AddScoped<AjustesInventarioPendientesService>();
+builder.Services.AddScoped<IMovimientosPostCorteService, MovimientosPostCorteService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<VerificacionProformasService>();
 
