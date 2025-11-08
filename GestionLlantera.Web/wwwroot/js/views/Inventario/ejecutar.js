@@ -3454,7 +3454,9 @@ function crearFilaProducto(producto, numero) {
         '';
 
     return $(`
-        <tr class="producto-row ${estadoClass}" data-producto-id="${producto.productoId}">
+        <tr class="producto-row ${estadoClass}"
+            data-producto-id="${producto.productoId}"
+            ${producto.esLlanta && producto.capasLlanta ? `data-capas="${producto.capasLlanta}"` : ''}>
             <td class="text-center fw-bold">${numero}</td>
             <td>
                 <div class="fw-semibold">${producto.nombreProducto}</div>
@@ -7306,7 +7308,8 @@ let filtrosLlantasActivos = {
     ancho: '',
     perfil: '',
     diametro: '',
-    tipoTerreno: ''
+    tipoTerreno: '',
+    capas: ''
 };
 
 /**
@@ -7320,13 +7323,14 @@ function poblarFiltrosLlantas() {
             anchos: new Set(),
             perfiles: new Set(),
             diametros: new Set(),
-            tiposTerreno: new Set()
+            tiposTerreno: new Set(),
+            capas: new Set()
         };
 
         // Recorrer todas las filas de la tabla
         $('#tablaProductosBody tr').each(function () {
             const $fila = $(this);
-            
+
             // Obtener el texto de la columna de medidas (columna 3: #, Producto, Medidas)
             const medidasTexto = $fila.find('td:eq(2)').text().trim();
 
@@ -7336,17 +7340,17 @@ function poblarFiltrosLlantas() {
 
                 if (match) {
                     const [, ancho, perfil, diametro] = match;
-                    
+
                     if (ancho) {
                         const anchoNum = parseFloat(ancho);
                         valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
                     }
-                    
+
                     if (perfil) {
                         const perfilNum = parseFloat(perfil);
                         valores.perfiles.add((perfilNum % 1 === 0) ? perfilNum.toString() : perfil);
                     }
-                    
+
                     if (diametro) {
                         const diametroNum = parseFloat(diametro);
                         valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
@@ -7354,15 +7358,15 @@ function poblarFiltrosLlantas() {
                 } else {
                     // Parsear formato SIN perfil: 700/R16
                     match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
-                    
+
                     if (match) {
                         const [, ancho, diametro] = match;
-                        
+
                         if (ancho) {
                             const anchoNum = parseFloat(ancho);
                             valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
                         }
-                        
+
                         if (diametro) {
                             const diametroNum = parseFloat(diametro);
                             valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
@@ -7375,6 +7379,12 @@ function poblarFiltrosLlantas() {
             const tipoTerreno = $fila.find('td:eq(3)').text().trim();
             if (tipoTerreno && tipoTerreno !== '-' && tipoTerreno !== 'N/A') {
                 valores.tiposTerreno.add(tipoTerreno);
+            }
+
+            // Extraer Capas (desde data attribute)
+            const capas = $fila.data('capas') || $fila.attr('data-capas');
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== '' && capas !== null) {
+                valores.capas.add(String(capas));
             }
         });
 
@@ -7395,11 +7405,16 @@ function poblarFiltrosLlantas() {
         $('#filterTipoTerreno').html('<option value="">Todos</option>' +
             tiposTerreno.map(tipo => `<option value="${tipo}">${tipo}</option>`).join(''));
 
+        const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+        $('#filterCapas').html('<option value="">Todas</option>' +
+            capas.map(c => `<option value="${c}">${c} capas</option>`).join(''));
+
         console.log('✅ Filtros poblados:', {
             anchos: anchos.length,
             perfiles: perfiles.length,
             diametros: diametros.length,
-            tiposTerreno: tiposTerreno.length
+            tiposTerreno: tiposTerreno.length,
+            capas: capas.length
         });
     } catch (error) {
         console.error('❌ Error poblando filtros:', error);
@@ -7416,6 +7431,7 @@ function actualizarFiltrosCascada() {
         const anchoSel = filtrosLlantasActivos.ancho;
         const perfilSel = filtrosLlantasActivos.perfil;
         const diametroSel = filtrosLlantasActivos.diametro;
+        const capasSel = filtrosLlantasActivos.capas;
 
         // Si no hay filtros, restaurar todos
         if (!anchoSel && !perfilSel && !diametroSel) {
@@ -7427,7 +7443,8 @@ function actualizarFiltrosCascada() {
             anchos: new Set(),
             perfiles: new Set(),
             diametros: new Set(),
-            tiposTerreno: new Set()
+            tiposTerreno: new Set(),
+            capas: new Set()
         };
 
         // Recorrer filas visibles
@@ -7474,6 +7491,11 @@ function actualizarFiltrosCascada() {
                 if (tipoTerreno && tipoTerreno !== '-') {
                     valores.tiposTerreno.add(tipoTerreno);
                 }
+
+                const capas = $fila.data('capas') || $fila.attr('data-capas');
+                if (capas && capas !== 'N/A' && capas !== '-' && capas !== null) {
+                    valores.capas.add(String(capas));
+                }
             }
         });
 
@@ -7502,6 +7524,17 @@ function actualizarFiltrosCascada() {
             const tiposTerreno = Array.from(valores.tiposTerreno).sort();
             $('#filterTipoTerreno').html('<option value="">Todos</option>' +
                 tiposTerreno.map(t => `<option value="${t}">${t}</option>`).join(''));
+        }
+
+        if (anchoSel || perfilSel || diametroSel) {
+            const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+            if (capas.length > 0) {
+                $('#filterCapas').html('<option value="">Todas</option>' +
+                    capas.map(c => `<option value="${c}">${c} capas</option>`).join(''));
+            } else {
+                $('#filterCapas').html('<option value="">Todas</option>');
+            }
+            $('#filterCapas').val(capasSel);
         }
 
         console.log('✅ Filtros en cascada actualizados');
@@ -7556,6 +7589,14 @@ function aplicarFiltrosLlantas() {
                 }
             }
 
+            // Filtro de capas
+            if (filtrosLlantasActivos.capas) {
+                const capas = $fila.data('capas') || $fila.attr('data-capas');
+                if (!capas || capas === '-' || capas === 'N/A' || String(capas) !== filtrosLlantasActivos.capas) {
+                    mostrar = false;
+                }
+            }
+
             if (mostrar) {
                 $fila.show();
             } else {
@@ -7604,10 +7645,16 @@ $(document).ready(function () {
         aplicarFiltrosLlantas();
     });
 
+    $('#filterCapas').on('change', function () {
+        filtrosLlantasActivos.capas = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
     // Limpiar filtros de llantas
     $('#btnLimpiarFiltrosLlantas').on('click', function () {
-        filtrosLlantasActivos = { ancho: '', perfil: '', diametro: '', tipoTerreno: '' };
-        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno').val('');
+        filtrosLlantasActivos = { ancho: '', perfil: '', diametro: '', tipoTerreno: '', capas: '' };
+        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterCapas').val('');
         poblarFiltrosLlantas();
         $('#tablaProductosBody tr').show();
 
