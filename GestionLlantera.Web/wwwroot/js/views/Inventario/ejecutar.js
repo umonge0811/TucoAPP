@@ -5978,193 +5978,6 @@ function actualizarPanelFinalizacion() {
 }
 
 /**
- * ✅ NUEVA FUNCIÓN: Finalizar inventario con aplicación de ajustes
- */
-async function finalizarInventarioCompleto() {
-    try {
-        console.log('🏁 === INICIANDO FINALIZACIÓN DE INVENTARIO ===');
-
-        const inventarioId = window.inventarioConfig.inventarioId;
-        const stats = estadisticasActuales;
-        const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
-
-        // ✅ VALIDACIONES FINALES SEGÚN TIPO DE INVENTARIO
-        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
-        const esInventarioCompleto = tipoInventario === 'Completo';
-
-        if (esInventarioCompleto) {
-            // Inventario Completo: requiere 100% contado
-            if (stats.pendientes > 0) {
-                mostrarError(`No se puede finalizar inventario COMPLETO: quedan ${stats.pendientes} productos sin contar`);
-                return;
-            }
-        } else {
-            // Inventario Parcial/Cíclico: requiere al menos 1 contado
-            if (stats.contados === 0) {
-                mostrarError(`No se puede finalizar: debes contar al menos 1 producto`);
-                return;
-            }
-        }
-
-        // ✅ CONFIRMACIÓN CON RESUMEN DETALLADO
-        const tieneAjustes = totalAjustes > 0;
-        let htmlConfirmacion = `
-            <div class="text-start">
-                <h5 class="text-primary mb-3">📋 Resumen del Inventario</h5>
-                <div class="alert alert-info mb-3">
-                    <strong>Tipo:</strong> ${tipoInventario}
-                </div>
-                <div class="row mb-3">
-                    <div class="col-6"><strong>Total productos:</strong></div>
-                    <div class="col-6">${stats.total}</div>
-                    <div class="col-6"><strong>Productos contados:</strong></div>
-                    <div class="col-6 text-success">${stats.contados}</div>
-                    ${!esInventarioCompleto ? `
-                    <div class="col-6"><strong>Productos NO contados:</strong></div>
-                    <div class="col-6 text-muted">${stats.pendientes} (se ignorarán)</div>
-                    ` : ''}
-                    <div class="col-6"><strong>Discrepancias encontradas:</strong></div>
-                    <div class="col-6 text-warning">${stats.discrepancias}</div>
-                    <div class="col-6"><strong>Ajustes pendientes:</strong></div>
-                    <div class="col-6 text-info">${totalAjustes}</div>
-                </div>
-        `;
-
-        if (tieneAjustes) {
-            htmlConfirmacion += `
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>¡Atención!</strong> Se aplicarán ${totalAjustes} ajustes al stock del sistema.
-                    <br><small>Esta acción es <strong>irreversible</strong>.</small>
-                </div>
-            `;
-        } else {
-            htmlConfirmacion += `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle me-2"></i>
-                    No hay ajustes pendientes. El inventario se marcará como completado.
-                </div>
-            `;
-        }
-
-        htmlConfirmacion += `</div>`;
-
-        const confirmacion = await Swal.fire({
-            title: '🏁 ¿Finalizar Inventario?',
-            html: htmlConfirmacion,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: tieneAjustes ? '#ffc107' : '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: tieneAjustes ? 'Sí, Finalizar y Aplicar Ajustes' : 'Sí, Finalizar Inventario',
-            cancelButtonText: 'Cancelar',
-            width: '600px'
-        });
-
-        if (!confirmacion.isConfirmed) return;
-
-        // ✅ CAMBIAR ESTADO DEL BOTÓN
-        const $btn = $('#btnFinalizarInventario');
-        $btn.prop('disabled', true);
-        $btn.find('.normal-state').hide();
-        $btn.find('.loading-state').show();
-
-        try {
-            let mensaje = '';
-
-            if (tieneAjustes) {
-                // ✅ PASO 1: Aplicar ajustes pendientes
-                console.log('📝 Aplicando ajustes pendientes...');
-
-                const responseAjustes = await fetch(`/TomaInventario/AplicarAjustesPendientes/${inventarioId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!responseAjustes.ok) {
-                    throw new Error(`Error aplicando ajustes: ${responseAjustes.status}`);
-                }
-
-                const resultadoAjustes = await responseAjustes.json();
-
-                if (!resultadoAjustes.success) {
-                    throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
-                }
-
-                console.log('✅ Ajustes aplicados exitosamente');
-                mensaje += `✅ ${totalAjustes} ajustes aplicados al stock.\n`;
-            }
-
-            // ✅ PASO 2: Completar inventario
-            console.log('🏁 Completando inventario...');
-
-            const responseCompletar = await fetch(`/TomaInventario/CompletarInventario/${inventarioId}`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!responseCompletar.ok) {
-                throw new Error(`Error completando inventario: ${responseCompletar.status}`);
-            }
-
-            const resultadoCompletar = await responseCompletar.json();
-
-            if (!resultadoCompletar.success) {
-                throw new Error(resultadoCompletar.message || 'Error al completar inventario');
-            }
-
-            console.log('🎉 === INVENTARIO FINALIZADO EXITOSAMENTE ===');
-
-            // ✅ MOSTRAR MENSAJE DE ÉXITO
-            mensaje += `🎉 Inventario completado exitosamente.\n`;
-            mensaje += `📊 Total productos: ${stats.total}\n`;
-            if (stats.discrepancias > 0) {
-                mensaje += `⚠️ Discrepancias resueltas: ${stats.discrepancias}`;
-            }
-
-            await Swal.fire({
-                title: '🎉 ¡Inventario Completado!',
-                text: mensaje,
-                icon: 'success',
-                confirmButtonColor: '#28a745',
-                confirmButtonText: 'Entendido'
-            });
-
-            // ✅ ACTUALIZAR UI FINAL
-            await cargarInformacionInventario(inventarioId);
-            await cargarProductosInventario(inventarioId);
-            await cargarAjustesPendientes(inventarioId);
-
-            // ✅ OCULTAR PANELES DE GESTIÓN
-            $('#ajustesPendientesPanel').slideUp();
-            $('#finalizacionPanel').slideUp();
-
-            // ✅ MOSTRAR MENSAJE EN LA INTERFAZ
-            mostrarInventarioCompletado();
-
-        } catch (error) {
-            console.error('💥 Error durante la finalización:', error);
-            mostrarError(`Error finalizando inventario: ${error.message}`);
-        } finally {
-            // ✅ RESTAURAR BOTÓN
-            $btn.prop('disabled', false);
-            $btn.find('.loading-state').hide();
-            $btn.find('.normal-state').show();
-        }
-
-    } catch (error) {
-        console.error('💥 Error crítico en finalización:', error);
-        mostrarError('Error crítico al finalizar inventario');
-    }
-}
-
-/**
  * ✅ NUEVA FUNCIÓN: Mostrar interfaz de inventario completado
  */
 function mostrarInventarioCompletado() {
@@ -6332,25 +6145,38 @@ async function ejecutarValidacionesPreFinalizacion(inventarioId, stats, totalAju
             informacion: []
         };
 
-        // ✅ VALIDACIÓN 1: Productos sin contar
-        if (stats.pendientes > 0) {
-            validaciones.puedeFinalizarse = false;
-            validaciones.mensaje = `No se puede finalizar: quedan ${stats.pendientes} productos sin contar.`;
-            return validaciones;
+        // ✅ VALIDACIÓN 1: Productos sin contar (SEGÚN TIPO DE INVENTARIO)
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+
+        console.log(`📋 Tipo de inventario: ${tipoInventario}`);
+        console.log(`📊 Productos contados: ${stats.contados}, Pendientes: ${stats.pendientes}`);
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: requiere 100% contado
+            if (stats.pendientes > 0) {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `No se puede finalizar inventario COMPLETO: quedan ${stats.pendientes} productos sin contar.`;
+                return validaciones;
+            }
+        } else {
+            // Inventario Parcial/Cíclico: requiere al menos 1 contado
+            if (stats.contados === 0) {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `No se puede finalizar: debes contar al menos 1 producto.`;
+                return validaciones;
+            }
+            // Si hay productos pendientes en inventario Parcial/Cíclico, agregar información
+            if (stats.pendientes > 0) {
+                validaciones.informacion.push(`Inventario ${tipoInventario}: ${stats.pendientes} productos no contados serán ignorados.`);
+            }
         }
 
         // ✅ VALIDACIÓN 2: Verificar estado del inventario
-        const inventarioResponse = await fetch(`/TomaInventario/ObtenerInventario/${inventarioId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-
-        if (inventarioResponse.ok) {
-            const inventarioData = await inventarioResponse.json();
-            if (inventarioData.estado !== 'En Progreso') {
-                validaciones.puedeFinalizarse = false;
-                validaciones.mensaje = `El inventario está en estado '${inventarioData.estado}' y no se puede finalizar.`;
-                return validaciones;
-            }
+        if (inventarioActual && inventarioActual.estado !== 'En Progreso') {
+            validaciones.puedeFinalizarse = false;
+            validaciones.mensaje = `El inventario está en estado '${inventarioActual.estado}' y no se puede finalizar.`;
+            return validaciones;
         }
 
         // ✅ VALIDACIÓN 3: Revisar ajustes pendientes
@@ -6441,20 +6267,32 @@ async function verificarProductosCriticos(inventarioId) {
  * ✅ FUNCIÓN: Mostrar confirmación detallada de finalización
  */
 async function mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones) {
+    const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+    const esInventarioCompleto = tipoInventario === 'Completo';
+
     let htmlConfirmacion = `
         <div class="text-start">
             <h5 class="text-primary mb-3">📋 Resumen Final del Inventario</h5>
-            
+
+            <div class="alert alert-info mb-3">
+                <strong>📝 Tipo de Inventario:</strong> ${tipoInventario}
+            </div>
+
             <div class="row mb-3">
                 <div class="col-6"><strong>📦 Total productos:</strong></div>
                 <div class="col-6">${stats.total}</div>
-                
+
                 <div class="col-6"><strong>✅ Productos contados:</strong></div>
                 <div class="col-6 text-success">${stats.contados}</div>
-                
+
+                ${!esInventarioCompleto && stats.pendientes > 0 ? `
+                <div class="col-6"><strong>⏸️ Productos NO contados:</strong></div>
+                <div class="col-6 text-muted">${stats.pendientes} <small>(se ignorarán)</small></div>
+                ` : ''}
+
                 <div class="col-6"><strong>⚠️ Discrepancias encontradas:</strong></div>
                 <div class="col-6 text-warning">${stats.discrepancias}</div>
-                
+
                 <div class="col-6"><strong>🔄 Ajustes a aplicar:</strong></div>
                 <div class="col-6 text-info">${totalAjustes}</div>
             </div>
