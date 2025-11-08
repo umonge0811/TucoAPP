@@ -21,7 +21,7 @@ let filtrosConfig = {
         perfil: '',
         diametro: '',
         tipoTerreno: '',
-        velocidad: ''
+        capas: ''
     },
     marcasDisponibles: [],
     medidasDisponibles: {
@@ -167,7 +167,7 @@ function actualizarFiltrosCascada() {
         diametros: new Set(),
         tiposTerreno: new Set(),
         marcas: new Set(),
-        velocidades: new Set()
+        capas: new Set()
     };
 
     // Recorrer todas las filas de llantas
@@ -382,7 +382,7 @@ function configurarEventosFiltros() {
     });
 
     // Filtros secundarios de llantas (sin cascada)
-    const filtrosLlantasSecundarios = ['#filterTipoTerreno', '#filterMarca', '#filterVelocidad'];
+    const filtrosLlantasSecundarios = ['#filterTipoTerreno', '#filterMarca', '#filterCapas'];
 
     filtrosLlantasSecundarios.forEach(selector => {
         $(selector).on("change", function () {
@@ -420,7 +420,7 @@ function configurarEventosFiltros() {
         console.log('🧹 Limpiando filtros de llantas...');
 
         // Limpiar selectores
-        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
+        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterCapas').val('');
 
         // Limpiar filtros activos
         filtrosConfig.activos.ancho = '';
@@ -428,7 +428,7 @@ function configurarEventosFiltros() {
         filtrosConfig.activos.diametro = '';
         filtrosConfig.activos.tipoterreno = '';
         filtrosConfig.activos.marca = '';
-        filtrosConfig.activos.velocidad = '';
+        filtrosConfig.activos.capas = '';
 
         // Restaurar todas las opciones originales
         poblarSelectoresDinamicos();
@@ -870,7 +870,7 @@ function cumpleFiltrosLlantas($fila) {
     if (!esLlanta) {
         const hayFiltrosLlanta = filtrosConfig.activos.ancho || filtrosConfig.activos.perfil ||
             filtrosConfig.activos.diametro || filtrosConfig.activos.tipoterreno ||
-            filtrosConfig.activos.marca || filtrosConfig.activos.velocidad;
+            filtrosConfig.activos.marca || filtrosConfig.activos.capas;
         return !hayFiltrosLlanta;
     }
 
@@ -947,15 +947,15 @@ function cumpleFiltrosLlantas($fila) {
     }
 
 
-    // ✅ FILTRO DE ÍNDICE DE VELOCIDAD
-    if (filtrosConfig.activos.velocidad) {
-        const velocidad = $fila.data('indice-velocidad') || $fila.attr('data-indice-velocidad');
+    // ✅ FILTRO DE CAPAS
+    if (filtrosConfig.activos.capas) {
+        const capas = $fila.data('capas') || $fila.attr('data-capas');
 
-        if (!velocidad || velocidad === 'N/A' || velocidad === '-') {
+        if (!capas || capas === 'N/A' || capas === '-') {
             return false;
         }
 
-        if (velocidad.toUpperCase() !== filtrosConfig.activos.velocidad.toUpperCase()) {
+        if (String(capas) !== String(filtrosConfig.activos.capas)) {
             return false;
         }
     }
@@ -1006,10 +1006,10 @@ function actualizarIndicadoresFiltros() {
     }
 
     // Filtros de llantas con iconos
-    const iconosLlantas = { ancho: '↔️', perfil: '📏', diametro: '⭕', tipoTerreno: '🌍', velocidad: '⚡' };
-    ['ancho', 'perfil', 'diametro', 'tipoTerreno', 'velocidad'].forEach(campo => {
+    const iconosLlantas = { ancho: '↔️', perfil: '📏', diametro: '⭕', tipoTerreno: '🌍', capas: '🔢' };
+    ['ancho', 'perfil', 'diametro', 'tipoTerreno', 'capas'].forEach(campo => {
         if (filtrosConfig.activos[campo]) {
-            const nombres = { ancho: 'Ancho', perfil: 'Perfil', diametro: 'Diámetro', tipoTerreno: 'Terreno', velocidad: 'Velocidad' };
+            const nombres = { ancho: 'Ancho', perfil: 'Perfil', diametro: 'Diámetro', tipoTerreno: 'Terreno', capas: 'Capas' };
             filtrosActivos.push(`${iconosLlantas[campo]} ${nombres[campo]}: ${filtrosConfig.activos[campo]}`);
         }
     });
@@ -1050,7 +1050,7 @@ function limpiarTodosLosFiltros() {
     $("#filterStock").val('');
     $("#filterMarca").val('');
     $("#precioMin, #precioMax, #stockMin, #stockMax, #utilidadMin, #utilidadMax").val('');
-    $("#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterVelocidad").val('');
+    $("#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterCapas").val('');
 
     // Ocultar botones de limpiar
     $("#btnLimpiarMarca").hide();
@@ -1071,7 +1071,7 @@ function limpiarTodosLosFiltros() {
         perfil: '',
         diametro: '',
         tipoTerreno: '',
-        velocidad: ''
+        capas: ''
     };
 
     // Aplicar filtros (esto mostrará todos los productos)
@@ -1187,7 +1187,7 @@ function poblarFiltrosLlantas() {
         diametros: new Set(),
         tiposTerreno: new Set(),
         marcas: new Set(),
-        velocidades: new Set()
+        capas: new Set()
     };
 
     // Recorrer todas las filas de la tabla
@@ -1263,10 +1263,10 @@ function poblarFiltrosLlantas() {
                 valores.marcas.add(marcaNormalizada);
             }
 
-            // ✅ EXTRAER ÍNDICE DE VELOCIDAD (si existe en data attribute)
-            const velocidad = $fila.data('indice-velocidad') || $fila.attr('data-indice-velocidad');
-            if (velocidad && velocidad !== 'N/A' && velocidad !== '-') {
-                valores.velocidades.add(velocidad.toUpperCase());
+            // ✅ EXTRAER CAPAS (si existe en data attribute)
+            const capas = $fila.data('capas') || $fila.attr('data-capas');
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== '' && capas !== null) {
+                valores.capas.add(String(capas));
             }
         }
     });
@@ -1277,7 +1277,7 @@ function poblarFiltrosLlantas() {
         diametros: Array.from(valores.diametros),
         tiposTerreno: Array.from(valores.tiposTerreno),
         marcas: Array.from(valores.marcas),
-        velocidades: Array.from(valores.velocidades)
+        capas: Array.from(valores.capas)
     });
 
     // ✅ POBLAR SELECTORES
@@ -1301,10 +1301,10 @@ function poblarFiltrosLlantas() {
     $('#filterMarca').html('<option value="">Todas</option>' +
         marcas.map(marca => `<option value="${marca}">${marca}</option>`).join(''));
 
-    const velocidades = Array.from(valores.velocidades).sort();
-    if (velocidades.length > 0) {
-        $('#filterVelocidad').html('<option value="">Todos</option>' +
-            velocidades.map(vel => `<option value="${vel}">${vel}</option>`).join(''));
+    const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+    if (capas.length > 0) {
+        $('#filterCapas').html('<option value="">Todas</option>' +
+            capas.map(capa => `<option value="${capa}">${capa} capas</option>`).join(''));
     }
 
     console.log('✅ Filtros de llantas poblados:', {
@@ -1313,7 +1313,7 @@ function poblarFiltrosLlantas() {
         diametros: diametros.length,
         tiposTerreno: tiposTerreno.length,
         marcas: marcas.length,
-        velocidades: velocidades.length
+        capas: capas.length
     });
 }
 
@@ -1352,7 +1352,7 @@ function cumpleFiltrosLlantasCard($card) {
     if (!tieneInfoLlanta) {
         const hayFiltrosLlanta = filtrosConfig.activos.ancho || filtrosConfig.activos.perfil ||
             filtrosConfig.activos.diametro || filtrosConfig.activos.tipoterreno ||
-            filtrosConfig.activos.velocidad;
+            filtrosConfig.activos.capas;
         return !hayFiltrosLlanta;
     }
 
@@ -1441,21 +1441,21 @@ function cumpleFiltrosLlantasCard($card) {
         }
     }
 
-    // ✅ VERIFICAR FILTRO DE ÍNDICE DE VELOCIDAD
-    if (filtrosConfig.activos.velocidad) {
+    // ✅ VERIFICAR FILTRO DE CAPAS
+    if (filtrosConfig.activos.capas) {
         // Intentar extraer del data attribute o del DOM
-        let velocidad = $card.data('indice-velocidad') || $card.attr('data-indice-velocidad');
+        let capas = $card.data('capas') || $card.attr('data-capas');
 
-        if (!velocidad) {
+        if (!capas) {
             // Buscar en el DOM
-            velocidad = $card.find('[class*="velocidad"]').text().trim();
+            capas = $card.find('[class*="capas"]').text().trim();
         }
 
-        if (!velocidad || velocidad === 'N/A' || velocidad === '-') {
+        if (!capas || capas === 'N/A' || capas === '-') {
             return false;
         }
 
-        if (velocidad.toUpperCase() !== filtrosConfig.activos.velocidad.toUpperCase()) {
+        if (String(capas) !== String(filtrosConfig.activos.capas)) {
             return false;
         }
     }

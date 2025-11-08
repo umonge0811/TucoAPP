@@ -206,11 +206,11 @@
                                 <!-- Se llenará dinámicamente -->
                             </select>
                         </div>
-                       
+
                         <div class="col-lg-2">
-                            <label for="filterVelocidad" class="form-label">Índice de Velocidad</label>
-                            <select id="filterVelocidad" class="form-select form-select-sm">
-                                <option value="">Todos</option>
+                            <label for="filterCapas" class="form-label">Capas</label>
+                            <select id="filterCapas" class="form-select form-select-sm">
+                                <option value="">Todas</option>
                                 <!-- Se llenará dinámicamente -->
                             </select>
                         </div>
@@ -327,7 +327,12 @@
                         <tbody>
                             @foreach (var producto in Model)
                             {
-                                <tr class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "table-danger" : "")" data-id="@producto.ProductoId">
+                                <tr class="@(producto.CantidadEnInventario <= producto.StockMinimo ? "table-danger" : "")"
+                                    data-id="@producto.ProductoId"
+                                    @if (producto.Llanta != null && producto.Llanta.Capas.HasValue)
+                                    {
+                                        @:data-capas="@producto.Llanta.Capas.Value"
+                                    }>
                                     <!-- 1. ID -->
                                     <td>@producto.ProductoId</td>
 
