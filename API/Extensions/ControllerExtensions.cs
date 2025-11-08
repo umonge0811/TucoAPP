@@ -209,5 +209,20 @@ namespace API.Extensions
                     .ToArray()
             };
         }
+
+        /// <summary>
+        /// Obtiene el ID del usuario autenticado
+        /// </summary>
+        public static int ObtenerUsuarioIdDesdeToken(
+            this ControllerBase controller,
+            IPermisosService permisosService)
+        {
+            if (controller.User == null || !controller.User.Identity.IsAuthenticated)
+            {
+                throw new UnauthorizedAccessException("Usuario no autenticado");
+            }
+
+            return permisosService.ObtenerUsuarioId(controller.User);
+        }
     }
 }

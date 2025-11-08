@@ -250,6 +250,76 @@
         </div>
     </div>
 
+    <!-- Panel de alertas de movimientos post-corte -->
+    <div class="alertas-post-corte-panel mb-4" id="alertasPostCortePanel" style="display: none;">
+        <div class="dashboard-card">
+            <div class="card-header bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Movimientos Post-Corte
+                        <span class="badge bg-light text-info ms-2" id="contadorAlertasPostCorte">0</span>
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-light btn-sm" id="btnActualizarAlertas">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Actualizar
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" id="btnMarcarAlertasLeidas">
+                            <i class="bi bi-check2-all me-1"></i>
+                            Marcar todas leídas
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" id="btnToggleAlertas">
+                            <i class="bi bi-chevron-up me-1"></i>
+                            Ocultar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" id="contenidoAlertasPostCorte">
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>¿Qué son los movimientos post-corte?</strong>
+                    <p class="mb-0 mt-2">
+                        Son cambios de inventario (ventas, ajustes, etc.) que ocurrieron <strong>después de iniciar</strong> este inventario.
+                        Estos movimientos pueden afectar las cantidades contadas. Revise los productos alertados y actualice sus conteos si es necesario.
+                    </p>
+                </div>
+
+                <!-- Lista de alertas -->
+                <div class="alertas-lista">
+                    <!-- Estado vacío -->
+                    <div class="text-center py-4" id="alertasVacio">
+                        <i class="bi bi-check-circle display-4 text-success mb-3"></i>
+                        <h5 class="text-muted">No hay alertas de movimientos post-corte</h5>
+                        <p class="text-muted mb-0">
+                            No se han registrado movimientos de inventario desde que inició este conteo.
+                        </p>
+                    </div>
+
+                    <!-- Tabla de alertas -->
+                    <div class="table-responsive" id="tablaAlertas" style="display: none;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="5%"><i class="bi bi-bell"></i></th>
+                                    <th width="45%">Mensaje</th>
+                                    <th width="15%">Tipo</th>
+                                    <th width="20%">Fecha</th>
+                                    <th width="10%">Estado</th>
+                                    <th width="5%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAlertasBody">
+                                <!-- Las alertas se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Panel de finalización del inventario - AGREGAR DESPUÉS DEL PANEL DE PRODUCTOS -->
     <div class="finalizacion-panel mt-4" id="finalizacionPanel" style="display: none;">
         <div class="dashboard-card border-success">
