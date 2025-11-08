@@ -3255,6 +3255,7 @@ async function cargarInformacionInventario(inventarioId) {
                 inventarioProgramadoId: window.inventarioConfig.inventarioId,
                 titulo: document.querySelector('h1')?.textContent?.replace('🔲', '').trim() || 'Inventario',
                 estado: 'En Progreso', // Ya sabemos que está en progreso porque llegamos aquí
+                tipoInventario: window.inventarioConfig.tipoInventario || 'Completo', // Default a Completo si no está definido
                 permisos: window.inventarioConfig.permisos
             };
 
@@ -5885,8 +5886,22 @@ function actualizarPanelFinalizacion() {
         }
 
         // ✅ HABILITAR/DESHABILITAR BOTÓN DE FINALIZAR
-        const puedeFinalizarSinAjustes = todoContado && !hayAjustes;
-        const puedeFinalizarConAjustes = todoContado && hayAjustes;
+        // Determinar si puede finalizar según el tipo de inventario
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+        const hayProductosContados = stats.contados > 0; // Al menos un producto contado
+
+        let puedeFinalizarSinAjustes, puedeFinalizarConAjustes;
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: Requiere que TODO esté contado
+            puedeFinalizarSinAjustes = todoContado && !hayAjustes;
+            puedeFinalizarConAjustes = todoContado && hayAjustes;
+        } else {
+            // Inventario Parcial/Cíclico: Permite finalizar con productos pendientes, pero debe haber al menos algo contado
+            puedeFinalizarSinAjustes = hayProductosContados && !hayAjustes;
+            puedeFinalizarConAjustes = hayProductosContados && hayAjustes;
+        }
 
         const $btnFinalizar = $('#btnFinalizarInventario');
 
@@ -5908,7 +5923,7 @@ function actualizarPanelFinalizacion() {
                 .addClass('btn-secondary');
         }
 
-        console.log(`✅ Panel de finalización actualizado - Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
+        console.log(`✅ Panel de finalización actualizado - Tipo: ${tipoInventario}, Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
 
     } catch (error) {
         console.error('❌ Error actualizando panel de finalización:', error);

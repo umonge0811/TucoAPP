@@ -1034,6 +1034,7 @@
         window.inventarioConfig = {
             inventarioId: @Model.InventarioProgramadoId,
             usuarioId: @ViewBag.UsuarioId,
+            tipoInventario: '@Model.TipoInventario',
             permisos: {
                 puedeContar: @(ViewBag.PuedeContar.ToString().ToLower()),
                 puedeAjustar: @(ViewBag.PuedeAjustar.ToString().ToLower()),
