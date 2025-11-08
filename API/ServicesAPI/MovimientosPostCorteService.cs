@@ -59,7 +59,7 @@ namespace API.ServicesAPI
                             Procesado = m.Procesado,
                             FechaProcesado = m.FechaProcesado,
                             UsuarioProcesadoId = m.UsuarioProcesadoId,
-                            NombreUsuarioProcesado = m.UsuarioProcesado?.NombreCompleto
+                            NombreUsuarioProcesado = m.UsuarioProcesado?.NombreUsuario
                         }).ToList()
                     })
                     .ToList();
@@ -114,7 +114,7 @@ namespace API.ServicesAPI
                         Procesado = m.Procesado,
                         FechaProcesado = m.FechaProcesado,
                         UsuarioProcesadoId = m.UsuarioProcesadoId,
-                        NombreUsuarioProcesado = m.UsuarioProcesado?.NombreCompleto
+                        NombreUsuarioProcesado = m.UsuarioProcesado?.NombreUsuario
                     }).ToList()
                 };
 
