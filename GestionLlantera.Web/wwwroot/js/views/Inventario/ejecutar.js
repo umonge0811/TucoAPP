@@ -7431,6 +7431,7 @@ function actualizarFiltrosCascada() {
         const anchoSel = filtrosLlantasActivos.ancho;
         const perfilSel = filtrosLlantasActivos.perfil;
         const diametroSel = filtrosLlantasActivos.diametro;
+        const capasSel = filtrosLlantasActivos.capas;
 
         // Si no hay filtros, restaurar todos
         if (!anchoSel && !perfilSel && !diametroSel) {
@@ -7533,6 +7534,7 @@ function actualizarFiltrosCascada() {
             } else {
                 $('#filterCapas').html('<option value="">Todas</option>');
             }
+            $('#filterCapas').val(capasSel);
         }
 
         console.log('✅ Filtros en cascada actualizados');
