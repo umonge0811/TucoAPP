@@ -12,7 +12,7 @@ let filtrosInventarioActivos = {
     diametro: '',
     tipoterreno: '',
     marca: '',
-    velocidad: ''
+    capas: ''
 };
 
 /**
@@ -60,7 +60,7 @@ function actualizarFiltrosCascadaInventario() {
         diametros: new Set(),
         tiposTerreno: new Set(),
         marcas: new Set(),
-        velocidades: new Set()
+        capas: new Set()
     };
 
     productosFiltrados.forEach(producto => {
@@ -98,9 +98,9 @@ function actualizarFiltrosCascadaInventario() {
                 valores.marcas.add(marcaNormalizada);
             }
 
-            // Extraer velocidad
-            if (llantaInfo.indiceVelocidad && llantaInfo.indiceVelocidad !== 'N/A') {
-                valores.velocidades.add(llantaInfo.indiceVelocidad.toUpperCase());
+            // Extraer capas
+            if (llantaInfo.capas && llantaInfo.capas !== 'N/A' && llantaInfo.capas !== '-' && llantaInfo.capas !== null) {
+                valores.capas.add(String(llantaInfo.capas));
             }
         }
     });
@@ -151,17 +151,21 @@ function actualizarFiltrosCascadaInventario() {
         console.log(`✅ Marca actualizada: ${marcas.length} opciones disponibles`);
     }
 
-    // Actualizar Velocidad
+    // Actualizar Capas
     if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
-        const velocidades = Array.from(valores.velocidades).sort();
-        const velocidadSeleccionada = $('#filterVelocidad').val() || '';
-        if (velocidades.length > 0) {
-            const opcionesVelocidades = velocidades.map(vel =>
-                `<option value="${vel}" ${velocidadSeleccionada === vel ? 'selected' : ''}>${vel}</option>`
+        const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+        const capasSeleccionada = $('#filterCapas').val() || '';
+        if (capas.length > 0) {
+            const opcionesCapas = capas.map(capa =>
+                `<option value="${capa}" ${capasSeleccionada === capa ? 'selected' : ''}>${capa} capas</option>`
             ).join('');
-            $('#filterVelocidad').html('<option value="">Todos</option>' + opcionesVelocidades);
+            $('#filterCapas').html('<option value="">Todas</option>' + opcionesCapas);
 
-            console.log(`✅ Velocidad actualizada: ${velocidades.length} opciones disponibles`);
+            console.log(`✅ Capas actualizado: ${capas.length} opciones disponibles`);
+        } else {
+            // Si no hay capas, solo mostrar "Todas"
+            $('#filterCapas').html('<option value="">Todas</option>');
+            console.log(`✅ Capas actualizado: sin opciones disponibles`);
         }
     }
 
@@ -234,7 +238,7 @@ function poblarFiltrosLlantasInventario() {
         diametros: new Set(),
         tiposTerreno: new Set(),
         marcas: new Set(),
-        velocidades: new Set()
+        capas: new Set()
     };
 
     // Recorrer productos para extraer valores únicos
@@ -281,10 +285,10 @@ function poblarFiltrosLlantasInventario() {
                 valores.marcas.add(marcaNormalizada);
             }
 
-            // Extraer índice de velocidad
-            const velocidad = llantaInfo.indiceVelocidad;
-            if (velocidad && velocidad !== 'N/A' && velocidad !== '-') {
-                valores.velocidades.add(velocidad.toUpperCase());
+            // Extraer capas
+            const capas = llantaInfo.capas;
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== null) {
+                valores.capas.add(String(capas));
             }
         }
     });
@@ -310,10 +314,10 @@ function poblarFiltrosLlantasInventario() {
     $('#filterMarca').html('<option value="">Todas</option>' +
         marcas.map(marca => `<option value="${marca}">${marca}</option>`).join(''));
 
-    const velocidades = Array.from(valores.velocidades).sort();
-    if (velocidades.length > 0) {
-        $('#filterVelocidad').html('<option value="">Todos</option>' +
-            velocidades.map(vel => `<option value="${vel}">${vel}</option>`).join(''));
+    const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+    if (capas.length > 0) {
+        $('#filterCapas').html('<option value="">Todas</option>' +
+            capas.map(capa => `<option value="${capa}">${capa} capas</option>`).join(''));
     }
 
     console.log('✅ Filtros de llantas poblados en modal inventario:', {
@@ -322,7 +326,7 @@ function poblarFiltrosLlantasInventario() {
         diametros: diametros.length,
         tiposTerreno: tiposTerreno.length,
         marcas: marcas.length,
-        velocidades: velocidades.length
+        capas: capas.length
     });
 }
 
@@ -370,7 +374,7 @@ function configurarFiltrosInventario() {
         actualizarFiltrosCascadaInventario();
     });
 
-    $('#filterTipoTerreno, #filterMarca, #filterVelocidad').off('change').on('change', function () {
+    $('#filterTipoTerreno, #filterMarca, #filterCapas').off('change').on('change', function () {
         console.log('🔄 Filtro de llanta cambiado (Modal)');
         $('#btnAplicarFiltrosInventario').addClass('btn-warning').removeClass('btn-primary');
         $('#btnAplicarFiltrosInventario').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
@@ -386,7 +390,7 @@ function configurarFiltrosInventario() {
         filtrosInventarioActivos.diametro = $('#filterDiametro').val() || '';
         filtrosInventarioActivos.tipoterreno = $('#filterTipoTerreno').val() || '';
         filtrosInventarioActivos.marca = $('#filterMarca').val() || '';
-        filtrosInventarioActivos.velocidad = $('#filterVelocidad').val() || '';
+        filtrosInventarioActivos.capas = $('#filterCapas').val() || '';
 
         // Aplicar filtros
         aplicarFiltrosInventario();
@@ -401,7 +405,7 @@ function configurarFiltrosInventario() {
         console.log('🧹 Limpiando filtros de llantas (Modal)...');
 
         // Limpiar selectores
-        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
+        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterCapas').val('');
 
         // Limpiar filtros activos
         filtrosInventarioActivos.ancho = '';
@@ -409,7 +413,7 @@ function configurarFiltrosInventario() {
         filtrosInventarioActivos.diametro = '';
         filtrosInventarioActivos.tipoterreno = '';
         filtrosInventarioActivos.marca = '';
-        filtrosInventarioActivos.velocidad = '';
+        filtrosInventarioActivos.capas = '';
 
         // Repoblar filtros con todas las opciones
         poblarFiltrosLlantasInventario();
@@ -1247,7 +1251,7 @@ function aplicarFiltrosInventario() {
     // ✅ FILTROS ESPECÍFICOS DE LLANTAS
     if (filtrosInventarioActivos.ancho || filtrosInventarioActivos.perfil ||
         filtrosInventarioActivos.diametro || filtrosInventarioActivos.tipoterreno ||
-        filtrosInventarioActivos.marca || filtrosInventarioActivos.velocidad) {
+        filtrosInventarioActivos.marca || filtrosInventarioActivos.capas) {
 
         productosFiltradosTemp = productosFiltradosTemp.filter(producto => {
             const esLlanta = producto.llanta || (producto.Llanta && producto.Llanta.length > 0);
@@ -1315,10 +1319,10 @@ function aplicarFiltrosInventario() {
                 }
             }
 
-            // Filtro de velocidad
-            if (filtrosInventarioActivos.velocidad) {
-                const velocidad = llantaInfo.indiceVelocidad || '';
-                if (velocidad.toUpperCase() !== filtrosInventarioActivos.velocidad.toUpperCase()) {
+            // Filtro de capas
+            if (filtrosInventarioActivos.capas) {
+                const capas = llantaInfo.capas || '';
+                if (String(capas) !== String(filtrosInventarioActivos.capas)) {
                     return false;
                 }
             }
@@ -1349,13 +1353,13 @@ function limpiarFiltrosInventario() {
         diametro: '',
         tipoterreno: '',
         marca: '',
-        velocidad: ''
+        capas: ''
     };
 
     $('#busquedaInventarioModal').val('');
     $('#categoriaInventarioModal').val('todas');
     $('#stockInventarioModal').val('');
-    $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterVelocidad').val('');
+    $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterMarca, #filterCapas').val('');
 
     // ✅ RESTABLECER TODOS LOS FILTROS A SU ESTADO INICIAL
     poblarFiltrosLlantasInventario();
