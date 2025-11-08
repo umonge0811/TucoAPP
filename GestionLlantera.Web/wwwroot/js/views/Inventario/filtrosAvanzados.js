@@ -224,11 +224,11 @@ function actualizarFiltrosCascada() {
                 });
             }
 
-            // Extraer velocidad si está disponible (necesitarías ajustar el índice según tu tabla)
-            // const velocidad = $fila.find("td:eq(X)").text().trim();
-            // if (velocidad && velocidad !== "N/A") {
-            //     valores.velocidades.add(velocidad);
-            // }
+            // Extraer capas (desde data attribute)
+            const capas = $fila.data('capas') || $fila.attr('data-capas');
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== '' && capas !== null) {
+                valores.capas.add(String(capas));
+            }
         }
     });
 
@@ -272,6 +272,24 @@ function actualizarFiltrosCascada() {
             tiposTerreno.map(t => `<option value="${t}" ${tipoActual === t ? 'selected' : ''}>${t}</option>`).join(''));
 
         console.log(`✅ Tipo Terreno actualizado: ${tiposTerreno.length} opciones disponibles`);
+    }
+
+    // Actualizar Capas si hay filtros activos
+    if (anchoSeleccionado || perfilSeleccionado || diametroSeleccionado) {
+        const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+        const $selectCapas = $('#filterCapas');
+        const capasActual = $selectCapas.val();
+
+        if (capas.length > 0) {
+            $selectCapas.html('<option value="">Todas</option>' +
+                capas.map(c => `<option value="${c}" ${capasActual === c ? 'selected' : ''}>${c} capas</option>`).join(''));
+
+            console.log(`✅ Capas actualizado: ${capas.length} opciones disponibles`);
+        } else {
+            // Si no hay capas, solo mostrar "Todas"
+            $selectCapas.html('<option value="">Todas</option>');
+            console.log(`✅ Capas actualizado: sin opciones disponibles`);
+        }
     }
 
     console.log('✅ Filtros en cascada actualizados correctamente');
