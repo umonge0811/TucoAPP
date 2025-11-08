@@ -1321,13 +1321,30 @@ function mostrarPanelesSegunProgreso() {
     // ✅ VERIFICAR CONDICIONES BÁSICAS
     const todoContado = stats.pendientes === 0;
     const hayProductos = stats.total > 0;
+    const hayProductosContados = stats.contados > 0;
     const tienePermisosConteo = permisosInventarioActual.puedeContar || false;
     const tienePermisosValidacion = permisosInventarioActual.puedeValidar || false;
     const esAdmin = permisosInventarioActual.esAdmin || false;
 
+    // ✅ DETERMINAR SI PUEDE MOSTRAR PANEL SEGÚN TIPO DE INVENTARIO
+    const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+    const esInventarioCompleto = tipoInventario === 'Completo';
+
+    let puedeFinalizarPanel;
+    if (esInventarioCompleto) {
+        // Inventario Completo: requiere que TODO esté contado
+        puedeFinalizarPanel = todoContado && hayProductos;
+    } else {
+        // Inventario Parcial/Cíclico: solo requiere al menos algo contado
+        puedeFinalizarPanel = hayProductosContados && hayProductos;
+    }
+
     console.log('🔍 === CONDICIONES BÁSICAS ===');
     console.log('📊 Todo contado:', todoContado, '(pendientes:', stats.pendientes, ')');
     console.log('📦 Hay productos:', hayProductos, '(total:', stats.total, ')');
+    console.log('🔢 Productos contados:', stats.contados);
+    console.log('📋 Tipo inventario:', tipoInventario);
+    console.log('✅ Puede finalizar panel:', puedeFinalizarPanel);
     console.log('📝 Tiene permisos conteo:', tienePermisosConteo);
     console.log('✅ Tiene permisos validación:', tienePermisosValidacion);
     console.log('👑 Es admin:', esAdmin);
@@ -1339,7 +1356,7 @@ function mostrarPanelesSegunProgreso() {
     console.log('🎛️ Panel finalización existe:', !!panelFinalizacionExiste);
     console.log('🎛️ Panel conteo completado existe:', !!panelConteoCompletadoExiste);
 
-    if (todoContado && hayProductos) {
+    if (puedeFinalizarPanel) {
         console.log('✅ === INVENTARIO LISTO PARA PROCESAR ===');
 
         // ✅ DECIDIR QUÉ PANEL MOSTRAR SEGÚN PERMISOS
@@ -1391,8 +1408,10 @@ function mostrarPanelesSegunProgreso() {
         if (panelConteoCompletadoExiste) $('#conteoCompletadoPanel').hide();
 
         // ✅ MOSTRAR RAZÓN ESPECÍFICA
-        if (!todoContado) {
-            console.log('🚫 Razón: Aún hay productos pendientes de contar');
+        if (esInventarioCompleto && !todoContado) {
+            console.log('🚫 Razón: Inventario COMPLETO - Aún hay productos pendientes de contar');
+        } else if (!esInventarioCompleto && !hayProductosContados) {
+            console.log('🚫 Razón: Inventario PARCIAL/CÍCLICO - No has contado ningún producto aún');
         }
         if (!hayProductos) {
             console.log('🚫 Razón: No hay productos en el inventario');
