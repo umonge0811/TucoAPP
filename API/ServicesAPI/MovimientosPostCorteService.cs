@@ -346,13 +346,42 @@ namespace API.ServicesAPI
         {
             try
             {
-                var inventarios = await _context.InventariosProgramados
-                    .Where(i => i.Estado == "En Progreso" &&
-                               i.DetallesInventario.Any(d => d.ProductoId == productoId))
-                    .Select(i => i.InventarioProgramadoId)
+                _logger.LogInformation("🔍 === BUSCANDO INVENTARIOS EN PROGRESO PARA PRODUCTO {ProductoId} ===", productoId);
+
+                // Primero verificar si hay inventarios en progreso
+                var inventariosEnProgreso = await _context.InventariosProgramados
+                    .Where(i => i.Estado == "En Progreso")
                     .ToListAsync();
 
-                return inventarios;
+                _logger.LogInformation("📋 Inventarios en estado 'En Progreso': {Count}", inventariosEnProgreso.Count);
+
+                if (!inventariosEnProgreso.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay inventarios en estado 'En Progreso'");
+                    return new List<int>();
+                }
+
+                // Verificar detalles para cada inventario
+                var resultados = new List<int>();
+                foreach (var inv in inventariosEnProgreso)
+                {
+                    var tieneProducto = await _context.DetallesInventarioProgramado
+                        .AnyAsync(d => d.InventarioProgramadoId == inv.InventarioProgramadoId &&
+                                      d.ProductoId == productoId);
+
+                    _logger.LogInformation("📦 Inventario '{Titulo}' (ID: {Id}): {TieneProducto}",
+                        inv.Titulo, inv.InventarioProgramadoId, tieneProducto ? "SÍ tiene el producto" : "NO tiene el producto");
+
+                    if (tieneProducto)
+                    {
+                        resultados.Add(inv.InventarioProgramadoId);
+                    }
+                }
+
+                _logger.LogInformation("✅ Encontrados {Count} inventarios en progreso con el producto {ProductoId}",
+                    resultados.Count, productoId);
+
+                return resultados;
             }
             catch (Exception ex)
             {
