@@ -41,7 +41,7 @@ public partial class TucoContext : DbContext
 
     public virtual DbSet<MovimientoPostCorte> MovimientosPostCorte { get; set; }
 
-    public virtual DbSet<AlertasInventarioProgramado> AlertasInventarioProgramado { get; set; }
+    public virtual DbSet<AlertasInventario> AlertasInventario { get; set; }
 
     public virtual DbSet<Notificacion> Notificaciones { get; set; }
 

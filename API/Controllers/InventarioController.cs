@@ -755,8 +755,9 @@ namespace API.Controllers
                 // Crear alerta para cada usuario asignado
                 foreach (var usuarioId in usuariosAsignados)
                 {
-                    var alerta = new AlertasInventarioProgramado
+                    var alerta = new AlertasInventario
                     {
+                        ProductoId = productoId,
                         InventarioProgramadoId = inventarioProgramadoId,
                         UsuarioId = usuarioId,
                         TipoAlerta = "MovimientoPostCorte",
@@ -765,7 +766,7 @@ namespace API.Controllers
                         FechaCreacion = DateTime.Now
                     };
 
-                    _context.AlertasInventarioProgramado.Add(alerta);
+                    _context.AlertasInventario.Add(alerta);
 
                     _logger.LogInformation("🔔 Alerta creada para usuario {UsuarioId}: Producto {ProductoId} - {Mensaje}",
                         usuarioId, productoId, mensajeMovimiento);
@@ -1240,7 +1241,7 @@ namespace API.Controllers
                 // Si no se especifica usuarioId, usar el del usuario autenticado
                 int userId = usuarioId ?? this.ObtenerUsuarioIdDesdeToken(_permisosService);
 
-                var query = _context.AlertasInventarioProgramado
+                var query = _context.AlertasInventario
                     .Where(a => a.InventarioProgramadoId == inventarioId && a.UsuarioId == userId);
 
                 if (soloNoLeidas)
@@ -1287,7 +1288,7 @@ namespace API.Controllers
         {
             try
             {
-                var alerta = await _context.AlertasInventarioProgramado.FindAsync(alertaId);
+                var alerta = await _context.AlertasInventario.FindAsync(alertaId);
 
                 if (alerta == null)
                     return NotFound(new { message = "Alerta no encontrada" });
@@ -1318,7 +1319,7 @@ namespace API.Controllers
                 // Si no se especifica usuarioId, usar el del usuario autenticado
                 int userId = usuarioId ?? this.ObtenerUsuarioIdDesdeToken(_permisosService);
 
-                var alertas = await _context.AlertasInventarioProgramado
+                var alertas = await _context.AlertasInventario
                     .Where(a => a.InventarioProgramadoId == inventarioId && a.UsuarioId == userId && !a.Leida)
                     .ToListAsync();
 
