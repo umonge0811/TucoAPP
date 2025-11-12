@@ -223,6 +223,61 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<(bool Success, string Message, object? Data)> ActualizarLineasMasivaAsync(
+            ActualizarLineasMasivaDTO solicitud,
+            string jwtToken)
+        {
+            try
+            {
+                _logger.LogInformation("🔄🔄 === ACTUALIZANDO LÍNEAS MASIVAS (WEB SERVICE) ===");
+                _logger.LogInformation("🔄🔄 Inventario: {InventarioId}, Usuario: {UsuarioId}",
+                    solicitud.InventarioProgramadoId, solicitud.UsuarioId);
+
+                // ✅ CONSTRUIR URL
+                var url = _apiConfig.GetApiUrl("MovimientosPostCorte/actualizar-masivo");
+                _logger.LogInformation("🌐 URL construida: {Url}", url);
+
+                // ✅ CONFIGURAR TOKEN JWT
+                ConfigurarAutenticacion(jwtToken);
+
+                // ✅ SERIALIZAR SOLICITUD
+                var jsonContent = JsonConvert.SerializeObject(solicitud, new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                // ✅ ENVIAR A LA API
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📡 Respuesta API: Status={Status}, Content={Content}",
+                    response.StatusCode, responseContent);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("❌ Error en API: {StatusCode} - {Content}",
+                        response.StatusCode, responseContent);
+                    return (false, "Error al actualizar las líneas en el servidor", null);
+                }
+
+                var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                bool success = resultado?.success ?? false;
+                string message = resultado?.message ?? "Líneas actualizadas";
+                object? data = resultado?.data;
+
+                return (success, message, data);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al actualizar líneas masivas en servicio web");
+                return (false, $"Error interno: {ex.Message}", null);
+            }
+        }
+
         private void ConfigurarAutenticacion(string jwtToken)
         {
             if (!string.IsNullOrEmpty(jwtToken))

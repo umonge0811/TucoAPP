@@ -3448,7 +3448,8 @@ function actualizarPanelAlertas(alertas) {
     $tablaAlertas.show();
 
     alertas.forEach(alerta => {
-        const fechaFormateada = new Date(alerta.fechaCreacion).toLocaleString('es-CR', {
+        // ✅ USAR PascalCase - la API devuelve con mayúscula inicial
+        const fechaFormateada = new Date(alerta.FechaCreacion).toLocaleString('es-CR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -3456,25 +3457,25 @@ function actualizarPanelAlertas(alertas) {
             minute: '2-digit'
         });
 
-        const iconoEstado = alerta.leida
+        const iconoEstado = alerta.Leida
             ? '<i class="bi bi-check-circle text-success"></i>'
             : '<i class="bi bi-exclamation-circle text-warning"></i>';
 
-        const badgeEstado = alerta.leida
+        const badgeEstado = alerta.Leida
             ? '<span class="badge bg-success">Leída</span>'
             : '<span class="badge bg-warning">Nueva</span>';
 
         const row = `
-            <tr class="${alerta.leida ? '' : 'table-warning'}">
+            <tr class="${alerta.Leida ? '' : 'table-warning'}">
                 <td class="text-center">${iconoEstado}</td>
-                <td>${alerta.mensaje}</td>
-                <td><span class="badge bg-info">${alerta.tipoAlerta}</span></td>
+                <td>${alerta.Mensaje}</td>
+                <td><span class="badge bg-info">${alerta.TipoAlerta}</span></td>
                 <td>${fechaFormateada}</td>
                 <td>${badgeEstado}</td>
                 <td>
-                    ${!alerta.leida ? `
+                    ${!alerta.Leida ? `
                         <button class="btn btn-sm btn-outline-success"
-                                onclick="marcarAlertaLeida(${alerta.alertaId})"
+                                onclick="marcarAlertaLeida(${alerta.AlertaId})"
                                 title="Marcar como leída">
                             <i class="bi bi-check"></i>
                         </button>
@@ -7778,8 +7779,9 @@ async function actualizarLineaIndividual(productoId) {
                 showConfirmButton: false
             });
 
-            // Recargar productos
+            // Recargar productos y alertas
             await cargarProductosInventario(inventarioId);
+            await cargarAlertasPostCorte();
             verificarMovimientosPostCorte();
         } else {
             Swal.fire({
@@ -7837,7 +7839,7 @@ async function actualizarTodasLineas() {
         const usuarioId = window.inventarioConfig?.usuarioId || 0;
         const inventarioId = inventarioActual?.inventarioProgramadoId;
 
-        const response = await fetch('/api/MovimientosPostCorte/actualizar-masivo', {
+        const response = await fetch('/TomaInventario/ActualizarLineasMasivas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -7866,8 +7868,9 @@ async function actualizarTodasLineas() {
                 timer: 3000
             });
 
-            // Recargar productos
+            // Recargar productos y alertas
             await cargarProductosInventario(inventarioId);
+            await cargarAlertasPostCorte();
             verificarMovimientosPostCorte();
         } else {
             Swal.fire({

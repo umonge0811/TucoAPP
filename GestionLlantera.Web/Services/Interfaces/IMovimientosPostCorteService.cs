@@ -26,5 +26,10 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Marca todas las alertas de un inventario como leídas
         /// </summary>
         Task<(bool Success, string Message)> MarcarTodasAlertasLeidasAsync(int inventarioId, int usuarioId, string jwtToken);
+
+        /// <summary>
+        /// Actualiza líneas masivamente procesando sus movimientos post-corte
+        /// </summary>
+        Task<(bool Success, string Message, object? Data)> ActualizarLineasMasivaAsync(ActualizarLineasMasivaDTO solicitud, string jwtToken);
     }
 }

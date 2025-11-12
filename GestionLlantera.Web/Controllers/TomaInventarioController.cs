@@ -1381,5 +1381,54 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        /// <summary>
+        /// Actualiza líneas masivamente procesando sus movimientos post-corte
+        /// POST: /TomaInventario/ActualizarLineasMasivas
+        /// </summary>
+        [HttpPost]
+        [Route("TomaInventario/ActualizarLineasMasivas")]
+        public async Task<IActionResult> ActualizarLineasMasivas([FromBody] ActualizarLineasMasivaDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("🔄🔄 === ACTUALIZANDO LÍNEAS MASIVAS DESDE WEB ===");
+                _logger.LogInformation("🔄🔄 Inventario: {InventarioId}",
+                    solicitud.InventarioProgramadoId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ ASIGNAR USUARIO ACTUAL SI NO VIENE EN LA SOLICITUD
+                if (solicitud.UsuarioId == 0)
+                {
+                    solicitud.UsuarioId = ObtenerIdUsuarioActual();
+                }
+
+                (bool success, string message, object? data) = await _movimientosPostCorteService.ActualizarLineasMasivaAsync(solicitud, token);
+
+                if (success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = message,
+                        data = data
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al actualizar líneas masivas");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 }
