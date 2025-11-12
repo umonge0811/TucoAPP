@@ -1262,28 +1262,51 @@ namespace API.Controllers
                     alertasBase.Count, inventarioId);
 
                 // Enriquecer cada alerta con datos de movimientos post-corte
-                var alertas = alertasBase.Select(alerta => new
+                var alertas = new List<object>();
+                foreach (var alerta in alertasBase)
                 {
-                    alerta.AlertaId,
-                    alerta.ProductoId,
-                    alerta.InventarioProgramadoId,
-                    alerta.UsuarioId,
-                    alerta.TipoAlerta,
-                    alerta.Mensaje,
-                    alerta.Leida,
-                    alerta.FechaCreacion,
-                    alerta.FechaLectura,
-                    NombreProducto = alerta.Producto?.NombreProducto,
-                    // ✅ USAR RELACIÓN DIRECTA con MovimientoPostCorte (evita buscar por producto)
-                    MovimientoPostCorteId = alerta.MovimientoPostCorte?.MovimientoPostCorteId,
-                    TipoMovimiento = alerta.MovimientoPostCorte?.TipoMovimiento,
-                    CantidadMovimiento = alerta.MovimientoPostCorte?.Cantidad,
-                    FechaMovimiento = alerta.MovimientoPostCorte?.FechaMovimiento,
-                    Procesado = alerta.MovimientoPostCorte?.Procesado ?? false,
-                    FechaProcesado = alerta.MovimientoPostCorte?.FechaProcesado,
-                    UsuarioProcesadoId = alerta.MovimientoPostCorte?.UsuarioProcesadoId,
-                    NombreUsuarioProcesado = alerta.MovimientoPostCorte?.UsuarioProcesado?.NombreUsuario
-                }).ToList();
+                    MovimientoPostCorte movimiento = alerta.MovimientoPostCorte;
+
+                    // ✅ COMPATIBILIDAD: Si la alerta no tiene MovimientoPostCorteId (alertas antiguas),
+                    // buscar el movimiento más reciente del producto
+                    if (movimiento == null && alerta.MovimientoPostCorteId == null)
+                    {
+                        movimiento = await _context.MovimientosPostCorte
+                            .Where(m => m.InventarioProgramadoId == inventarioId && m.ProductoId == alerta.ProductoId)
+                            .Include(m => m.UsuarioProcesado)
+                            .OrderByDescending(m => m.FechaMovimiento)
+                            .FirstOrDefaultAsync();
+
+                        _logger.LogWarning("⚠️ Alerta {AlertaId} sin MovimientoPostCorteId (alerta antigua). Usando movimiento más reciente del producto.",
+                            alerta.AlertaId);
+                    }
+
+                    // Obtener nombre del usuario que procesó
+                    string nombreUsuarioProcesado = movimiento?.UsuarioProcesado?.NombreUsuario;
+
+                    alertas.Add(new
+                    {
+                        alerta.AlertaId,
+                        alerta.ProductoId,
+                        alerta.InventarioProgramadoId,
+                        alerta.UsuarioId,
+                        alerta.TipoAlerta,
+                        alerta.Mensaje,
+                        alerta.Leida,
+                        alerta.FechaCreacion,
+                        alerta.FechaLectura,
+                        NombreProducto = alerta.Producto?.NombreProducto,
+                        // Datos del movimiento post-corte
+                        MovimientoPostCorteId = movimiento?.MovimientoPostCorteId,
+                        TipoMovimiento = movimiento?.TipoMovimiento,
+                        CantidadMovimiento = movimiento?.Cantidad,
+                        FechaMovimiento = movimiento?.FechaMovimiento,
+                        Procesado = movimiento?.Procesado ?? false,
+                        FechaProcesado = movimiento?.FechaProcesado,
+                        UsuarioProcesadoId = movimiento?.UsuarioProcesadoId,
+                        NombreUsuarioProcesado = nombreUsuarioProcesado
+                    });
+                }
 
                 _logger.LogInformation("✅ Procesadas {Count} alertas enriquecidas", alertas.Count);
 
