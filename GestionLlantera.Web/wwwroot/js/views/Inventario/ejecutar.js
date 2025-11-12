@@ -3455,14 +3455,16 @@ function actualizarPanelAlertas(alertas) {
 
     alertas.forEach((alerta, index) => {
         console.log(`🔔 Renderizando alerta ${index + 1}:`, {
-            AlertaId: alerta.AlertaId,
-            Mensaje: alerta.Mensaje,
-            Leida: alerta.Leida,
-            FechaCreacion: alerta.FechaCreacion
+            alertaId: alerta.alertaId,
+            mensaje: alerta.mensaje,
+            leida: alerta.leida,
+            fechaCreacion: alerta.fechaCreacion
         });
 
-        // ✅ USAR PascalCase - la API devuelve con mayúscula inicial
-        const fechaFormateada = new Date(alerta.FechaCreacion).toLocaleString('es-CR', {
+        // ✅ USAR camelCase - la API devuelve en camelCase por defecto
+        // Validar que fechaCreacion existe antes de formatear
+        const fecha = alerta.fechaCreacion ? new Date(alerta.fechaCreacion) : new Date();
+        const fechaFormateada = fecha.toLocaleString('es-CR', {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric',
@@ -3470,25 +3472,29 @@ function actualizarPanelAlertas(alertas) {
             minute: '2-digit'
         });
 
-        const iconoEstado = alerta.Leida
+        const iconoEstado = alerta.leida
             ? '<i class="bi bi-check-circle text-success"></i>'
             : '<i class="bi bi-exclamation-circle text-warning"></i>';
 
-        const badgeEstado = alerta.Leida
+        const badgeEstado = alerta.leida
             ? '<span class="badge bg-success">Leída</span>'
             : '<span class="badge bg-warning">Nueva</span>';
 
+        // Validar datos antes de renderizar
+        const mensaje = alerta.mensaje || 'Sin mensaje';
+        const tipoAlerta = alerta.tipoAlerta || 'GENERAL';
+
         const row = `
-            <tr class="${alerta.Leida ? '' : 'table-warning'}">
+            <tr class="${alerta.leida ? '' : 'table-warning'}">
                 <td class="text-center">${iconoEstado}</td>
-                <td>${alerta.Mensaje}</td>
-                <td><span class="badge bg-info">${alerta.TipoAlerta}</span></td>
+                <td>${mensaje}</td>
+                <td><span class="badge bg-info">${tipoAlerta}</span></td>
                 <td>${fechaFormateada}</td>
                 <td>${badgeEstado}</td>
                 <td>
-                    ${!alerta.Leida ? `
+                    ${!alerta.leida ? `
                         <button class="btn btn-sm btn-outline-success"
-                                onclick="marcarAlertaLeida(${alerta.AlertaId})"
+                                onclick="marcarAlertaLeida(${alerta.alertaId})"
                                 title="Marcar como leída">
                             <i class="bi bi-check"></i>
                         </button>
