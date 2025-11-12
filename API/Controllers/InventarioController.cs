@@ -1254,6 +1254,7 @@ namespace API.Controllers
                     .Select(a => new
                     {
                         a.AlertaId,
+                        a.ProductoId,
                         a.InventarioProgramadoId,
                         a.UsuarioId,
                         a.TipoAlerta,

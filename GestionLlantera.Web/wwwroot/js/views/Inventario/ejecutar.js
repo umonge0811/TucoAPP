@@ -3400,14 +3400,16 @@ async function cargarAlertasPostCorte() {
         });
 
         if (!response.ok) {
-            console.warn('⚠️ No se pudieron cargar las alertas');
+            console.warn('⚠️ No se pudieron cargar las alertas. Status:', response.status);
             return;
         }
 
         const data = await response.json();
+        console.log('📦 Datos recibidos de alertas:', data);
 
         if (data.success && data.alertas) {
             console.log(`✅ Cargadas ${data.alertas.length} alertas (${data.noLeidas} no leídas)`);
+            console.log('📋 Detalle primera alerta:', data.alertas[0]);
 
             // Actualizar UI
             actualizarPanelAlertas(data.alertas);
@@ -3432,6 +3434,9 @@ async function cargarAlertasPostCorte() {
  * Actualizar el panel de alertas con los datos
  */
 function actualizarPanelAlertas(alertas) {
+    console.log('🎨 === ACTUALIZANDO PANEL DE ALERTAS ===');
+    console.log('🎨 Total de alertas a renderizar:', alertas?.length || 0);
+
     const $tablaBody = $('#tablaAlertasBody');
     const $alertasVacio = $('#alertasVacio');
     const $tablaAlertas = $('#tablaAlertas');
@@ -3439,6 +3444,7 @@ function actualizarPanelAlertas(alertas) {
     $tablaBody.empty();
 
     if (!alertas || alertas.length === 0) {
+        console.log('📭 No hay alertas para mostrar');
         $alertasVacio.show();
         $tablaAlertas.hide();
         return;
@@ -3447,7 +3453,14 @@ function actualizarPanelAlertas(alertas) {
     $alertasVacio.hide();
     $tablaAlertas.show();
 
-    alertas.forEach(alerta => {
+    alertas.forEach((alerta, index) => {
+        console.log(`🔔 Renderizando alerta ${index + 1}:`, {
+            AlertaId: alerta.AlertaId,
+            Mensaje: alerta.Mensaje,
+            Leida: alerta.Leida,
+            FechaCreacion: alerta.FechaCreacion
+        });
+
         // ✅ USAR PascalCase - la API devuelve con mayúscula inicial
         const fechaFormateada = new Date(alerta.FechaCreacion).toLocaleString('es-CR', {
             day: '2-digit',
@@ -3493,6 +3506,8 @@ function actualizarPanelAlertas(alertas) {
  */
 async function marcarAlertaLeida(alertaId) {
     try {
+        console.log(`✅ === MARCANDO ALERTA ${alertaId} COMO LEÍDA ===`);
+
         const response = await fetch(`/TomaInventario/MarcarAlertaLeida/${alertaId}`, {
             method: 'PUT',
             headers: {
@@ -3501,10 +3516,20 @@ async function marcarAlertaLeida(alertaId) {
             }
         });
 
+        console.log('📡 Respuesta marcar alerta:', response.status, response.statusText);
+
         if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Alerta marcada exitosamente:', data);
+
             mostrarExito('Alerta marcada como leída');
+
+            console.log('🔄 Recargando alertas...');
             await cargarAlertasPostCorte();
+            console.log('✅ Alertas recargadas');
         } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Error del servidor:', response.status, errorData);
             mostrarError('Error al marcar alerta como leída');
         }
 
