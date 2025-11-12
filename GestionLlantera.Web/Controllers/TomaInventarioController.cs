@@ -9,7 +9,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Tuco.Clases.DTOs.Inventario;
+using tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Controllers
 {
@@ -1246,7 +1246,7 @@ namespace GestionLlantera.Web.Controllers
                 var usuarioId = ObtenerIdUsuarioActual();
 
                 // ✅ LLAMAR AL SERVICIO
-                var (success, data) = await _movimientosPostCorteService.ObtenerAlertasAsync(
+                (bool success, object? data) = await _movimientosPostCorteService.ObtenerAlertasAsync(
                     inventarioId,
                     usuarioId,
                     soloNoLeidas,
@@ -1296,7 +1296,7 @@ namespace GestionLlantera.Web.Controllers
                 }
 
                 // ✅ LLAMAR AL SERVICIO
-                var (success, message) = await _movimientosPostCorteService.ActualizarLineaAsync(solicitud, token);
+                (bool success, string message) = await _movimientosPostCorteService.ActualizarLineaAsync(solicitud, token);
 
                 if (success)
                 {
