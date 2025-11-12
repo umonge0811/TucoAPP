@@ -1249,28 +1249,72 @@ namespace API.Controllers
                     query = query.Where(a => !a.Leida);
                 }
 
-                var alertas = await query
+                // Obtener las alertas básicas primero
+                var alertasBase = await query
                     .OrderByDescending(a => a.FechaCreacion)
-                    .Select(a => new
-                    {
-                        a.AlertaId,
-                        a.ProductoId,
-                        a.InventarioProgramadoId,
-                        a.UsuarioId,
-                        a.TipoAlerta,
-                        a.Mensaje,
-                        a.Leida,
-                        a.FechaCreacion,
-                        a.FechaLectura
-                    })
                     .ToListAsync();
+
+                _logger.LogInformation("📋 Encontradas {Count} alertas base para inventario {InventarioId}",
+                    alertasBase.Count, inventarioId);
+
+                // Enriquecer cada alerta con datos de movimientos post-corte
+                var alertas = new List<object>();
+                foreach (var alerta in alertasBase)
+                {
+                    // Buscar el movimiento post-corte más reciente para este producto
+                    var movimiento = await _context.MovimientosPostCorte
+                        .Where(m => m.InventarioProgramadoId == inventarioId && m.ProductoId == alerta.ProductoId)
+                        .OrderByDescending(m => m.FechaMovimiento)
+                        .FirstOrDefaultAsync();
+
+                    // Obtener nombre del producto
+                    var nombreProducto = await _context.Productos
+                        .Where(p => p.ProductoId == alerta.ProductoId)
+                        .Select(p => p.NombreProducto)
+                        .FirstOrDefaultAsync();
+
+                    // Obtener nombre del usuario que procesó (si existe)
+                    string nombreUsuarioProcesado = null;
+                    if (movimiento?.UsuarioProcesadoId != null)
+                    {
+                        nombreUsuarioProcesado = await _context.Usuarios
+                            .Where(u => u.UsuarioId == movimiento.UsuarioProcesadoId)
+                            .Select(u => u.NombreUsuario)
+                            .FirstOrDefaultAsync();
+                    }
+
+                    alertas.Add(new
+                    {
+                        alerta.AlertaId,
+                        alerta.ProductoId,
+                        alerta.InventarioProgramadoId,
+                        alerta.UsuarioId,
+                        alerta.TipoAlerta,
+                        alerta.Mensaje,
+                        alerta.Leida,
+                        alerta.FechaCreacion,
+                        alerta.FechaLectura,
+                        NombreProducto = nombreProducto,
+                        // Datos del movimiento post-corte
+                        MovimientoPostCorteId = movimiento?.MovimientoPostCorteId,
+                        TipoMovimiento = movimiento?.TipoMovimiento,
+                        CantidadMovimiento = movimiento?.Cantidad,
+                        FechaMovimiento = movimiento?.FechaMovimiento,
+                        Procesado = movimiento?.Procesado ?? false,
+                        FechaProcesado = movimiento?.FechaProcesado,
+                        UsuarioProcesadoId = movimiento?.UsuarioProcesadoId,
+                        NombreUsuarioProcesado = nombreUsuarioProcesado
+                    });
+                }
+
+                _logger.LogInformation("✅ Procesadas {Count} alertas enriquecidas", alertas.Count);
 
                 return Ok(new
                 {
                     success = true,
                     alertas = alertas,
                     total = alertas.Count,
-                    noLeidas = alertas.Count(a => !a.Leida)
+                    noLeidas = alertasBase.Count(a => !a.Leida)
                 });
             }
             catch (Exception ex)

@@ -3406,6 +3406,8 @@ async function cargarAlertasPostCorte() {
 
         const data = await response.json();
         console.log('📦 Datos recibidos de alertas:', data);
+        console.log('📦 data.success:', data.success);
+        console.log('📦 data.alertas:', data.alertas);
 
         if (data.success && data.alertas) {
             console.log(`✅ Cargadas ${data.alertas.length} alertas (${data.noLeidas} no leídas)`);
@@ -3423,10 +3425,18 @@ async function cargarAlertasPostCorte() {
             } else {
                 $('#alertasPostCortePanel').hide();
             }
+        } else {
+            console.error('❌ Respuesta inválida de la API:', {
+                success: data.success,
+                alertas: data.alertas,
+                mensaje: data.message
+            });
+            $('#alertasPostCortePanel').hide();
         }
 
     } catch (error) {
         console.error('❌ Error cargando alertas:', error);
+        console.error('❌ Stack trace:', error.stack);
     }
 }
 
@@ -3454,38 +3464,109 @@ function actualizarPanelAlertas(alertas) {
     $tablaAlertas.show();
 
     alertas.forEach((alerta, index) => {
-        console.log(`🔔 Renderizando alerta ${index + 1}:`, {
-            AlertaId: alerta.AlertaId,
-            Mensaje: alerta.Mensaje,
-            Leida: alerta.Leida,
-            FechaCreacion: alerta.FechaCreacion
+        console.log(`🔔 Renderizando alerta ${index + 1}:`, alerta);
+        console.log('📋 Propiedades de la alerta:', {
+            NombreProducto: alerta.NombreProducto,
+            TipoMovimiento: alerta.TipoMovimiento,
+            CantidadMovimiento: alerta.CantidadMovimiento,
+            FechaMovimiento: alerta.FechaMovimiento,
+            Procesado: alerta.Procesado,
+            FechaProcesado: alerta.FechaProcesado,
+            NombreUsuarioProcesado: alerta.NombreUsuarioProcesado,
+            Leida: alerta.Leida
         });
 
-        // ✅ USAR PascalCase - la API devuelve con mayúscula inicial
-        const fechaFormateada = new Date(alerta.FechaCreacion).toLocaleString('es-CR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        // ✅ USAR PascalCase - la API devuelve en PascalCase desde C#
 
-        const iconoEstado = alerta.Leida
-            ? '<i class="bi bi-check-circle text-success"></i>'
-            : '<i class="bi bi-exclamation-circle text-warning"></i>';
+        // Formatear fecha del movimiento
+        const fechaMovimiento = alerta.FechaMovimiento
+            ? new Date(alerta.FechaMovimiento).toLocaleString('es-CR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+            : '<span class="text-muted">N/A</span>';
 
-        const badgeEstado = alerta.Leida
+        // Formatear fecha de procesado
+        const fechaProcesado = alerta.FechaProcesado
+            ? new Date(alerta.FechaProcesado).toLocaleString('es-CR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+            : '<span class="text-muted">-</span>';
+
+        // Icono de estado de alerta (leída/no leída)
+        const iconoEstadoAlerta = alerta.Leida
+            ? '<i class="bi bi-check-circle text-success" title="Alerta leída"></i>'
+            : '<i class="bi bi-exclamation-circle text-warning" title="Alerta nueva"></i>';
+
+        // Badge de estado de alerta
+        const badgeEstadoAlerta = alerta.Leida
             ? '<span class="badge bg-success">Leída</span>'
             : '<span class="badge bg-warning">Nueva</span>';
 
+        // Badge de estado de procesado
+        const badgeEstadoProcesado = alerta.Procesado
+            ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Procesado</span>'
+            : '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Pendiente</span>';
+
+        // Tipo de movimiento con icono
+        const tipoMovimiento = alerta.TipoMovimiento || 'N/A';
+        let iconoMovimiento = '';
+        let colorMovimiento = 'secondary';
+
+        switch(tipoMovimiento.toLowerCase()) {
+            case 'venta':
+                iconoMovimiento = '<i class="bi bi-cart me-1"></i>';
+                colorMovimiento = 'danger';
+                break;
+            case 'ajuste':
+                iconoMovimiento = '<i class="bi bi-pencil-square me-1"></i>';
+                colorMovimiento = 'warning';
+                break;
+            case 'traspaso':
+                iconoMovimiento = '<i class="bi bi-arrow-left-right me-1"></i>';
+                colorMovimiento = 'info';
+                break;
+            case 'devolucion':
+                iconoMovimiento = '<i class="bi bi-arrow-return-left me-1"></i>';
+                colorMovimiento = 'success';
+                break;
+            default:
+                iconoMovimiento = '<i class="bi bi-question-circle me-1"></i>';
+        }
+
+        const badgeTipoMovimiento = `<span class="badge bg-${colorMovimiento}">${iconoMovimiento}${tipoMovimiento}</span>`;
+
+        // Cantidad con signo y color
+        const cantidad = alerta.CantidadMovimiento || 0;
+        const cantidadFormateada = cantidad > 0
+            ? `<span class="text-success fw-bold">+${cantidad}</span>`
+            : `<span class="text-danger fw-bold">${cantidad}</span>`;
+
+        // Nombre del producto
+        const nombreProducto = alerta.NombreProducto || `Producto #${alerta.ProductoId}`;
+
+        // Usuario que procesó
+        const usuarioProcesado = alerta.NombreUsuarioProcesado || '<span class="text-muted">-</span>';
+
         const row = `
             <tr class="${alerta.Leida ? '' : 'table-warning'}">
-                <td class="text-center">${iconoEstado}</td>
-                <td>${alerta.Mensaje}</td>
-                <td><span class="badge bg-info">${alerta.TipoAlerta}</span></td>
-                <td>${fechaFormateada}</td>
-                <td>${badgeEstado}</td>
-                <td>
+                <td class="text-center">${iconoEstadoAlerta}</td>
+                <td>${nombreProducto}</td>
+                <td class="text-center">${badgeTipoMovimiento}</td>
+                <td class="text-center">${cantidadFormateada}</td>
+                <td>${fechaMovimiento}</td>
+                <td class="text-center">${badgeEstadoProcesado}</td>
+                <td>${fechaProcesado}</td>
+                <td>${usuarioProcesado}</td>
+                <td class="text-center">${badgeEstadoAlerta}</td>
+                <td class="text-center">
                     ${!alerta.Leida ? `
                         <button class="btn btn-sm btn-outline-success"
                                 onclick="marcarAlertaLeida(${alerta.AlertaId})"

@@ -10,7 +10,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// <summary>
         /// Obtiene alertas de movimientos post-corte para un inventario y usuario
         /// </summary>
-        Task<(bool Success, object? Data)> ObtenerAlertasAsync(int inventarioId, int? usuarioId, bool soloNoLeidas, string jwtToken);
+        Task<(bool Success, string? JsonData)> ObtenerAlertasAsync(int inventarioId, int? usuarioId, bool soloNoLeidas, string jwtToken);
 
         /// <summary>
         /// Actualiza una línea de inventario con los movimientos post-corte
