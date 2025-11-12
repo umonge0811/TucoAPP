@@ -24,17 +24,20 @@ namespace API.Controllers
         private readonly ILogger<FacturacionController> _logger;
         private readonly IPermisosService _permisosService;
         private readonly INotificacionService _notificacionService;
+        private readonly IMovimientosPostCorteService _movimientosPostCorteService;
 
         public FacturacionController(
             TucoContext context,
             ILogger<FacturacionController> logger,
             IPermisosService permisosService,
-            INotificacionService notificacionService)
+            INotificacionService notificacionService,
+            IMovimientosPostCorteService movimientosPostCorteService)
         {
             _context = context;
             _logger = logger;
             _permisosService = permisosService;
             _notificacionService = notificacionService;
+            _movimientosPostCorteService = movimientosPostCorteService;
         }
 
         // =====================================
@@ -794,12 +797,58 @@ namespace API.Controllers
                         var producto = await _context.Productos.FindAsync(detalle.ProductoId.Value);
                         if (producto != null)
                         {
+                            var stockAnterior = (int)(producto.CantidadEnInventario ?? 0);
+
                             producto.CantidadEnInventario = Math.Max(0,
                                 (producto.CantidadEnInventario ?? 0) - detalle.Cantidad);
                             producto.FechaUltimaActualizacion = DateTime.Now;
 
+                            var nuevoStock = (int)producto.CantidadEnInventario;
+
                             _logger.LogInformation("📦 Stock actualizado para {Producto}: -{Cantidad} unidades",
                                 producto.NombreProducto, detalle.Cantidad);
+
+                            // ✅ REGISTRAR MOVIMIENTO POST-CORTE SI HAY INVENTARIOS EN PROGRESO
+                            try
+                            {
+                                var inventariosEnProgreso = await _movimientosPostCorteService
+                                    .ObtenerInventariosEnProgresoConProductoAsync(detalle.ProductoId.Value);
+
+                                if (inventariosEnProgreso != null && inventariosEnProgreso.Any())
+                                {
+                                    _logger.LogInformation("📋 Producto {ProductoId} está en {Count} inventarios en progreso. Registrando movimientos post-corte de VENTA...",
+                                        detalle.ProductoId.Value, inventariosEnProgreso.Count);
+
+                                    foreach (var inventarioId in inventariosEnProgreso)
+                                    {
+                                        int cantidadMovimiento = -(int)detalle.Cantidad; // Negativo para ventas
+
+                                        var registrado = await _movimientosPostCorteService.RegistrarMovimientoAsync(
+                                            inventarioId,
+                                            detalle.ProductoId.Value,
+                                            "Venta",
+                                            cantidadMovimiento,
+                                            factura.FacturaId, // DocumentoReferenciaId
+                                            "Factura" // TipoDocumento
+                                        );
+
+                                        if (registrado)
+                                        {
+                                            _logger.LogInformation("✅ Movimiento post-corte registrado: Inventario {InventarioId}, Producto {ProductoId}, Cantidad {Cantidad}, Factura {FacturaId}",
+                                                inventarioId, detalle.ProductoId.Value, cantidadMovimiento, factura.FacturaId);
+
+                                            // ✅ CREAR ALERTA PARA LOS USUARIOS ASIGNADOS AL INVENTARIO
+                                            await CrearAlertasMovimientoPostCorte(inventarioId, detalle.ProductoId.Value, producto.NombreProducto, cantidadMovimiento, factura.NumeroFactura);
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, "❌ Error al registrar movimientos post-corte para producto {ProductoId} en factura {FacturaId}",
+                                    detalle.ProductoId.Value, factura.FacturaId);
+                                // No fallar la operación principal si falla el registro de movimientos post-corte
+                            }
                         }
                         else
                         {
@@ -2163,6 +2212,62 @@ namespace API.Controllers
                     success = false, 
                     message = "Error interno al verificar vencimiento" 
                 });
+            }
+        }
+
+        // =====================================
+        // MÉTODOS AUXILIARES PRIVADOS
+        // =====================================
+
+        /// <summary>
+        /// Crea alertas de movimiento post-corte para todos los usuarios asignados al inventario
+        /// </summary>
+        private async Task CrearAlertasMovimientoPostCorte(int inventarioProgramadoId, int productoId, string nombreProducto, int cantidad, string numeroFactura)
+        {
+            try
+            {
+                // Obtener todos los usuarios asignados al inventario
+                var usuariosAsignados = await _context.AsignacionesUsuariosInventario
+                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId)
+                    .Select(a => a.UsuarioId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (!usuariosAsignados.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay usuarios asignados al inventario {InventarioId}", inventarioProgramadoId);
+                    return;
+                }
+
+                string mensajeMovimiento = cantidad > 0
+                    ? $"Se agregaron {Math.Abs(cantidad)} unidades"
+                    : $"Se quitaron {Math.Abs(cantidad)} unidades (Factura {numeroFactura})";
+
+                // Crear alerta para cada usuario asignado
+                foreach (var usuarioId in usuariosAsignados)
+                {
+                    var alerta = new AlertasInventario
+                    {
+                        ProductoId = productoId,
+                        InventarioProgramadoId = inventarioProgramadoId,
+                        UsuarioId = usuarioId,
+                        TipoAlerta = "MovimientoPostCorte",
+                        Mensaje = $"⚠️ El producto '{nombreProducto}' tuvo cambios de inventario después del corte. {mensajeMovimiento}.",
+                        Leida = false,
+                        FechaCreacion = DateTime.Now
+                    };
+
+                    _context.AlertasInventario.Add(alerta);
+
+                    _logger.LogInformation("🔔 Alerta de factura creada para usuario {UsuarioId}: Producto {ProductoId} - {Mensaje}",
+                        usuarioId, productoId, mensajeMovimiento);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creando alertas de movimiento post-corte para factura");
             }
         }
 
