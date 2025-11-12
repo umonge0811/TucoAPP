@@ -128,7 +128,7 @@ namespace API.ServicesAPI
             }
         }
 
-        public async Task<bool> RegistrarMovimientoAsync(int inventarioProgramadoId, int productoId, string tipoMovimiento,
+        public async Task<int?> RegistrarMovimientoAsync(int inventarioProgramadoId, int productoId, string tipoMovimiento,
             int cantidad, int? documentoReferenciaId = null, string tipoDocumento = null)
         {
             try
@@ -140,7 +140,7 @@ namespace API.ServicesAPI
                 if (inventario == null || inventario.Estado != "En Progreso")
                 {
                     _logger.LogWarning("Inventario {InventarioId} no existe o no está en progreso", inventarioProgramadoId);
-                    return false;
+                    return null;
                 }
 
                 // Crear el movimiento
@@ -176,15 +176,15 @@ namespace API.ServicesAPI
                 }
 
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("Movimiento post-corte registrado: {TipoMovimiento} de {Cantidad} unidades para producto {ProductoId}",
-                    tipoMovimiento, cantidad, productoId);
+                _logger.LogInformation("Movimiento post-corte registrado: {TipoMovimiento} de {Cantidad} unidades para producto {ProductoId}, MovimientoId: {MovimientoId}",
+                    tipoMovimiento, cantidad, productoId, movimiento.MovimientoPostCorteId);
 
-                return true;
+                return movimiento.MovimientoPostCorteId;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error registrando movimiento post-corte");
-                return false;
+                return null;
             }
         }
 

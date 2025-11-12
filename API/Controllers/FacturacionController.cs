@@ -823,7 +823,7 @@ namespace API.Controllers
                                     {
                                         int cantidadMovimiento = -(int)detalle.Cantidad; // Negativo para ventas
 
-                                        var registrado = await _movimientosPostCorteService.RegistrarMovimientoAsync(
+                                        var movimientoId = await _movimientosPostCorteService.RegistrarMovimientoAsync(
                                             inventarioId,
                                             detalle.ProductoId.Value,
                                             "Venta",
@@ -832,13 +832,13 @@ namespace API.Controllers
                                             "Factura" // TipoDocumento
                                         );
 
-                                        if (registrado)
+                                        if (movimientoId.HasValue)
                                         {
-                                            _logger.LogInformation("✅ Movimiento post-corte registrado: Inventario {InventarioId}, Producto {ProductoId}, Cantidad {Cantidad}, Factura {FacturaId}",
-                                                inventarioId, detalle.ProductoId.Value, cantidadMovimiento, factura.FacturaId);
+                                            _logger.LogInformation("✅ Movimiento post-corte registrado: Inventario {InventarioId}, Producto {ProductoId}, Cantidad {Cantidad}, Factura {FacturaId}, MovimientoId {MovimientoId}",
+                                                inventarioId, detalle.ProductoId.Value, cantidadMovimiento, factura.FacturaId, movimientoId.Value);
 
                                             // ✅ CREAR ALERTA PARA LOS USUARIOS ASIGNADOS AL INVENTARIO
-                                            await CrearAlertasMovimientoPostCorte(inventarioId, detalle.ProductoId.Value, producto.NombreProducto, cantidadMovimiento, factura.NumeroFactura);
+                                            await CrearAlertasMovimientoPostCorte(inventarioId, detalle.ProductoId.Value, producto.NombreProducto, cantidadMovimiento, factura.NumeroFactura, movimientoId.Value);
                                         }
                                     }
                                 }
@@ -2222,7 +2222,7 @@ namespace API.Controllers
         /// <summary>
         /// Crea alertas de movimiento post-corte para todos los usuarios asignados al inventario
         /// </summary>
-        private async Task CrearAlertasMovimientoPostCorte(int inventarioProgramadoId, int productoId, string nombreProducto, int cantidad, string numeroFactura)
+        private async Task CrearAlertasMovimientoPostCorte(int inventarioProgramadoId, int productoId, string nombreProducto, int cantidad, string numeroFactura, int movimientoPostCorteId)
         {
             try
             {
@@ -2251,6 +2251,7 @@ namespace API.Controllers
                         ProductoId = productoId,
                         InventarioProgramadoId = inventarioProgramadoId,
                         UsuarioId = usuarioId,
+                        MovimientoPostCorteId = movimientoPostCorteId, // ✅ Relacionar con el movimiento específico
                         TipoAlerta = "MovimientoPostCorte",
                         Mensaje = $"⚠️ El producto '{nombreProducto}' tuvo cambios de inventario después del corte. {mensajeMovimiento}.",
                         Leida = false,
@@ -2259,8 +2260,8 @@ namespace API.Controllers
 
                     _context.AlertasInventario.Add(alerta);
 
-                    _logger.LogInformation("🔔 Alerta de factura creada para usuario {UsuarioId}: Producto {ProductoId} - {Mensaje}",
-                        usuarioId, productoId, mensajeMovimiento);
+                    _logger.LogInformation("🔔 Alerta de factura creada para usuario {UsuarioId}: Producto {ProductoId} - MovimientoId {MovimientoId}",
+                        usuarioId, productoId, movimientoPostCorteId);
                 }
 
                 await _context.SaveChangesAsync();

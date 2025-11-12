@@ -731,7 +731,7 @@ namespace API.Controllers
         /// <summary>
         /// Crea alertas de movimiento post-corte para todos los usuarios asignados al inventario
         /// </summary>
-        private async Task CrearAlertasMovimientoPostCorte(int inventarioProgramadoId, int productoId, string nombreProducto, int cantidad)
+        private async Task CrearAlertasMovimientoPostCorte(int inventarioProgramadoId, int productoId, string nombreProducto, int cantidad, int movimientoPostCorteId)
         {
             try
             {
@@ -760,6 +760,7 @@ namespace API.Controllers
                         ProductoId = productoId,
                         InventarioProgramadoId = inventarioProgramadoId,
                         UsuarioId = usuarioId,
+                        MovimientoPostCorteId = movimientoPostCorteId, // ✅ Relacionar con el movimiento específico
                         TipoAlerta = "MovimientoPostCorte",
                         Mensaje = $"⚠️ El producto '{nombreProducto}' tuvo cambios de inventario después del corte. {mensajeMovimiento}.",
                         Leida = false,
@@ -768,8 +769,8 @@ namespace API.Controllers
 
                     _context.AlertasInventario.Add(alerta);
 
-                    _logger.LogInformation("🔔 Alerta creada para usuario {UsuarioId}: Producto {ProductoId} - {Mensaje}",
-                        usuarioId, productoId, mensajeMovimiento);
+                    _logger.LogInformation("🔔 Alerta creada para usuario {UsuarioId}: Producto {ProductoId} - MovimientoId {MovimientoId}",
+                        usuarioId, productoId, movimientoPostCorteId);
                 }
 
                 await _context.SaveChangesAsync();
@@ -851,7 +852,7 @@ namespace API.Controllers
 
                             int cantidadMovimiento = nuevoStock - stockAnterior; // Positivo para entradas, negativo para salidas
 
-                            var registrado = await _movimientosPostCorteService.RegistrarMovimientoAsync(
+                            var movimientoId = await _movimientosPostCorteService.RegistrarMovimientoAsync(
                                 inventarioId,
                                 id,
                                 tipoMovimiento,
@@ -860,13 +861,13 @@ namespace API.Controllers
                                 "AjusteManual" // TipoDocumento
                             );
 
-                            if (registrado)
+                            if (movimientoId.HasValue)
                             {
-                                _logger.LogInformation("✅ Movimiento post-corte registrado: Inventario {InventarioId}, Producto {ProductoId}, Cantidad {Cantidad}",
-                                    inventarioId, id, cantidadMovimiento);
+                                _logger.LogInformation("✅ Movimiento post-corte registrado: Inventario {InventarioId}, Producto {ProductoId}, Cantidad {Cantidad}, MovimientoId {MovimientoId}",
+                                    inventarioId, id, cantidadMovimiento, movimientoId.Value);
 
                                 // ✅ CREAR ALERTA PARA LOS USUARIOS ASIGNADOS AL INVENTARIO
-                                await CrearAlertasMovimientoPostCorte(inventarioId, id, producto.NombreProducto, cantidadMovimiento);
+                                await CrearAlertasMovimientoPostCorte(inventarioId, id, producto.NombreProducto, cantidadMovimiento, movimientoId.Value);
                             }
                         }
                     }
@@ -1249,8 +1250,11 @@ namespace API.Controllers
                     query = query.Where(a => !a.Leida);
                 }
 
-                // Obtener las alertas básicas primero
+                // ✅ OBTENER ALERTAS CON SUS RELACIONES (Include para evitar N+1 queries)
                 var alertasBase = await query
+                    .Include(a => a.MovimientoPostCorte)
+                        .ThenInclude(m => m.UsuarioProcesado)
+                    .Include(a => a.Producto)
                     .OrderByDescending(a => a.FechaCreacion)
                     .ToListAsync();
 
@@ -1258,54 +1262,28 @@ namespace API.Controllers
                     alertasBase.Count, inventarioId);
 
                 // Enriquecer cada alerta con datos de movimientos post-corte
-                var alertas = new List<object>();
-                foreach (var alerta in alertasBase)
+                var alertas = alertasBase.Select(alerta => new
                 {
-                    // Buscar el movimiento post-corte más reciente para este producto
-                    var movimiento = await _context.MovimientosPostCorte
-                        .Where(m => m.InventarioProgramadoId == inventarioId && m.ProductoId == alerta.ProductoId)
-                        .OrderByDescending(m => m.FechaMovimiento)
-                        .FirstOrDefaultAsync();
-
-                    // Obtener nombre del producto
-                    var nombreProducto = await _context.Productos
-                        .Where(p => p.ProductoId == alerta.ProductoId)
-                        .Select(p => p.NombreProducto)
-                        .FirstOrDefaultAsync();
-
-                    // Obtener nombre del usuario que procesó (si existe)
-                    string nombreUsuarioProcesado = null;
-                    if (movimiento?.UsuarioProcesadoId != null)
-                    {
-                        nombreUsuarioProcesado = await _context.Usuarios
-                            .Where(u => u.UsuarioId == movimiento.UsuarioProcesadoId)
-                            .Select(u => u.NombreUsuario)
-                            .FirstOrDefaultAsync();
-                    }
-
-                    alertas.Add(new
-                    {
-                        alerta.AlertaId,
-                        alerta.ProductoId,
-                        alerta.InventarioProgramadoId,
-                        alerta.UsuarioId,
-                        alerta.TipoAlerta,
-                        alerta.Mensaje,
-                        alerta.Leida,
-                        alerta.FechaCreacion,
-                        alerta.FechaLectura,
-                        NombreProducto = nombreProducto,
-                        // Datos del movimiento post-corte
-                        MovimientoPostCorteId = movimiento?.MovimientoPostCorteId,
-                        TipoMovimiento = movimiento?.TipoMovimiento,
-                        CantidadMovimiento = movimiento?.Cantidad,
-                        FechaMovimiento = movimiento?.FechaMovimiento,
-                        Procesado = movimiento?.Procesado ?? false,
-                        FechaProcesado = movimiento?.FechaProcesado,
-                        UsuarioProcesadoId = movimiento?.UsuarioProcesadoId,
-                        NombreUsuarioProcesado = nombreUsuarioProcesado
-                    });
-                }
+                    alerta.AlertaId,
+                    alerta.ProductoId,
+                    alerta.InventarioProgramadoId,
+                    alerta.UsuarioId,
+                    alerta.TipoAlerta,
+                    alerta.Mensaje,
+                    alerta.Leida,
+                    alerta.FechaCreacion,
+                    alerta.FechaLectura,
+                    NombreProducto = alerta.Producto?.NombreProducto,
+                    // ✅ USAR RELACIÓN DIRECTA con MovimientoPostCorte (evita buscar por producto)
+                    MovimientoPostCorteId = alerta.MovimientoPostCorte?.MovimientoPostCorteId,
+                    TipoMovimiento = alerta.MovimientoPostCorte?.TipoMovimiento,
+                    CantidadMovimiento = alerta.MovimientoPostCorte?.Cantidad,
+                    FechaMovimiento = alerta.MovimientoPostCorte?.FechaMovimiento,
+                    Procesado = alerta.MovimientoPostCorte?.Procesado ?? false,
+                    FechaProcesado = alerta.MovimientoPostCorte?.FechaProcesado,
+                    UsuarioProcesadoId = alerta.MovimientoPostCorte?.UsuarioProcesadoId,
+                    NombreUsuarioProcesado = alerta.MovimientoPostCorte?.UsuarioProcesado?.NombreUsuario
+                }).ToList();
 
                 _logger.LogInformation("✅ Procesadas {Count} alertas enriquecidas", alertas.Count);
 
