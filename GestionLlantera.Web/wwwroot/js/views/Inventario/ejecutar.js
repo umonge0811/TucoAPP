@@ -3465,6 +3465,16 @@ function actualizarPanelAlertas(alertas) {
 
     alertas.forEach((alerta, index) => {
         console.log(`🔔 Renderizando alerta ${index + 1}:`, alerta);
+        console.log('📋 Propiedades de la alerta:', {
+            nombreProducto: alerta.nombreProducto,
+            tipoMovimiento: alerta.tipoMovimiento,
+            cantidadMovimiento: alerta.cantidadMovimiento,
+            fechaMovimiento: alerta.fechaMovimiento,
+            procesado: alerta.procesado,
+            fechaProcesado: alerta.fechaProcesado,
+            nombreUsuarioProcesado: alerta.nombreUsuarioProcesado,
+            leida: alerta.leida
+        });
 
         // ✅ USAR camelCase - la API devuelve en camelCase por defecto
 
