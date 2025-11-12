@@ -59,7 +59,7 @@ namespace API.ServicesAPI
                             Procesado = m.Procesado,
                             FechaProcesado = m.FechaProcesado,
                             UsuarioProcesadoId = m.UsuarioProcesadoId,
-                            NombreUsuarioProcesado = m.UsuarioProcesado?.NombreCompleto
+                            NombreUsuarioProcesado = m.UsuarioProcesado?.NombreUsuario
                         }).ToList()
                     })
                     .ToList();
@@ -114,7 +114,7 @@ namespace API.ServicesAPI
                         Procesado = m.Procesado,
                         FechaProcesado = m.FechaProcesado,
                         UsuarioProcesadoId = m.UsuarioProcesadoId,
-                        NombreUsuarioProcesado = m.UsuarioProcesado?.NombreCompleto
+                        NombreUsuarioProcesado = m.UsuarioProcesado?.NombreUsuario
                     }).ToList()
                 };
 
@@ -192,6 +192,10 @@ namespace API.ServicesAPI
         {
             try
             {
+                _logger.LogInformation("🔄 === ACTUALIZANDO LÍNEA DE INVENTARIO ===");
+                _logger.LogInformation("📋 InventarioId: {InventarioId}, ProductoId: {ProductoId}, UsuarioId: {UsuarioId}",
+                    solicitud.InventarioProgramadoId, solicitud.ProductoId, solicitud.UsuarioId);
+
                 var resultado = new ResultadoActualizacionDTO();
 
                 // Obtener el detalle del inventario
@@ -201,10 +205,14 @@ namespace API.ServicesAPI
 
                 if (detalle == null)
                 {
+                    _logger.LogWarning("⚠️ Detalle de inventario no encontrado");
                     resultado.Exito = false;
                     resultado.Mensaje = "Detalle de inventario no encontrado";
                     return resultado;
                 }
+
+                _logger.LogInformation("✅ Detalle encontrado: CantidadSistema={CantidadSistema}, CantidadFisica={CantidadFisica}",
+                    detalle.CantidadSistema, detalle.CantidadFisica);
 
                 // Obtener movimientos pendientes
                 var movimientos = await _context.MovimientosPostCorte
@@ -213,8 +221,11 @@ namespace API.ServicesAPI
                                !m.Procesado)
                     .ToListAsync();
 
+                _logger.LogInformation("📦 Movimientos pendientes encontrados: {Count}", movimientos.Count);
+
                 if (!movimientos.Any())
                 {
+                    _logger.LogWarning("⚠️ No hay movimientos pendientes");
                     resultado.Exito = false;
                     resultado.Mensaje = "No hay movimientos pendientes para este producto";
                     return resultado;
@@ -222,14 +233,19 @@ namespace API.ServicesAPI
 
                 // Calcular el total de movimientos
                 var totalMovimientos = movimientos.Sum(m => m.Cantidad);
+                _logger.LogInformation("📊 Total de movimientos: {Total}", totalMovimientos);
 
                 // Actualizar la cantidad del sistema
+                var cantidadSistemaAnterior = detalle.CantidadSistema;
                 detalle.CantidadSistema += totalMovimientos;
+                _logger.LogInformation("🔢 CantidadSistema: {Anterior} → {Nueva}", cantidadSistemaAnterior, detalle.CantidadSistema);
 
                 // Si ya fue contado, recalcular la diferencia
                 if (detalle.CantidadFisica.HasValue)
                 {
+                    var diferenciaAnterior = detalle.Diferencia;
                     detalle.Diferencia = detalle.CantidadFisica.Value - detalle.CantidadSistema;
+                    _logger.LogInformation("📊 Diferencia actualizada: {Anterior} → {Nueva}", diferenciaAnterior, detalle.Diferencia);
                 }
 
                 // Marcar movimientos como procesados
@@ -240,31 +256,35 @@ namespace API.ServicesAPI
                     movimiento.UsuarioProcesadoId = solicitud.UsuarioId;
                 }
 
+                _logger.LogInformation("✔️ {Count} movimientos marcados como procesados", movimientos.Count);
+
                 // Actualizar información de tracking
                 detalle.MovimientosPostCorte = 0; // Ya no hay movimientos pendientes
                 detalle.UltimaActualizacion = DateTime.Now;
                 detalle.UsuarioActualizacionId = solicitud.UsuarioId;
 
+                _logger.LogInformation("💾 Guardando cambios en la base de datos...");
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("✅ Cambios guardados exitosamente");
 
                 resultado.Exito = true;
                 resultado.Mensaje = "Línea actualizada correctamente";
                 resultado.LineasActualizadas = 1;
                 resultado.MovimientosProcesados = movimientos.Count;
 
-                _logger.LogInformation("Línea actualizada: Producto {ProductoId}, Movimientos: {Total}",
-                    solicitud.ProductoId, totalMovimientos);
+                _logger.LogInformation("🎉 Línea actualizada exitosamente");
 
                 return resultado;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error actualizando línea de inventario");
+                _logger.LogError(ex, "❌ Error actualizando línea de inventario: {Message}", ex.Message);
+                _logger.LogError("❌ Stack trace: {StackTrace}", ex.StackTrace);
                 return new ResultadoActualizacionDTO
                 {
                     Exito = false,
                     Mensaje = "Error al actualizar la línea",
-                    Errores = new List<string> { ex.Message }
+                    Errores = new List<string> { ex.Message, ex.InnerException?.Message }
                 };
             }
         }
@@ -346,13 +366,42 @@ namespace API.ServicesAPI
         {
             try
             {
-                var inventarios = await _context.InventariosProgramados
-                    .Where(i => i.Estado == "En Progreso" &&
-                               i.DetallesInventario.Any(d => d.ProductoId == productoId))
-                    .Select(i => i.InventarioProgramadoId)
+                _logger.LogInformation("🔍 === BUSCANDO INVENTARIOS EN PROGRESO PARA PRODUCTO {ProductoId} ===", productoId);
+
+                // Primero verificar si hay inventarios en progreso
+                var inventariosEnProgreso = await _context.InventariosProgramados
+                    .Where(i => i.Estado == "En Progreso")
                     .ToListAsync();
 
-                return inventarios;
+                _logger.LogInformation("📋 Inventarios en estado 'En Progreso': {Count}", inventariosEnProgreso.Count);
+
+                if (!inventariosEnProgreso.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay inventarios en estado 'En Progreso'");
+                    return new List<int>();
+                }
+
+                // Verificar detalles para cada inventario
+                var resultados = new List<int>();
+                foreach (var inv in inventariosEnProgreso)
+                {
+                    var tieneProducto = await _context.DetallesInventarioProgramado
+                        .AnyAsync(d => d.InventarioProgramadoId == inv.InventarioProgramadoId &&
+                                      d.ProductoId == productoId);
+
+                    _logger.LogInformation("📦 Inventario '{Titulo}' (ID: {Id}): {TieneProducto}",
+                        inv.Titulo, inv.InventarioProgramadoId, tieneProducto ? "SÍ tiene el producto" : "NO tiene el producto");
+
+                    if (tieneProducto)
+                    {
+                        resultados.Add(inv.InventarioProgramadoId);
+                    }
+                }
+
+                _logger.LogInformation("✅ Encontrados {Count} inventarios en progreso con el producto {ProductoId}",
+                    resultados.Count, productoId);
+
+                return resultados;
             }
             catch (Exception ex)
             {

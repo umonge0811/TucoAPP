@@ -879,6 +879,10 @@ async function inicializarEjecutorInventario(inventarioId) {
         console.log('🔄 Cargando ajustes pendientes ANTES que productos...');
         await cargarAjustesPendientes(inventarioId);
 
+        // ✅ CARGAR ALERTAS DE MOVIMIENTOS POST-CORTE
+        console.log('🔔 Cargando alertas de movimientos post-corte...');
+        await cargarAlertasPostCorte();
+
         // ✅ AHORA SÍ CARGAR PRODUCTOS (ya con ajustes en memoria)
         console.log('📦 Cargando productos CON ajustes ya cargados...');
         await cargarProductosInventario(inventarioId);
@@ -894,6 +898,7 @@ async function inicializarEjecutorInventario(inventarioId) {
         setInterval(async () => {
             await actualizarEstadisticas();
             await cargarAjustesPendientes(inventarioId);
+            await cargarAlertasPostCorte();
         }, 30000);
         console.log('✅ Ejecutor de inventario inicializado correctamente');
         // ✅ AGREGAR AL FINAL:
@@ -3366,6 +3371,203 @@ async function cargarProductosInventario(inventarioId) {
         $('#loadingProductos').hide();
         $('#estadoVacio').show();
         mostrarError('Error al cargar productos del inventario');
+    }
+}
+
+// =====================================
+// FUNCIONES DE ALERTAS DE MOVIMIENTOS POST-CORTE
+// =====================================
+
+/**
+ * Cargar alertas de movimientos post-corte
+ */
+async function cargarAlertasPostCorte() {
+    try {
+        console.log('🔔 Cargando alertas de movimientos post-corte...');
+
+        const inventarioId = window.inventarioConfig?.inventarioId;
+        if (!inventarioId) {
+            console.warn('⚠️ No se encontró ID de inventario');
+            return;
+        }
+
+        const response = await fetch(`/TomaInventario/ObtenerAlertasPostCorte/${inventarioId}?soloNoLeidas=false`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.warn('⚠️ No se pudieron cargar las alertas. Status:', response.status);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('📦 Datos recibidos de alertas:', data);
+
+        if (data.success && data.alertas) {
+            console.log(`✅ Cargadas ${data.alertas.length} alertas (${data.noLeidas} no leídas)`);
+            console.log('📋 Detalle primera alerta:', data.alertas[0]);
+
+            // Actualizar UI
+            actualizarPanelAlertas(data.alertas);
+
+            // Actualizar contador
+            $('#contadorAlertasPostCorte').text(data.noLeidas);
+
+            // Mostrar/ocultar panel según si hay alertas
+            if (data.alertas.length > 0) {
+                $('#alertasPostCortePanel').show();
+            } else {
+                $('#alertasPostCortePanel').hide();
+            }
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando alertas:', error);
+    }
+}
+
+/**
+ * Actualizar el panel de alertas con los datos
+ */
+function actualizarPanelAlertas(alertas) {
+    console.log('🎨 === ACTUALIZANDO PANEL DE ALERTAS ===');
+    console.log('🎨 Total de alertas a renderizar:', alertas?.length || 0);
+
+    const $tablaBody = $('#tablaAlertasBody');
+    const $alertasVacio = $('#alertasVacio');
+    const $tablaAlertas = $('#tablaAlertas');
+
+    $tablaBody.empty();
+
+    if (!alertas || alertas.length === 0) {
+        console.log('📭 No hay alertas para mostrar');
+        $alertasVacio.show();
+        $tablaAlertas.hide();
+        return;
+    }
+
+    $alertasVacio.hide();
+    $tablaAlertas.show();
+
+    alertas.forEach((alerta, index) => {
+        console.log(`🔔 Renderizando alerta ${index + 1}:`, {
+            AlertaId: alerta.AlertaId,
+            Mensaje: alerta.Mensaje,
+            Leida: alerta.Leida,
+            FechaCreacion: alerta.FechaCreacion
+        });
+
+        // ✅ USAR PascalCase - la API devuelve con mayúscula inicial
+        const fechaFormateada = new Date(alerta.FechaCreacion).toLocaleString('es-CR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        const iconoEstado = alerta.Leida
+            ? '<i class="bi bi-check-circle text-success"></i>'
+            : '<i class="bi bi-exclamation-circle text-warning"></i>';
+
+        const badgeEstado = alerta.Leida
+            ? '<span class="badge bg-success">Leída</span>'
+            : '<span class="badge bg-warning">Nueva</span>';
+
+        const row = `
+            <tr class="${alerta.Leida ? '' : 'table-warning'}">
+                <td class="text-center">${iconoEstado}</td>
+                <td>${alerta.Mensaje}</td>
+                <td><span class="badge bg-info">${alerta.TipoAlerta}</span></td>
+                <td>${fechaFormateada}</td>
+                <td>${badgeEstado}</td>
+                <td>
+                    ${!alerta.Leida ? `
+                        <button class="btn btn-sm btn-outline-success"
+                                onclick="marcarAlertaLeida(${alerta.AlertaId})"
+                                title="Marcar como leída">
+                            <i class="bi bi-check"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            </tr>
+        `;
+
+        $tablaBody.append(row);
+    });
+}
+
+/**
+ * Marcar una alerta como leída
+ */
+async function marcarAlertaLeida(alertaId) {
+    try {
+        console.log(`✅ === MARCANDO ALERTA ${alertaId} COMO LEÍDA ===`);
+
+        const response = await fetch(`/TomaInventario/MarcarAlertaLeida/${alertaId}`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('📡 Respuesta marcar alerta:', response.status, response.statusText);
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Alerta marcada exitosamente:', data);
+
+            mostrarExito('Alerta marcada como leída');
+
+            console.log('🔄 Recargando alertas...');
+            await cargarAlertasPostCorte();
+            console.log('✅ Alertas recargadas');
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Error del servidor:', response.status, errorData);
+            mostrarError('Error al marcar alerta como leída');
+        }
+
+    } catch (error) {
+        console.error('❌ Error marcando alerta como leída:', error);
+        mostrarError('Error al marcar alerta como leída');
+    }
+}
+
+/**
+ * Marcar todas las alertas como leídas
+ */
+async function marcarTodasAlertasLeidas() {
+    try {
+        const inventarioId = window.inventarioConfig?.inventarioId;
+        if (!inventarioId) {
+            return;
+        }
+
+        const response = await fetch(`/TomaInventario/MarcarTodasAlertasLeidas/${inventarioId}`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            mostrarExito(data.message || 'Todas las alertas han sido marcadas como leídas');
+            await cargarAlertasPostCorte();
+        } else {
+            mostrarError('Error al marcar alertas como leídas');
+        }
+
+    } catch (error) {
+        console.error('❌ Error marcando todas las alertas:', error);
+        mostrarError('Error al marcar alertas como leídas');
     }
 }
 
@@ -7578,7 +7780,7 @@ async function actualizarLineaIndividual(productoId) {
         const usuarioId = window.inventarioConfig?.usuarioId || 0;
         const inventarioId = inventarioActual?.inventarioProgramadoId;
 
-        const response = await fetch('/api/MovimientosPostCorte/actualizar-linea', {
+        const response = await fetch('/TomaInventario/ActualizarLineaPostCorte', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -7602,8 +7804,9 @@ async function actualizarLineaIndividual(productoId) {
                 showConfirmButton: false
             });
 
-            // Recargar productos
+            // Recargar productos y alertas
             await cargarProductosInventario(inventarioId);
+            await cargarAlertasPostCorte();
             verificarMovimientosPostCorte();
         } else {
             Swal.fire({
@@ -7661,7 +7864,7 @@ async function actualizarTodasLineas() {
         const usuarioId = window.inventarioConfig?.usuarioId || 0;
         const inventarioId = inventarioActual?.inventarioProgramadoId;
 
-        const response = await fetch('/api/MovimientosPostCorte/actualizar-masivo', {
+        const response = await fetch('/TomaInventario/ActualizarLineasMasivas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -7690,8 +7893,9 @@ async function actualizarTodasLineas() {
                 timer: 3000
             });
 
-            // Recargar productos
+            // Recargar productos y alertas
             await cargarProductosInventario(inventarioId);
+            await cargarAlertasPostCorte();
             verificarMovimientosPostCorte();
         } else {
             Swal.fire({
@@ -7787,5 +7991,35 @@ $(document).ready(function () {
         }, 100);
 
         console.log('🧹 Filtros de llantas limpiados');
+    });
+
+    // =====================================
+    // EVENTOS DE ALERTAS DE MOVIMIENTOS POST-CORTE
+    // =====================================
+
+    // Actualizar alertas
+    $('#btnActualizarAlertas').on('click', function () {
+        cargarAlertasPostCorte();
+    });
+
+    // Marcar todas las alertas como leídas
+    $('#btnMarcarAlertasLeidas').on('click', function () {
+        marcarTodasAlertasLeidas();
+    });
+
+    // Toggle del panel de alertas
+    $('#btnToggleAlertas').on('click', function () {
+        const $contenido = $('#contenidoAlertasPostCorte');
+        const $icon = $(this).find('i');
+
+        if ($contenido.is(':visible')) {
+            $contenido.slideUp();
+            $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+            $(this).html('<i class="bi bi-chevron-down me-1"></i>Mostrar');
+        } else {
+            $contenido.slideDown();
+            $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+            $(this).html('<i class="bi bi-chevron-up me-1"></i>Ocultar');
+        }
     });
 });
