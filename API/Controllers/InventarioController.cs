@@ -1249,19 +1249,50 @@ namespace API.Controllers
                     query = query.Where(a => !a.Leida);
                 }
 
+                // JOIN con MovimientosPostCorte para obtener el estado de procesado
                 var alertas = await query
-                    .OrderByDescending(a => a.FechaCreacion)
-                    .Select(a => new
+                    .GroupJoin(
+                        _context.MovimientosPostCorte.Where(m => m.InventarioProgramadoId == inventarioId),
+                        alerta => alerta.ProductoId,
+                        movimiento => movimiento.ProductoId,
+                        (alerta, movimientos) => new { alerta, movimientos }
+                    )
+                    .SelectMany(
+                        x => x.movimientos.DefaultIfEmpty(),
+                        (x, movimiento) => new { x.alerta, movimiento }
+                    )
+                    .GroupBy(x => x.alerta.AlertaId)
+                    .Select(g => g.OrderByDescending(x => x.movimiento.FechaMovimiento).First())
+                    .OrderByDescending(x => x.alerta.FechaCreacion)
+                    .Select(x => new
                     {
-                        a.AlertaId,
-                        a.ProductoId,
-                        a.InventarioProgramadoId,
-                        a.UsuarioId,
-                        a.TipoAlerta,
-                        a.Mensaje,
-                        a.Leida,
-                        a.FechaCreacion,
-                        a.FechaLectura
+                        x.alerta.AlertaId,
+                        x.alerta.ProductoId,
+                        x.alerta.InventarioProgramadoId,
+                        x.alerta.UsuarioId,
+                        x.alerta.TipoAlerta,
+                        x.alerta.Mensaje,
+                        x.alerta.Leida,
+                        x.alerta.FechaCreacion,
+                        x.alerta.FechaLectura,
+                        NombreProducto = _context.Productos
+                            .Where(p => p.ProductoId == x.alerta.ProductoId)
+                            .Select(p => p.Nombre)
+                            .FirstOrDefault(),
+                        // Datos del movimiento post-corte
+                        MovimientoPostCorteId = x.movimiento != null ? (int?)x.movimiento.MovimientoPostCorteId : null,
+                        TipoMovimiento = x.movimiento != null ? x.movimiento.TipoMovimiento : null,
+                        CantidadMovimiento = x.movimiento != null ? (int?)x.movimiento.Cantidad : null,
+                        FechaMovimiento = x.movimiento != null ? (DateTime?)x.movimiento.FechaMovimiento : null,
+                        Procesado = x.movimiento != null ? x.movimiento.Procesado : false,
+                        FechaProcesado = x.movimiento != null ? x.movimiento.FechaProcesado : null,
+                        UsuarioProcesadoId = x.movimiento != null ? x.movimiento.UsuarioProcesadoId : null,
+                        NombreUsuarioProcesado = x.movimiento != null && x.movimiento.UsuarioProcesadoId != null
+                            ? _context.Usuarios
+                                .Where(u => u.UsuarioId == x.movimiento.UsuarioProcesadoId)
+                                .Select(u => u.NombreCompleto)
+                                .FirstOrDefault()
+                            : null
                     })
                     .ToListAsync();
 

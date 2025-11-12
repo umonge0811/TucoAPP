@@ -3454,44 +3454,99 @@ function actualizarPanelAlertas(alertas) {
     $tablaAlertas.show();
 
     alertas.forEach((alerta, index) => {
-        console.log(`🔔 Renderizando alerta ${index + 1}:`, {
-            alertaId: alerta.alertaId,
-            mensaje: alerta.mensaje,
-            leida: alerta.leida,
-            fechaCreacion: alerta.fechaCreacion
-        });
+        console.log(`🔔 Renderizando alerta ${index + 1}:`, alerta);
 
         // ✅ USAR camelCase - la API devuelve en camelCase por defecto
-        // Validar que fechaCreacion existe antes de formatear
-        const fecha = alerta.fechaCreacion ? new Date(alerta.fechaCreacion) : new Date();
-        const fechaFormateada = fecha.toLocaleString('es-CR', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
 
-        const iconoEstado = alerta.leida
-            ? '<i class="bi bi-check-circle text-success"></i>'
-            : '<i class="bi bi-exclamation-circle text-warning"></i>';
+        // Formatear fecha del movimiento
+        const fechaMovimiento = alerta.fechaMovimiento
+            ? new Date(alerta.fechaMovimiento).toLocaleString('es-CR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+            : '<span class="text-muted">N/A</span>';
 
-        const badgeEstado = alerta.leida
+        // Formatear fecha de procesado
+        const fechaProcesado = alerta.fechaProcesado
+            ? new Date(alerta.fechaProcesado).toLocaleString('es-CR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+            : '<span class="text-muted">-</span>';
+
+        // Icono de estado de alerta (leída/no leída)
+        const iconoEstadoAlerta = alerta.leida
+            ? '<i class="bi bi-check-circle text-success" title="Alerta leída"></i>'
+            : '<i class="bi bi-exclamation-circle text-warning" title="Alerta nueva"></i>';
+
+        // Badge de estado de alerta
+        const badgeEstadoAlerta = alerta.leida
             ? '<span class="badge bg-success">Leída</span>'
             : '<span class="badge bg-warning">Nueva</span>';
 
-        // Validar datos antes de renderizar
-        const mensaje = alerta.mensaje || 'Sin mensaje';
-        const tipoAlerta = alerta.tipoAlerta || 'GENERAL';
+        // Badge de estado de procesado
+        const badgeEstadoProcesado = alerta.procesado
+            ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Procesado</span>'
+            : '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Pendiente</span>';
+
+        // Tipo de movimiento con icono
+        const tipoMovimiento = alerta.tipoMovimiento || 'N/A';
+        let iconoMovimiento = '';
+        let colorMovimiento = 'secondary';
+
+        switch(tipoMovimiento.toLowerCase()) {
+            case 'venta':
+                iconoMovimiento = '<i class="bi bi-cart me-1"></i>';
+                colorMovimiento = 'danger';
+                break;
+            case 'ajuste':
+                iconoMovimiento = '<i class="bi bi-pencil-square me-1"></i>';
+                colorMovimiento = 'warning';
+                break;
+            case 'traspaso':
+                iconoMovimiento = '<i class="bi bi-arrow-left-right me-1"></i>';
+                colorMovimiento = 'info';
+                break;
+            case 'devolucion':
+                iconoMovimiento = '<i class="bi bi-arrow-return-left me-1"></i>';
+                colorMovimiento = 'success';
+                break;
+            default:
+                iconoMovimiento = '<i class="bi bi-question-circle me-1"></i>';
+        }
+
+        const badgeTipoMovimiento = `<span class="badge bg-${colorMovimiento}">${iconoMovimiento}${tipoMovimiento}</span>`;
+
+        // Cantidad con signo y color
+        const cantidad = alerta.cantidadMovimiento || 0;
+        const cantidadFormateada = cantidad > 0
+            ? `<span class="text-success fw-bold">+${cantidad}</span>`
+            : `<span class="text-danger fw-bold">${cantidad}</span>`;
+
+        // Nombre del producto
+        const nombreProducto = alerta.nombreProducto || `Producto #${alerta.productoId}`;
+
+        // Usuario que procesó
+        const usuarioProcesado = alerta.nombreUsuarioProcesado || '<span class="text-muted">-</span>';
 
         const row = `
             <tr class="${alerta.leida ? '' : 'table-warning'}">
-                <td class="text-center">${iconoEstado}</td>
-                <td>${mensaje}</td>
-                <td><span class="badge bg-info">${tipoAlerta}</span></td>
-                <td>${fechaFormateada}</td>
-                <td>${badgeEstado}</td>
-                <td>
+                <td class="text-center">${iconoEstadoAlerta}</td>
+                <td>${nombreProducto}</td>
+                <td class="text-center">${badgeTipoMovimiento}</td>
+                <td class="text-center">${cantidadFormateada}</td>
+                <td>${fechaMovimiento}</td>
+                <td class="text-center">${badgeEstadoProcesado}</td>
+                <td>${fechaProcesado}</td>
+                <td>${usuarioProcesado}</td>
+                <td class="text-center">${badgeEstadoAlerta}</td>
+                <td class="text-center">
                     ${!alerta.leida ? `
                         <button class="btn btn-sm btn-outline-success"
                                 onclick="marcarAlertaLeida(${alerta.alertaId})"
