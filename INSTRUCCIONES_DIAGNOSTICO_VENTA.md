@@ -1,32 +1,67 @@
 # Diagnóstico: Por qué las alertas muestran "Ajuste" en lugar de "Venta"
 
-## Paso 1: Reiniciar el Backend
+## Resumen del Problema
 
-**MUY IMPORTANTE:** Antes de hacer cualquier otra cosa, asegúrese de que el backend de la API ha sido reiniciado después de hacer `git pull` de los últimos cambios.
+Después de una revisión exhaustiva del código, he confirmado que:
 
+✅ **El código es CORRECTO** - `FacturacionController.cs` línea 829 pasa "Venta" correctamente
+✅ **No hay sobrescrituras** - No hay código, triggers, ni valores por defecto que cambien esto
+✅ **El flujo es directo** - El valor "Venta" se guarda directamente en la base de datos
+
+Si está viendo "Ajuste" en lugar de "Venta", solo hay **3 posibilidades**:
+
+### Posibilidad 1: Backend no reiniciado
+El backend está ejecutando código antiguo que NO tenía esta funcionalidad.
+
+### Posibilidad 2: Viendo alertas antiguas
+Las alertas antiguas fueron actualizadas por el script de migración con movimientos tipo "Ajuste".
+
+### Posibilidad 3: No hay movimientos de factura
+Las facturas se completaron cuando NO había inventarios en progreso.
+
+## Paso 1: Verificar Movimientos de Facturas
+
+**PRIMERO EJECUTE ESTE SCRIPT:** `VerificarMovimientosDeFacturas.sql`
+
+Este script le dirá **exactamente** cuál es el problema.
+
+### Interpretación de Resultados:
+
+#### Resultado A: "NO hay movimientos con TipoDocumento = 'Factura'"
+📌 **Causa:** El backend NO se reinició después de `git pull`
+📌 **Solución:** Reinicie el backend completamente y complete UNA NUEVA factura
+
+#### Resultado B: "SÍ hay movimientos con TipoDocumento = 'Factura' y TipoMovimiento = 'Ajuste'"
+📌 **Causa:** BUG en el código (muy improbable según revisión)
+📌 **Solución:** Enviar screenshot de los resultados al desarrollador
+
+#### Resultado C: "SÍ hay movimientos con TipoDocumento = 'Factura' y TipoMovimiento = 'Venta'"
+📌 **Causa:** El sistema funciona CORRECTAMENTE - está viendo alertas ANTIGUAS
+📌 **Solución:** Complete una NUEVA factura y verifique esa alerta específica
+
+## Paso 2: Según el Resultado
+
+### Si obtuvo Resultado A (No hay movimientos de facturas):
+
+1. **Reinicie completamente el backend**
 ```bash
-# Detenga el backend si está corriendo
-# Luego inícielo de nuevo
+# Detener el proceso del backend
+# Iniciar nuevamente el backend
 ```
 
-Si el backend no se reinicia, seguirá usando el código antiguo y NO creará movimientos de tipo "Venta".
+2. **Verifique que los cambios están presentes**
+   - Busque en el log de inicio del backend
+   - El código nuevo debería estar activo
 
-## Paso 2: Ejecutar el Script de Diagnóstico
+3. **Complete UNA NUEVA factura** de un producto que esté en un inventario en progreso
 
-Ejecute el archivo `DiagnosticoMovimientosYAlertas.sql` en su base de datos para verificar qué está pasando.
+4. **Ejecute nuevamente** `VerificarMovimientosDeFacturas.sql`
+   - Ahora debería ver movimientos con TipoDocumento = "Factura"
+   - Y TipoMovimiento debería ser "Venta"
 
-### Qué buscar en los resultados:
+### Si obtuvo Resultado C (Sí hay movimientos correctos):
 
-#### Sección 5: "MOVIMIENTOS DE VENTA (FACTURACION)"
-- **Si está VACÍA**: El backend NO se reinició o los cambios no se aplicaron
-  - ✅ Solución: Reinicie el backend y complete una nueva factura
-
-- **Si tiene registros**: El código está funcionando correctamente
-  - ✅ El backend está creando movimientos de tipo "Venta"
-
-#### Sección 3: "ALERTAS RECIENTES Y SUS MOVIMIENTOS"
-- Observe la columna `TipoMovimiento` de las alertas más recientes
-- Observe las fechas: `FechaMovimiento` vs `FechaAlerta`
+El sistema está funcionando perfectamente. Las alertas que muestran "Ajuste" son antiguas.
 
 ## Paso 3: Entender el Problema con Alertas Antiguas
 
@@ -52,70 +87,74 @@ WHERE a.MovimientoPostCorteId IS NULL
 
 **Resultado:** Si el movimiento más reciente era de tipo "Ajuste", entonces todas las alertas antiguas de ese producto ahora muestran "Ajuste", AUNQUE originalmente hayan sido creadas por ventas.
 
-## Paso 4: Verificar con Datos Nuevos
+## Paso 4: Prueba Final
 
-Para verificar que el sistema está funcionando correctamente:
+Después de reiniciar el backend (si fue necesario):
 
-1. **Asegúrese de que el backend esté reiniciado**
-2. **Complete UNA NUEVA FACTURA** de un producto que está en un inventario en progreso
-3. **Verifique que se creó un nuevo movimiento de tipo "Venta":**
+1. **Asegúrese de tener un inventario en estado "En Progreso"**
+2. **Complete UNA NUEVA FACTURA** de un producto que está en ese inventario
+3. **Ejecute este query rápido:**
 
 ```sql
-SELECT TOP 5
+-- Ver el movimiento MÁS RECIENTE
+SELECT TOP 1
     m.MovimientoPostCorteId,
-    m.ProductoId,
     m.TipoMovimiento,
     m.TipoDocumento,
-    m.Cantidad,
-    m.FechaMovimiento
+    m.DocumentoReferenciaId AS FacturaId,
+    m.FechaMovimiento,
+    p.NombreProducto
 FROM MovimientosPostCorte m
+LEFT JOIN Productos p ON p.ProductoId = m.ProductoId
 ORDER BY m.FechaMovimiento DESC;
 ```
 
-4. **Verifique que se creó una nueva alerta vinculada a ese movimiento:**
+4. **Debería ver:**
+   - `TipoMovimiento = "Venta"`
+   - `TipoDocumento = "Factura"`
+   - `FacturaId` = el ID de la factura que acaba de completar
+
+5. **Vaya a "Ejecutar Inventario"** → Panel de Alertas
+   - Busque la alerta MÁS RECIENTE
+   - Debería mostrar "Venta" como tipo de movimiento
+
+## Resumen de Diagnóstico
+
+### ✅ El Código es Correcto
+
+He revisado TODO el flujo:
+
+1. **FacturacionController.cs:826-833** - Llama al servicio con "Venta" ✅
+2. **MovimientosPostCorteService.cs:151** - Asigna TipoMovimiento directamente ✅
+3. **SaveChangesAsync:178** - Guarda en la base de datos ✅
+4. **No hay triggers** - Verificado ✅
+5. **No hay valores por defecto** - Verificado ✅
+6. **No hay sobrescrituras** - Verificado ✅
+
+### 🔍 Diagnóstico según Script SQL
+
+Ejecute `VerificarMovimientosDeFacturas.sql` y compare con estos casos:
+
+| Resultado del Script | Causa | Solución |
+|---------------------|-------|----------|
+| **No hay movimientos con TipoDocumento='Factura'** | Backend no reiniciado | ⚠️ Reiniciar backend completamente |
+| **Hay movimientos correctos ('Venta')** | Código funciona bien | ✅ Crear nueva factura y verificar |
+| **Hay movimientos incorrectos ('Ajuste')** | Bug inesperado | 🚨 Contactar desarrollador |
+
+### 📋 Scripts Disponibles
+
+1. **`VerificarMovimientosDeFacturas.sql`** - Diagnóstico específico de facturas (USE ESTE PRIMERO)
+2. **`DiagnosticoMovimientosYAlertas.sql`** - Diagnóstico general completo
+3. **`UpdateAlertasAntiguasConMovimientoPostCorteId.sql`** - Script de migración original
+
+### ⚡ Prueba Rápida
+
+Si después de reiniciar el backend, complete una nueva factura y verifique con:
 
 ```sql
-SELECT TOP 5
-    a.AlertaId,
-    a.ProductoId,
-    a.MovimientoPostCorteId,
-    m.TipoMovimiento,
-    a.FechaCreacion
-FROM AlertasInventario a
-INNER JOIN MovimientosPostCorte m ON m.MovimientoPostCorteId = a.MovimientoPostCorteId
-ORDER BY a.FechaCreacion DESC;
+SELECT TOP 1 TipoMovimiento, TipoDocumento
+FROM MovimientosPostCorte
+ORDER BY FechaMovimiento DESC;
 ```
 
-5. **Vaya a la interfaz de "Ejecutar Inventario" y verifique que la nueva alerta muestre "Venta"**
-
-## Resumen
-
-### Si NO aparecen movimientos de tipo "Venta":
-- ❌ El backend no se reinició
-- ✅ Reinicie el backend y vuelva a intentar
-
-### Si aparecen movimientos de tipo "Venta" pero las alertas muestran "Ajuste":
-- ❌ Está viendo alertas ANTIGUAS que fueron actualizadas por el script de migración
-- ✅ Complete una NUEVA factura y verifique que esa alerta muestre "Venta"
-
-### Si las nuevas facturas también crean alertas con "Ajuste":
-- ❌ Hay un problema con el código
-- ✅ Verifique los logs del backend para ver errores
-- ✅ Contacte al desarrollador con los resultados del script de diagnóstico
-
-## Código Correcto
-
-El código en `FacturacionController.cs` línea 829 está correcto:
-
-```csharp
-var movimientoId = await _movimientosPostCorteService.RegistrarMovimientoAsync(
-    inventarioId,
-    detalle.ProductoId.Value,
-    "Venta",  // ← CORRECTO
-    cantidadMovimiento,
-    factura.FacturaId,
-    "Factura"
-);
-```
-
-Este código crea movimientos con `TipoMovimiento = "Venta"`, pero SOLO si el backend está ejecutando este código (requiere reinicio después de `git pull`).
+Debería ver: `TipoMovimiento='Venta'` y `TipoDocumento='Factura'`
