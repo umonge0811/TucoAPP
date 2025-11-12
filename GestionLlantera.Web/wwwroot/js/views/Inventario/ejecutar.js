@@ -3406,6 +3406,8 @@ async function cargarAlertasPostCorte() {
 
         const data = await response.json();
         console.log('📦 Datos recibidos de alertas:', data);
+        console.log('📦 data.success:', data.success);
+        console.log('📦 data.alertas:', data.alertas);
 
         if (data.success && data.alertas) {
             console.log(`✅ Cargadas ${data.alertas.length} alertas (${data.noLeidas} no leídas)`);
@@ -3423,10 +3425,18 @@ async function cargarAlertasPostCorte() {
             } else {
                 $('#alertasPostCortePanel').hide();
             }
+        } else {
+            console.error('❌ Respuesta inválida de la API:', {
+                success: data.success,
+                alertas: data.alertas,
+                mensaje: data.message
+            });
+            $('#alertasPostCortePanel').hide();
         }
 
     } catch (error) {
         console.error('❌ Error cargando alertas:', error);
+        console.error('❌ Stack trace:', error.stack);
     }
 }
 
