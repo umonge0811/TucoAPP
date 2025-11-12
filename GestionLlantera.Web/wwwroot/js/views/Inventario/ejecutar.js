@@ -3391,10 +3391,9 @@ async function cargarAlertasPostCorte() {
             return;
         }
 
-        const response = await fetch(`/api/Inventario/inventarios-programados/${inventarioId}/alertas?soloNoLeidas=false`, {
+        const response = await fetch(`/TomaInventario/ObtenerAlertasPostCorte/${inventarioId}?soloNoLeidas=false`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
@@ -3493,10 +3492,9 @@ function actualizarPanelAlertas(alertas) {
  */
 async function marcarAlertaLeida(alertaId) {
     try {
-        const response = await fetch(`/api/Inventario/alertas/${alertaId}/marcar-leida`, {
+        const response = await fetch(`/TomaInventario/MarcarAlertaLeida/${alertaId}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
@@ -3525,10 +3523,9 @@ async function marcarTodasAlertasLeidas() {
             return;
         }
 
-        const response = await fetch(`/api/Inventario/inventarios-programados/${inventarioId}/alertas/marcar-todas-leidas`, {
+        const response = await fetch(`/TomaInventario/MarcarTodasAlertasLeidas/${inventarioId}`, {
             method: 'PUT',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             }
@@ -7757,10 +7754,9 @@ async function actualizarLineaIndividual(productoId) {
         const usuarioId = window.inventarioConfig?.usuarioId || 0;
         const inventarioId = inventarioActual?.inventarioProgramadoId;
 
-        const response = await fetch('/api/MovimientosPostCorte/actualizar-linea', {
+        const response = await fetch('/TomaInventario/ActualizarLineaPostCorte', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
