@@ -1247,15 +1247,16 @@ namespace GestionLlantera.Web.Controllers
                 var usuarioId = ObtenerIdUsuarioActual();
 
                 // ✅ LLAMAR AL SERVICIO
-                (bool success, object? data) = await _movimientosPostCorteService.ObtenerAlertasAsync(
+                (bool success, string? jsonData) = await _movimientosPostCorteService.ObtenerAlertasAsync(
                     inventarioId,
                     usuarioId,
                     soloNoLeidas,
                     token);
 
-                if (success && data != null)
+                if (success && !string.IsNullOrEmpty(jsonData))
                 {
-                    return Json(data);
+                    // ✅ DEVOLVER EL JSON STRING DIRECTAMENTE SIN RE-SERIALIZAR
+                    return Content(jsonData, "application/json");
                 }
                 else
                 {

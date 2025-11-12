@@ -28,7 +28,7 @@ namespace GestionLlantera.Web.Services
                 _apiConfig.BaseUrl);
         }
 
-        public async Task<(bool Success, object? Data)> ObtenerAlertasAsync(
+        public async Task<(bool Success, string? JsonData)> ObtenerAlertasAsync(
             int inventarioId,
             int? usuarioId,
             bool soloNoLeidas,
@@ -60,8 +60,8 @@ namespace GestionLlantera.Web.Services
                 var response = await _httpClient.GetAsync(url);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
-                _logger.LogInformation("📡 Respuesta API: Status={Status}, Content={Content}",
-                    response.StatusCode, responseContent);
+                _logger.LogInformation("📡 Respuesta API: Status={Status}, ContentLength={Length}",
+                    response.StatusCode, responseContent?.Length ?? 0);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -70,9 +70,8 @@ namespace GestionLlantera.Web.Services
                     return (false, null);
                 }
 
-                var resultado = JsonConvert.DeserializeObject<dynamic>(responseContent);
-
-                return (true, resultado);
+                // ✅ DEVOLVER EL JSON STRING DIRECTAMENTE SIN DESERIALIZAR
+                return (true, responseContent);
             }
             catch (Exception ex)
             {
