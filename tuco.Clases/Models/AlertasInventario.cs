@@ -34,6 +34,9 @@ namespace tuco.Clases.Models
 
         public DateTime? FechaLectura { get; set; }
 
+        // Relación con el movimiento post-corte que generó la alerta
+        public int? MovimientoPostCorteId { get; set; }
+
         // Relaciones
         [ForeignKey("ProductoId")]
         public virtual Producto Producto { get; set; }
@@ -43,6 +46,9 @@ namespace tuco.Clases.Models
 
         [ForeignKey("UsuarioId")]
         public virtual Usuario Usuario { get; set; }
+
+        [ForeignKey("MovimientoPostCorteId")]
+        public virtual MovimientoPostCorte MovimientoPostCorte { get; set; }
 
         public AlertasInventario()
         {

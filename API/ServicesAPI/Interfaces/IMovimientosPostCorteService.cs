@@ -18,8 +18,9 @@ namespace API.ServicesAPI.Interfaces
 
         /// <summary>
         /// Registra un movimiento post-corte (llamado desde proceso de venta/ajuste)
+        /// Retorna el ID del movimiento creado, o null si falla
         /// </summary>
-        Task<bool> RegistrarMovimientoAsync(int inventarioProgramadoId, int productoId, string tipoMovimiento,
+        Task<int?> RegistrarMovimientoAsync(int inventarioProgramadoId, int productoId, string tipoMovimiento,
             int cantidad, int? documentoReferenciaId = null, string tipoDocumento = null);
 
         /// <summary>
