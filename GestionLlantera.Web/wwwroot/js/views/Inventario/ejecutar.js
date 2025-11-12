@@ -3466,21 +3466,21 @@ function actualizarPanelAlertas(alertas) {
     alertas.forEach((alerta, index) => {
         console.log(`🔔 Renderizando alerta ${index + 1}:`, alerta);
         console.log('📋 Propiedades de la alerta:', {
-            NombreProducto: alerta.NombreProducto,
-            TipoMovimiento: alerta.TipoMovimiento,
-            CantidadMovimiento: alerta.CantidadMovimiento,
-            FechaMovimiento: alerta.FechaMovimiento,
-            Procesado: alerta.Procesado,
-            FechaProcesado: alerta.FechaProcesado,
-            NombreUsuarioProcesado: alerta.NombreUsuarioProcesado,
-            Leida: alerta.Leida
+            nombreProducto: alerta.nombreProducto,
+            tipoMovimiento: alerta.tipoMovimiento,
+            cantidadMovimiento: alerta.cantidadMovimiento,
+            fechaMovimiento: alerta.fechaMovimiento,
+            procesado: alerta.procesado,
+            fechaProcesado: alerta.fechaProcesado,
+            nombreUsuarioProcesado: alerta.nombreUsuarioProcesado,
+            leida: alerta.leida
         });
 
-        // ✅ USAR PascalCase - la API devuelve en PascalCase desde C#
+        // ✅ USAR camelCase - la API devuelve en camelCase por defecto en ASP.NET Core
 
         // Formatear fecha del movimiento
-        const fechaMovimiento = alerta.FechaMovimiento
-            ? new Date(alerta.FechaMovimiento).toLocaleString('es-CR', {
+        const fechaMovimiento = alerta.fechaMovimiento
+            ? new Date(alerta.fechaMovimiento).toLocaleString('es-CR', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -3490,8 +3490,8 @@ function actualizarPanelAlertas(alertas) {
             : '<span class="text-muted">N/A</span>';
 
         // Formatear fecha de procesado
-        const fechaProcesado = alerta.FechaProcesado
-            ? new Date(alerta.FechaProcesado).toLocaleString('es-CR', {
+        const fechaProcesado = alerta.fechaProcesado
+            ? new Date(alerta.fechaProcesado).toLocaleString('es-CR', {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
@@ -3501,22 +3501,22 @@ function actualizarPanelAlertas(alertas) {
             : '<span class="text-muted">-</span>';
 
         // Icono de estado de alerta (leída/no leída)
-        const iconoEstadoAlerta = alerta.Leida
+        const iconoEstadoAlerta = alerta.leida
             ? '<i class="bi bi-check-circle text-success" title="Alerta leída"></i>'
             : '<i class="bi bi-exclamation-circle text-warning" title="Alerta nueva"></i>';
 
         // Badge de estado de alerta
-        const badgeEstadoAlerta = alerta.Leida
+        const badgeEstadoAlerta = alerta.leida
             ? '<span class="badge bg-success">Leída</span>'
             : '<span class="badge bg-warning">Nueva</span>';
 
         // Badge de estado de procesado
-        const badgeEstadoProcesado = alerta.Procesado
+        const badgeEstadoProcesado = alerta.procesado
             ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Procesado</span>'
             : '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Pendiente</span>';
 
         // Tipo de movimiento con icono
-        const tipoMovimiento = alerta.TipoMovimiento || 'N/A';
+        const tipoMovimiento = alerta.tipoMovimiento || 'N/A';
         let iconoMovimiento = '';
         let colorMovimiento = 'secondary';
 
@@ -3544,19 +3544,19 @@ function actualizarPanelAlertas(alertas) {
         const badgeTipoMovimiento = `<span class="badge bg-${colorMovimiento}">${iconoMovimiento}${tipoMovimiento}</span>`;
 
         // Cantidad con signo y color
-        const cantidad = alerta.CantidadMovimiento || 0;
+        const cantidad = alerta.cantidadMovimiento || 0;
         const cantidadFormateada = cantidad > 0
             ? `<span class="text-success fw-bold">+${cantidad}</span>`
             : `<span class="text-danger fw-bold">${cantidad}</span>`;
 
         // Nombre del producto
-        const nombreProducto = alerta.NombreProducto || `Producto #${alerta.ProductoId}`;
+        const nombreProducto = alerta.nombreProducto || `Producto #${alerta.productoId}`;
 
         // Usuario que procesó
-        const usuarioProcesado = alerta.NombreUsuarioProcesado || '<span class="text-muted">-</span>';
+        const usuarioProcesado = alerta.nombreUsuarioProcesado || '<span class="text-muted">-</span>';
 
         const row = `
-            <tr class="${alerta.Leida ? '' : 'table-warning'}">
+            <tr class="${alerta.leida ? '' : 'table-warning'}">
                 <td class="text-center">${iconoEstadoAlerta}</td>
                 <td>${nombreProducto}</td>
                 <td class="text-center">${badgeTipoMovimiento}</td>
@@ -3567,9 +3567,9 @@ function actualizarPanelAlertas(alertas) {
                 <td>${usuarioProcesado}</td>
                 <td class="text-center">${badgeEstadoAlerta}</td>
                 <td class="text-center">
-                    ${!alerta.Leida ? `
+                    ${!alerta.leida ? `
                         <button class="btn btn-sm btn-outline-success"
-                                onclick="marcarAlertaLeida(${alerta.AlertaId})"
+                                onclick="marcarAlertaLeida(${alerta.alertaId})"
                                 title="Marcar como leída">
                             <i class="bi bi-check"></i>
                         </button>
