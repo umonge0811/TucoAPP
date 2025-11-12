@@ -1277,7 +1277,7 @@ namespace API.Controllers
                         x.alerta.FechaLectura,
                         NombreProducto = _context.Productos
                             .Where(p => p.ProductoId == x.alerta.ProductoId)
-                            .Select(p => p.Nombre)
+                            .Select(p => p.NombreProducto)
                             .FirstOrDefault(),
                         // Datos del movimiento post-corte
                         MovimientoPostCorteId = x.movimiento != null ? (int?)x.movimiento.MovimientoPostCorteId : null,
@@ -1290,7 +1290,7 @@ namespace API.Controllers
                         NombreUsuarioProcesado = x.movimiento != null && x.movimiento.UsuarioProcesadoId != null
                             ? _context.Usuarios
                                 .Where(u => u.UsuarioId == x.movimiento.UsuarioProcesadoId)
-                                .Select(u => u.NombreCompleto)
+                                .Select(u => u.NombreUsuario)
                                 .FirstOrDefault()
                             : null
                     })
