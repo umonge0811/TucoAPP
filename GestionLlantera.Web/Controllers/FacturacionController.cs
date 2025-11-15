@@ -1640,6 +1640,71 @@ namespace GestionLlantera.Web.Controllers
             return new { usuarioId = 1, nombre = "Sistema" };
         }
 
+        // ===== FUNCIÓN PARA OBTENER CONFIGURACIÓN DE FACTURACIÓN =====
+        private object ObtenerConfiguracionFacturacion()
+        {
+            try
+            {
+                var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+                var tokenJWT = this.ObtenerTokenJWT();
+
+                // Verificar permisos desde token JWT
+                var puedeCrearFacturas = this.TienePermisoEnToken("Crear Facturas");
+                var puedeCompletarFacturas = this.TienePermisoEnToken("Completar Facturas");
+                var puedeEditarFacturas = this.TienePermisoEnToken("Editar Facturas");
+                var puedeAnularFacturas = this.TienePermisoEnToken("Anular Facturas");
+                var esAdmin = this.EsAdministradorAsync().GetAwaiter().GetResult();
+
+                var permisos = new
+                {
+                    puedeCrearFacturas = puedeCrearFacturas,
+                    puedeCompletarFacturas = puedeCompletarFacturas,
+                    puedeEditarFacturas = puedeEditarFacturas,
+                    puedeAnularFacturas = puedeAnularFacturas,
+                    esAdmin = esAdmin
+                };
+
+                var configuracionCompleta = new
+                {
+                    Usuario = new
+                    {
+                        usuarioId = usuarioId,
+                        id = usuarioId,
+                        nombre = nombreUsuario,
+                        nombreUsuario = nombreUsuario,
+                        email = emailUsuario
+                    },
+                    Permisos = permisos,
+                    FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+                    HoraActual = DateTime.Now.ToString("HH:mm"),
+                    TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
+                };
+
+                return configuracionCompleta;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo configuración de facturación");
+
+                // Retornar configuración mínima en caso de error
+                return new
+                {
+                    Usuario = new { usuarioId = 0, nombre = "Sistema" },
+                    Permisos = new
+                    {
+                        puedeCrearFacturas = false,
+                        puedeCompletarFacturas = false,
+                        puedeEditarFacturas = false,
+                        puedeAnularFacturas = false,
+                        esAdmin = false
+                    },
+                    FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+                    HoraActual = DateTime.Now.ToString("HH:mm"),
+                    TokenDisponible = false
+                };
+            }
+        }
+
         // ===== VALIDACIÓN DE PIN PARA EDICIÓN DE FACTURAS =====
         [HttpPost]
         public async Task<IActionResult> ValidarPinEdicion([FromBody] ValidarPinRequest request)
