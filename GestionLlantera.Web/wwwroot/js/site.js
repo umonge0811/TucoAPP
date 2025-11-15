@@ -493,5 +493,35 @@ function inicializarNotificaciones() {
     setInterval(cargarConteoNotificaciones, 30000);
 }
 
+// Función helper para obtener la imagen placeholder correcta según tipo de producto
+function obtenerImagenPlaceholder(producto) {
+    // Si el producto tiene imágenes, retornar la primera
+    if (producto.imagenes && producto.imagenes.length > 0) {
+        return producto.imagenes[0].urlImagen;
+    }
+
+    // Si el producto tiene una propiedad urlImagen directa
+    if (producto.urlImagen && producto.urlImagen.trim() !== '' && !producto.urlImagen.includes('no-image.png')) {
+        return producto.urlImagen;
+    }
+
+    // Determinar placeholder según tipo de llanta
+    if (producto.esLlanta || producto.llanta) {
+        // Si tiene información de tipo de llanta
+        if (producto.tipoLlanta) {
+            const tipoLlanta = producto.tipoLlanta.toUpperCase();
+            if (tipoLlanta === 'MOTO' || tipoLlanta === 'MOTOCICLETA') {
+                return '/images/llanta-moto-placeholder.jpg';
+            }
+        }
+
+        // Para cualquier otro tipo de llanta (auto, camión, etc.)
+        return '/images/llanta-placeholder.jpg';
+    }
+
+    // Imagen por defecto para productos que no son llantas
+    return '/images/no-image.png';
+}
+
 // Auto-inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', inicializarNotificaciones);

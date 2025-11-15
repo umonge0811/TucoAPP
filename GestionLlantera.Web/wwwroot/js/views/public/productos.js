@@ -275,7 +275,7 @@ function crearCardProducto(producto) {
     const esLlanta = producto.esLlanta || false;
 
     // ✅ PROCESAR IMAGEN - LÓGICA MEJORADA Y CONSISTENTE
-    let imagenUrl = '/images/no-image.png';
+    let imagenUrl = obtenerImagenPlaceholder(producto);
     try {
         console.log(`🖼️ Procesando imágenes para: ${nombreProducto}`, {
             imagenesUrls: producto.imagenesUrls,
@@ -316,7 +316,7 @@ function crearCardProducto(producto) {
 
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes del producto:', error);
-        imagenUrl = '/images/no-image.png';
+        imagenUrl = obtenerImagenPlaceholder(producto);
     }
 
     // ✅ FUNCIÓN AUXILIAR PARA CONSTRUIR URL COMPLETA DE IMAGEN

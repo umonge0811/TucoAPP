@@ -2294,7 +2294,7 @@ function compartirPorWhatsApp() {
             // Mostrar preview del producto en el modal
             $("#productoPreview").html(`
                 <div class="d-flex align-items-center">
-                    <img src="${productoParaCompartir.urlImagen || '/images/no-image.png'}"
+                    <img src="${productoParaCompartir.urlImagen || obtenerImagenPlaceholder(productoParaCompartir)}"
                          alt="${productoParaCompartir.nombre}"
                          class="me-3"
                          style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
