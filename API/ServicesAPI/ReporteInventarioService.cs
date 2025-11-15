@@ -704,7 +704,7 @@ namespace API.ServicesAPI
                 });
                 productosTable.SetWidth(UnitValue.CreatePercentValue(100));
 
-                // ✅ HEADERS COMPLETOS (18 columnas)
+                // ✅ HEADERS COMPLETOS (18 columnas) - Se repiten en cada página
                 string[] productHeaders = {
                     "ID", "Producto", "Descripción", "Medidas", "Tipo Terreno", "Capas",
                     "Marca", "Modelo", "Índice Vel.", "Stock Mín.", "Cant. Sistema", "Cant. Física",
@@ -719,8 +719,12 @@ namespace API.ServicesAPI
                     headerCell.SetBorder(new SolidBorder(1));
                     headerCell.SetTextAlignment(TextAlignment.CENTER);
                     headerCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
-                    productosTable.AddCell(headerCell);
+                    productosTable.AddHeaderCell(headerCell); // ✅ AddHeaderCell en lugar de AddCell
                 }
+
+                // ✅ Marcar la primera fila como header para que se repita en cada página
+                productosTable.SetSkipFirstHeader(false); // Mostrar header en la primera página
+                productosTable.SetRepeatHeader(true);     // Repetir header en páginas siguientes
 
                 // Datos de productos (Todos los productos ordenados por medidas)
                 _logger.LogInformation("🔵 Agregando {Count} productos a la tabla del PDF...", reporte.Productos.Count);
