@@ -65,17 +65,29 @@ namespace API.ServicesAPI
                     // Formatear medidas si es llanta
                     if (llanta != null)
                     {
-                        var partes = new List<string>();
-                        if (llanta.Ancho.HasValue && llanta.Perfil.HasValue)
+                        // Formatear medidas según estándar de neumáticos
+                        // Formato: {Ancho}/{Perfil}R{Diametro} o {Ancho}R{Diametro} (sin perfil)
+                        if (llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
                         {
-                            // Formatear sin decimales innecesarios (.00)
                             var anchoStr = FormatearMedida(llanta.Ancho.Value);
-                            var perfilStr = FormatearMedida(llanta.Perfil.Value);
-                            partes.Add($"{anchoStr}/{perfilStr}");
+
+                            // Verificar si tiene perfil (y si es mayor que 0)
+                            if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                            {
+                                var perfilStr = FormatearMedida(llanta.Perfil.Value);
+                                medidas = $"{anchoStr}/{perfilStr}R{llanta.Diametro}";
+                            }
+                            else
+                            {
+                                // Sin perfil, solo ancho y diámetro
+                                medidas = $"{anchoStr}R{llanta.Diametro}";
+                            }
                         }
-                        if (!string.IsNullOrEmpty(llanta.Diametro))
-                            partes.Add(llanta.Diametro);
-                        medidas = partes.Any() ? string.Join(" ", partes) : null;
+                        else if (llanta.Ancho.HasValue)
+                        {
+                            // Solo tiene ancho, sin diámetro
+                            medidas = FormatearMedida(llanta.Ancho.Value);
+                        }
                     }
 
                     return new ProductoInventarioReporteDTO
@@ -567,15 +579,17 @@ namespace API.ServicesAPI
                 var usuariosParticipantes = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioProgramadoId && d.UsuarioConteoId != null)
                     .Include(d => d.UsuarioConteo)
-                    .Select(d => d.UsuarioConteo.NombreUsuario)
+                    .Select(d => d.UsuarioConteo != null ? d.UsuarioConteo.NombreUsuario : "Sin nombre")
                     .Distinct()
                     .ToListAsync();
 
-                var usuariosTexto = usuariosParticipantes.Any() ? string.Join(", ", usuariosParticipantes) : "Sin asignar";
+                var usuariosTexto = usuariosParticipantes != null && usuariosParticipantes.Any()
+                    ? string.Join(", ", usuariosParticipantes.Where(u => !string.IsNullOrEmpty(u)))
+                    : "Sin asignar";
 
-                AddInfoInventarioRow("Inventario:", reporte.Titulo, "Creado por:", reporte.UsuarioCreador);
+                AddInfoInventarioRow("Inventario:", reporte.Titulo ?? "Sin título", "Creado por:", reporte.UsuarioCreador ?? "Desconocido");
                 AddInfoInventarioRow("Fecha Inicio:", reporte.FechaInicio.ToString("dd/MM/yyyy HH:mm"), "Fecha Fin:", reporte.FechaFin.ToString("dd/MM/yyyy HH:mm"));
-                AddInfoInventarioRow("Usuarios Participantes:", usuariosTexto, "Duración:", CalcularDuracion(reporte.FechaInicio, reporte.FechaFin));
+                AddInfoInventarioRow("Usuarios Participantes:", usuariosTexto ?? "Sin asignar", "Duración:", CalcularDuracion(reporte.FechaInicio, reporte.FechaFin));
 
                 document.Add(infoInventarioTable);
                 document.Add(new Paragraph(" ")); // Espacio
@@ -756,8 +770,9 @@ namespace API.ServicesAPI
                 document.Close();
                 return memoryStream.ToArray();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error generando PDF para inventario {InventarioId}", inventarioProgramadoId);
                 document.Close();
                 throw;
             }
