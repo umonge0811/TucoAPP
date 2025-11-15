@@ -151,7 +151,11 @@ namespace API.ServicesAPI
                     ProductosConFaltante = productosFaltante,
                     ValorExceso = valorExceso,
                     ValorFaltante = valorFaltante,
-                    Productos = productos.OrderByDescending(p => Math.Abs(p.ImpactoEconomico)).ToList(),
+                    // ✅ ORDENAR POR MEDIDAS (alfanuméricamente), productos sin medidas al final
+                    Productos = productos
+                        .OrderBy(p => string.IsNullOrEmpty(p.Medidas) ? 1 : 0)  // Sin medidas al final
+                        .ThenBy(p => p.Medidas ?? string.Empty)                   // Alfabéticamente por medidas
+                        .ToList(),
                     FechaGeneracionReporte = DateTime.Now
                 };
 
@@ -654,7 +658,7 @@ namespace API.ServicesAPI
                 // ======================
                 // DETALLE DE PRODUCTOS CON COLORES
                 // ======================
-                var detalleTitulo = new Paragraph("DETALLE POR PRODUCTO (Top 25 por Impacto)").SetFont(headerFont).SetFontSize(14);
+                var detalleTitulo = new Paragraph("DETALLE POR PRODUCTO (Ordenado por Medidas)").SetFont(headerFont).SetFontSize(14);
                 detalleTitulo.SetMarginBottom(10f);
                 document.Add(detalleTitulo);
 
@@ -674,10 +678,8 @@ namespace API.ServicesAPI
                     productosTable.AddCell(headerCell);
                 }
 
-                // Datos de productos (Top 25)
-                var productosParaPdf = reporte.Productos.Take(25).ToList();
-
-                foreach (var producto in productosParaPdf)
+                // Datos de productos (Todos los productos ordenados por medidas)
+                foreach (var producto in reporte.Productos)
                 {
                     // ✅ COLOR DE FONDO SEGÚN CATEGORÍA Y SEVERIDAD
                     DeviceRgb backgroundColor = blanco;
@@ -758,14 +760,11 @@ namespace API.ServicesAPI
                 document.Add(leyendaTable);
 
                 // Nota final
-                if (reporte.Productos.Count > 25)
-                {
-                    var nota = new Paragraph($"\n📋 Nota: Se muestran los 25 productos con mayor impacto económico de {reporte.Productos.Count} total.\n📊 Para ver el reporte completo, descargue la versión en Excel.")
-                        .SetFont(italicFont)
-                        .SetFontSize(8)
-                        .SetFontColor(gris);
-                    document.Add(nota);
-                }
+                var nota = new Paragraph($"\n📋 Total de productos en el reporte: {reporte.Productos.Count}\n📊 Productos ordenados alfabéticamente por medidas de neumáticos.")
+                    .SetFont(italicFont)
+                    .SetFontSize(8)
+                    .SetFontColor(gris);
+                document.Add(nota);
 
                 document.Close();
                 return memoryStream.ToArray();
