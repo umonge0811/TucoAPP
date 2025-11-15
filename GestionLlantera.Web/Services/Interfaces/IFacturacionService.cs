@@ -82,6 +82,11 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<object> DesbloquearFacturaParaEdicionAsync(int facturaId, string pin, string jwtToken = null);
 
         /// <summary>
+        /// Restaura el estado anterior de una factura
+        /// </summary>
+        Task<object> RestaurarEstadoFacturaAsync(int facturaId, string estadoAnterior, string jwtToken = null);
+
+        /// <summary>
         /// Actualiza una factura existente
         /// </summary>
         Task<object> ActualizarFacturaAsync(object request, string jwtToken = null);
