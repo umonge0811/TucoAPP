@@ -41,6 +41,37 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 
+<!-- Toggle de Anulación -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-x-octagon me-2"></i>Anulación de Factura
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1"><i class="bi bi-shield-lock me-2"></i>¿Anular esta factura?</h6>
+                        <p class="text-muted mb-0 small">
+                            Al activar esta opción, la factura será marcada como anulada y <strong>todos los productos se devolverán al inventario</strong>. Esta acción requiere PIN de seguridad.
+                        </p>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggleAnularFactura" style="width: 60px; height: 30px; cursor: pointer;">
+                        <label class="form-check-label ms-2 fw-bold" for="toggleAnularFactura" id="labelAnularFactura">
+                            <span class="badge bg-secondary">No Anulada</span>
+                        </label>
+                    </div>
+                </div>
+                <input type="hidden" id="facturaAnuladaFlag" value="false">
+                <input type="hidden" id="pinAnulacionValidado" value="false">
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Información de la factura -->
 <div class="row mb-3">
     <div class="col-12">

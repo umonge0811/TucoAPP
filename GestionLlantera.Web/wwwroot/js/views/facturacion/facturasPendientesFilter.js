@@ -346,6 +346,9 @@ function mostrarFacturasPendientesEnTabla(facturas) {
             case 'Anulada':
                 estadoBadge = '<span class="badge bg-danger">Anulada</span>';
                 break;
+            case 'En Edición':
+                estadoBadge = '<span class="badge bg-info text-dark"><i class="bi bi-pencil-square me-1"></i>En Edición</span>';
+                break;
             default:
                 estadoBadge = `<span class="badge bg-secondary">${factura.estado || 'Sin Estado'}</span>`;
         }
@@ -392,6 +395,12 @@ function mostrarFacturasPendientesEnTabla(facturas) {
                                 data-numero-factura="${factura.numeroFactura}"
                                 onclick="solicitarPinParaEditar(${factura.facturaId || factura.id}, '${factura.numeroFactura}')">
                             <i class="bi bi-pencil-square"></i>
+                        </button>
+                        ` : ''}
+                        ${factura.estado === 'En Edición' ? `
+                        <button type="button" class="btn btn-info" title="Continuar Edición"
+                                onclick="window.location.href='/Facturacion/Editar?facturaId=${factura.facturaId || factura.id}'">
+                            <i class="bi bi-pencil-fill"></i> Continuar
                         </button>
                         ` : ''}
                     </div>

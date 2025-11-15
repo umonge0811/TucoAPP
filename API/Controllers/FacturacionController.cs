@@ -2336,19 +2336,85 @@ namespace API.Controllers
                     _context.DetallesFactura.Add(nuevoDetalle);
                 }
 
+                // ===== PROCESAR AJUSTES DE STOCK =====
+                if (request.AjustesStock != null && request.AjustesStock.Any())
+                {
+                    _logger.LogInformation("📦 Procesando {Count} ajustes de stock", request.AjustesStock.Count);
+
+                    foreach (var ajuste in request.AjustesStock)
+                    {
+                        try
+                        {
+                            var producto = await _context.Productos.FindAsync(ajuste.ProductoId);
+                            if (producto == null)
+                            {
+                                _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado para ajuste", ajuste.ProductoId);
+                                continue;
+                            }
+
+                            int stockAnterior = (int)producto.CantidadEnInventario;
+                            int nuevoStock = stockAnterior;
+
+                            switch (ajuste.TipoAjuste.ToLower())
+                            {
+                                case "entrada":
+                                    nuevoStock = stockAnterior + ajuste.Cantidad;
+                                    _logger.LogInformation("  ➕ ENTRADA: {Producto} - Stock: {StockAnterior} + {Cantidad} = {StockNuevo}",
+                                        ajuste.NombreProducto, stockAnterior, ajuste.Cantidad, nuevoStock);
+                                    break;
+                                case "salida":
+                                    nuevoStock = Math.Max(0, stockAnterior - ajuste.Cantidad);
+                                    _logger.LogInformation("  ➖ SALIDA: {Producto} - Stock: {StockAnterior} - {Cantidad} = {StockNuevo}",
+                                        ajuste.NombreProducto, stockAnterior, ajuste.Cantidad, nuevoStock);
+                                    break;
+                                default:
+                                    _logger.LogWarning("⚠️ Tipo de ajuste no válido: {TipoAjuste}", ajuste.TipoAjuste);
+                                    continue;
+                            }
+
+                            producto.CantidadEnInventario = nuevoStock;
+                            producto.FechaUltimaActualizacion = ObtenerFechaHoraCostaRica();
+
+                            _logger.LogInformation("✅ Stock actualizado para {Producto}: {StockAnterior} → {StockNuevo}",
+                                producto.NombreProducto, stockAnterior, nuevoStock);
+                        }
+                        catch (Exception exAjuste)
+                        {
+                            _logger.LogError(exAjuste, "❌ Error ajustando stock del producto {ProductoId}", ajuste.ProductoId);
+                            throw; // Esto hará rollback de toda la transacción
+                        }
+                    }
+                }
+
+                // ===== ACTUALIZAR ESTADO FINAL DE LA FACTURA =====
+                if (request.EsAnulada)
+                {
+                    factura.Estado = "Anulada";
+                    factura.Observaciones += $"\n\n[ANULADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]";
+                    _logger.LogInformation("❌ Factura {NumeroFactura} marcada como ANULADA", factura.NumeroFactura);
+                }
+                else
+                {
+                    factura.Estado = "Pagada";
+                    _logger.LogInformation("✅ Factura {NumeroFactura} regresa a estado PAGADA", factura.NumeroFactura);
+                }
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                _logger.LogInformation("✅ Factura {NumeroFactura} actualizada exitosamente", factura.NumeroFactura);
+                _logger.LogInformation("✅ Factura {NumeroFactura} actualizada exitosamente. Estado final: {Estado}",
+                    factura.NumeroFactura, factura.Estado);
 
                 return Ok(new
                 {
                     success = true,
-                    message = "Factura actualizada exitosamente",
+                    message = request.EsAnulada ? "Factura anulada exitosamente" : "Factura actualizada exitosamente",
                     facturaId = factura.FacturaId,
                     numeroFactura = factura.NumeroFactura,
                     total = factura.Total,
-                    cambiosRealizados = request.CambiosRealizados.Count
+                    cambiosRealizados = request.CambiosRealizados.Count,
+                    ajustesStock = request.AjustesStock?.Count ?? 0,
+                    estadoFinal = factura.Estado
                 });
             }
             catch (Exception ex)
@@ -2416,9 +2482,9 @@ namespace API.Controllers
                 if (factura == null)
                     return NotFound(new { success = false, message = "Factura no encontrada" });
 
-                // Cambiar estado a Pendiente para permitir edición
+                // Cambiar estado a "En Edición" para permitir edición
                 var estadoAnterior = factura.Estado;
-                factura.Estado = "Pendiente";
+                factura.Estado = "En Edición";
                 factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
                 factura.Observaciones = (factura.Observaciones ?? "") +
                     $" | DESBLOQUEADA PARA EDICIÓN (Estado anterior: {estadoAnterior}) - {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}";
@@ -2604,6 +2670,17 @@ namespace API.Controllers
         public string? MetodoPago { get; set; }
         public string? Observaciones { get; set; }
         public List<CambioFactura> CambiosRealizados { get; set; } = new List<CambioFactura>();
+        public bool EsAnulada { get; set; } = false;
+        public List<AjusteStockFactura> AjustesStock { get; set; } = new List<AjusteStockFactura>();
+    }
+
+    public class AjusteStockFactura
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public string TipoAjuste { get; set; } = string.Empty; // "entrada" o "salida"
+        public int Cantidad { get; set; }
+        public string Comentario { get; set; } = string.Empty;
     }
 
     public class DetalleFacturaActualizacion

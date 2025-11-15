@@ -345,6 +345,11 @@ function configurarEventosEdicion() {
         mostrarHistorialCambios();
     });
 
+    // Toggle de anulación
+    $('#toggleAnularFactura').on('change', function() {
+        manejarToggleAnulacion(this.checked);
+    });
+
     // Buscar cliente
     $('#buscarClienteInput').on('input', debounce(function() {
         buscarClientes($(this).val());
@@ -584,6 +589,98 @@ async function guardarCambiosFactura() {
     }
 }
 
+// ===== CALCULAR AJUSTES DE STOCK =====
+function calcularAjustesStock(esAnulada) {
+    const ajustes = [];
+
+    if (esAnulada) {
+        // Si la factura se anula, devolver TODOS los productos al inventario
+        console.log('📦 Calculando ajustes para ANULACIÓN completa');
+
+        facturaOriginal.detallesFactura.forEach(detalle => {
+            ajustes.push({
+                productoId: detalle.productoId,
+                nombreProducto: detalle.nombreProducto,
+                tipoAjuste: 'entrada', // Devolver al stock
+                cantidad: detalle.cantidad,
+                comentario: `Anulación de factura ${facturaOriginal.numeroFactura}`
+            });
+            console.log(`  → Devolver ${detalle.cantidad} unidades de "${detalle.nombreProducto}"`);
+        });
+    } else {
+        // Si solo se edita, calcular diferencias
+        console.log('📦 Calculando ajustes para EDICIÓN');
+
+        // 1. Productos que se ELIMINARON (estaban en original pero no en editados)
+        facturaOriginal.detallesFactura.forEach(original => {
+            const productoEditado = productosEditar.find(p => p.productoId === original.productoId);
+
+            if (!productoEditado) {
+                // Producto eliminado → devolver al stock
+                ajustes.push({
+                    productoId: original.productoId,
+                    nombreProducto: original.nombreProducto,
+                    tipoAjuste: 'entrada',
+                    cantidad: original.cantidad,
+                    comentario: `Producto eliminado de factura ${facturaOriginal.numeroFactura} durante edición`
+                });
+                console.log(`  ✖️ Eliminado: "${original.nombreProducto}" - Devolver ${original.cantidad} unidades`);
+            }
+        });
+
+        // 2. Productos que se AGREGARON (están en editados pero no en original)
+        productosEditar.forEach(editado => {
+            const productoOriginal = facturaOriginal.detallesFactura.find(p => p.productoId === editado.productoId);
+
+            if (!productoOriginal) {
+                // Producto nuevo → restar del stock
+                ajustes.push({
+                    productoId: editado.productoId,
+                    nombreProducto: editado.nombreProducto,
+                    tipoAjuste: 'salida',
+                    cantidad: editado.cantidad,
+                    comentario: `Producto agregado a factura ${facturaOriginal.numeroFactura} durante edición`
+                });
+                console.log(`  ➕ Agregado: "${editado.nombreProducto}" - Restar ${editado.cantidad} unidades`);
+            }
+        });
+
+        // 3. Productos que CAMBIARON DE CANTIDAD
+        facturaOriginal.detallesFactura.forEach(original => {
+            const productoEditado = productosEditar.find(p => p.productoId === original.productoId);
+
+            if (productoEditado && productoEditado.cantidad !== original.cantidad) {
+                const diferencia = productoEditado.cantidad - original.cantidad;
+
+                if (diferencia > 0) {
+                    // Aumentó la cantidad → restar más del stock
+                    ajustes.push({
+                        productoId: productoEditado.productoId,
+                        nombreProducto: productoEditado.nombreProducto,
+                        tipoAjuste: 'salida',
+                        cantidad: Math.abs(diferencia),
+                        comentario: `Cantidad aumentada en factura ${facturaOriginal.numeroFactura} (de ${original.cantidad} a ${productoEditado.cantidad})`
+                    });
+                    console.log(`  🔼 Aumentó: "${productoEditado.nombreProducto}" - Restar ${Math.abs(diferencia)} unidades más`);
+                } else {
+                    // Disminuyó la cantidad → devolver al stock
+                    ajustes.push({
+                        productoId: productoEditado.productoId,
+                        nombreProducto: productoEditado.nombreProducto,
+                        tipoAjuste: 'entrada',
+                        cantidad: Math.abs(diferencia),
+                        comentario: `Cantidad reducida en factura ${facturaOriginal.numeroFactura} (de ${original.cantidad} a ${productoEditado.cantidad})`
+                    });
+                    console.log(`  🔽 Disminuyó: "${productoEditado.nombreProducto}" - Devolver ${Math.abs(diferencia)} unidades`);
+                }
+            }
+        });
+    }
+
+    console.log(`📊 Total ajustes de stock: ${ajustes.length}`);
+    return ajustes;
+}
+
 function prepararDatosActualizacion() {
     // Calcular totales finales
     const subtotal = productosEditar.reduce((sum, p) => sum + p.subtotal, 0);
@@ -592,6 +689,12 @@ function prepararDatosActualizacion() {
     const subtotalConDescuento = subtotal - montoDescuento;
     const iva = subtotalConDescuento * 0.13;
     const total = subtotalConDescuento + iva;
+
+    // Verificar si la factura está marcada para anulación
+    const esAnulada = $('#facturaAnuladaFlag').val() === 'true';
+
+    // Calcular ajustes de stock necesarios
+    const ajustesStock = calcularAjustesStock(esAnulada);
 
     return {
         facturaId: window.facturaIdEditar,
@@ -616,7 +719,9 @@ function prepararDatosActualizacion() {
         total: total,
         metodoPago: $('#metodoPagoEditar').val(),
         observaciones: $('#observacionesEditar').val(),
-        cambiosRealizados: cambiosRealizados
+        cambiosRealizados: cambiosRealizados,
+        esAnulada: esAnulada,
+        ajustesStock: ajustesStock
     };
 }
 
@@ -704,6 +809,114 @@ function mostrarToast(titulo, mensaje, tipo = 'info') {
         window.mostrarToast(titulo, mensaje, tipo);
     } else {
         console.log(`[${tipo.toUpperCase()}] ${titulo}: ${mensaje}`);
+    }
+}
+
+// ===== MANEJO DE ANULACIÓN DE FACTURA =====
+async function manejarToggleAnulacion(activado) {
+    if (activado) {
+        // Solicitar PIN para anular
+        const { value: pin } = await Swal.fire({
+            title: '<i class="bi bi-shield-lock text-danger"></i> PIN de Seguridad',
+            html: `
+                <p class="mb-3">Para anular esta factura, ingrese el PIN de seguridad:</p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Advertencia:</strong> Al anular la factura, todos los productos se devolverán al inventario.
+                </div>
+            `,
+            input: 'password',
+            inputPlaceholder: 'Ingrese el PIN',
+            inputAttributes: {
+                maxlength: 10,
+                autocapitalize: 'off',
+                autocorrect: 'off'
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Validar PIN',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Debe ingresar el PIN';
+                }
+            }
+        });
+
+        if (!pin) {
+            // Usuario canceló o no ingresó PIN
+            $('#toggleAnularFactura').prop('checked', false);
+            $('#facturaAnuladaFlag').val('false');
+            $('#pinAnulacionValidado').val('false');
+            return;
+        }
+
+        // Validar PIN
+        try {
+            const response = await fetch('/Facturacion/ValidarPinEdicion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin: pin })
+            });
+
+            const resultado = await response.json();
+
+            if (resultado.success) {
+                // PIN correcto - marcar factura para anulación
+                $('#facturaAnuladaFlag').val('true');
+                $('#pinAnulacionValidado').val('true');
+                $('#labelAnularFactura').html('<span class="badge bg-danger">Anulada</span>');
+
+                registrarCambio('factura_anulada', 'Factura marcada para anulación', {
+                    observacion: 'Al guardar, todos los productos se devolverán al inventario'
+                });
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'PIN Validado',
+                    text: 'La factura será anulada al guardar los cambios',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+
+                console.log('✅ Factura marcada para anulación');
+            } else {
+                // PIN incorrecto
+                Swal.fire({
+                    icon: 'error',
+                    title: 'PIN Incorrecto',
+                    text: resultado.message || 'El PIN ingresado no es válido',
+                    confirmButtonColor: '#dc3545'
+                });
+
+                $('#toggleAnularFactura').prop('checked', false);
+                $('#facturaAnuladaFlag').val('false');
+                $('#pinAnulacionValidado').val('false');
+            }
+        } catch (error) {
+            console.error('❌ Error validando PIN:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al validar el PIN. Intente nuevamente.',
+                confirmButtonColor: '#dc3545'
+            });
+
+            $('#toggleAnularFactura').prop('checked', false);
+            $('#facturaAnuladaFlag').val('false');
+            $('#pinAnulacionValidado').val('false');
+        }
+    } else {
+        // Desactivar anulación
+        $('#facturaAnuladaFlag').val('false');
+        $('#pinAnulacionValidado').val('false');
+        $('#labelAnularFactura').html('<span class="badge bg-secondary">No Anulada</span>');
+
+        // Remover el cambio de anulación si existe
+        cambiosRealizados = cambiosRealizados.filter(c => c.tipo !== 'factura_anulada');
+
+        console.log('ℹ️ Anulación cancelada');
     }
 }
 
