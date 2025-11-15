@@ -321,6 +321,8 @@ namespace API.Controllers
                         Capas = productoDto.Llanta.Capas,
                         IndiceVelocidad = productoDto.Llanta.IndiceVelocidad,
                         TipoTerreno = productoDto.Llanta.TipoTerreno
+                        // ✅ Almacenar tipo de llanta si tu modelo lo soporta
+                        // TipoLlanta = productoDto.TipoLlanta
                     };
 
                     _context.Llantas.Add(llanta);

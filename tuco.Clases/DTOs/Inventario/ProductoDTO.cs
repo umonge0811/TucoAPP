@@ -66,6 +66,9 @@ namespace Tuco.Clases.DTOs.Inventario
 
         public bool EsLlanta { get; set; } = false;
 
+        /// ✅ NUEVA PROPIEDAD: TIPO DE LLANTA
+        public string? TipoLlanta { get; set; } // "AUTO", "MOTO", "CAMIÓN", etc.
+
         public DateTime? FechaUltimaActualizacion { get; set; }
 
         // Propiedad específica para llantas - ahora nullable

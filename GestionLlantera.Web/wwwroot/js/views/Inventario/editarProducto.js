@@ -26,6 +26,39 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnLimpiarPrecios = document.getElementById('btnLimpiarPrecios');
     const hiddenPorcentajeUtilidad = document.getElementById('hiddenPorcentajeUtilidad');
     const hiddenPrecio = document.getElementById('hiddenPrecio');
+    // ✅ AGREGAR ESTO DENTRO DEL DOMContentLoaded:
+    const tipoLlantaSelect = document.getElementById('tipoLlantaEditar');
+    const marcaInputEditar = document.getElementById('marcaInput');
+    const modeloInputEditar = document.getElementById('modeloInput');
+
+    // ✅ Evento: Cuando cambia el tipo de llanta
+    if (tipoLlantaSelect) {
+        tipoLlantaSelect.addEventListener('change', function () {
+            console.log('🔄 Tipo de llanta cambió a:', this.value);
+            actualizarNombreLlanta();
+        });
+    }
+
+    // ✅ Eventos: Cuando cambia marca o modelo
+    [marcaInputEditar, modeloInputEditar].forEach(input => {
+        if (input) {
+            input.addEventListener('change', function () {
+                console.log('📝 Campo de llanta cambió');
+                actualizarNombreLlanta();
+            });
+        }
+    });
+
+    // ✅ También generar nombre cuando cambian los valores numéricos
+    const anchoInputEditar = document.querySelector('[asp-for="Llanta.Ancho"]');
+    const perfilInputEditar = document.querySelector('[asp-for="Llanta.Perfil"]');
+    const diametroInputEditar = document.querySelector('[asp-for="Llanta.Diametro"]');
+
+    [anchoInputEditar, perfilInputEditar, diametroInputEditar].forEach(input => {
+        if (input) {
+            input.addEventListener('change', actualizarNombreLlanta);
+        }
+    });
 
     // Verificar elementos críticos
     if (!form) {
@@ -889,4 +922,49 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     console.log('✅ EditarProducto - Inicialización completada');
+
+    /**
+ * ✅ FUNCIÓN: Actualizar nombre de llanta al editar
+ */
+    function actualizarNombreLlanta() {
+        // Obtener valores actuales
+        const marca = document.getElementById('marcaInput')?.value?.trim() || '';
+        const modelo = document.getElementById('modeloInput')?.value?.trim() || '';
+        const ancho = document.querySelector('[asp-for="Llanta.Ancho"]')?.value?.trim() || '';
+        const perfil = document.querySelector('[asp-for="Llanta.Perfil"]')?.value?.trim() || '';
+        const diametro = document.querySelector('[asp-for="Llanta.Diametro"]')?.value?.trim() || '';
+        const tipoLlanta = document.getElementById('tipoLlantaEditar')?.value?.trim() || '';
+
+        let nombreGenerado = '';
+
+        // Construir medida (ej: 225/45R17)
+        let medida = '';
+        if (ancho && perfil && diametro) {
+            medida = `${ancho}/${perfil}R${diametro}`;
+        } else if (ancho && diametro) {
+            medida = `${ancho}R${diametro}`;
+        }
+
+        // Construir nombre final: Marca Modelo Medida TIPO
+        if (marca || modelo || medida || tipoLlanta) {
+            nombreGenerado = [marca, modelo, medida, tipoLlanta]
+                .filter(part => part)
+                .join(' ');
+        }
+
+        // Actualizar el nombre del producto
+        const nombreProductoInput = document.querySelector('[asp-for="NombreProducto"]');
+        if (nombreProductoInput && nombreGenerado) {
+            nombreProductoInput.value = nombreGenerado;
+            console.log('✅ Nombre actualizado:', nombreGenerado);
+        }
+    }
+
+    // ✅ Generar nombre al cargar la página si ya hay datos y es llanta
+    window.addEventListener('load', function () {
+        const esLlantaHidden = document.getElementById('hiddenEsLlanta');
+        if (esLlantaHidden && esLlantaHidden.value === 'True') {
+            actualizarNombreLlanta();
+        }
+    });
 });

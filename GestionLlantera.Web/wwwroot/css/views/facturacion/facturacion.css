@@ -993,3 +993,33 @@ input[type=number] {
         margin: 0;
     }
 }
+
+/* ===== CARRITO STICKY EN FACTURACIÓN ===== */
+/* Carrito sticky en pantallas grandes */
+@media (min-width: 992px) {
+    #carritoVenta {
+        position: sticky;
+        top: 80px;
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+    }
+}
+
+/* Mejorar scroll del carrito */
+#carritoVenta::-webkit-scrollbar {
+    width: 8px;
+}
+
+#carritoVenta::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+#carritoVenta::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+
+#carritoVenta::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
