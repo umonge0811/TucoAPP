@@ -66,7 +66,7 @@ namespace API.ServicesAPI
                     if (llanta != null)
                     {
                         // Formatear medidas según estándar de neumáticos
-                        // Formato: {Ancho}/{Perfil}R{Diametro} o {Ancho}R{Diametro} (sin perfil)
+                        // Formato: {Ancho}/{Perfil}/R{Diametro} o {Ancho}/R{Diametro} (sin perfil)
                         if (llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
                         {
                             var anchoStr = FormatearMedida(llanta.Ancho.Value);
@@ -75,12 +75,12 @@ namespace API.ServicesAPI
                             if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
                             {
                                 var perfilStr = FormatearMedida(llanta.Perfil.Value);
-                                medidas = $"{anchoStr}/{perfilStr}R{llanta.Diametro}";
+                                medidas = $"{anchoStr}/{perfilStr}/R{llanta.Diametro}";
                             }
                             else
                             {
                                 // Sin perfil, solo ancho y diámetro
-                                medidas = $"{anchoStr}R{llanta.Diametro}";
+                                medidas = $"{anchoStr}/R{llanta.Diametro}";
                             }
                         }
                         else if (llanta.Ancho.HasValue)
