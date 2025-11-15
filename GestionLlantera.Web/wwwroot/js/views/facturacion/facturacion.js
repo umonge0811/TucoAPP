@@ -251,7 +251,7 @@ $(document).ready(function () {
     // ===== EVENTOS PARA COMPARTIR PRODUCTOS =====
 
     // Event delegation para botones de compartir (ya que el modal se genera dinámicamente)
-    $(document).on('click', '#btnCompartirWhatsAppFacturacion', function (e) {
+    $(document).on('click', '#btnCompartirWhatsAppFacturacion, #btnCompartirWhatsAppDetalles', function (e) {
         e.preventDefault();
         console.log('📱 Click en compartir WhatsApp');
 
@@ -260,7 +260,7 @@ $(document).ready(function () {
         compartirPorWhatsAppFacturacion(productoActual);
     });
 
-    $(document).on('click', '#btnCompartirEmailFacturacion', function (e) {
+    $(document).on('click', '#btnCompartirEmailFacturacion, #btnCompartirEmailDetalles', function (e) {
         e.preventDefault();
         console.log('📧 Click en compartir Email');
 
@@ -6324,11 +6324,26 @@ function verDetalleProducto(producto) {
                     <!-- FOOTER COMPACTO -->
                     <div class="modal-footer bg-light py-2">
                         <div class="d-flex w-100 justify-content-between align-items-center">
-                            <div>
-                                <button type="button" class="btn btn-sm btn-outline-info" onclick="compartirProducto(${producto.productoId})" title="Copiar link público del producto">
-                                    <i class="bi bi-share me-1"></i>Compartir Link
-                                </button>
-                                <small class="text-muted ms-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <!-- Botón dropdown de compartir -->
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="bi bi-share me-1"></i>Compartir
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="#" id="btnCompartirWhatsAppDetalles">
+                                                <i class="bi bi-whatsapp text-success me-2"></i>WhatsApp
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" id="btnCompartirEmailDetalles">
+                                                <i class="bi bi-envelope text-primary me-2"></i>Email
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <small class="text-muted">
                                     ${producto.fechaUltimaActualizacion ?
                 `<i class="bi bi-clock-history me-1"></i>Actualizado: ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}`
                 : ''}
