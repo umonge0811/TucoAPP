@@ -6109,7 +6109,7 @@ function verDetalleProducto(producto) {
         producto.cantidadEnInventario <= producto.stockMinimo ? 'warning' : 'success';
 
     const modalHtml = `
-        <div class="modal fade" id="modalDetalleProducto" tabindex="-1" style="z-index: 1055 !important;">
+        <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <!-- HEADER COMPACTO -->
@@ -6372,43 +6372,10 @@ function verDetalleProducto(producto) {
 
     // Remover modal anterior si existe
     $('#modalDetalleProducto').remove();
-
-    // Limpiar TODOS los backdrops residuales
-    $('.modal-backdrop').remove();
-    $('body').removeClass('modal-open').css('padding-right', '');
-
-    // Agregar el nuevo modal al body
     $('body').append(modalHtml);
 
-    // Crear el modal
-    const modalElement = document.getElementById('modalDetalleProducto');
-    const modal = new bootstrap.Modal(modalElement, {
-        backdrop: true,
-        keyboard: true,
-        focus: true
-    });
-
-    // Escuchar el evento cuando el modal se muestra completamente
-    $(modalElement).on('shown.bs.modal', function () {
-        // Asegurar z-index correcto del backdrop
-        $('.modal-backdrop').css({
-            'z-index': '1050',
-            'opacity': '0.5'
-        });
-
-        // Asegurar que el modal esté encima
-        $('#modalDetalleProducto').css('z-index', '1055');
-
-        console.log('Modal mostrado - z-index ajustado');
-    });
-
-    // Limpiar backdrops al cerrar
-    $(modalElement).on('hidden.bs.modal', function () {
-        $('.modal-backdrop').remove();
-        $('body').removeClass('modal-open').css('padding-right', '');
-    });
-
-    modal.show();
+    // Mostrar el modal usando jQuery (como en inventario)
+    $('#modalDetalleProducto').modal('show');
 
     // Cargar imágenes después de mostrar el modal
     setTimeout(() => {
@@ -9530,9 +9497,8 @@ function compartirPorWhatsAppFacturacion(producto) {
         // Limpiar el campo de número
         $('#numeroWhatsAppFacturacion').val('');
 
-        // Mostrar el modal del número de WhatsApp
-        const modalWhatsApp = new bootstrap.Modal(document.getElementById('modalWhatsAppNumeroFacturacion'));
-        modalWhatsApp.show();
+        // Mostrar el modal del número de WhatsApp (como en inventario)
+        $('#modalWhatsAppNumeroFacturacion').modal('show');
 
         console.log('✅ Modal de WhatsApp abierto con producto:', productoParaCompartirFacturacion);
 
@@ -9593,8 +9559,8 @@ function enviarWhatsAppFacturacion() {
         // Abrir WhatsApp
         window.open(urlWhatsApp, '_blank');
 
-        // Ocultar modal y mostrar notificación
-        bootstrap.Modal.getInstance(document.getElementById('modalWhatsAppNumeroFacturacion')).hide();
+        // Ocultar modal y mostrar notificación (como en inventario)
+        $('#modalWhatsAppNumeroFacturacion').modal('hide');
         mostrarToast('Éxito', 'Mensaje enviado a WhatsApp correctamente', 'success');
 
         // Restablecer estado del botón
