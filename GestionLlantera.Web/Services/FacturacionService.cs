@@ -1653,6 +1653,55 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<object> ActualizarFacturaAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("💾 === ACTUALIZANDO FACTURA ===");
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl("Facturacion/actualizar-factura");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error actualizando factura: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al actualizar factura" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando factura");
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
         public async Task<(bool success, object? data, string? message, string? details)> MarcarProductosEntregadosAsync(object request, string jwtToken = null)
         {
             try
