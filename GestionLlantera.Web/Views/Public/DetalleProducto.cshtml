@@ -53,9 +53,26 @@
                     }
                     else
                     {
-                        <div class="sin-imagen-principal">
-                            <i class="fas fa-image"></i>
-                            <p>Sin imagen disponible</p>
+                        @{
+                            // Determinar qué placeholder usar según el tipo de producto
+                            var placeholderUrl = "/images/no-image.png";
+                            if (Model.EsLlanta)
+                            {
+                                if (Model.NombreProducto?.ToUpper().StartsWith("LLANTA MOTO") == true)
+                                {
+                                    placeholderUrl = "/images/llanta-moto-placeholder.jpg";
+                                }
+                                else
+                                {
+                                    placeholderUrl = "/images/llanta-placeholder.jpg";
+                                }
+                            }
+                        }
+                        <div class="imagen-principal-container">
+                            <img id="imagenPrincipal"
+                                 src="@placeholderUrl"
+                                 alt="@Model.NombreProducto"
+                                 class="imagen-principal">
                         </div>
                     }
                 </div>
