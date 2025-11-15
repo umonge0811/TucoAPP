@@ -719,12 +719,8 @@ namespace API.ServicesAPI
                     headerCell.SetBorder(new SolidBorder(1));
                     headerCell.SetTextAlignment(TextAlignment.CENTER);
                     headerCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
-                    productosTable.AddHeaderCell(headerCell); // ✅ AddHeaderCell en lugar de AddCell
+                    productosTable.AddHeaderCell(headerCell); // ✅ AddHeaderCell repite automáticamente en cada página
                 }
-
-                // ✅ Marcar la primera fila como header para que se repita en cada página
-                productosTable.SetSkipFirstHeader(false); // Mostrar header en la primera página
-                productosTable.SetRepeatHeader(true);     // Repetir header en páginas siguientes
 
                 // Datos de productos (Todos los productos ordenados por medidas)
                 _logger.LogInformation("🔵 Agregando {Count} productos a la tabla del PDF...", reporte.Productos.Count);
