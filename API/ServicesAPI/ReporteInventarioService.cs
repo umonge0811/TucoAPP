@@ -484,7 +484,11 @@ namespace API.ServicesAPI
                 _logger.LogInformation("🔵 Creando PdfWriter...");
 
                 // ✅ CAMBIAR A ORIENTACIÓN HORIZONTAL
-                var writer = new PdfWriter(memoryStream);
+                // Configurar WriterProperties para que NO cierre el stream
+                var writerProperties = new WriterProperties();
+                var writer = new PdfWriter(memoryStream, writerProperties);
+                writer.SetCloseStream(false); // NO cerrar el stream cuando se cierre el writer
+
                 var pdfDoc = new PdfDocument(writer);
                 var document = new iText.Layout.Document(pdfDoc, PageSize.A4.Rotate());
                 document.SetMargins(30, 25, 30, 25);
