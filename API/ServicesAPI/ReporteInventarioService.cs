@@ -44,26 +44,64 @@ namespace API.ServicesAPI
                 var usuarioCreador = await _context.Usuarios
                     .FirstOrDefaultAsync(u => u.UsuarioId == inventario.UsuarioCreadorId);
 
-                // Obtener detalles del inventario
+                // Obtener detalles del inventario con información de llantas
                 var detalles = await _context.DetallesInventarioProgramado
                     .Include(d => d.Producto)
+                        .ThenInclude(p => p.Llanta)
                     .Include(d => d.UsuarioConteo)
                     .Where(d => d.InventarioProgramadoId == inventarioProgramadoId)
                     .ToListAsync();
 
-                // Crear lista de productos para el reporte
-                var productos = detalles.Select(d => new ProductoInventarioReporteDTO
+                // Crear lista de productos para el reporte con información completa
+                var productos = detalles.Select(d =>
                 {
-                    NombreProducto = d.Producto?.NombreProducto ?? "Producto Desconocido",
-                    CantidadSistema = d.CantidadSistema,
-                    CantidadFisica = d.CantidadFisica ?? 0,
-                    Diferencia = d.Diferencia ?? 0,
-                    PrecioUnitario = d.Producto?.Precio ?? 0,
-                    ImpactoEconomico = (d.Diferencia ?? 0) * (d.Producto?.Precio ?? 0),
-                    Categoria = (d.Diferencia ?? 0) > 0 ? "Exceso" :
-                               (d.Diferencia ?? 0) < 0 ? "Faltante" : "Correcto",
-                    UsuarioConteo = d.UsuarioConteo?.NombreUsuario ?? "Sin asignar",
-                    FechaConteo = d.FechaConteo
+                    var llanta = d.Producto?.Llanta?.FirstOrDefault();
+                    string medidas = null;
+
+                    // Formatear medidas si es llanta
+                    if (llanta != null)
+                    {
+                        var partes = new List<string>();
+                        if (llanta.Ancho.HasValue && llanta.Perfil.HasValue)
+                            partes.Add($"{llanta.Ancho}/{llanta.Perfil}");
+                        if (!string.IsNullOrEmpty(llanta.Diametro))
+                            partes.Add(llanta.Diametro);
+                        medidas = partes.Any() ? string.Join(" ", partes) : null;
+                    }
+
+                    return new ProductoInventarioReporteDTO
+                    {
+                        // Información básica
+                        ProductoId = d.Producto?.ProductoId ?? 0,
+                        NombreProducto = d.Producto?.NombreProducto ?? "Producto Desconocido",
+                        Descripcion = d.Producto?.Descripcion,
+
+                        // Información de inventario
+                        CantidadSistema = d.CantidadSistema,
+                        CantidadFisica = d.CantidadFisica ?? 0,
+                        Diferencia = d.Diferencia ?? 0,
+                        StockMinimo = d.Producto?.StockMinimo,
+
+                        // Información financiera
+                        Costo = d.Producto?.Costo,
+                        PorcentajeUtilidad = d.Producto?.PorcentajeUtilidad,
+                        PrecioUnitario = d.Producto?.Precio ?? 0,
+                        ImpactoEconomico = (d.Diferencia ?? 0) * (d.Producto?.Precio ?? 0),
+
+                        // Información de llanta (si aplica)
+                        Medidas = medidas,
+                        TipoTerreno = llanta?.TipoTerreno,
+                        Capas = llanta?.Capas,
+                        Marca = llanta?.Marca,
+                        Modelo = llanta?.Modelo,
+                        IndiceVelocidad = llanta?.IndiceVelocidad,
+
+                        // Información de conteo
+                        Categoria = (d.Diferencia ?? 0) > 0 ? "Exceso" :
+                                   (d.Diferencia ?? 0) < 0 ? "Faltante" : "Correcto",
+                        UsuarioConteo = d.UsuarioConteo?.NombreUsuario ?? "Sin asignar",
+                        FechaConteo = d.FechaConteo
+                    };
                 }).ToList();
 
                 // Calcular estadísticas
@@ -112,10 +150,13 @@ namespace API.ServicesAPI
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Reporte Inventario");
 
+            // ✅ NÚMERO TOTAL DE COLUMNAS ACTUALIZADO
+            int totalColumnas = 18; // ID, Nombre, Desc, Medidas, Terreno, Capas, Marca, Modelo, Índice, Stock Min, Sist, Fís, Dif, Costo, %, Precio, Impacto, Usuario
+
             // ======================
             // ENCABEZADO DE EMPRESA
             // ======================
-            worksheet.Cells["A1:H1"].Merge = true;
+            worksheet.Cells[1, 1, 1, totalColumnas].Merge = true;
             worksheet.Cells["A1"].Value = "MULTISERVICIOS TUCO";
             worksheet.Cells["A1"].Style.Font.Size = 20;
             worksheet.Cells["A1"].Style.Font.Bold = true;
@@ -124,7 +165,7 @@ namespace API.ServicesAPI
             worksheet.Cells["A1"].Style.Fill.BackgroundColor.SetColor(Color.DarkBlue);
             worksheet.Cells["A1"].Style.Font.Color.SetColor(Color.White);
 
-            worksheet.Cells["A2:H2"].Merge = true;
+            worksheet.Cells[2, 1, 2, totalColumnas].Merge = true;
             worksheet.Cells["A2"].Value = "Sistema de Gestión de Inventarios";
             worksheet.Cells["A2"].Style.Font.Size = 12;
             worksheet.Cells["A2"].Style.Font.Italic = true;
@@ -135,7 +176,7 @@ namespace API.ServicesAPI
             // ======================
             // TÍTULO DEL REPORTE
             // ======================
-            worksheet.Cells["A4:H4"].Merge = true;
+            worksheet.Cells[4, 1, 4, totalColumnas].Merge = true;
             worksheet.Cells["A4"].Value = "REPORTE DE INVENTARIO";
             worksheet.Cells["A4"].Style.Font.Size = 16;
             worksheet.Cells["A4"].Style.Font.Bold = true;
@@ -185,7 +226,7 @@ namespace API.ServicesAPI
             // RESUMEN EJECUTIVO
             // ======================
             row += 2;
-            worksheet.Cells[$"A{row}:H{row}"].Merge = true;
+            worksheet.Cells[row, 1, row, totalColumnas].Merge = true;
             worksheet.Cells[$"A{row}"].Value = "RESUMEN EJECUTIVO";
             worksheet.Cells[$"A{row}"].Style.Font.Size = 14;
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
@@ -234,7 +275,7 @@ namespace API.ServicesAPI
             // DETALLE DE PRODUCTOS
             // ======================
             row += 6;
-            worksheet.Cells[$"A{row}:H{row}"].Merge = true;
+            worksheet.Cells[row, 1, row, totalColumnas].Merge = true;
             worksheet.Cells[$"A{row}"].Value = "DETALLE POR PRODUCTO";
             worksheet.Cells[$"A{row}"].Style.Font.Size = 14;
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
@@ -245,8 +286,28 @@ namespace API.ServicesAPI
 
             row += 2;
 
-            // Encabezados de la tabla
-            string[] headers = { "Producto", "Cant. Sistema", "Cant. Física", "Diferencia", "Precio Unit.", "Impacto Económico", "Categoría", "Usuario Conteo" };
+            // ✅ ENCABEZADOS ACTUALIZADOS CON TODAS LAS COLUMNAS
+            string[] headers = {
+                "ID",                   // 1
+                "Producto",             // 2
+                "Descripción",          // 3
+                "Medidas",              // 4
+                "Tipo Terreno",         // 5
+                "Capas",                // 6
+                "Marca",                // 7
+                "Modelo",               // 8
+                "Índice Vel.",          // 9
+                "Stock Mín.",           // 10
+                "Cant. Sistema",        // 11
+                "Cant. Física",         // 12
+                "Diferencia",           // 13
+                "Costo",                // 14
+                "% Utilidad",           // 15
+                "Precio Venta",         // 16
+                "Impacto $",            // 17
+                "Usuario Conteo"        // 18
+            };
+
             for (int i = 0; i < headers.Length; i++)
             {
                 var headerCell = worksheet.Cells[row, i + 1];
@@ -256,6 +317,7 @@ namespace API.ServicesAPI
                 headerCell.Style.Fill.BackgroundColor.SetColor(Color.DarkGray);
                 headerCell.Style.Font.Color.SetColor(Color.White);
                 headerCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                headerCell.Style.WrapText = true; // Permitir texto en varias líneas
 
                 // Bordes
                 headerCell.Style.Border.Top.Style = ExcelBorderStyle.Thick;
@@ -265,54 +327,118 @@ namespace API.ServicesAPI
             }
             row++;
 
-            // Datos de productos
+            // ✅ DATOS DE PRODUCTOS CON TODAS LAS COLUMNAS
             foreach (var producto in reporte.Productos)
             {
-                worksheet.Cells[row, 1].Value = producto.NombreProducto;
-                worksheet.Cells[row, 2].Value = producto.CantidadSistema;
-                worksheet.Cells[row, 3].Value = producto.CantidadFisica;
-                worksheet.Cells[row, 4].Value = producto.Diferencia;
-                worksheet.Cells[row, 5].Value = producto.PrecioUnitario;
-                worksheet.Cells[row, 5].Style.Numberformat.Format = "₡#,##0.00";
-                worksheet.Cells[row, 6].Value = producto.ImpactoEconomico;
-                worksheet.Cells[row, 6].Style.Numberformat.Format = "₡#,##0.00";
-                worksheet.Cells[row, 7].Value = producto.Categoria;
-                worksheet.Cells[row, 8].Value = producto.UsuarioConteo;
+                int col = 1;
+
+                // Información básica
+                worksheet.Cells[row, col++].Value = producto.ProductoId;
+                worksheet.Cells[row, col++].Value = producto.NombreProducto;
+                worksheet.Cells[row, col++].Value = producto.Descripcion;
+
+                // Información de llanta
+                worksheet.Cells[row, col++].Value = producto.Medidas ?? "-";
+                worksheet.Cells[row, col++].Value = producto.TipoTerreno ?? "-";
+                worksheet.Cells[row, col++].Value = producto.Capas?.ToString() ?? "-";
+                worksheet.Cells[row, col++].Value = producto.Marca ?? "-";
+                worksheet.Cells[row, col++].Value = producto.Modelo ?? "-";
+                worksheet.Cells[row, col++].Value = producto.IndiceVelocidad ?? "-";
+
+                // Información de inventario
+                worksheet.Cells[row, col++].Value = producto.StockMinimo?.ToString() ?? "-";
+                worksheet.Cells[row, col++].Value = producto.CantidadSistema;
+                worksheet.Cells[row, col++].Value = producto.CantidadFisica;
+                worksheet.Cells[row, col++].Value = producto.Diferencia;
+
+                // Información financiera
+                var costoCel = worksheet.Cells[row, col++];
+                if (producto.Costo.HasValue)
+                {
+                    costoCel.Value = producto.Costo.Value;
+                    costoCel.Style.Numberformat.Format = "₡#,##0.00";
+                }
+                else
+                {
+                    costoCel.Value = "-";
+                }
+
+                var utilidadCel = worksheet.Cells[row, col++];
+                if (producto.PorcentajeUtilidad.HasValue)
+                {
+                    utilidadCel.Value = producto.PorcentajeUtilidad.Value;
+                    utilidadCel.Style.Numberformat.Format = "0.00\"%\"";
+                }
+                else
+                {
+                    utilidadCel.Value = "-";
+                }
+
+                var precioCel = worksheet.Cells[row, col++];
+                precioCel.Value = producto.PrecioUnitario;
+                precioCel.Style.Numberformat.Format = "₡#,##0.00";
+
+                var impactoCel = worksheet.Cells[row, col++];
+                impactoCel.Value = producto.ImpactoEconomico;
+                impactoCel.Style.Numberformat.Format = "₡#,##0.00";
+
+                // Usuario conteo
+                worksheet.Cells[row, col++].Value = producto.UsuarioConteo;
 
                 // Colorear según categoría
                 if (producto.Categoria == "Faltante")
                 {
-                    worksheet.Cells[row, 1, row, 8].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1, row, 8].Style.Fill.BackgroundColor.SetColor(Color.MistyRose);
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(Color.MistyRose);
                 }
                 else if (producto.Categoria == "Exceso")
                 {
-                    worksheet.Cells[row, 1, row, 8].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1, row, 8].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
                 }
                 else
                 {
-                    worksheet.Cells[row, 1, row, 8].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1, row, 8].Style.Fill.BackgroundColor.SetColor(Color.White);
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(Color.White);
                 }
 
                 // Bordes para toda la fila
-                for (int col = 1; col <= 8; col++)
+                for (int c = 1; c <= totalColumnas; c++)
                 {
-                    worksheet.Cells[row, col].Style.Border.Top.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[row, col].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[row, col].Style.Border.Left.Style = ExcelBorderStyle.Thin;
-                    worksheet.Cells[row, col].Style.Border.Right.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, c].Style.Border.Top.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, c].Style.Border.Bottom.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, c].Style.Border.Left.Style = ExcelBorderStyle.Thin;
+                    worksheet.Cells[row, c].Style.Border.Right.Style = ExcelBorderStyle.Thin;
                 }
 
                 row++;
             }
 
-            // Autofit columnas y ajustes finales
+            // ✅ AJUSTES FINALES DE ANCHOS DE COLUMNA
             worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-            worksheet.Column(1).Width = 25; // Nombre producto más ancho
-            worksheet.Column(7).Width = 12; // Categoría
-            worksheet.Column(8).Width = 15; // Usuario
+
+            // Ajustar anchos específicos de columnas
+            worksheet.Column(1).Width = 8;   // ID
+            worksheet.Column(2).Width = 30;  // Nombre Producto
+            worksheet.Column(3).Width = 35;  // Descripción
+            worksheet.Column(4).Width = 15;  // Medidas
+            worksheet.Column(5).Width = 12;  // Tipo Terreno
+            worksheet.Column(6).Width = 8;   // Capas
+            worksheet.Column(7).Width = 15;  // Marca
+            worksheet.Column(8).Width = 15;  // Modelo
+            worksheet.Column(9).Width = 10;  // Índice Velocidad
+            worksheet.Column(10).Width = 10; // Stock Mínimo
+            worksheet.Column(11).Width = 12; // Cant. Sistema
+            worksheet.Column(12).Width = 12; // Cant. Física
+            worksheet.Column(13).Width = 10; // Diferencia
+            worksheet.Column(14).Width = 12; // Costo
+            worksheet.Column(15).Width = 10; // % Utilidad
+            worksheet.Column(16).Width = 12; // Precio Venta
+            worksheet.Column(17).Width = 12; // Impacto
+            worksheet.Column(18).Width = 18; // Usuario Conteo
+
+            // Ajustar altura de la fila de headers
+            worksheet.Row(worksheet.Dimension.Start.Row + headers.Length - 1).Height = 30;
 
             return package.GetAsByteArray();
         }
