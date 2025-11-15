@@ -1449,7 +1449,7 @@ function mostrarResultadosProductos(productos) {
             medidaCompleta = null;
         }
         // VALIDACIÓN DE IMÁGENES - MEJORADA (basada en verDetalleProducto)
-        let imagenUrl = '/images/no-image.png'; // Imagen por defecto
+        let imagenUrl = obtenerImagenPlaceholder(producto); // Imagen por defecto según tipo
         try {
             if (producto && typeof producto === 'object') {
                 console.log('🖼️ Procesando imágenes para producto:', producto.nombreProducto);
@@ -1506,7 +1506,7 @@ function mostrarResultadosProductos(productos) {
             }
         } catch (error) {
             console.warn('⚠️ Error procesando imágenes del producto:', error);
-            imagenUrl = '/images/no-image.png';
+            imagenUrl = obtenerImagenPlaceholder(producto);
         }
         // ✅ CÁLCULO DE PRECIOS CORREGIDO
         const precioBase = (typeof precio === 'number') ? precio : 0;
@@ -1772,7 +1772,7 @@ function mostrarModalSeleccionProducto(producto) {
     const precioBase = producto.precio || 0;
 
     // Validación robusta para imágenes con URL de la API (mejorada)
-    let imagenUrl = '/images/no-image.png';
+    let imagenUrl = obtenerImagenPlaceholder(producto);
     try {
         console.log('🖼️ Procesando imágenes para modal de producto:', producto.nombreProducto);
         let imagenesArray = [];
@@ -1812,7 +1812,7 @@ function mostrarModalSeleccionProducto(producto) {
         }
     } catch (error) {
         console.warn('⚠️ Error procesando imágenes del producto en modal:', error);
-        imagenUrl = '/images/no-image.png';
+        imagenUrl = obtenerImagenPlaceholder(producto);
     }
 
     const modalHtml = `

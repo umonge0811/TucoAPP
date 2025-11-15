@@ -146,7 +146,7 @@ namespace GestionLlantera.Web.Services
             }
         }
 
-        public async Task<bool> MarcarTodasComoLeidasAsync()
+        public async Task<dynamic> MarcarTodasComoLeidasAsync()
         {
             try
             {
@@ -159,12 +159,32 @@ namespace GestionLlantera.Web.Services
                 var response = await _httpClient.PutAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
                 _logger.LogInformation($"Respuesta API al marcar todas como leídas: {response.StatusCode}");
 
-                return response.IsSuccessStatusCode;
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var result = JsonConvert.DeserializeObject(responseContent);
+                    return result ?? new { success = true };
+                }
+
+                // Si hay un error, intentar leer el mensaje de error de la API
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning("Error al marcar todas como leídas. Status: {Status}, Content: {Content}",
+                    response.StatusCode, errorContent);
+
+                try
+                {
+                    var errorResult = JsonConvert.DeserializeObject(errorContent);
+                    return errorResult ?? new { success = false, message = "Error al marcar las notificaciones" };
+                }
+                catch
+                {
+                    return new { success = false, message = "Error al marcar las notificaciones" };
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Excepción al marcar todas las notificaciones como leídas");
-                return false;
+                return new { success = false, message = "Error al marcar las notificaciones" };
             }
         }
 

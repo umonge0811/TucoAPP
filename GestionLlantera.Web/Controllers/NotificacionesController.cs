@@ -66,7 +66,7 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Endpoint for JavaScript to mark a notification as read.
         /// </summary>
-        [HttpPost("marcar-leida")]
+        [HttpPost]
         // Using POST for actions that modify server state.
         // Removed [ValidateAntiForgeryToken] as this is an API endpoint called from client-side JavaScript,
         // and CSRF protection is typically handled differently for API endpoints or might not be needed
@@ -98,7 +98,7 @@ namespace GestionLlantera.Web.Controllers
         /// <summary>
         /// Endpoint for JavaScript to mark all notifications as read.
         /// </summary>
-        [HttpPost("marcar-todas-leidas")]
+        [HttpPost]
         // Using POST for actions that modify server state.
         // Removed [ValidateAntiForgeryToken] for similar reasons as above.
         public async Task<IActionResult> MarcarTodasComoLeidas()
@@ -106,8 +106,8 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 var resultado = await _notificacionService.MarcarTodasComoLeidasAsync();
-                // Returning success status of the operation.
-                return Json(new { success = resultado });
+                // Returning the complete result object from the API service
+                return Json(resultado);
             }
             catch (Exception ex)
             {

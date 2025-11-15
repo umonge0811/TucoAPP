@@ -243,7 +243,7 @@ function getCSRFToken() {
 // Función para marcar como leída
 async function marcarNotificacionComoLeida(notificacionId) {
     try {
-        const response = await fetch('/Notificaciones/marcar-leida', {
+        const response = await fetch('/Notificaciones/MarcarComoLeida', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -309,7 +309,7 @@ async function ocultarNotificacion(notificacionId) {
 async function marcarTodasComoLeidas() {
     console.log('Marcando todas las notificaciones como leídas...');
     try {
-        const response = await fetch('/Notificaciones/marcar-todas-leidas', {
+        const response = await fetch('/Notificaciones/MarcarTodasComoLeidas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -491,6 +491,36 @@ function inicializarNotificaciones() {
 
     // Actualizar conteo cada 30 segundos
     setInterval(cargarConteoNotificaciones, 30000);
+}
+
+// Función helper para obtener la imagen placeholder correcta según tipo de producto
+function obtenerImagenPlaceholder(producto) {
+    // Si el producto tiene imágenes, retornar la primera
+    if (producto.imagenes && producto.imagenes.length > 0) {
+        return producto.imagenes[0].urlImagen;
+    }
+
+    // Si el producto tiene una propiedad urlImagen directa
+    if (producto.urlImagen && producto.urlImagen.trim() !== '' && !producto.urlImagen.includes('no-image.png')) {
+        return producto.urlImagen;
+    }
+
+    // Determinar placeholder según tipo de llanta
+    if (producto.esLlanta || producto.llanta) {
+        // Obtener el nombre del producto
+        const nombreProducto = producto.nombreProducto || producto.nombre || '';
+
+        // Si el nombre empieza con "Llanta MOTO", usar placeholder de moto
+        if (nombreProducto.toUpperCase().startsWith('LLANTA MOTO')) {
+            return '/images/llanta-moto-placeholder.jpg';
+        }
+
+        // Para cualquier otro tipo de llanta (auto, camión, etc.)
+        return '/images/llanta-placeholder.jpg';
+    }
+
+    // Imagen por defecto para productos que no son llantas
+    return '/images/no-image.png';
 }
 
 // Auto-inicializar cuando el DOM esté listo

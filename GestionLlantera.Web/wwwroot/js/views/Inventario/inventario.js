@@ -474,36 +474,42 @@ function cargarImagenesEnModal(fila, productoId) {
     $btnNext.hide();
     $indicadores.hide();
 
+    // Obtener información del producto desde la fila
+    const nombreProducto = fila.find("td:eq(2) strong").text().trim();
+    const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
+
     $.ajax({
         url: `/Inventario/ObtenerImagenesProducto/${productoId}`,
         type: "GET",
         success: function (imagenes) {
             console.log('🖼️ Imágenes recibidas:', imagenes);
-            procesarImagenesDelProducto(imagenes);
+            procesarImagenesDelProducto(imagenes, { nombreProducto, esLlanta });
         },
         error: function (xhr, status, error) {
             console.warn('⚠️ Error al cargar imágenes desde servidor:', error);
             const imagenDeTabla = fila.find("td:eq(1) img").attr("src");
             const imagenesFallback = imagenDeTabla ? [imagenDeTabla] : [];
-            procesarImagenesDelProducto(imagenesFallback);
+            procesarImagenesDelProducto(imagenesFallback, { nombreProducto, esLlanta });
         }
     });
 }
 
 // Función para procesar imágenes del producto - VERSIÓN CORREGIDA
-function procesarImagenesDelProducto(imagenes) {
+function procesarImagenesDelProducto(imagenes, producto) {
     const $contenedorImagenes = $("#contenedorImagenesModal");
     const $indicadores = $("#indicadoresModal");
     const $btnPrev = $("#btnPrevModal");
     const $btnNext = $("#btnNextModal");
 
     if (imagenes.length === 0) {
+        // Usar imagen placeholder según el tipo de producto
+        const placeholderUrl = obtenerImagenPlaceholder(producto || {});
         $contenedorImagenes.html(`
             <div class="carousel-item active">
-                <div class="text-center">
-                    <i class="bi bi-image text-muted"></i>
-                    <p class="text-muted mt-3">No hay imágenes disponibles</p>
-                </div>
+                <img src="${placeholderUrl}"
+                     class="img-fluid"
+                     alt="Imagen del producto"
+                     style="opacity: 1;">
             </div>
         `);
     } else if (imagenes.length === 1) {
@@ -2294,7 +2300,7 @@ function compartirPorWhatsApp() {
             // Mostrar preview del producto en el modal
             $("#productoPreview").html(`
                 <div class="d-flex align-items-center">
-                    <img src="${productoParaCompartir.urlImagen || '/images/no-image.png'}"
+                    <img src="${productoParaCompartir.urlImagen || obtenerImagenPlaceholder(productoParaCompartir)}"
                          alt="${productoParaCompartir.nombre}"
                          class="me-3"
                          style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">

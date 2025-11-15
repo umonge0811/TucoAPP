@@ -7,7 +7,7 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<List<NotificacionDTO>> ObtenerMisNotificacionesAsync();
         Task<int> ObtenerConteoNoLeidasAsync();
         Task<bool> MarcarComoLeidaAsync(int notificacionId);
-        Task<bool> MarcarTodasComoLeidasAsync();
+        Task<dynamic> MarcarTodasComoLeidasAsync();
         Task<dynamic> OcultarNotificacionAsync(int notificacionId);
         Task<dynamic> OcultarTodasNotificacionesAsync();
     }
