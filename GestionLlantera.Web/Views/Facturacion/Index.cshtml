@@ -189,7 +189,7 @@
 
             <!-- Panel derecho - Carrito de venta -->
             <div class="col-lg-5">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm" id="carritoVenta">
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-cart me-2"></i>Venta Actual
@@ -716,10 +716,85 @@
     </div>
 </div>
 
+<!-- Modal para ingresar número de WhatsApp -->
+<div class="modal fade" id="modalWhatsAppNumeroFacturacion" tabindex="-1" aria-labelledby="modalWhatsAppNumeroFacturacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalWhatsAppNumeroFacturacionLabel">
+                    <i class="bi bi-whatsapp me-2"></i>
+                    Compartir por WhatsApp
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Preview del producto -->
+                <div class="alert alert-info mb-3">
+                    <h6 class="mb-2">Producto a compartir:</h6>
+                    <div id="productoPreviewFacturacion">
+                        <div class="text-center">
+                            <div class="spinner-border spinner-border-sm me-2"></div>
+                            Cargando información del producto...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario de número -->
+                <form id="formWhatsAppNumeroFacturacion">
+                    <div class="mb-3">
+                        <label for="numeroWhatsAppFacturacion" class="form-label fw-bold">
+                            <i class="bi bi-phone me-1"></i>
+                            Número de WhatsApp <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">+506</span>
+                            <input type="tel" class="form-control" id="numeroWhatsAppFacturacion"
+                                   placeholder="Ej: 88887777"
+                                   pattern="[0-9]{8}"
+                                   maxlength="8"
+                                   required>
+                        </div>
+                        <div class="form-text">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Ingrese solo los 8 dígitos del número (sin espacios ni guiones)
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="incluirImagenFacturacion">
+                            <label class="form-check-label" for="incluirImagenFacturacion">
+                                <i class="bi bi-image me-1"></i>
+                                Incluir imagen del producto
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnEnviarWhatsAppFacturacion">
+                    <span class="normal-state">
+                        <i class="bi bi-whatsapp me-2"></i>Enviar por WhatsApp
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Enviando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 
-    @section Scripts {
+@section Scripts {
         <!-- Scripts específicos para facturación -->
         <script src="~/js/utils/impresionTermica.js"></script>
         <script src="~/js/views/facturacion/zoomImagenes.js"></script>    
