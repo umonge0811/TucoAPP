@@ -151,10 +151,12 @@ namespace API.ServicesAPI
                     ProductosConFaltante = productosFaltante,
                     ValorExceso = valorExceso,
                     ValorFaltante = valorFaltante,
-                    // ✅ ORDENAR POR MEDIDAS (alfanuméricamente), productos sin medidas al final
+                    // ✅ ORDENAR POR MEDIDAS (numéricamente por diámetro → ancho → perfil)
                     Productos = productos
                         .OrderBy(p => string.IsNullOrEmpty(p.Medidas) ? 1 : 0)  // Sin medidas al final
-                        .ThenBy(p => p.Medidas ?? string.Empty)                   // Alfabéticamente por medidas
+                        .ThenBy(p => ExtraerDiametro(p.Medidas))                 // Por diámetro (R10, R12, R13...)
+                        .ThenBy(p => ExtraerAncho(p.Medidas))                    // Por ancho (155, 165, 175...)
+                        .ThenBy(p => ExtraerPerfil(p.Medidas))                   // Por perfil (0, 60, 65, 70...)
                         .ToList(),
                     FechaGeneracionReporte = DateTime.Now
                 };
@@ -471,17 +473,25 @@ namespace API.ServicesAPI
 
         public async Task<byte[]> GenerarReportePdfAsync(int inventarioProgramadoId)
         {
-            var reporte = await GenerarReporteAsync(inventarioProgramadoId);
-
-            using var memoryStream = new MemoryStream();
-            // ✅ CAMBIAR A ORIENTACIÓN HORIZONTAL
-            var writer = new PdfWriter(memoryStream);
-            var pdfDoc = new PdfDocument(writer);
-            var document = new iText.Layout.Document(pdfDoc, PageSize.A4.Rotate());
-            document.SetMargins(30, 25, 30, 25);
-
             try
             {
+                _logger.LogInformation("🔵 Iniciando generación de PDF para inventario {InventarioId}", inventarioProgramadoId);
+
+                var reporte = await GenerarReporteAsync(inventarioProgramadoId);
+                _logger.LogInformation("✅ Reporte generado con {ProductosCount} productos", reporte.Productos.Count);
+
+                using var memoryStream = new MemoryStream();
+                _logger.LogInformation("🔵 Creando PdfWriter...");
+
+                // ✅ CAMBIAR A ORIENTACIÓN HORIZONTAL
+                var writer = new PdfWriter(memoryStream);
+                var pdfDoc = new PdfDocument(writer);
+                var document = new iText.Layout.Document(pdfDoc, PageSize.A4.Rotate());
+                document.SetMargins(30, 25, 30, 25);
+                _logger.LogInformation("✅ PdfDocument creado exitosamente");
+
+                try
+                {
                 // ======================
                 // DEFINIR COLORES Y FUENTES
                 // ======================
@@ -580,6 +590,7 @@ namespace API.ServicesAPI
                 }
 
                 // ✅ OBTENER USUARIOS QUE PARTICIPARON EN EL INVENTARIO
+                _logger.LogInformation("🔵 Consultando usuarios participantes...");
                 var usuariosParticipantes = await _context.DetallesInventarioProgramado
                     .Where(d => d.InventarioProgramadoId == inventarioProgramadoId && d.UsuarioConteoId != null)
                     .Include(d => d.UsuarioConteo)
@@ -587,16 +598,20 @@ namespace API.ServicesAPI
                     .Distinct()
                     .ToListAsync();
 
+                _logger.LogInformation("✅ Usuarios participantes obtenidos: {Count}", usuariosParticipantes?.Count ?? 0);
+
                 var usuariosTexto = usuariosParticipantes != null && usuariosParticipantes.Any()
                     ? string.Join(", ", usuariosParticipantes.Where(u => !string.IsNullOrEmpty(u)))
                     : "Sin asignar";
 
+                _logger.LogInformation("🔵 Agregando información del inventario...");
                 AddInfoInventarioRow("Inventario:", reporte.Titulo ?? "Sin título", "Creado por:", reporte.UsuarioCreador ?? "Desconocido");
                 AddInfoInventarioRow("Fecha Inicio:", reporte.FechaInicio.ToString("dd/MM/yyyy HH:mm"), "Fecha Fin:", reporte.FechaFin.ToString("dd/MM/yyyy HH:mm"));
                 AddInfoInventarioRow("Usuarios Participantes:", usuariosTexto ?? "Sin asignar", "Duración:", CalcularDuracion(reporte.FechaInicio, reporte.FechaFin));
 
                 document.Add(infoInventarioTable);
                 document.Add(new Paragraph(" ")); // Espacio
+                _logger.LogInformation("✅ Información del inventario agregada");
 
                 // ======================
                 // RESUMEN EJECUTIVO CON ALERTAS
@@ -679,8 +694,11 @@ namespace API.ServicesAPI
                 }
 
                 // Datos de productos (Todos los productos ordenados por medidas)
+                _logger.LogInformation("🔵 Agregando {Count} productos a la tabla del PDF...", reporte.Productos.Count);
+                int productosProcesados = 0;
                 foreach (var producto in reporte.Productos)
                 {
+                    productosProcesados++;
                     // ✅ COLOR DE FONDO SEGÚN CATEGORÍA Y SEVERIDAD
                     DeviceRgb backgroundColor = blanco;
                     DeviceRgb textColor = negro;
@@ -720,7 +738,10 @@ namespace API.ServicesAPI
                     AddProductCell(producto.UsuarioConteo?.Length > 12 ? producto.UsuarioConteo.Substring(0, 12) + "..." : producto.UsuarioConteo ?? "N/A");
                 }
 
+                _logger.LogInformation("✅ Productos procesados: {Count}/{Total}", productosProcesados, reporte.Productos.Count);
+                _logger.LogInformation("🔵 Agregando tabla de productos al documento...");
                 document.Add(productosTable);
+                _logger.LogInformation("✅ Tabla de productos agregada exitosamente");
 
                 // ======================
                 // LEYENDA Y NOTAS FINALES
@@ -766,13 +787,26 @@ namespace API.ServicesAPI
                     .SetFontColor(gris);
                 document.Add(nota);
 
-                document.Close();
-                return memoryStream.ToArray();
+                    _logger.LogInformation("🔵 Cerrando documento PDF...");
+                    document.Close();
+                    _logger.LogInformation("✅ PDF generado exitosamente. Tamaño: {Size} bytes", memoryStream.Length);
+                    return memoryStream.ToArray();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "💥 Error interno generando contenido del PDF para inventario {InventarioId}", inventarioProgramadoId);
+                    _logger.LogError("💥 Tipo de error: {ErrorType}, Mensaje: {Message}", ex.GetType().Name, ex.Message);
+                    _logger.LogError("💥 StackTrace: {StackTrace}", ex.StackTrace);
+
+                    try { document?.Close(); } catch { }
+                    throw;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generando PDF para inventario {InventarioId}", inventarioProgramadoId);
-                document.Close();
+                _logger.LogError(ex, "💥 Error general generando PDF para inventario {InventarioId}", inventarioProgramadoId);
+                _logger.LogError("💥 Tipo de error: {ErrorType}, Mensaje: {Message}", ex.GetType().Name, ex.Message);
+                _logger.LogError("💥 StackTrace: {StackTrace}", ex.StackTrace);
                 throw;
             }
         }
@@ -787,6 +821,49 @@ namespace API.ServicesAPI
                 return $"{duracion.Hours} horas, {duracion.Minutes} minutos";
             else
                 return $"{duracion.Minutes} minutos";
+        }
+
+        // ✅ MÉTODOS AUXILIARES PARA ORDENAMIENTO DE MEDIDAS
+        // Extraer diámetro de la medida (el número después de R)
+        // Ejemplos: "175/70/R13" → 13, "155/R12" → 12, "350/R10" → 10
+        private decimal ExtraerDiametro(string medidas)
+        {
+            if (string.IsNullOrEmpty(medidas)) return decimal.MaxValue;
+
+            var indexR = medidas.IndexOf("/R");
+            if (indexR < 0) return decimal.MaxValue;
+
+            var diametroStr = medidas.Substring(indexR + 2);
+            return decimal.TryParse(diametroStr, out var diametro) ? diametro : decimal.MaxValue;
+        }
+
+        // Extraer ancho de la medida (el primer número)
+        // Ejemplos: "175/70/R13" → 175, "155/R12" → 155, "27/8.50/R14" → 27
+        private decimal ExtraerAncho(string medidas)
+        {
+            if (string.IsNullOrEmpty(medidas)) return decimal.MaxValue;
+
+            var indexSlash = medidas.IndexOf('/');
+            if (indexSlash < 0) return decimal.MaxValue;
+
+            var anchoStr = medidas.Substring(0, indexSlash);
+            return decimal.TryParse(anchoStr, out var ancho) ? ancho : decimal.MaxValue;
+        }
+
+        // Extraer perfil de la medida (el número del medio)
+        // Ejemplos: "175/70/R13" → 70, "155/R12" → 0, "155/0/R12" → 0
+        private decimal ExtraerPerfil(string medidas)
+        {
+            if (string.IsNullOrEmpty(medidas)) return 0;
+
+            var partes = medidas.Split('/');
+            if (partes.Length < 2) return 0;
+
+            // El perfil está en la segunda parte (si existe y no es "R...")
+            var perfilStr = partes[1];
+            if (perfilStr.StartsWith("R")) return 0; // No tiene perfil
+
+            return decimal.TryParse(perfilStr, out var perfil) ? perfil : 0;
         }
 
         // ✅ MÉTODO AUXILIAR PARA FORMATEAR MEDIDAS DE NEUMÁTICOS
