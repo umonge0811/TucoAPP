@@ -12,7 +12,7 @@ using iText.Layout.Borders;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using System.Drawing;
+using ExcelColor = System.Drawing.Color;
 using Tuco.Clases.DTOs.Inventario;
 
 namespace API.ServicesAPI
@@ -171,8 +171,8 @@ namespace API.ServicesAPI
             worksheet.Cells["A1"].Style.Font.Bold = true;
             worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             worksheet.Cells["A1"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells["A1"].Style.Fill.BackgroundColor.SetColor(Color.DarkBlue);
-            worksheet.Cells["A1"].Style.Font.Color.SetColor(Color.White);
+            worksheet.Cells["A1"].Style.Fill.BackgroundColor.SetColor(ExcelColor.DarkBlue);
+            worksheet.Cells["A1"].Style.Font.Color.SetColor(ExcelColor.White);
 
             worksheet.Cells[2, 1, 2, totalColumnas].Merge = true;
             worksheet.Cells["A2"].Value = "Sistema de Gestión de Inventarios";
@@ -180,7 +180,7 @@ namespace API.ServicesAPI
             worksheet.Cells["A2"].Style.Font.Italic = true;
             worksheet.Cells["A2"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             worksheet.Cells["A2"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells["A2"].Style.Fill.BackgroundColor.SetColor(Color.LightBlue);
+            worksheet.Cells["A2"].Style.Fill.BackgroundColor.SetColor(ExcelColor.LightBlue);
 
             // ======================
             // TÍTULO DEL REPORTE
@@ -191,42 +191,42 @@ namespace API.ServicesAPI
             worksheet.Cells["A4"].Style.Font.Bold = true;
             worksheet.Cells["A4"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             worksheet.Cells["A4"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells["A4"].Style.Fill.BackgroundColor.SetColor(Color.LightGray);
+            worksheet.Cells["A4"].Style.Fill.BackgroundColor.SetColor(ExcelColor.LightGray);
 
             // ======================
             // INFORMACIÓN GENERAL
             // ======================
             int row = 6;
             worksheet.Cells[$"A{row}:B{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(Color.WhiteSmoke);
+            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.WhiteSmoke);
             worksheet.Cells[$"A{row}"].Value = "Inventario:";
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"B{row}"].Value = reporte.Titulo;
 
             row++;
             worksheet.Cells[$"A{row}:B{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(Color.WhiteSmoke);
+            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.WhiteSmoke);
             worksheet.Cells[$"A{row}"].Value = "Fecha Inicio:";
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"B{row}"].Value = reporte.FechaInicio.ToString("dd/MM/yyyy HH:mm");
 
             row++;
             worksheet.Cells[$"A{row}:B{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(Color.WhiteSmoke);
+            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.WhiteSmoke);
             worksheet.Cells[$"A{row}"].Value = "Fecha Fin:";
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"B{row}"].Value = reporte.FechaFin.ToString("dd/MM/yyyy HH:mm");
 
             row++;
             worksheet.Cells[$"A{row}:B{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(Color.WhiteSmoke);
+            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.WhiteSmoke);
             worksheet.Cells[$"A{row}"].Value = "Creado por:";
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"B{row}"].Value = reporte.UsuarioCreador;
 
             row++;
             worksheet.Cells[$"A{row}:B{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(Color.WhiteSmoke);
+            worksheet.Cells[$"A{row}:B{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.WhiteSmoke);
             worksheet.Cells[$"A{row}"].Value = "Generado el:";
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"B{row}"].Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
@@ -241,8 +241,8 @@ namespace API.ServicesAPI
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"A{row}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             worksheet.Cells[$"A{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}"].Style.Fill.BackgroundColor.SetColor(Color.Orange);
-            worksheet.Cells[$"A{row}"].Style.Font.Color.SetColor(Color.White);
+            worksheet.Cells[$"A{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.Orange);
+            worksheet.Cells[$"A{row}"].Style.Font.Color.SetColor(ExcelColor.White);
 
             // Crear tabla de resumen en formato 2x4
             row++;
@@ -264,12 +264,12 @@ namespace API.ServicesAPI
                     {
                         cell.Style.Font.Bold = true;
                         cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        cell.Style.Fill.BackgroundColor.SetColor(Color.LightYellow);
+                        cell.Style.Fill.BackgroundColor.SetColor(ExcelColor.LightYellow);
                     }
                     else // Valores
                     {
                         cell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                        cell.Style.Fill.BackgroundColor.SetColor(Color.White);
+                        cell.Style.Fill.BackgroundColor.SetColor(ExcelColor.White);
                     }
 
                     // Bordes
@@ -290,8 +290,8 @@ namespace API.ServicesAPI
             worksheet.Cells[$"A{row}"].Style.Font.Bold = true;
             worksheet.Cells[$"A{row}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             worksheet.Cells[$"A{row}"].Style.Fill.PatternType = ExcelFillStyle.Solid;
-            worksheet.Cells[$"A{row}"].Style.Fill.BackgroundColor.SetColor(Color.Green);
-            worksheet.Cells[$"A{row}"].Style.Font.Color.SetColor(Color.White);
+            worksheet.Cells[$"A{row}"].Style.Fill.BackgroundColor.SetColor(ExcelColor.Green);
+            worksheet.Cells[$"A{row}"].Style.Font.Color.SetColor(ExcelColor.White);
 
             row += 2;
 
@@ -323,8 +323,8 @@ namespace API.ServicesAPI
                 headerCell.Value = headers[i];
                 headerCell.Style.Font.Bold = true;
                 headerCell.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                headerCell.Style.Fill.BackgroundColor.SetColor(Color.DarkGray);
-                headerCell.Style.Font.Color.SetColor(Color.White);
+                headerCell.Style.Fill.BackgroundColor.SetColor(ExcelColor.DarkGray);
+                headerCell.Style.Font.Color.SetColor(ExcelColor.White);
                 headerCell.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                 headerCell.Style.WrapText = true; // Permitir texto en varias líneas
 
@@ -398,17 +398,17 @@ namespace API.ServicesAPI
                 if (producto.Categoria == "Faltante")
                 {
                     worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(Color.MistyRose);
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(ExcelColor.MistyRose);
                 }
                 else if (producto.Categoria == "Exceso")
                 {
                     worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(Color.LightGreen);
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(ExcelColor.LightGreen);
                 }
                 else
                 {
                     worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(Color.White);
+                    worksheet.Cells[row, 1, row, totalColumnas].Style.Fill.BackgroundColor.SetColor(ExcelColor.White);
                 }
 
                 // Bordes para toda la fila

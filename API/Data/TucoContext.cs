@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using tuco.Clases.Models;
 using Tuco.Clases.Enums;
 using Tuco.Clases.Models;
-using static iTextSharp.text.pdf.events.IndexEvents;
 
 namespace API.Data;
 
