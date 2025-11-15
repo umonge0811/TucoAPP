@@ -109,16 +109,24 @@ function renderizarNotificaciones() {
 
     let html = '';
 
-    if (conteoNoLeidas > 0) {
-        html += `
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <small class="text-muted">Tienes ${conteoNoLeidas} notificaciones no leídas</small>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="marcarTodasComoLeidas()">
-                    Marcar todas como leídas
+    // Botones de acción superior
+    html += `
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+            <small class="text-muted">
+                ${conteoNoLeidas > 0 ? `${conteoNoLeidas} no leída${conteoNoLeidas > 1 ? 's' : ''}` : 'Todas leídas'}
+            </small>
+            <div class="d-flex gap-2">
+                ${conteoNoLeidas > 0 ? `
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="marcarTodasComoLeidas()">
+                        <i class="bi bi-check-all me-1"></i>Marcar todas
+                    </button>
+                ` : ''}
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarTodasLasNotificaciones()">
+                    <i class="bi bi-trash3 me-1"></i>Eliminar todas
                 </button>
             </div>
-        `;
-    }
+        </div>
+    `;
 
     html += '<div class="notifications-list">';
 
@@ -314,10 +322,80 @@ async function marcarTodasComoLeidas() {
                 conteoNoLeidas = 0;
                 actualizarBadges();
                 renderizarNotificaciones();
+
+                // Mostrar mensaje de éxito
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Todas las notificaciones marcadas como leídas');
+                }
             }
         }
     } catch (error) {
         console.error('Error al marcar todas como leídas:', error);
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Error al marcar las notificaciones');
+        }
+    }
+}
+
+// Función para eliminar todas las notificaciones
+async function eliminarTodasLasNotificaciones() {
+    // Mostrar confirmación
+    if (typeof Swal !== 'undefined') {
+        const result = await Swal.fire({
+            title: '¿Eliminar todas las notificaciones?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar todas',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+    } else {
+        if (!confirm('¿Estás seguro de que deseas eliminar todas las notificaciones?')) {
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch('/Notificaciones/OcultarTodasNotificaciones', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': getCSRFToken()
+            }
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+                // Limpiar cache local
+                notificacionesCache = [];
+                conteoNoLeidas = 0;
+                actualizarBadges();
+                renderizarNotificaciones();
+
+                // Mostrar mensaje de éxito
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Todas las notificaciones han sido eliminadas');
+                }
+            } else {
+                throw new Error('Error al eliminar las notificaciones');
+            }
+        } else {
+            throw new Error('Error en la respuesta del servidor');
+        }
+    } catch (error) {
+        console.error('Error al eliminar todas las notificaciones:', error);
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Error al eliminar las notificaciones');
+        } else {
+            alert('Error al eliminar las notificaciones');
+        }
     }
 }
 
