@@ -475,7 +475,7 @@ function cargarImagenesEnModal(fila, productoId) {
     $indicadores.hide();
 
     // Obtener información del producto desde la fila
-    const nombreProducto = fila.find("td:eq(0)").text().trim();
+    const nombreProducto = fila.find("td:eq(2) strong").text().trim();
     const esLlanta = fila.find("td:eq(2) .badge").text() === "Llanta";
 
     $.ajax({

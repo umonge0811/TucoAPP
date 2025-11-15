@@ -154,9 +154,24 @@
                             }
                             else
                             {
-                                <div class="sin-imagen-grande">
-                                    <i class="bi bi-image"></i>
-                                    <p>No hay imágenes disponibles</p>
+                                // Determinar qué placeholder usar según el tipo de producto
+                                var placeholderUrl = "/images/no-image.png";
+                                if (Model.EsLlanta || Model.Llanta != null)
+                                {
+                                    if (Model.NombreProducto?.ToUpper().StartsWith("LLANTA MOTO") == true)
+                                    {
+                                        placeholderUrl = "/images/llanta-moto-placeholder.jpg";
+                                    }
+                                    else
+                                    {
+                                        placeholderUrl = "/images/llanta-placeholder.jpg";
+                                    }
+                                }
+
+                                <div class="sin-imagen-placeholder">
+                                    <img src="@placeholderUrl"
+                                         class="d-block w-100 img-fluid rounded"
+                                         alt="@Model.NombreProducto - Sin imagen">
                                 </div>
                             }
                         </div>
