@@ -717,7 +717,7 @@
 </div>
 
 <!-- Modal para ingresar número de WhatsApp -->
-<div class="modal fade" id="modalWhatsAppNumeroFacturacion" tabindex="-1" aria-labelledby="modalWhatsAppNumeroFacturacionLabel" aria-hidden="true">
+<div class="modal fade" id="modalWhatsAppNumeroFacturacion" tabindex="-1" aria-labelledby="modalWhatsAppNumeroFacturacionLabel" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
@@ -793,6 +793,17 @@
 
 <!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
+
+<style>
+    /* Z-index para backdrop del modal de WhatsApp */
+    .modal-backdrop.show:last-of-type {
+        z-index: 1055 !important;
+    }
+
+    #modalWhatsAppNumeroFacturacion.show {
+        z-index: 1060 !important;
+    }
+</style>
 
     @section Scripts {
         <!-- Scripts específicos para facturación -->

@@ -9415,11 +9415,8 @@ function descargarImagen(urlImagen, nombreProducto) {
  */
 function compartirProducto(productoId) {
     try {
-        // Obtener el dominio actual
-        const dominio = window.location.origin;
-
         // Construir el link público del producto
-        const linkPublico = `${dominio}/Public/DetalleProducto/${productoId}`;
+        const linkPublico = `https://www.llantasymastc.com/Public/DetalleProducto/${productoId}`;
 
         // Copiar al portapapeles
         navigator.clipboard.writeText(linkPublico).then(() => {
@@ -9477,7 +9474,7 @@ function compartirPorWhatsAppFacturacion(producto) {
             precio: precioProducto,
             stock: stockProducto,
             urlImagen: urlImagen,
-            urlProducto: `${window.location.origin}/Public/DetalleProducto/${productoId}`,
+            urlProducto: `https://www.llantasymastc.com/Public/DetalleProducto/${productoId}`,
             medida: medida,
             marca: marca,
             productoId: productoId
@@ -9538,23 +9535,23 @@ function enviarWhatsAppFacturacion() {
         $btnEnviar.prop('disabled', true);
 
         // Construir mensaje
-        let mensaje = `¡Hola! Te comparto información sobre este producto:\n\n`;
+        let mensaje = `Hola! Te comparto informacion sobre este producto:\n\n`;
         mensaje += `*${productoParaCompartirFacturacion.nombre}*\n\n`;
 
         // Agregar información de llanta si está disponible
         if (productoParaCompartirFacturacion.medida && productoParaCompartirFacturacion.medida !== '-' && productoParaCompartirFacturacion.medida !== '') {
-            mensaje += `📏 Medida: ${productoParaCompartirFacturacion.medida}\n`;
+            mensaje += `Medida: ${productoParaCompartirFacturacion.medida}\n`;
         }
         if (productoParaCompartirFacturacion.marca && productoParaCompartirFacturacion.marca !== '-' && productoParaCompartirFacturacion.marca !== '') {
-            mensaje += `🏷️ Marca: ${productoParaCompartirFacturacion.marca}\n`;
+            mensaje += `Marca: ${productoParaCompartirFacturacion.marca}\n`;
         }
 
-        mensaje += `💰 Precio: ${productoParaCompartirFacturacion.precio}\n`;
-        mensaje += `📦 Stock: ${productoParaCompartirFacturacion.stock}\n`;
-        mensaje += `🔗 Más detalles: ${productoParaCompartirFacturacion.urlProducto}\n\n`;
+        mensaje += `Precio: ${productoParaCompartirFacturacion.precio}\n`;
+        mensaje += `Stock: ${productoParaCompartirFacturacion.stock}\n`;
+        mensaje += `Mas detalles: ${productoParaCompartirFacturacion.urlProducto}\n\n`;
 
         if (incluirImagen && productoParaCompartirFacturacion.urlImagen && !productoParaCompartirFacturacion.urlImagen.includes('no-image.png')) {
-            mensaje += `📷 Imagen: ${productoParaCompartirFacturacion.urlImagen}`;
+            mensaje += `Imagen: ${productoParaCompartirFacturacion.urlImagen}`;
         }
 
         // Construir la URL de WhatsApp con el número específico
@@ -9592,7 +9589,7 @@ function compartirPorEmailFacturacion(producto) {
         const descripcionProducto = $('#productoDescripcion').text() || producto?.descripcion || 'Sin descripción disponible';
         const productoId = producto?.productoId || 0;
 
-        const urlProducto = `${window.location.origin}/Public/DetalleProducto/${productoId}`;
+        const urlProducto = `https://www.llantasymastc.com/Public/DetalleProducto/${productoId}`;
         const asunto = `Producto: ${nombreProducto}`;
         const cuerpo = `Hola,
 
