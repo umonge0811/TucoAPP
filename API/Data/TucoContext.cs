@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using tuco.Clases.Models;
 using Tuco.Clases.Enums;
 using Tuco.Clases.Models;
-using static iTextSharp.text.pdf.events.IndexEvents;
 
 namespace API.Data;
 
@@ -38,6 +37,10 @@ public partial class TucoContext : DbContext
     public virtual DbSet<AsignacionUsuarioInventario> AsignacionesUsuariosInventario { get; set; }
 
     public virtual DbSet<DetalleInventarioProgramado> DetallesInventarioProgramado { get; set; }
+
+    public virtual DbSet<MovimientoPostCorte> MovimientosPostCorte { get; set; }
+
+    public virtual DbSet<AlertasInventario> AlertasInventario { get; set; }
 
     public virtual DbSet<Notificacion> Notificaciones { get; set; }
 
@@ -255,6 +258,72 @@ public partial class TucoContext : DbContext
                 .WithMany()
                 .HasForeignKey(d => d.UsuarioConteoId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(d => d.UsuarioActualizacion)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioActualizacionId)
+                .OnDelete(DeleteBehavior.NoAction);
+        });
+
+        // ✅ CONFIGURACIÓN DE MovimientosPostCorte
+        modelBuilder.Entity<MovimientoPostCorte>(entity =>
+        {
+            entity.ToTable("MovimientosPostCorte");
+
+            entity.HasKey(e => e.MovimientoPostCorteId);
+
+            entity.Property(e => e.MovimientoPostCorteId)
+                .ValueGeneratedOnAdd();
+
+            entity.Property(e => e.InventarioProgramadoId)
+                .IsRequired();
+
+            entity.Property(e => e.ProductoId)
+                .IsRequired();
+
+            entity.Property(e => e.TipoMovimiento)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(e => e.Cantidad)
+                .IsRequired();
+
+            entity.Property(e => e.TipoDocumento)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.FechaMovimiento)
+                .IsRequired()
+                .HasDefaultValueSql("(getdate())");
+
+            entity.Property(e => e.Procesado)
+                .IsRequired()
+                .HasDefaultValue(false);
+
+            // Configurar relaciones
+            entity.HasOne(d => d.InventarioProgramado)
+                .WithMany(p => p.MovimientosPostCorte)
+                .HasForeignKey(d => d.InventarioProgramadoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(d => d.Producto)
+                .WithMany()
+                .HasForeignKey(d => d.ProductoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            entity.HasOne(d => d.UsuarioProcesado)
+                .WithMany()
+                .HasForeignKey(d => d.UsuarioProcesadoId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Índices
+            entity.HasIndex(e => new { e.InventarioProgramadoId, e.ProductoId })
+                .HasDatabaseName("IX_MovimientosPostCorte_InventarioProducto");
+
+            entity.HasIndex(e => new { e.Procesado, e.InventarioProgramadoId })
+                .HasDatabaseName("IX_MovimientosPostCorte_Procesado");
+
+            entity.HasIndex(e => e.FechaMovimiento)
+                .HasDatabaseName("IX_MovimientosPostCorte_FechaMovimiento");
         });
 
         modelBuilder.Entity<DetallePedido>(entity =>

@@ -29,6 +29,7 @@ namespace API.Controllers
         private readonly INotificacionService _notificacionService;
         private readonly IPermisosService _permisosService;
         private readonly IAjustesInventarioPendientesService _ajustesService;
+        private readonly IMovimientosPostCorteService _movimientosPostCorteService;
 
         public InventarioController(
             TucoContext context,
@@ -36,7 +37,8 @@ namespace API.Controllers
             ILogger<InventarioController> logger,
             INotificacionService notificacionService,
             IPermisosService permisosService,
-            IAjustesInventarioPendientesService ajustesService)
+            IAjustesInventarioPendientesService ajustesService,
+            IMovimientosPostCorteService movimientosPostCorteService)
         {
             _context = context;
             _webHostEnvironment = webHostEnvironment;
@@ -44,6 +46,7 @@ namespace API.Controllers
             _notificacionService = notificacionService;
             _permisosService = permisosService;
             _ajustesService = ajustesService;
+            _movimientosPostCorteService = movimientosPostCorteService;
         }
 
         // =====================================
@@ -728,6 +731,59 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Crea alertas de movimiento post-corte para todos los usuarios asignados al inventario
+        /// </summary>
+        private async Task CrearAlertasMovimientoPostCorte(int inventarioProgramadoId, int productoId, string nombreProducto, int cantidad, int movimientoPostCorteId)
+        {
+            try
+            {
+                // Obtener todos los usuarios asignados al inventario
+                var usuariosAsignados = await _context.AsignacionesUsuariosInventario
+                    .Where(a => a.InventarioProgramadoId == inventarioProgramadoId)
+                    .Select(a => a.UsuarioId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (!usuariosAsignados.Any())
+                {
+                    _logger.LogWarning("⚠️ No hay usuarios asignados al inventario {InventarioId}", inventarioProgramadoId);
+                    return;
+                }
+
+                string mensajeMovimiento = cantidad > 0
+                    ? $"Se agregaron {Math.Abs(cantidad)} unidades"
+                    : $"Se quitaron {Math.Abs(cantidad)} unidades";
+
+                // Crear alerta para cada usuario asignado
+                foreach (var usuarioId in usuariosAsignados)
+                {
+                    var alerta = new AlertasInventario
+                    {
+                        ProductoId = productoId,
+                        InventarioProgramadoId = inventarioProgramadoId,
+                        UsuarioId = usuarioId,
+                        MovimientoPostCorteId = movimientoPostCorteId, // ✅ Relacionar con el movimiento específico
+                        TipoAlerta = "MovimientoPostCorte",
+                        Mensaje = $"⚠️ El producto '{nombreProducto}' tuvo cambios de inventario después del corte. {mensajeMovimiento}.",
+                        Leida = false,
+                        FechaCreacion = DateTime.Now
+                    };
+
+                    _context.AlertasInventario.Add(alerta);
+
+                    _logger.LogInformation("🔔 Alerta creada para usuario {UsuarioId}: Producto {ProductoId} - MovimientoId {MovimientoId}",
+                        usuarioId, productoId, movimientoPostCorteId);
+                }
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creando alertas de movimiento post-corte");
+            }
+        }
+
+        /// <summary>
         /// Procesa un ajuste individual (lógica original)
         /// </summary>
         private async Task<IActionResult> ProcesarAjusteIndividual(int id, AjusteStockRapidoDTO ajusteDto)
@@ -773,6 +829,56 @@ namespace API.Controllers
                 producto.CantidadEnInventario = nuevoStock;
                 producto.FechaUltimaActualizacion = DateTime.Now;
                 await _context.SaveChangesAsync();
+
+                // ✅ REGISTRAR MOVIMIENTO POST-CORTE SI HAY INVENTARIOS EN PROGRESO
+                try
+                {
+                    var inventariosEnProgreso = await _movimientosPostCorteService
+                        .ObtenerInventariosEnProgresoConProductoAsync(id);
+
+                    if (inventariosEnProgreso != null && inventariosEnProgreso.Any())
+                    {
+                        _logger.LogInformation("📋 Producto {ProductoId} está en {Count} inventarios en progreso. Registrando movimientos post-corte...",
+                            id, inventariosEnProgreso.Count);
+
+                        foreach (var inventarioId in inventariosEnProgreso)
+                        {
+                            // Determinar tipo de movimiento y cantidad según el tipo de ajuste
+                            string tipoMovimiento = ajusteDto.TipoAjuste.ToLower() switch
+                            {
+                                "entrada" => "Ajuste",
+                                "salida" => "Ajuste",
+                                "ajuste" => "Ajuste",
+                                _ => "Ajuste"
+                            };
+
+                            int cantidadMovimiento = nuevoStock - stockAnterior; // Positivo para entradas, negativo para salidas
+
+                            var movimientoId = await _movimientosPostCorteService.RegistrarMovimientoAsync(
+                                inventarioId,
+                                id,
+                                tipoMovimiento,
+                                cantidadMovimiento,
+                                null, // DocumentoReferenciaId
+                                "AjusteManual" // TipoDocumento
+                            );
+
+                            if (movimientoId.HasValue)
+                            {
+                                _logger.LogInformation("✅ Movimiento post-corte registrado: Inventario {InventarioId}, Producto {ProductoId}, Cantidad {Cantidad}, MovimientoId {MovimientoId}",
+                                    inventarioId, id, cantidadMovimiento, movimientoId.Value);
+
+                                // ✅ CREAR ALERTA PARA LOS USUARIOS ASIGNADOS AL INVENTARIO
+                                await CrearAlertasMovimientoPostCorte(inventarioId, id, producto.NombreProducto, cantidadMovimiento, movimientoId.Value);
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Error al registrar movimientos post-corte para producto {ProductoId}", id);
+                    // No fallar la operación principal si falla el registro de movimientos post-corte
+                }
 
                 return Ok(new AjusteStockRapidoResponseDTO
                 {
@@ -1123,6 +1229,166 @@ namespace API.Controllers
         }
 
         // =====================================
+        // ALERTAS DE INVENTARIO
+        // =====================================
+
+        /// <summary>
+        /// Obtiene las alertas de un inventario para un usuario
+        /// </summary>
+        [HttpGet("inventarios-programados/{inventarioId}/alertas")]
+        [Authorize]
+        public async Task<IActionResult> ObtenerAlertasInventario(int inventarioId, [FromQuery] int? usuarioId = null, [FromQuery] bool soloNoLeidas = true)
+        {
+            try
+            {
+                // Si no se especifica usuarioId, usar el del usuario autenticado
+                int userId = usuarioId ?? this.ObtenerUsuarioIdDesdeToken(_permisosService);
+
+                var query = _context.AlertasInventario
+                    .Where(a => a.InventarioProgramadoId == inventarioId && a.UsuarioId == userId);
+
+                if (soloNoLeidas)
+                {
+                    query = query.Where(a => !a.Leida);
+                }
+
+                // ✅ OBTENER ALERTAS CON SUS RELACIONES (Include para evitar N+1 queries)
+                var alertasBase = await query
+                    .Include(a => a.MovimientoPostCorte)
+                        .ThenInclude(m => m.UsuarioProcesado)
+                    .Include(a => a.Producto)
+                    .OrderByDescending(a => a.FechaCreacion)
+                    .ToListAsync();
+
+                _logger.LogInformation("📋 Encontradas {Count} alertas base para inventario {InventarioId}",
+                    alertasBase.Count, inventarioId);
+
+                // Enriquecer cada alerta con datos de movimientos post-corte
+                var alertas = new List<object>();
+                foreach (var alerta in alertasBase)
+                {
+                    MovimientoPostCorte movimiento = alerta.MovimientoPostCorte;
+
+                    // ✅ COMPATIBILIDAD: Si la alerta no tiene MovimientoPostCorteId (alertas antiguas),
+                    // buscar el movimiento más reciente del producto
+                    if (movimiento == null && alerta.MovimientoPostCorteId == null)
+                    {
+                        movimiento = await _context.MovimientosPostCorte
+                            .Where(m => m.InventarioProgramadoId == inventarioId && m.ProductoId == alerta.ProductoId)
+                            .Include(m => m.UsuarioProcesado)
+                            .OrderByDescending(m => m.FechaMovimiento)
+                            .FirstOrDefaultAsync();
+
+                        _logger.LogWarning("⚠️ Alerta {AlertaId} sin MovimientoPostCorteId (alerta antigua). Usando movimiento más reciente del producto.",
+                            alerta.AlertaId);
+                    }
+
+                    // Obtener nombre del usuario que procesó
+                    string nombreUsuarioProcesado = movimiento?.UsuarioProcesado?.NombreUsuario;
+
+                    alertas.Add(new
+                    {
+                        alerta.AlertaId,
+                        alerta.ProductoId,
+                        alerta.InventarioProgramadoId,
+                        alerta.UsuarioId,
+                        alerta.TipoAlerta,
+                        alerta.Mensaje,
+                        alerta.Leida,
+                        alerta.FechaCreacion,
+                        alerta.FechaLectura,
+                        NombreProducto = alerta.Producto?.NombreProducto,
+                        // Datos del movimiento post-corte
+                        MovimientoPostCorteId = movimiento?.MovimientoPostCorteId,
+                        TipoMovimiento = movimiento?.TipoMovimiento,
+                        CantidadMovimiento = movimiento?.Cantidad,
+                        FechaMovimiento = movimiento?.FechaMovimiento,
+                        Procesado = movimiento?.Procesado ?? false,
+                        FechaProcesado = movimiento?.FechaProcesado,
+                        UsuarioProcesadoId = movimiento?.UsuarioProcesadoId,
+                        NombreUsuarioProcesado = nombreUsuarioProcesado
+                    });
+                }
+
+                _logger.LogInformation("✅ Procesadas {Count} alertas enriquecidas", alertas.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    alertas = alertas,
+                    total = alertas.Count,
+                    noLeidas = alertasBase.Count(a => !a.Leida)
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al obtener alertas del inventario {InventarioId}", inventarioId);
+                return StatusCode(500, new { message = "Error al obtener alertas" });
+            }
+        }
+
+        /// <summary>
+        /// Marca una alerta como leída
+        /// </summary>
+        [HttpPut("alertas/{alertaId}/marcar-leida")]
+        [Authorize]
+        public async Task<IActionResult> MarcarAlertaLeida(int alertaId)
+        {
+            try
+            {
+                var alerta = await _context.AlertasInventario.FindAsync(alertaId);
+
+                if (alerta == null)
+                    return NotFound(new { message = "Alerta no encontrada" });
+
+                alerta.Leida = true;
+                alerta.FechaLectura = DateTime.Now;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = "Alerta marcada como leída" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al marcar alerta {AlertaId} como leída", alertaId);
+                return StatusCode(500, new { message = "Error al marcar alerta como leída" });
+            }
+        }
+
+        /// <summary>
+        /// Marca todas las alertas de un inventario como leídas para un usuario
+        /// </summary>
+        [HttpPut("inventarios-programados/{inventarioId}/alertas/marcar-todas-leidas")]
+        [Authorize]
+        public async Task<IActionResult> MarcarTodasAlertasLeidas(int inventarioId, [FromQuery] int? usuarioId = null)
+        {
+            try
+            {
+                // Si no se especifica usuarioId, usar el del usuario autenticado
+                int userId = usuarioId ?? this.ObtenerUsuarioIdDesdeToken(_permisosService);
+
+                var alertas = await _context.AlertasInventario
+                    .Where(a => a.InventarioProgramadoId == inventarioId && a.UsuarioId == userId && !a.Leida)
+                    .ToListAsync();
+
+                foreach (var alerta in alertas)
+                {
+                    alerta.Leida = true;
+                    alerta.FechaLectura = DateTime.Now;
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { success = true, message = $"{alertas.Count} alertas marcadas como leídas" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al marcar todas las alertas del inventario {InventarioId} como leídas", inventarioId);
+                return StatusCode(500, new { message = "Error al marcar alertas como leídas" });
+            }
+        }
+
+        // =====================================
         // MÉTODOS AUXILIARES
         // =====================================
 
@@ -1193,12 +1459,21 @@ namespace API.Controllers
 
         private decimal CalcularPrecioFinal(ProductoDTO dto)
         {
+            // PRIORIDAD 1: Si el usuario especificó un precio de venta, usarlo directamente
+            if (dto.Precio.HasValue && dto.Precio.Value > 0)
+            {
+                return dto.Precio.Value;
+            }
+
+            // PRIORIDAD 2: Si tiene costo Y utilidad, calcular automáticamente
             if (dto.Costo.HasValue && dto.PorcentajeUtilidad.HasValue)
             {
                 var utilidad = dto.Costo.Value * (dto.PorcentajeUtilidad.Value / 100m);
                 return dto.Costo.Value + utilidad;
             }
-            return dto.Precio.GetValueOrDefault(0m);
+
+            // FALLBACK: Precio mínimo
+            return 0.01m;
         }
 
         // =====================================

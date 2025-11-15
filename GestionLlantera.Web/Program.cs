@@ -92,6 +92,7 @@ builder.Services.AddScoped<IClientesService, ClientesService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IFacturacionService, FacturacionService>();
 builder.Services.AddScoped<IInventarioService, InventarioService>();
+builder.Services.AddScoped<IMovimientosPostCorteService, MovimientosPostCorteService>();
 builder.Services.AddScoped<INotasRapidasService, NotasRapidasService>();
 builder.Services.AddScoped<IProveedoresService, ProveedoresService>();
 builder.Services.AddScoped<IReportesService, ReportesService>();

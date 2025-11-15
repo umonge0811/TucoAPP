@@ -156,7 +156,7 @@ namespace GestionLlantera.Web.Services
                 var url = _apiConfig.GetApiUrl("Notificaciones/marcar-todas-leidas");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
-                var response = await _httpClient.PostAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PutAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
                 _logger.LogInformation($"Respuesta API al marcar todas como leídas: {response.StatusCode}");
 
                 return response.IsSuccessStatusCode;
@@ -209,7 +209,7 @@ namespace GestionLlantera.Web.Services
                 var url = _apiConfig.GetApiUrl("Notificaciones/ocultar-todas");
                 _logger.LogInformation("🌐 URL construida: {url}", url);
 
-                var response = await _httpClient.PostAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
+                var response = await _httpClient.PutAsync(url, new StringContent("", System.Text.Encoding.UTF8, "application/json"));
                 _logger.LogInformation($"Respuesta API al ocultar todas las notificaciones: {response.StatusCode}");
 
                 if (response.IsSuccessStatusCode)

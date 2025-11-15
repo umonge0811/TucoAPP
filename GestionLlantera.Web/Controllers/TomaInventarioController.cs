@@ -9,6 +9,7 @@ using GestionLlantera.Web.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using tuco.Clases.DTOs.Inventario;
 using Tuco.Clases.DTOs.Inventario;
 
 namespace GestionLlantera.Web.Controllers
@@ -32,19 +33,21 @@ namespace GestionLlantera.Web.Controllers
     {
         private readonly ITomaInventarioService _tomaInventarioService;
         private readonly IInventarioService _inventarioService;
-
-        private readonly ILogger<TomaInventarioController> _logger;
         private readonly IAjustesInventarioService _ajustesInventarioService;
+        private readonly IMovimientosPostCorteService _movimientosPostCorteService;
+        private readonly ILogger<TomaInventarioController> _logger;
 
         public TomaInventarioController(
             ITomaInventarioService tomaInventarioService,
             IInventarioService inventarioService,
             IAjustesInventarioService ajustesInventarioService,
+            IMovimientosPostCorteService movimientosPostCorteService,
             ILogger<TomaInventarioController> logger)
         {
             _tomaInventarioService = tomaInventarioService;
             _inventarioService = inventarioService;
             _ajustesInventarioService = ajustesInventarioService;
+            _movimientosPostCorteService = movimientosPostCorteService;
             _logger = logger;
         }
 
@@ -1214,6 +1217,219 @@ namespace GestionLlantera.Web.Controllers
         private async Task<bool> EsAdministradorAsync()
         {
             return await this.TienePermisoAsync("Ver Historial Inventarios Completo");
+        }
+
+        // =====================================
+        // 🔔 MÉTODOS PARA MOVIMIENTOS POST-CORTE
+        // =====================================
+
+        /// <summary>
+        /// Obtiene alertas de movimientos post-corte para un inventario
+        /// GET: /TomaInventario/ObtenerAlertasPostCorte/{inventarioId}
+        /// </summary>
+        [HttpGet]
+        [Route("TomaInventario/ObtenerAlertasPostCorte/{inventarioId}")]
+        public async Task<IActionResult> ObtenerAlertasPostCorte(int inventarioId, [FromQuery] bool soloNoLeidas = false)
+        {
+            try
+            {
+                _logger.LogInformation("🔔 === OBTENIENDO ALERTAS POST-CORTE DESDE WEB ===");
+                _logger.LogInformation("🔔 Inventario ID: {InventarioId}", inventarioId);
+
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ OBTENER USUARIO ACTUAL
+                var usuarioId = ObtenerIdUsuarioActual();
+
+                // ✅ LLAMAR AL SERVICIO
+                (bool success, string? jsonData) = await _movimientosPostCorteService.ObtenerAlertasAsync(
+                    inventarioId,
+                    usuarioId,
+                    soloNoLeidas,
+                    token);
+
+                if (success && !string.IsNullOrEmpty(jsonData))
+                {
+                    // ✅ DEVOLVER EL JSON STRING DIRECTAMENTE SIN RE-SERIALIZAR
+                    return Content(jsonData, "application/json");
+                }
+                else
+                {
+                    return Json(new { success = false, message = "No se pudieron obtener las alertas" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al obtener alertas post-corte");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza una línea de inventario procesando sus movimientos post-corte
+        /// POST: /TomaInventario/ActualizarLineaPostCorte
+        /// </summary>
+        [HttpPost]
+        [Route("TomaInventario/ActualizarLineaPostCorte")]
+        public async Task<IActionResult> ActualizarLineaPostCorte([FromBody] ActualizarLineaInventarioDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 === ACTUALIZANDO LÍNEA POST-CORTE DESDE WEB ===");
+                _logger.LogInformation("🔄 Inventario: {InventarioId}, Producto: {ProductoId}",
+                    solicitud.InventarioProgramadoId, solicitud.ProductoId);
+
+                // ✅ OBTENER TOKEN JWT
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ ASIGNAR USUARIO ACTUAL SI NO VIENE EN LA SOLICITUD
+                if (solicitud.UsuarioId == 0)
+                {
+                    solicitud.UsuarioId = ObtenerIdUsuarioActual();
+                }
+
+                // ✅ LLAMAR AL SERVICIO
+                (bool success, string message) = await _movimientosPostCorteService.ActualizarLineaAsync(solicitud, token);
+
+                if (success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = message
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al actualizar línea post-corte");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Marca una alerta como leída
+        /// PUT: /TomaInventario/MarcarAlertaLeida/{alertaId}
+        /// </summary>
+        [HttpPut]
+        [Route("TomaInventario/MarcarAlertaLeida/{alertaId}")]
+        public async Task<IActionResult> MarcarAlertaLeida(int alertaId)
+        {
+            try
+            {
+                _logger.LogInformation("✔️ Marcando alerta {AlertaId} como leída desde web", alertaId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var (success, message) = await _movimientosPostCorteService.MarcarAlertaLeidaAsync(alertaId, token);
+
+                return Json(new { success = success, message = message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al marcar alerta como leída");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Marca todas las alertas de un inventario como leídas
+        /// PUT: /TomaInventario/MarcarTodasAlertasLeidas/{inventarioId}
+        /// </summary>
+        [HttpPut]
+        [Route("TomaInventario/MarcarTodasAlertasLeidas/{inventarioId}")]
+        public async Task<IActionResult> MarcarTodasAlertasLeidas(int inventarioId)
+        {
+            try
+            {
+                _logger.LogInformation("✔️✔️ Marcando todas las alertas del inventario {InventarioId} como leídas", inventarioId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                var usuarioId = ObtenerIdUsuarioActual();
+
+                var (success, message) = await _movimientosPostCorteService.MarcarTodasAlertasLeidasAsync(
+                    inventarioId,
+                    usuarioId,
+                    token);
+
+                return Json(new { success = success, message = message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al marcar todas las alertas como leídas");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza líneas masivamente procesando sus movimientos post-corte
+        /// POST: /TomaInventario/ActualizarLineasMasivas
+        /// </summary>
+        [HttpPost]
+        [Route("TomaInventario/ActualizarLineasMasivas")]
+        public async Task<IActionResult> ActualizarLineasMasivas([FromBody] ActualizarLineasMasivaDTO solicitud)
+        {
+            try
+            {
+                _logger.LogInformation("🔄🔄 === ACTUALIZANDO LÍNEAS MASIVAS DESDE WEB ===");
+                _logger.LogInformation("🔄🔄 Inventario: {InventarioId}",
+                    solicitud.InventarioProgramadoId);
+
+                var token = ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(token))
+                {
+                    return Json(new { success = false, message = "Sesión expirada" });
+                }
+
+                // ✅ ASIGNAR USUARIO ACTUAL SI NO VIENE EN LA SOLICITUD
+                if (solicitud.UsuarioId == 0)
+                {
+                    solicitud.UsuarioId = ObtenerIdUsuarioActual();
+                }
+
+                (bool success, string message, object? data) = await _movimientosPostCorteService.ActualizarLineasMasivaAsync(solicitud, token);
+
+                if (success)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = message,
+                        data = data
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = message });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error al actualizar líneas masivas");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
         }
     }
 }

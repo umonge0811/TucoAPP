@@ -879,6 +879,10 @@ async function inicializarEjecutorInventario(inventarioId) {
         console.log('🔄 Cargando ajustes pendientes ANTES que productos...');
         await cargarAjustesPendientes(inventarioId);
 
+        // ✅ CARGAR ALERTAS DE MOVIMIENTOS POST-CORTE
+        console.log('🔔 Cargando alertas de movimientos post-corte...');
+        await cargarAlertasPostCorte();
+
         // ✅ AHORA SÍ CARGAR PRODUCTOS (ya con ajustes en memoria)
         console.log('📦 Cargando productos CON ajustes ya cargados...');
         await cargarProductosInventario(inventarioId);
@@ -894,6 +898,7 @@ async function inicializarEjecutorInventario(inventarioId) {
         setInterval(async () => {
             await actualizarEstadisticas();
             await cargarAjustesPendientes(inventarioId);
+            await cargarAlertasPostCorte();
         }, 30000);
         console.log('✅ Ejecutor de inventario inicializado correctamente');
         // ✅ AGREGAR AL FINAL:
@@ -1321,13 +1326,30 @@ function mostrarPanelesSegunProgreso() {
     // ✅ VERIFICAR CONDICIONES BÁSICAS
     const todoContado = stats.pendientes === 0;
     const hayProductos = stats.total > 0;
+    const hayProductosContados = stats.contados > 0;
     const tienePermisosConteo = permisosInventarioActual.puedeContar || false;
     const tienePermisosValidacion = permisosInventarioActual.puedeValidar || false;
     const esAdmin = permisosInventarioActual.esAdmin || false;
 
+    // ✅ DETERMINAR SI PUEDE MOSTRAR PANEL SEGÚN TIPO DE INVENTARIO
+    const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+    const esInventarioCompleto = tipoInventario === 'Completo';
+
+    let puedeFinalizarPanel;
+    if (esInventarioCompleto) {
+        // Inventario Completo: requiere que TODO esté contado
+        puedeFinalizarPanel = todoContado && hayProductos;
+    } else {
+        // Inventario Parcial/Cíclico: solo requiere al menos algo contado
+        puedeFinalizarPanel = hayProductosContados && hayProductos;
+    }
+
     console.log('🔍 === CONDICIONES BÁSICAS ===');
     console.log('📊 Todo contado:', todoContado, '(pendientes:', stats.pendientes, ')');
     console.log('📦 Hay productos:', hayProductos, '(total:', stats.total, ')');
+    console.log('🔢 Productos contados:', stats.contados);
+    console.log('📋 Tipo inventario:', tipoInventario);
+    console.log('✅ Puede finalizar panel:', puedeFinalizarPanel);
     console.log('📝 Tiene permisos conteo:', tienePermisosConteo);
     console.log('✅ Tiene permisos validación:', tienePermisosValidacion);
     console.log('👑 Es admin:', esAdmin);
@@ -1339,7 +1361,7 @@ function mostrarPanelesSegunProgreso() {
     console.log('🎛️ Panel finalización existe:', !!panelFinalizacionExiste);
     console.log('🎛️ Panel conteo completado existe:', !!panelConteoCompletadoExiste);
 
-    if (todoContado && hayProductos) {
+    if (puedeFinalizarPanel) {
         console.log('✅ === INVENTARIO LISTO PARA PROCESAR ===');
 
         // ✅ DECIDIR QUÉ PANEL MOSTRAR SEGÚN PERMISOS
@@ -1391,8 +1413,10 @@ function mostrarPanelesSegunProgreso() {
         if (panelConteoCompletadoExiste) $('#conteoCompletadoPanel').hide();
 
         // ✅ MOSTRAR RAZÓN ESPECÍFICA
-        if (!todoContado) {
-            console.log('🚫 Razón: Aún hay productos pendientes de contar');
+        if (esInventarioCompleto && !todoContado) {
+            console.log('🚫 Razón: Inventario COMPLETO - Aún hay productos pendientes de contar');
+        } else if (!esInventarioCompleto && !hayProductosContados) {
+            console.log('🚫 Razón: Inventario PARCIAL/CÍCLICO - No has contado ningún producto aún');
         }
         if (!hayProductos) {
             console.log('🚫 Razón: No hay productos en el inventario');
@@ -1960,7 +1984,7 @@ function configurarEventListeners() {
 
     // Event listeners para panel de finalización
     $('#btnVerResumenCompleto').on('click', verResumenCompleto);
-    $('#btnExportarInventario').on('click', exportarInventario);
+    $('#btnExportarInventario').on('click', () => exportarInventario(window.inventarioConfig.inventarioId));
     $('#btnFinalizarInventario').on('click', finalizarInventarioCompleto);
 
     configurarEventListenersFiltrado();
@@ -3255,6 +3279,7 @@ async function cargarInformacionInventario(inventarioId) {
                 inventarioProgramadoId: window.inventarioConfig.inventarioId,
                 titulo: document.querySelector('h1')?.textContent?.replace('🔲', '').trim() || 'Inventario',
                 estado: 'En Progreso', // Ya sabemos que está en progreso porque llegamos aquí
+                tipoInventario: window.inventarioConfig.tipoInventario || 'Completo', // Default a Completo si no está definido
                 permisos: window.inventarioConfig.permisos
             };
 
@@ -3349,6 +3374,284 @@ async function cargarProductosInventario(inventarioId) {
     }
 }
 
+// =====================================
+// FUNCIONES DE ALERTAS DE MOVIMIENTOS POST-CORTE
+// =====================================
+
+/**
+ * Cargar alertas de movimientos post-corte
+ */
+async function cargarAlertasPostCorte() {
+    try {
+        console.log('🔔 Cargando alertas de movimientos post-corte...');
+
+        const inventarioId = window.inventarioConfig?.inventarioId;
+        if (!inventarioId) {
+            console.warn('⚠️ No se encontró ID de inventario');
+            return;
+        }
+
+        const response = await fetch(`/TomaInventario/ObtenerAlertasPostCorte/${inventarioId}?soloNoLeidas=false`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            console.warn('⚠️ No se pudieron cargar las alertas. Status:', response.status);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('📦 Datos recibidos de alertas:', data);
+        console.log('📦 data.success:', data.success);
+        console.log('📦 data.alertas:', data.alertas);
+
+        if (data.success && data.alertas) {
+            console.log(`✅ Cargadas ${data.alertas.length} alertas (${data.noLeidas} no leídas)`);
+            console.log('📋 Detalle primera alerta:', data.alertas[0]);
+
+            // Actualizar UI
+            actualizarPanelAlertas(data.alertas);
+
+            // Actualizar contador
+            $('#contadorAlertasPostCorte').text(data.noLeidas);
+
+            // Mostrar/ocultar panel según si hay alertas
+            if (data.alertas.length > 0) {
+                $('#alertasPostCortePanel').show();
+            } else {
+                $('#alertasPostCortePanel').hide();
+            }
+        } else {
+            console.error('❌ Respuesta inválida de la API:', {
+                success: data.success,
+                alertas: data.alertas,
+                mensaje: data.message
+            });
+            $('#alertasPostCortePanel').hide();
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando alertas:', error);
+        console.error('❌ Stack trace:', error.stack);
+    }
+}
+
+/**
+ * Actualizar el panel de alertas con los datos
+ */
+function actualizarPanelAlertas(alertas) {
+    console.log('🎨 === ACTUALIZANDO PANEL DE ALERTAS ===');
+    console.log('🎨 Total de alertas a renderizar:', alertas?.length || 0);
+
+    const $tablaBody = $('#tablaAlertasBody');
+    const $alertasVacio = $('#alertasVacio');
+    const $tablaAlertas = $('#tablaAlertas');
+
+    $tablaBody.empty();
+
+    if (!alertas || alertas.length === 0) {
+        console.log('📭 No hay alertas para mostrar');
+        $alertasVacio.show();
+        $tablaAlertas.hide();
+        return;
+    }
+
+    $alertasVacio.hide();
+    $tablaAlertas.show();
+
+    alertas.forEach((alerta, index) => {
+        console.log(`🔔 Renderizando alerta ${index + 1}:`, alerta);
+        console.log('📋 Propiedades de la alerta:', {
+            nombreProducto: alerta.nombreProducto,
+            tipoMovimiento: alerta.tipoMovimiento,
+            cantidadMovimiento: alerta.cantidadMovimiento,
+            fechaMovimiento: alerta.fechaMovimiento,
+            procesado: alerta.procesado,
+            fechaProcesado: alerta.fechaProcesado,
+            nombreUsuarioProcesado: alerta.nombreUsuarioProcesado,
+            leida: alerta.leida
+        });
+
+        // ✅ USAR camelCase - la API devuelve en camelCase por defecto en ASP.NET Core
+
+        // Formatear fecha del movimiento
+        const fechaMovimiento = alerta.fechaMovimiento
+            ? new Date(alerta.fechaMovimiento).toLocaleString('es-CR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+            : '<span class="text-muted">N/A</span>';
+
+        // Formatear fecha de procesado
+        const fechaProcesado = alerta.fechaProcesado
+            ? new Date(alerta.fechaProcesado).toLocaleString('es-CR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            })
+            : '<span class="text-muted">-</span>';
+
+        // Icono de estado de alerta (leída/no leída)
+        const iconoEstadoAlerta = alerta.leida
+            ? '<i class="bi bi-check-circle text-success" title="Alerta leída"></i>'
+            : '<i class="bi bi-exclamation-circle text-warning" title="Alerta nueva"></i>';
+
+        // Badge de estado de alerta
+        const badgeEstadoAlerta = alerta.leida
+            ? '<span class="badge bg-success">Leída</span>'
+            : '<span class="badge bg-warning">Nueva</span>';
+
+        // Badge de estado de procesado
+        const badgeEstadoProcesado = alerta.procesado
+            ? '<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Procesado</span>'
+            : '<span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Pendiente</span>';
+
+        // Tipo de movimiento con icono
+        const tipoMovimiento = alerta.tipoMovimiento || 'N/A';
+        let iconoMovimiento = '';
+        let colorMovimiento = 'secondary';
+
+        switch(tipoMovimiento.toLowerCase()) {
+            case 'venta':
+                iconoMovimiento = '<i class="bi bi-cart me-1"></i>';
+                colorMovimiento = 'danger';
+                break;
+            case 'ajuste':
+                iconoMovimiento = '<i class="bi bi-pencil-square me-1"></i>';
+                colorMovimiento = 'warning';
+                break;
+            case 'traspaso':
+                iconoMovimiento = '<i class="bi bi-arrow-left-right me-1"></i>';
+                colorMovimiento = 'info';
+                break;
+            case 'devolucion':
+                iconoMovimiento = '<i class="bi bi-arrow-return-left me-1"></i>';
+                colorMovimiento = 'success';
+                break;
+            default:
+                iconoMovimiento = '<i class="bi bi-question-circle me-1"></i>';
+        }
+
+        const badgeTipoMovimiento = `<span class="badge bg-${colorMovimiento}">${iconoMovimiento}${tipoMovimiento}</span>`;
+
+        // Cantidad con signo y color
+        const cantidad = alerta.cantidadMovimiento || 0;
+        const cantidadFormateada = cantidad > 0
+            ? `<span class="text-success fw-bold">+${cantidad}</span>`
+            : `<span class="text-danger fw-bold">${cantidad}</span>`;
+
+        // Nombre del producto
+        const nombreProducto = alerta.nombreProducto || `Producto #${alerta.productoId}`;
+
+        // Usuario que procesó
+        const usuarioProcesado = alerta.nombreUsuarioProcesado || '<span class="text-muted">-</span>';
+
+        const row = `
+            <tr class="${alerta.leida ? '' : 'table-warning'}">
+                <td class="text-center">${iconoEstadoAlerta}</td>
+                <td>${nombreProducto}</td>
+                <td class="text-center">${badgeTipoMovimiento}</td>
+                <td class="text-center">${cantidadFormateada}</td>
+                <td>${fechaMovimiento}</td>
+                <td class="text-center">${badgeEstadoProcesado}</td>
+                <td>${fechaProcesado}</td>
+                <td>${usuarioProcesado}</td>
+                <td class="text-center">${badgeEstadoAlerta}</td>
+                <td class="text-center">
+                    ${!alerta.leida ? `
+                        <button class="btn btn-sm btn-outline-success"
+                                onclick="marcarAlertaLeida(${alerta.alertaId})"
+                                title="Marcar como leída">
+                            <i class="bi bi-check"></i>
+                        </button>
+                    ` : ''}
+                </td>
+            </tr>
+        `;
+
+        $tablaBody.append(row);
+    });
+}
+
+/**
+ * Marcar una alerta como leída
+ */
+async function marcarAlertaLeida(alertaId) {
+    try {
+        console.log(`✅ === MARCANDO ALERTA ${alertaId} COMO LEÍDA ===`);
+
+        const response = await fetch(`/TomaInventario/MarcarAlertaLeida/${alertaId}`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('📡 Respuesta marcar alerta:', response.status, response.statusText);
+
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Alerta marcada exitosamente:', data);
+
+            mostrarExito('Alerta marcada como leída');
+
+            console.log('🔄 Recargando alertas...');
+            await cargarAlertasPostCorte();
+            console.log('✅ Alertas recargadas');
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            console.error('❌ Error del servidor:', response.status, errorData);
+            mostrarError('Error al marcar alerta como leída');
+        }
+
+    } catch (error) {
+        console.error('❌ Error marcando alerta como leída:', error);
+        mostrarError('Error al marcar alerta como leída');
+    }
+}
+
+/**
+ * Marcar todas las alertas como leídas
+ */
+async function marcarTodasAlertasLeidas() {
+    try {
+        const inventarioId = window.inventarioConfig?.inventarioId;
+        if (!inventarioId) {
+            return;
+        }
+
+        const response = await fetch(`/TomaInventario/MarcarTodasAlertasLeidas/${inventarioId}`, {
+            method: 'PUT',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            mostrarExito(data.message || 'Todas las alertas han sido marcadas como leídas');
+            await cargarAlertasPostCorte();
+        } else {
+            mostrarError('Error al marcar alertas como leídas');
+        }
+
+    } catch (error) {
+        console.error('❌ Error marcando todas las alertas:', error);
+        mostrarError('Error al marcar alertas como leídas');
+    }
+}
+
 
 // =====================================
 // FUNCIONES DE RENDERIZADO
@@ -3384,11 +3687,20 @@ function renderizarProductos() {
             });
 
             productosFiltrados = productosInventario;
+
+            // ✅ ORDENAR POR MEDIDAS AL CARGAR
+            ordenarProductosPorMedidas();
         }
 
         $('#loadingProductos').hide();
         $('#productosLista').show();
         $('#estadoVacio').hide();
+
+        // ✅ POBLAR FILTROS DE LLANTAS AL CARGAR
+        setTimeout(() => {
+            poblarFiltrosLlantas();
+            verificarMovimientosPostCorte(); // Verificar movimientos post-corte
+        }, 500);
 
         console.log('✅ Productos renderizados correctamente con filtros preservados');
 
@@ -3424,11 +3736,15 @@ function crearFilaProducto(producto, numero) {
         infoLlanta = `
             <div class="small text-muted">
                 <i class="bi bi-car-front me-1"></i>
-                ${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''} 
-                ${producto.medidasLlanta || ''}
+                ${producto.marcaLlanta || ''} ${producto.modeloLlanta || ''}
             </div>
         `;
     }
+
+    // Obtener los datos de la llanta para las nuevas columnas
+    const medidas = producto.esLlanta && producto.medidasLlanta ? producto.medidasLlanta : '-';
+    const tipoTerreno = producto.esLlanta && producto.tipoTerrenoLlanta ? producto.tipoTerrenoLlanta : '-';
+    const capas = producto.esLlanta && producto.capasLlanta ? producto.capasLlanta : '-';
 
     // ✅ NUEVA COLUMNA DE ESTADO CON MÚLTIPLES BADGES
     const estadoBadges = crearBadgesEstado(producto);
@@ -3441,14 +3757,46 @@ function crearFilaProducto(producto, numero) {
         `<i class="bi bi-clock-history text-warning" data-bs-toggle="tooltip" title="Tiene ajustes pendientes"></i>` :
         '';
 
+    // ✅ CELDA DE MOVIMIENTOS POST-CORTE
+    const movimientosPostCorte = producto.movimientosPostCorte || 0;
+    const tieneMovimientos = movimientosPostCorte !== 0;
+    let celdaMovimientos = '';
+
+    if (tieneMovimientos) {
+        const colorBadge = movimientosPostCorte < 0 ? 'bg-danger' : 'bg-success';
+        const iconoMovimiento = movimientosPostCorte < 0 ? 'bi-arrow-down' : 'bi-arrow-up';
+        celdaMovimientos = `
+            <div class="d-flex flex-column align-items-center gap-1">
+                <span class="badge ${colorBadge}">
+                    <i class="bi ${iconoMovimiento}"></i> ${movimientosPostCorte > 0 ? '+' : ''}${movimientosPostCorte}
+                </span>
+                <button class="btn btn-warning btn-sm"
+                        onclick="actualizarLineaIndividual(${producto.productoId})"
+                        data-bs-toggle="tooltip"
+                        title="Actualizar con movimientos post-corte">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        `;
+    } else {
+        celdaMovimientos = '<span class="text-muted">-</span>';
+    }
+
     return $(`
-        <tr class="producto-row ${estadoClass}" data-producto-id="${producto.productoId}">
+        <tr class="producto-row ${estadoClass}"
+            data-producto-id="${producto.productoId}"
+            data-movimientos="${movimientosPostCorte}"
+            ${producto.esLlanta && producto.capasLlanta ? `data-capas="${producto.capasLlanta}"` : ''}>
             <td class="text-center fw-bold">${numero}</td>
             <td>
                 <div class="fw-semibold">${producto.nombreProducto}</div>
                 <div class="small text-muted">${producto.descripcionProducto || ''}</div>
                 ${infoLlanta}
             </td>
+            <td>${medidas}</td>
+            <td>${tipoTerreno}</td>
+            <td class="text-center">${capas}</td>
+            <td class="text-center">${celdaMovimientos}</td>
             <td class="text-center">
                 <span class="badge bg-primary fs-6">${producto.cantidadSistema}</span>
             </td>
@@ -3574,10 +3922,10 @@ function crearNuevosBotonesAccion(producto) {
                 console.log(`🟡 Producto ${producto.productoId}: Mostrando botón CREAR AJUSTE`);
 
                 botones += `
-                    <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
+                    <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente"
                             onclick="abrirModalAjustePendiente(${producto.productoId})"
                             data-bs-toggle="tooltip"
-                            title="Crear ajuste pendiente para esta discrepancia">
+                            title="📦 Crear ajuste personalizado: Te permite escribir un motivo detallado y seleccionar el tipo de ajuste">
                         <i class="bi bi-clock-history me-1"></i>
                         Crear Ajuste
                     </button>
@@ -3592,10 +3940,10 @@ function crearNuevosBotonesAccion(producto) {
             inventarioEnProgreso) {
 
             botones += `
-                <button class="btn btn-sm btn-success mb-1 btn-validacion" 
+                <button class="btn btn-sm btn-success mb-1 btn-validacion"
                         onclick="validarDiscrepancia(${producto.productoId})"
                         data-bs-toggle="tooltip"
-                        title="Validar y aprobar discrepancia">
+                        title="✅ Validar conteo: Ajusta automáticamente el stock del sistema (${producto.cantidadSistema}) al físico contado (${producto.cantidadFisica})">
                     <i class="bi bi-check-double me-1"></i>
                     Validar
                 </button>
@@ -3646,26 +3994,31 @@ async function validarDiscrepancia(productoId) {
         }
 
         const confirmacion = await Swal.fire({
-            title: '✅ ¿Validar discrepancia?',
+            title: '✅ ¿Validar y ajustar al conteo físico?',
             html: `
                 <div class="text-start">
                     <p><strong>Producto:</strong> ${producto.nombreProducto}</p>
-                    <p><strong>Stock Sistema:</strong> ${producto.cantidadSistema}</p>
-                    <p><strong>Stock Físico:</strong> ${producto.cantidadFisica}</p>
-                    <p><strong>Diferencia:</strong> <span class="fw-bold text-warning">${producto.diferencia}</span></p>
+                    <p><strong>Stock Sistema Actual:</strong> <span class="badge bg-secondary">${producto.cantidadSistema}</span></p>
+                    <p><strong>Stock Físico Contado:</strong> <span class="badge bg-info">${producto.cantidadFisica}</span></p>
+                    <p><strong>Diferencia:</strong> <span class="fw-bold text-warning">${producto.diferencia > 0 ? '+' : ''}${producto.diferencia}</span></p>
                     <hr>
-                    <p class="text-muted">Al validar esta discrepancia, se acepta como correcta y no requerirá ajuste.</p>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>¿Qué hace este botón?</strong><br>
+                        Al validar, el stock del sistema se actualizará automáticamente a <strong>${producto.cantidadFisica}</strong> unidades (el conteo físico).
+                    </div>
                 </div>
             `,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, validar',
+            confirmButtonText: 'Sí, validar y ajustar',
             cancelButtonText: 'Cancelar'
         });
 
         if (confirmacion.isConfirmed) {
+            // ✅ CAMBIO: Ahora "validar" SÍ actualiza el stock al físico contado
             // Crear ajuste de tipo "validado"
             const solicitudValidacion = {
                 inventarioProgramadoId: window.inventarioConfig.inventarioId,
@@ -3673,8 +4026,8 @@ async function validarDiscrepancia(productoId) {
                 tipoAjuste: 'validado',
                 cantidadSistemaOriginal: producto.cantidadSistema,
                 cantidadFisicaContada: producto.cantidadFisica,
-                cantidadFinalPropuesta: producto.cantidadSistema, // Mantener sistema
-                motivoAjuste: 'Discrepancia validada y aceptada por supervisor',
+                cantidadFinalPropuesta: producto.cantidadFisica, // ✅ Ajustar al físico contado
+                motivoAjuste: 'Discrepancia validada - ajuste automático al conteo físico',
                 usuarioId: permisosInventarioActual.usuarioId
             };
 
@@ -3700,6 +4053,314 @@ async function validarDiscrepancia(productoId) {
     } catch (error) {
         console.error('❌ Error validando discrepancia:', error);
         mostrarError('Error al validar la discrepancia');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Validar TODAS las discrepancias de una vez
+ */
+async function validarTodasLasDiscrepancias() {
+    try {
+        const verificacion = verificarPermisoEspecifico('validacion', 'validar todas las discrepancias');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
+            return;
+        }
+
+        // Filtrar productos con discrepancias que NO tienen ajuste pendiente
+        const productosSinAjuste = productosInventario.filter(p =>
+            p.tieneDiscrepancia && !verificarAjustePendiente(p.productoId)
+        );
+
+        if (productosSinAjuste.length === 0) {
+            mostrarInfo('No hay discrepancias pendientes para validar');
+            return;
+        }
+
+        const confirmacion = await Swal.fire({
+            title: '✅ ¿Validar TODAS las discrepancias?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Productos a validar:</strong> ${productosSinAjuste.length}</p>
+                    <hr>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>¿Qué hace esta acción?</strong><br>
+                        Se validarán <strong>${productosSinAjuste.length} productos</strong> automáticamente.<br>
+                        El stock del sistema se ajustará al conteo físico de cada producto.
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Esta acción creará ${productosSinAjuste.length} ajustes pendientes que se aplicarán al finalizar el inventario.</small>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, validar ${productosSinAjuste.length} productos`,
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+            let procesados = 0;
+            let errores = 0;
+
+            // Mostrar progreso
+            Swal.fire({
+                title: 'Procesando...',
+                html: `Validando productos: <strong>0</strong> / ${productosSinAjuste.length}`,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Procesar cada producto
+            for (const producto of productosSinAjuste) {
+                try {
+                    const solicitudValidacion = {
+                        inventarioProgramadoId: window.inventarioConfig.inventarioId,
+                        productoId: producto.productoId,
+                        tipoAjuste: 'validado',
+                        cantidadSistemaOriginal: producto.cantidadSistema,
+                        cantidadFisicaContada: producto.cantidadFisica,
+                        cantidadFinalPropuesta: producto.cantidadFisica,
+                        motivoAjuste: 'Validación masiva - ajuste automático al conteo físico',
+                        usuarioId: permisosInventarioActual.usuarioId
+                    };
+
+                    const response = await fetch('/TomaInventario/CrearAjustePendiente', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(solicitudValidacion)
+                    });
+
+                    if (response.ok) {
+                        const resultado = await response.json();
+                        if (resultado.success) {
+                            procesados++;
+                        } else {
+                            errores++;
+                        }
+                    } else {
+                        errores++;
+                    }
+                } catch (error) {
+                    console.error(`❌ Error validando producto ${producto.productoId}:`, error);
+                    errores++;
+                }
+
+                // Actualizar progreso
+                Swal.update({
+                    html: `Validando productos: <strong>${procesados + errores}</strong> / ${productosSinAjuste.length}`
+                });
+            }
+
+            // Recargar datos
+            await cargarAjustesPendientes(window.inventarioConfig.inventarioId);
+            await cargarProductosInventario(window.inventarioConfig.inventarioId);
+
+            // Mostrar resultado
+            Swal.fire({
+                icon: errores === 0 ? 'success' : 'warning',
+                title: errores === 0 ? '¡Validación completada!' : 'Validación completada con errores',
+                html: `
+                    <p><strong>Procesados exitosamente:</strong> ${procesados}</p>
+                    ${errores > 0 ? `<p class="text-danger"><strong>Errores:</strong> ${errores}</p>` : ''}
+                `,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error en validación masiva:', error);
+        mostrarError('Error al validar las discrepancias');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear ajuste para TODAS las discrepancias con tipo personalizado
+ */
+async function crearAjusteParaTodasLasDiscrepancias() {
+    try {
+        const verificacion = verificarPermisoEspecifico('ajuste', 'crear ajuste masivo');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
+            return;
+        }
+
+        // Filtrar productos con discrepancias que NO tienen ajuste pendiente
+        const productosSinAjuste = productosInventario.filter(p =>
+            p.tieneDiscrepancia && !verificarAjustePendiente(p.productoId)
+        );
+
+        if (productosSinAjuste.length === 0) {
+            mostrarInfo('No hay discrepancias pendientes para ajustar');
+            return;
+        }
+
+        // Mostrar modal de selección de tipo
+        const { value: formValues } = await Swal.fire({
+            title: '📦 Crear Ajuste Masivo',
+            html: `
+                <div class="text-start">
+                    <p><strong>Productos a ajustar:</strong> ${productosSinAjuste.length}</p>
+                    <hr>
+
+                    <div class="mb-3">
+                        <label for="swal-tipoAjuste" class="form-label fw-bold">
+                            <i class="bi bi-gear me-1"></i>
+                            Tipo de Ajuste
+                        </label>
+                        <select id="swal-tipoAjuste" class="form-select">
+                            <option value="sistema_a_fisico">📦 Ajustar Sistema al Físico</option>
+                            <option value="validado">✅ Validar (Ajustar al Físico)</option>
+                        </select>
+                        <div class="form-text">
+                            <small>
+                                <strong>Ambas opciones actualizan el stock al conteo físico.</strong><br>
+                                La diferencia es solo para registro histórico.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="swal-motivo" class="form-label fw-bold">
+                            <i class="bi bi-card-text me-1"></i>
+                            Motivo del Ajuste
+                        </label>
+                        <textarea id="swal-motivo" class="form-control" rows="3"
+                                  placeholder="Describe el motivo del ajuste masivo (mínimo 10 caracteres)"></textarea>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>¿Qué hace esta acción?</strong><br>
+                        Se crearán <strong>${productosSinAjuste.length} ajustes pendientes</strong>.<br>
+                        El stock de cada producto se ajustará a su conteo físico.
+                    </div>
+                </div>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Crear ajustes',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const tipoAjuste = document.getElementById('swal-tipoAjuste').value;
+                const motivo = document.getElementById('swal-motivo').value.trim();
+
+                if (motivo.length < 10) {
+                    Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres');
+                    return false;
+                }
+
+                return { tipoAjuste, motivo };
+            }
+        });
+
+        if (!formValues) return;
+
+        const { tipoAjuste, motivo } = formValues;
+
+        // Confirmar acción
+        const confirmacion = await Swal.fire({
+            title: '⚠️ ¿Confirmar ajuste masivo?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Productos:</strong> ${productosSinAjuste.length}</p>
+                    <p><strong>Tipo:</strong> ${tipoAjuste === 'sistema_a_fisico' ? '📦 Ajustar al Físico' : '✅ Validado'}</p>
+                    <p><strong>Motivo:</strong> ${motivo}</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, crear ajustes',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+            let procesados = 0;
+            let errores = 0;
+
+            // Mostrar progreso
+            Swal.fire({
+                title: 'Procesando...',
+                html: `Creando ajustes: <strong>0</strong> / ${productosSinAjuste.length}`,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Procesar cada producto
+            for (const producto of productosSinAjuste) {
+                try {
+                    const solicitudAjuste = {
+                        inventarioProgramadoId: window.inventarioConfig.inventarioId,
+                        productoId: producto.productoId,
+                        tipoAjuste: tipoAjuste,
+                        cantidadSistemaOriginal: producto.cantidadSistema,
+                        cantidadFisicaContada: producto.cantidadFisica,
+                        cantidadFinalPropuesta: producto.cantidadFisica,
+                        motivoAjuste: `[Ajuste Masivo] ${motivo}`,
+                        usuarioId: permisosInventarioActual.usuarioId
+                    };
+
+                    const response = await fetch('/TomaInventario/CrearAjustePendiente', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(solicitudAjuste)
+                    });
+
+                    if (response.ok) {
+                        const resultado = await response.json();
+                        if (resultado.success) {
+                            procesados++;
+                        } else {
+                            errores++;
+                        }
+                    } else {
+                        errores++;
+                    }
+                } catch (error) {
+                    console.error(`❌ Error creando ajuste para producto ${producto.productoId}:`, error);
+                    errores++;
+                }
+
+                // Actualizar progreso
+                Swal.update({
+                    html: `Creando ajustes: <strong>${procesados + errores}</strong> / ${productosSinAjuste.length}`
+                });
+            }
+
+            // Recargar datos
+            await cargarAjustesPendientes(window.inventarioConfig.inventarioId);
+            await cargarProductosInventario(window.inventarioConfig.inventarioId);
+
+            // Mostrar resultado
+            Swal.fire({
+                icon: errores === 0 ? 'success' : 'warning',
+                title: errores === 0 ? '¡Ajustes creados!' : 'Ajustes creados con errores',
+                html: `
+                    <p><strong>Procesados exitosamente:</strong> ${procesados}</p>
+                    ${errores > 0 ? `<p class="text-danger"><strong>Errores:</strong> ${errores}</p>` : ''}
+                `,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error en ajuste masivo:', error);
+        mostrarError('Error al crear los ajustes');
     }
 }
 
@@ -3908,11 +4569,71 @@ function renderizarProductosFiltrados() {
         $('#productosLista').show();
         $('#estadoVacio').hide();
 
+        // ✅ ORDENAR POR MEDIDAS AL RENDERIZAR
+        ordenarProductosPorMedidas();
+
         console.log(`✅ Renderizados ${productosFiltrados.length} productos filtrados`);
 
     } catch (error) {
         console.error('❌ Error renderizando productos filtrados:', error);
     }
+}
+
+/**
+ * ✅ FUNCIÓN: Ordenar productos por medidas (igual que Index de Inventario)
+ */
+function ordenarProductosPorMedidas() {
+    try {
+        const tbody = $('#tablaProductosBody');
+        const filas = tbody.find('tr').toArray();
+
+        // Ordenar filas
+        filas.sort(function(a, b) {
+            const valorA = obtenerValorMedidas($(a));
+            const valorB = obtenerValorMedidas($(b));
+
+            return valorA.localeCompare(valorB);
+        });
+
+        // Reinsertar filas ordenadas
+        tbody.empty();
+        filas.forEach((fila, index) => {
+            // Actualizar el número de orden
+            $(fila).find('td:first').text(index + 1);
+            tbody.append(fila);
+        });
+
+        console.log('✅ Productos ordenados por medidas');
+    } catch (error) {
+        console.error('❌ Error ordenando productos:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Obtener valor de medidas para ordenamiento
+ */
+function obtenerValorMedidas(fila) {
+    // Obtener el texto de la columna de medidas (columna 3)
+    const texto = $(fila).find("td:eq(2)").text().trim();
+
+    if (texto === "N/A" || texto === "-" || !texto) {
+        return "ZZZZ"; // Poner al final los productos sin medida
+    }
+
+    // Extraer el RIN (R13, R14, R15, etc.)
+    const rin = texto.match(/R(\d+)/i);
+    const ancho = texto.match(/^(\d+)/);
+
+    if (rin && ancho) {
+        const numeroRin = parseInt(rin[1]);
+        const numeroAncho = parseInt(ancho[1]);
+
+        // Formato: RIN con 2 dígitos + ANCHO con 3 dígitos
+        // Ejemplo: R14 con 185 = "14185"
+        return numeroRin.toString().padStart(2, '0') + numeroAncho.toString().padStart(3, '0');
+    }
+
+    return texto.toLowerCase();
 }
 
 /**
@@ -3926,6 +4647,11 @@ function limpiarFiltros() {
 
     // Aplicar filtros vacíos
     filtrarProductos('', '', '');
+
+    // ✅ ORDENAR POR MEDIDAS DESPUÉS DE LIMPIAR
+    setTimeout(() => {
+        ordenarProductosPorMedidas();
+    }, 100);
 
     console.log('🧹 Filtros limpiados');
 }
@@ -5803,8 +6529,22 @@ function actualizarPanelFinalizacion() {
         }
 
         // ✅ HABILITAR/DESHABILITAR BOTÓN DE FINALIZAR
-        const puedeFinalizarSinAjustes = todoContado && !hayAjustes;
-        const puedeFinalizarConAjustes = todoContado && hayAjustes;
+        // Determinar si puede finalizar según el tipo de inventario
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+        const hayProductosContados = stats.contados > 0; // Al menos un producto contado
+
+        let puedeFinalizarSinAjustes, puedeFinalizarConAjustes;
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: Requiere que TODO esté contado
+            puedeFinalizarSinAjustes = todoContado && !hayAjustes;
+            puedeFinalizarConAjustes = todoContado && hayAjustes;
+        } else {
+            // Inventario Parcial/Cíclico: Permite finalizar con productos pendientes, pero debe haber al menos algo contado
+            puedeFinalizarSinAjustes = hayProductosContados && !hayAjustes;
+            puedeFinalizarConAjustes = hayProductosContados && hayAjustes;
+        }
 
         const $btnFinalizar = $('#btnFinalizarInventario');
 
@@ -5826,178 +6566,10 @@ function actualizarPanelFinalizacion() {
                 .addClass('btn-secondary');
         }
 
-        console.log(`✅ Panel de finalización actualizado - Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
+        console.log(`✅ Panel de finalización actualizado - Tipo: ${tipoInventario}, Puede finalizar: ${puedeFinalizarSinAjustes || puedeFinalizarConAjustes}`);
 
     } catch (error) {
         console.error('❌ Error actualizando panel de finalización:', error);
-    }
-}
-
-/**
- * ✅ NUEVA FUNCIÓN: Finalizar inventario con aplicación de ajustes
- */
-async function finalizarInventarioCompleto() {
-    try {
-        console.log('🏁 === INICIANDO FINALIZACIÓN DE INVENTARIO ===');
-
-        const inventarioId = window.inventarioConfig.inventarioId;
-        const stats = estadisticasActuales;
-        const totalAjustes = ajustesPendientes.filter(a => a.estado === 'Pendiente').length;
-
-        // ✅ VALIDACIONES FINALES
-        if (stats.pendientes > 0) {
-            mostrarError(`No se puede finalizar: quedan ${stats.pendientes} productos sin contar`);
-            return;
-        }
-
-        // ✅ CONFIRMACIÓN CON RESUMEN DETALLADO
-        const tieneAjustes = totalAjustes > 0;
-        let htmlConfirmacion = `
-            <div class="text-start">
-                <h5 class="text-primary mb-3">📋 Resumen del Inventario</h5>
-                <div class="row mb-3">
-                    <div class="col-6"><strong>Total productos:</strong></div>
-                    <div class="col-6">${stats.total}</div>
-                    <div class="col-6"><strong>Productos contados:</strong></div>
-                    <div class="col-6 text-success">${stats.contados}</div>
-                    <div class="col-6"><strong>Discrepancias encontradas:</strong></div>
-                    <div class="col-6 text-warning">${stats.discrepancias}</div>
-                    <div class="col-6"><strong>Ajustes pendientes:</strong></div>
-                    <div class="col-6 text-info">${totalAjustes}</div>
-                </div>
-        `;
-
-        if (tieneAjustes) {
-            htmlConfirmacion += `
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-                    <strong>¡Atención!</strong> Se aplicarán ${totalAjustes} ajustes al stock del sistema.
-                    <br><small>Esta acción es <strong>irreversible</strong>.</small>
-                </div>
-            `;
-        } else {
-            htmlConfirmacion += `
-                <div class="alert alert-success">
-                    <i class="bi bi-check-circle me-2"></i>
-                    No hay ajustes pendientes. El inventario se marcará como completado.
-                </div>
-            `;
-        }
-
-        htmlConfirmacion += `</div>`;
-
-        const confirmacion = await Swal.fire({
-            title: '🏁 ¿Finalizar Inventario?',
-            html: htmlConfirmacion,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: tieneAjustes ? '#ffc107' : '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: tieneAjustes ? 'Sí, Finalizar y Aplicar Ajustes' : 'Sí, Finalizar Inventario',
-            cancelButtonText: 'Cancelar',
-            width: '600px'
-        });
-
-        if (!confirmacion.isConfirmed) return;
-
-        // ✅ CAMBIAR ESTADO DEL BOTÓN
-        const $btn = $('#btnFinalizarInventario');
-        $btn.prop('disabled', true);
-        $btn.find('.normal-state').hide();
-        $btn.find('.loading-state').show();
-
-        try {
-            let mensaje = '';
-
-            if (tieneAjustes) {
-                // ✅ PASO 1: Aplicar ajustes pendientes
-                console.log('📝 Aplicando ajustes pendientes...');
-
-                const responseAjustes = await fetch(`/TomaInventario/AplicarAjustesPendientes/${inventarioId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!responseAjustes.ok) {
-                    throw new Error(`Error aplicando ajustes: ${responseAjustes.status}`);
-                }
-
-                const resultadoAjustes = await responseAjustes.json();
-
-                if (!resultadoAjustes.success) {
-                    throw new Error(resultadoAjustes.message || 'Error al aplicar ajustes');
-                }
-
-                console.log('✅ Ajustes aplicados exitosamente');
-                mensaje += `✅ ${totalAjustes} ajustes aplicados al stock.\n`;
-            }
-
-            // ✅ PASO 2: Completar inventario
-            console.log('🏁 Completando inventario...');
-
-            const responseCompletar = await fetch(`/TomaInventario/CompletarInventario/${inventarioId}`, {
-                method: 'POST',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!responseCompletar.ok) {
-                throw new Error(`Error completando inventario: ${responseCompletar.status}`);
-            }
-
-            const resultadoCompletar = await responseCompletar.json();
-
-            if (!resultadoCompletar.success) {
-                throw new Error(resultadoCompletar.message || 'Error al completar inventario');
-            }
-
-            console.log('🎉 === INVENTARIO FINALIZADO EXITOSAMENTE ===');
-
-            // ✅ MOSTRAR MENSAJE DE ÉXITO
-            mensaje += `🎉 Inventario completado exitosamente.\n`;
-            mensaje += `📊 Total productos: ${stats.total}\n`;
-            if (stats.discrepancias > 0) {
-                mensaje += `⚠️ Discrepancias resueltas: ${stats.discrepancias}`;
-            }
-
-            await Swal.fire({
-                title: '🎉 ¡Inventario Completado!',
-                text: mensaje,
-                icon: 'success',
-                confirmButtonColor: '#28a745',
-                confirmButtonText: 'Entendido'
-            });
-
-            // ✅ ACTUALIZAR UI FINAL
-            await cargarInformacionInventario(inventarioId);
-            await cargarProductosInventario(inventarioId);
-            await cargarAjustesPendientes(inventarioId);
-
-            // ✅ OCULTAR PANELES DE GESTIÓN
-            $('#ajustesPendientesPanel').slideUp();
-            $('#finalizacionPanel').slideUp();
-
-            // ✅ MOSTRAR MENSAJE EN LA INTERFAZ
-            mostrarInventarioCompletado();
-
-        } catch (error) {
-            console.error('💥 Error durante la finalización:', error);
-            mostrarError(`Error finalizando inventario: ${error.message}`);
-        } finally {
-            // ✅ RESTAURAR BOTÓN
-            $btn.prop('disabled', false);
-            $btn.find('.loading-state').hide();
-            $btn.find('.normal-state').show();
-        }
-
-    } catch (error) {
-        console.error('💥 Error crítico en finalización:', error);
-        mostrarError('Error crítico al finalizar inventario');
     }
 }
 
@@ -6169,25 +6741,38 @@ async function ejecutarValidacionesPreFinalizacion(inventarioId, stats, totalAju
             informacion: []
         };
 
-        // ✅ VALIDACIÓN 1: Productos sin contar
-        if (stats.pendientes > 0) {
-            validaciones.puedeFinalizarse = false;
-            validaciones.mensaje = `No se puede finalizar: quedan ${stats.pendientes} productos sin contar.`;
-            return validaciones;
+        // ✅ VALIDACIÓN 1: Productos sin contar (SEGÚN TIPO DE INVENTARIO)
+        const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+        const esInventarioCompleto = tipoInventario === 'Completo';
+
+        console.log(`📋 Tipo de inventario: ${tipoInventario}`);
+        console.log(`📊 Productos contados: ${stats.contados}, Pendientes: ${stats.pendientes}`);
+
+        if (esInventarioCompleto) {
+            // Inventario Completo: requiere 100% contado
+            if (stats.pendientes > 0) {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `No se puede finalizar inventario COMPLETO: quedan ${stats.pendientes} productos sin contar.`;
+                return validaciones;
+            }
+        } else {
+            // Inventario Parcial/Cíclico: requiere al menos 1 contado
+            if (stats.contados === 0) {
+                validaciones.puedeFinalizarse = false;
+                validaciones.mensaje = `No se puede finalizar: debes contar al menos 1 producto.`;
+                return validaciones;
+            }
+            // Si hay productos pendientes en inventario Parcial/Cíclico, agregar información
+            if (stats.pendientes > 0) {
+                validaciones.informacion.push(`Inventario ${tipoInventario}: ${stats.pendientes} productos no contados serán ignorados.`);
+            }
         }
 
         // ✅ VALIDACIÓN 2: Verificar estado del inventario
-        const inventarioResponse = await fetch(`/TomaInventario/ObtenerInventario/${inventarioId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-
-        if (inventarioResponse.ok) {
-            const inventarioData = await inventarioResponse.json();
-            if (inventarioData.estado !== 'En Progreso') {
-                validaciones.puedeFinalizarse = false;
-                validaciones.mensaje = `El inventario está en estado '${inventarioData.estado}' y no se puede finalizar.`;
-                return validaciones;
-            }
+        if (inventarioActual && inventarioActual.estado !== 'En Progreso') {
+            validaciones.puedeFinalizarse = false;
+            validaciones.mensaje = `El inventario está en estado '${inventarioActual.estado}' y no se puede finalizar.`;
+            return validaciones;
         }
 
         // ✅ VALIDACIÓN 3: Revisar ajustes pendientes
@@ -6278,20 +6863,32 @@ async function verificarProductosCriticos(inventarioId) {
  * ✅ FUNCIÓN: Mostrar confirmación detallada de finalización
  */
 async function mostrarConfirmacionFinalizacion(stats, totalAjustes, validaciones) {
+    const tipoInventario = inventarioActual?.tipoInventario || 'Completo';
+    const esInventarioCompleto = tipoInventario === 'Completo';
+
     let htmlConfirmacion = `
         <div class="text-start">
             <h5 class="text-primary mb-3">📋 Resumen Final del Inventario</h5>
-            
+
+            <div class="alert alert-info mb-3">
+                <strong>📝 Tipo de Inventario:</strong> ${tipoInventario}
+            </div>
+
             <div class="row mb-3">
                 <div class="col-6"><strong>📦 Total productos:</strong></div>
                 <div class="col-6">${stats.total}</div>
-                
+
                 <div class="col-6"><strong>✅ Productos contados:</strong></div>
                 <div class="col-6 text-success">${stats.contados}</div>
-                
+
+                ${!esInventarioCompleto && stats.pendientes > 0 ? `
+                <div class="col-6"><strong>⏸️ Productos NO contados:</strong></div>
+                <div class="col-6 text-muted">${stats.pendientes} <small>(se ignorarán)</small></div>
+                ` : ''}
+
                 <div class="col-6"><strong>⚠️ Discrepancias encontradas:</strong></div>
                 <div class="col-6 text-warning">${stats.discrepancias}</div>
-                
+
                 <div class="col-6"><strong>🔄 Ajustes a aplicar:</strong></div>
                 <div class="col-6 text-info">${totalAjustes}</div>
             </div>
@@ -7038,8 +7635,196 @@ function generarHtmlReporte(datos) {
 /**
  * ✅ FUNCIÓN: Exportar inventario (usando utilidades globales)
  */
+/**
+ * ✅ FUNCIÓN: Mostrar opciones de descarga de reporte
+ */
+async function mostrarOpcionesDescarga(inventarioId, tituloInventario) {
+    try {
+        const resultado = await Swal.fire({
+            title: '📥 Descargar Reporte de Inventario',
+            html: `
+                <div class="text-start">
+                    <p class="mb-3"><strong>Inventario:</strong> ${tituloInventario || `ID: ${inventarioId}`}</p>
+                    <p class="text-muted">Selecciona el formato de descarga:</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: '<i class="bi bi-file-earmark-excel me-2"></i>Descargar Excel',
+            denyButtonText: '<i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#28a745',
+            denyButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        });
+
+        if (resultado.isConfirmed) {
+            // Descargar Excel
+            await descargarReporteExcel(inventarioId);
+        } else if (resultado.isDenied) {
+            // Descargar PDF
+            await descargarReportePdf(inventarioId);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando opciones de descarga:', error);
+        mostrarError('Error al mostrar opciones de descarga');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Descargar reporte en formato Excel
+ */
+async function descargarReporteExcel(inventarioId) {
+    try {
+        console.log('📥 Descargando reporte Excel para inventario:', inventarioId);
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando reporte...',
+            text: 'Por favor espera mientras se genera el archivo Excel',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Construir URL del endpoint
+        const url = `/api/Reportes/inventario/${inventarioId}/excel`;
+
+        // Realizar petición con autenticación
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener blob del archivo
+        const blob = await response.blob();
+
+        // Crear nombre de archivo
+        const fileName = `Reporte_Inventario_${inventarioId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Crear link de descarga y hacer clic automático
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+
+        // Cerrar loading y mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            text: `El archivo ${fileName} se ha descargado correctamente`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('❌ Error descargando Excel:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar',
+            text: error.message || 'No se pudo descargar el reporte Excel. Verifica tus permisos.',
+            confirmButtonColor: '#d33'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Descargar reporte en formato PDF
+ */
+async function descargarReportePdf(inventarioId) {
+    try {
+        console.log('📄 Descargando reporte PDF para inventario:', inventarioId);
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando reporte...',
+            text: 'Por favor espera mientras se genera el archivo PDF',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Construir URL del endpoint
+        const url = `/api/Reportes/inventario/${inventarioId}/pdf`;
+
+        // Realizar petición con autenticación
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener blob del archivo
+        const blob = await response.blob();
+
+        // Crear nombre de archivo
+        const fileName = `Reporte_Inventario_${inventarioId}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+        // Crear link de descarga y hacer clic automático
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+
+        // Cerrar loading y mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            text: `El archivo ${fileName} se ha descargado correctamente`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('❌ Error descargando PDF:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar',
+            text: error.message || 'No se pudo descargar el reporte PDF. Verifica tus permisos.',
+            confirmButtonColor: '#d33'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Exportar inventario (wrapper que muestra opciones)
+ */
 async function exportarInventario(inventarioId) {
     try {
+        // ✅ Si no se pasa inventarioId, obtenerlo de la configuración
+        if (!inventarioId) {
+            inventarioId = window.inventarioConfig?.inventarioId || getInventarioIdFromUrl();
+        }
+
+        if (!inventarioId) {
+            throw new Error('No se pudo obtener el ID del inventario');
+        }
+
         console.log('📤 Exportando inventario:', inventarioId);
 
         // ✅ OBTENER TÍTULO DEL INVENTARIO
@@ -7048,8 +7833,8 @@ async function exportarInventario(inventarioId) {
             window.inventarioConfig?.titulo ||
             'Inventario';
 
-        // ✅ LLAMAR A LA FUNCIÓN GLOBAL DE REPORTES
-        mostrarOpcionesDescarga(inventarioId, tituloInventario);
+        // ✅ LLAMAR A LA FUNCIÓN DE OPCIONES DE DESCARGA
+        await mostrarOpcionesDescarga(inventarioId, tituloInventario);
 
     } catch (error) {
         console.error('❌ Error al exportar inventario:', error);
@@ -7057,7 +7842,7 @@ async function exportarInventario(inventarioId) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No se pudo abrir las opciones de descarga',
+            text: error.message || 'No se pudo abrir las opciones de descarga',
             confirmButtonColor: '#d33'
         });
     }
@@ -7217,3 +8002,606 @@ window.verEstadoActual = function () {
     console.log('  ajustesPendientes:', ajustesPendientes ? ajustesPendientes.length : 'undefined');
     console.log('  estadisticasActuales:', estadisticasActuales);
 };
+// =====================================
+// FILTROS EN CASCADA PARA LLANTAS
+// =====================================
+
+// Variables globales para filtros de llantas
+let filtrosLlantasActivos = {
+    ancho: '',
+    perfil: '',
+    diametro: '',
+    tipoTerreno: '',
+    capas: ''
+};
+
+/**
+ * ✅ FUNCIÓN: Poblar filtros de llantas desde la tabla
+ */
+function poblarFiltrosLlantas() {
+    try {
+        console.log('📊 Poblando filtros de llantas...');
+
+        const valores = {
+            anchos: new Set(),
+            perfiles: new Set(),
+            diametros: new Set(),
+            tiposTerreno: new Set(),
+            capas: new Set()
+        };
+
+        // Recorrer todas las filas de la tabla
+        $('#tablaProductosBody tr').each(function () {
+            const $fila = $(this);
+
+            // Obtener el texto de la columna de medidas (columna 3: #, Producto, Medidas)
+            const medidasTexto = $fila.find('td:eq(2)').text().trim();
+
+            if (medidasTexto && medidasTexto !== '-' && medidasTexto !== 'N/A') {
+                // Parsear formato CON perfil: 175/70/R12
+                let match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+
+                if (match) {
+                    const [, ancho, perfil, diametro] = match;
+
+                    if (ancho) {
+                        const anchoNum = parseFloat(ancho);
+                        valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
+                    }
+
+                    if (perfil) {
+                        const perfilNum = parseFloat(perfil);
+                        valores.perfiles.add((perfilNum % 1 === 0) ? perfilNum.toString() : perfil);
+                    }
+
+                    if (diametro) {
+                        const diametroNum = parseFloat(diametro);
+                        valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
+                    }
+                } else {
+                    // Parsear formato SIN perfil: 700/R16
+                    match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+
+                    if (match) {
+                        const [, ancho, diametro] = match;
+
+                        if (ancho) {
+                            const anchoNum = parseFloat(ancho);
+                            valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
+                        }
+
+                        if (diametro) {
+                            const diametroNum = parseFloat(diametro);
+                            valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
+                        }
+                    }
+                }
+            }
+
+            // Extraer Tipo de Terreno (columna 4)
+            const tipoTerreno = $fila.find('td:eq(3)').text().trim();
+            if (tipoTerreno && tipoTerreno !== '-' && tipoTerreno !== 'N/A') {
+                valores.tiposTerreno.add(tipoTerreno);
+            }
+
+            // Extraer Capas (desde data attribute)
+            const capas = $fila.data('capas') || $fila.attr('data-capas');
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== '' && capas !== null) {
+                valores.capas.add(String(capas));
+            }
+        });
+
+        // Poblar selectores
+        const anchos = Array.from(valores.anchos).sort((a, b) => parseFloat(a) - parseFloat(b));
+        $('#filterAncho').html('<option value="">Todos</option>' +
+            anchos.map(ancho => `<option value="${ancho}">${ancho}</option>`).join(''));
+
+        const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+        $('#filterPerfil').html('<option value="">Todos</option>' +
+            perfiles.map(perfil => `<option value="${perfil}">${perfil}</option>`).join(''));
+
+        const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+        $('#filterDiametro').html('<option value="">Todos</option>' +
+            diametros.map(diametro => `<option value="${diametro}">R${diametro}"</option>`).join(''));
+
+        const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+        $('#filterTipoTerreno').html('<option value="">Todos</option>' +
+            tiposTerreno.map(tipo => `<option value="${tipo}">${tipo}</option>`).join(''));
+
+        const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+        $('#filterCapas').html('<option value="">Todas</option>' +
+            capas.map(c => `<option value="${c}">${c} capas</option>`).join(''));
+
+        console.log('✅ Filtros poblados:', {
+            anchos: anchos.length,
+            perfiles: perfiles.length,
+            diametros: diametros.length,
+            tiposTerreno: tiposTerreno.length,
+            capas: capas.length
+        });
+    } catch (error) {
+        console.error('❌ Error poblando filtros:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Actualizar filtros en cascada
+ */
+function actualizarFiltrosCascada() {
+    try {
+        console.log('🔄 Actualizando filtros en cascada...');
+
+        const anchoSel = filtrosLlantasActivos.ancho;
+        const perfilSel = filtrosLlantasActivos.perfil;
+        const diametroSel = filtrosLlantasActivos.diametro;
+        const capasSel = filtrosLlantasActivos.capas;
+
+        // Si no hay filtros, restaurar todos
+        if (!anchoSel && !perfilSel && !diametroSel) {
+            poblarFiltrosLlantas();
+            return;
+        }
+
+        const valores = {
+            anchos: new Set(),
+            perfiles: new Set(),
+            diametros: new Set(),
+            tiposTerreno: new Set(),
+            capas: new Set()
+        };
+
+        // Recorrer filas visibles
+        $('#tablaProductosBody tr:visible').each(function () {
+            const $fila = $(this);
+            const medidasTexto = $fila.find('td:eq(2)').text().trim();
+
+            if (!medidasTexto || medidasTexto === '-' || medidasTexto === 'N/A') return;
+
+            let match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+            let ancho, perfil, diametro;
+
+            if (match) {
+                [, ancho, perfil, diametro] = match;
+            } else {
+                match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                if (match) {
+                    [, ancho, diametro] = match;
+                    perfil = null;
+                }
+            }
+
+            // Verificar si cumple filtros
+            let cumple = true;
+            if (anchoSel && ancho != anchoSel) cumple = false;
+            if (perfilSel && perfil != perfilSel) cumple = false;
+            if (diametroSel && diametro != diametroSel) cumple = false;
+
+            if (cumple) {
+                if (ancho) {
+                    const anchoNum = parseFloat(ancho);
+                    valores.anchos.add((anchoNum % 1 === 0) ? anchoNum.toString() : ancho);
+                }
+                if (perfil) {
+                    const perfilNum = parseFloat(perfil);
+                    valores.perfiles.add((perfilNum % 1 === 0) ? perfilNum.toString() : perfil);
+                }
+                if (diametro) {
+                    const diametroNum = parseFloat(diametro);
+                    valores.diametros.add((diametroNum % 1 === 0) ? diametroNum.toString() : diametro);
+                }
+
+                const tipoTerreno = $fila.find('td:eq(3)').text().trim();
+                if (tipoTerreno && tipoTerreno !== '-') {
+                    valores.tiposTerreno.add(tipoTerreno);
+                }
+
+                const capas = $fila.data('capas') || $fila.attr('data-capas');
+                if (capas && capas !== 'N/A' && capas !== '-' && capas !== null) {
+                    valores.capas.add(String(capas));
+                }
+            }
+        });
+
+        // Actualizar selectores
+        if (!anchoSel) {
+            const anchos = Array.from(valores.anchos).sort((a, b) => parseFloat(a) - parseFloat(b));
+            $('#filterAncho').html('<option value="">Todos</option>' +
+                anchos.map(a => `<option value="${a}">${a}</option>`).join(''));
+        }
+
+        if (anchoSel || !perfilSel) {
+            const perfiles = Array.from(valores.perfiles).sort((a, b) => parseFloat(a) - parseFloat(b));
+            $('#filterPerfil').html('<option value="">Todos</option>' +
+                perfiles.map(p => `<option value="${p}">${p}</option>`).join(''));
+            $('#filterPerfil').val(perfilSel);
+        }
+
+        if (anchoSel || perfilSel || !diametroSel) {
+            const diametros = Array.from(valores.diametros).sort((a, b) => parseFloat(a) - parseFloat(b));
+            $('#filterDiametro').html('<option value="">Todos</option>' +
+                diametros.map(d => `<option value="${d}">R${d}"</option>`).join(''));
+            $('#filterDiametro').val(diametroSel);
+        }
+
+        if (anchoSel || perfilSel || diametroSel) {
+            const tiposTerreno = Array.from(valores.tiposTerreno).sort();
+            $('#filterTipoTerreno').html('<option value="">Todos</option>' +
+                tiposTerreno.map(t => `<option value="${t}">${t}</option>`).join(''));
+        }
+
+        if (anchoSel || perfilSel || diametroSel) {
+            const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+            if (capas.length > 0) {
+                $('#filterCapas').html('<option value="">Todas</option>' +
+                    capas.map(c => `<option value="${c}">${c} capas</option>`).join(''));
+            } else {
+                $('#filterCapas').html('<option value="">Todas</option>');
+            }
+            $('#filterCapas').val(capasSel);
+        }
+
+        console.log('✅ Filtros en cascada actualizados');
+    } catch (error) {
+        console.error('❌ Error actualizando cascada:', error);
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Aplicar filtros de llantas
+ */
+function aplicarFiltrosLlantas() {
+    try {
+        console.log('🔍 Aplicando filtros de llantas:', filtrosLlantasActivos);
+
+        $('#tablaProductosBody tr').each(function () {
+            const $fila = $(this);
+            const medidasTexto = $fila.find('td:eq(2)').text().trim();
+            const tipoTerreno = $fila.find('td:eq(3)').text().trim();
+
+            let mostrar = true;
+
+            // Filtros de medidas
+            if (filtrosLlantasActivos.ancho || filtrosLlantasActivos.perfil || filtrosLlantasActivos.diametro) {
+                if (!medidasTexto || medidasTexto === '-' || medidasTexto === 'N/A') {
+                    mostrar = false;
+                } else {
+                    let match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                    let ancho, perfil, diametro;
+
+                    if (match) {
+                        [, ancho, perfil, diametro] = match;
+                    } else {
+                        match = medidasTexto.match(/^(\d+(?:\.\d+)?)\/R?(\d+(?:\.\d+)?)$/);
+                        if (match) {
+                            [, ancho, diametro] = match;
+                            perfil = null;
+                        }
+                    }
+
+                    if (filtrosLlantasActivos.ancho && ancho != filtrosLlantasActivos.ancho) mostrar = false;
+                    if (filtrosLlantasActivos.perfil && perfil != filtrosLlantasActivos.perfil) mostrar = false;
+                    if (filtrosLlantasActivos.diametro && diametro != filtrosLlantasActivos.diametro) mostrar = false;
+                }
+            }
+
+            // Filtro de tipo de terreno
+            if (filtrosLlantasActivos.tipoTerreno) {
+                if (!tipoTerreno || tipoTerreno === '-' || tipoTerreno === 'N/A' ||
+                    tipoTerreno !== filtrosLlantasActivos.tipoTerreno) {
+                    mostrar = false;
+                }
+            }
+
+            // Filtro de capas
+            if (filtrosLlantasActivos.capas) {
+                const capas = $fila.data('capas') || $fila.attr('data-capas');
+                if (!capas || capas === '-' || capas === 'N/A' || String(capas) !== filtrosLlantasActivos.capas) {
+                    mostrar = false;
+                }
+            }
+
+            if (mostrar) {
+                $fila.show();
+            } else {
+                $fila.hide();
+            }
+        });
+
+        // ✅ MANTENER ORDENAMIENTO DESPUÉS DE FILTRAR
+        setTimeout(() => {
+            ordenarProductosPorMedidas();
+        }, 50);
+
+        const visibles = $('#tablaProductosBody tr:visible').length;
+        console.log(`✅ Filtros aplicados. Productos visibles: ${visibles}`);
+    } catch (error) {
+        console.error('❌ Error aplicando filtros:', error);
+    }
+}
+
+// =====================================
+// FUNCIONES DE MOVIMIENTOS POST-CORTE
+// =====================================
+
+/**
+ * Actualiza una línea individual procesando sus movimientos post-corte
+ */
+async function actualizarLineaIndividual(productoId) {
+    try {
+        console.log(`🔄 Actualizando línea individual para producto ${productoId}`);
+
+        const resultado = await Swal.fire({
+            title: '¿Actualizar línea?',
+            html: `
+                <div class="text-start">
+                    <p>Esta acción actualizará la cantidad del sistema con los movimientos registrados después del corte.</p>
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>
+                    Si el producto ya fue contado, se recalculará la diferencia automáticamente.</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!resultado.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando...',
+            html: 'Procesando movimientos post-corte',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const usuarioId = window.inventarioConfig?.usuarioId || 0;
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+
+        const response = await fetch('/TomaInventario/ActualizarLineaPostCorte', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                inventarioProgramadoId: inventarioId,
+                productoId: productoId,
+                usuarioId: usuarioId
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                text: data.message,
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            // Recargar productos y alertas
+            await cargarProductosInventario(inventarioId);
+            await cargarAlertasPostCorte();
+            verificarMovimientosPostCorte();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'No se pudo actualizar la línea'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando línea:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al actualizar la línea'
+        });
+    }
+}
+
+/**
+ * Actualiza todas las líneas con movimientos post-corte pendientes
+ */
+async function actualizarTodasLineas() {
+    try {
+        console.log('🔄 Actualizando todas las líneas con movimientos');
+
+        const resultado = await Swal.fire({
+            title: '¿Actualizar todas las líneas?',
+            html: `
+                <div class="text-start">
+                    <p>Esta acción actualizará TODAS las líneas que tienen movimientos post-corte pendientes.</p>
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>
+                    Las cantidades del sistema se ajustarán y las diferencias se recalcularán automáticamente.</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ffc107',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, actualizar todas',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!resultado.isConfirmed) return;
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Actualizando líneas...',
+            html: 'Procesando movimientos post-corte',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        const usuarioId = window.inventarioConfig?.usuarioId || 0;
+        const inventarioId = inventarioActual?.inventarioProgramadoId;
+
+        const response = await fetch('/TomaInventario/ActualizarLineasMasivas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                inventarioProgramadoId: inventarioId,
+                usuarioId: usuarioId,
+                productoIds: [] // Vacío = todas las líneas con movimientos
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Actualizado!',
+                html: `
+                    <p>${data.message}</p>
+                    <p class="small text-muted">
+                        Líneas actualizadas: ${data.data.lineasActualizadas}<br>
+                        Movimientos procesados: ${data.data.movimientosProcesados}
+                    </p>
+                `,
+                timer: 3000
+            });
+
+            // Recargar productos y alertas
+            await cargarProductosInventario(inventarioId);
+            await cargarAlertasPostCorte();
+            verificarMovimientosPostCorte();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'No se pudieron actualizar las líneas'
+            });
+        }
+    } catch (error) {
+        console.error('❌ Error actualizando líneas:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Ocurrió un error al actualizar las líneas'
+        });
+    }
+}
+
+/**
+ * Verifica si hay productos con movimientos post-corte y actualiza la UI
+ */
+function verificarMovimientosPostCorte() {
+    try {
+        // Contar productos con movimientos
+        const productosConMovimientos = productosInventario.filter(p => (p.movimientosPostCorte || 0) !== 0);
+        const totalConMovimientos = productosConMovimientos.length;
+
+        console.log(`📊 Productos con movimientos post-corte: ${totalConMovimientos}`);
+
+        // Actualizar contador y mostrar/ocultar botón
+        const $btnActualizar = $('#btnActualizarTodasLineas');
+        const $contador = $('#contadorLineasConMovimientos');
+
+        if (totalConMovimientos > 0) {
+            $contador.text(totalConMovimientos);
+            $btnActualizar.show();
+        } else {
+            $btnActualizar.hide();
+        }
+    } catch (error) {
+        console.error('❌ Error verificando movimientos post-corte:', error);
+    }
+}
+
+// =====================================
+// EVENT LISTENERS PARA FILTROS DE LLANTAS
+// =====================================
+
+$(document).ready(function () {
+    // ✅ Event listener para botón de actualizar todas las líneas
+    $('#btnActualizarTodasLineas').on('click', actualizarTodasLineas);
+
+    // ✅ Event listeners para filtros en cascada (siempre activos)
+    $('#filterAncho').on('change', function () {
+        filtrosLlantasActivos.ancho = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterPerfil').on('change', function () {
+        filtrosLlantasActivos.perfil = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterDiametro').on('change', function () {
+        filtrosLlantasActivos.diametro = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterTipoTerreno').on('change', function () {
+        filtrosLlantasActivos.tipoTerreno = $(this).val();
+        aplicarFiltrosLlantas();
+    });
+
+    $('#filterCapas').on('change', function () {
+        filtrosLlantasActivos.capas = $(this).val();
+        actualizarFiltrosCascada();
+        aplicarFiltrosLlantas();
+    });
+
+    // Limpiar filtros de llantas
+    $('#btnLimpiarFiltrosLlantas').on('click', function () {
+        filtrosLlantasActivos = { ancho: '', perfil: '', diametro: '', tipoTerreno: '', capas: '' };
+        $('#filterAncho, #filterPerfil, #filterDiametro, #filterTipoTerreno, #filterCapas').val('');
+        poblarFiltrosLlantas();
+        $('#tablaProductosBody tr').show();
+
+        // ✅ REORDENAR DESPUÉS DE LIMPIAR
+        setTimeout(() => {
+            ordenarProductosPorMedidas();
+        }, 100);
+
+        console.log('🧹 Filtros de llantas limpiados');
+    });
+
+    // =====================================
+    // EVENTOS DE ALERTAS DE MOVIMIENTOS POST-CORTE
+    // =====================================
+
+    // Actualizar alertas
+    $('#btnActualizarAlertas').on('click', function () {
+        cargarAlertasPostCorte();
+    });
+
+    // Marcar todas las alertas como leídas
+    $('#btnMarcarAlertasLeidas').on('click', function () {
+        marcarTodasAlertasLeidas();
+    });
+
+    // Toggle del panel de alertas
+    $('#btnToggleAlertas').on('click', function () {
+        const $contenido = $('#contenidoAlertasPostCorte');
+        const $icon = $(this).find('i');
+
+        if ($contenido.is(':visible')) {
+            $contenido.slideUp();
+            $icon.removeClass('bi-chevron-up').addClass('bi-chevron-down');
+            $(this).html('<i class="bi bi-chevron-down me-1"></i>Mostrar');
+        } else {
+            $contenido.slideDown();
+            $icon.removeClass('bi-chevron-down').addClass('bi-chevron-up');
+            $(this).html('<i class="bi bi-chevron-up me-1"></i>Ocultar');
+        }
+    });
+});

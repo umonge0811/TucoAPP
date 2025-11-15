@@ -1716,7 +1716,14 @@ namespace GestionLlantera.Web.Services
             _logger.LogInformation("💳 Costo: {Costo}, Utilidad: {Utilidad}%, Precio: {Precio}",
                 dto.Costo, dto.PorcentajeUtilidad, dto.Precio);
 
-            // Si tiene costo Y utilidad, calcular automáticamente (PRIORIDAD)
+            // PRIORIDAD 1: Si el usuario especificó un precio de venta, usarlo directamente
+            if (dto.Precio.HasValue && dto.Precio.Value > 0)
+            {
+                _logger.LogInformation("📝 Precio ingresado por usuario: ₡{Precio:N2}", dto.Precio.Value);
+                return dto.Precio.Value;
+            }
+
+            // PRIORIDAD 2: Si tiene costo Y utilidad, calcular automáticamente
             if (dto.Costo.HasValue && dto.Costo.Value > 0 &&
                 dto.PorcentajeUtilidad.HasValue && dto.PorcentajeUtilidad.Value >= 0)
             {
@@ -1727,12 +1734,9 @@ namespace GestionLlantera.Web.Services
                 return precioCalculado;
             }
 
-            // Si no, usar el precio manual
-            var precioManual = dto.Precio.GetValueOrDefault(0m);
-            var precioFinal = Math.Max(precioManual, 0.01m);
-
-            _logger.LogInformation("📝 Precio manual usado: ₡{Precio:N2}", precioFinal);
-            return precioFinal;
+            // FALLBACK: Precio mínimo
+            _logger.LogInformation("⚠️ No hay precio ni datos para calcular, usando mínimo: ₡0.01");
+            return 0.01m;
         }
 
         /// ✅ MÉTODO AUXILIAR: SUBIR NUEVAS IMÁGENES

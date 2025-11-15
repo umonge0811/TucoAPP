@@ -985,4 +985,42 @@ async function descargarReportePdf(inventarioId, titulo) {
     }
 }
 
+/**
+ * ✅ NUEVA FUNCIÓN: Mostrar opciones de descarga de reporte
+ */
+async function mostrarOpcionesDescarga(inventarioId, tituloInventario) {
+    try {
+        const resultado = await Swal.fire({
+            title: '📥 Descargar Reporte de Inventario',
+            html: `
+                <div class="text-start">
+                    <p class="mb-3"><strong>Inventario:</strong> ${tituloInventario || `ID: ${inventarioId}`}</p>
+                    <p class="text-muted">Selecciona el formato de descarga:</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: '<i class="bi bi-file-earmark-excel me-2"></i>Descargar Excel',
+            denyButtonText: '<i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#28a745',
+            denyButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        });
+
+        if (resultado.isConfirmed) {
+            // Descargar Excel
+            await descargarReporteExcel(inventarioId, tituloInventario);
+        } else if (resultado.isDenied) {
+            // Descargar PDF
+            await descargarReportePdf(inventarioId, tituloInventario);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando opciones de descarga:', error);
+        mostrarError('Error al mostrar opciones de descarga');
+    }
+}
+
 console.log('✅ Módulo de historial de inventarios cargado completamente');

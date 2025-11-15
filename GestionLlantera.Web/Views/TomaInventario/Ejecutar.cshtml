@@ -250,6 +250,80 @@
         </div>
     </div>
 
+    <!-- Panel de alertas de movimientos post-corte -->
+    <div class="alertas-post-corte-panel mb-4" id="alertasPostCortePanel" style="display: none;">
+        <div class="dashboard-card">
+            <div class="card-header bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Movimientos Post-Corte
+                        <span class="badge bg-light text-info ms-2" id="contadorAlertasPostCorte">0</span>
+                    </h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-light btn-sm" id="btnActualizarAlertas">
+                            <i class="bi bi-arrow-clockwise me-1"></i>
+                            Actualizar
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" id="btnMarcarAlertasLeidas">
+                            <i class="bi bi-check2-all me-1"></i>
+                            Marcar todas leídas
+                        </button>
+                        <button class="btn btn-outline-light btn-sm" id="btnToggleAlertas">
+                            <i class="bi bi-chevron-up me-1"></i>
+                            Ocultar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" id="contenidoAlertasPostCorte">
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>¿Qué son los movimientos post-corte?</strong>
+                    <p class="mb-0 mt-2">
+                        Son cambios de inventario (ventas, ajustes, etc.) que ocurrieron <strong>después de iniciar</strong> este inventario.
+                        Estos movimientos pueden afectar las cantidades contadas. Revise los productos alertados y actualice sus conteos si es necesario.
+                    </p>
+                </div>
+
+                <!-- Lista de alertas -->
+                <div class="alertas-lista">
+                    <!-- Estado vacío -->
+                    <div class="text-center py-4" id="alertasVacio">
+                        <i class="bi bi-check-circle display-4 text-success mb-3"></i>
+                        <h5 class="text-muted">No hay alertas de movimientos post-corte</h5>
+                        <p class="text-muted mb-0">
+                            No se han registrado movimientos de inventario desde que inició este conteo.
+                        </p>
+                    </div>
+
+                    <!-- Tabla de alertas -->
+                    <div class="table-responsive" id="tablaAlertas" style="display: none;">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="3%"><i class="bi bi-bell"></i></th>
+                                    <th width="20%">Producto</th>
+                                    <th width="12%">Tipo Movimiento</th>
+                                    <th width="8%">Cantidad</th>
+                                    <th width="12%">Fecha Movimiento</th>
+                                    <th width="10%">Estado Proceso</th>
+                                    <th width="12%">Fecha Procesado</th>
+                                    <th width="13%">Usuario Procesado</th>
+                                    <th width="5%">Estado Alerta</th>
+                                    <th width="5%">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAlertasBody">
+                                <!-- Las alertas se cargarán aquí dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Panel de finalización del inventario - AGREGAR DESPUÉS DEL PANEL DE PRODUCTOS -->
     <div class="finalizacion-panel mt-4" id="finalizacionPanel" style="display: none;">
         <div class="dashboard-card border-success">
@@ -456,21 +530,74 @@
                     </div>
                 </div>
 
+                <!-- Filtros específicos para llantas (en cascada) -->
+                <div class="row g-3 mt-2" id="filtrosLlantas">
+                    <div class="col-12">
+                        <hr class="my-2">
+                        <h6 class="text-muted mb-3">
+                            <i class="bi bi-car-front me-1"></i>Filtros Específicos para Llantas
+                        </h6>
+                    </div>
+                    <div class="col-lg-3">
+                        <label for="filterAncho" class="form-label">Ancho</label>
+                        <select id="filterAncho" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3">
+                        <label for="filterPerfil" class="form-label">Perfil</label>
+                        <select id="filterPerfil" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3">
+                        <label for="filterDiametro" class="form-label">Diámetro</label>
+                        <select id="filterDiametro" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3">
+                        <label for="filterTipoTerreno" class="form-label">Tipo Terreno</label>
+                        <select id="filterTipoTerreno" class="form-select form-select-sm">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3">
+                        <label for="filterCapas" class="form-label">Capas</label>
+                        <select id="filterCapas" class="form-select form-select-sm">
+                            <option value="">Todas</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-outline-danger btn-sm" id="btnLimpiarFiltrosLlantas">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Limpiar Filtros de Llantas
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Botones de acción rápida -->
                 <div class="row mt-3">
                     <div class="col-12">
-                        <div class="d-flex gap-2 flex-wrap">
-                            <button class="btn btn-outline-primary btn-sm" id="btnMostrarTodos">
-                                <i class="bi bi-list-ul me-1"></i>
-                                Mostrar Todos
-                            </button>
-                            <button class="btn btn-outline-warning btn-sm" id="btnSoloPendientes">
-                                <i class="bi bi-clock me-1"></i>
-                                Solo Pendientes
-                            </button>
-                            <button class="btn btn-outline-danger btn-sm" id="btnSoloDiscrepancias">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                Solo Discrepancias
+                        <div class="d-flex gap-2 flex-wrap justify-content-between">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-outline-primary btn-sm" id="btnMostrarTodos">
+                                    <i class="bi bi-list-ul me-1"></i>
+                                    Mostrar Todos
+                                </button>
+                                <button class="btn btn-outline-warning btn-sm" id="btnSoloPendientes">
+                                    <i class="bi bi-clock me-1"></i>
+                                    Solo Pendientes
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" id="btnSoloDiscrepancias">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>
+                                    Solo Discrepancias
+                                </button>
+                            </div>
+                            <button class="btn btn-warning btn-sm" id="btnActualizarTodasLineas" style="display: none;">
+                                <i class="bi bi-arrow-clockwise me-1"></i>
+                                Actualizar Líneas con Movimientos
+                                <span class="badge bg-danger ms-1" id="contadorLineasConMovimientos">0</span>
                             </button>
                         </div>
                     </div>
@@ -483,21 +610,56 @@
     <div class="productos-panel">
         <div class="dashboard-card">
             <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h3 class="mb-0">
                         <i class="bi bi-list-check me-2"></i>
                         Productos para Contar
                         <span class="badge bg-primary ms-2" id="contadorProductosMostrados">0</span>
                     </h3>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-secondary btn-sm" id="btnVistaTarjetas">
-                            <i class="bi bi-grid me-1"></i>
-                            Tarjetas
-                        </button>
-                        <button class="btn btn-primary btn-sm" id="btnVistaLista">
-                            <i class="bi bi-list me-1"></i>
-                            Lista
-                        </button>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <!-- ✅ NUEVOS BOTONES DE ACCIONES MASIVAS -->
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-success btn-sm"
+                                    onclick="validarTodasLasDiscrepancias()"
+                                    data-bs-toggle="tooltip"
+                                    title="Validar todas las discrepancias: Ajusta el stock del sistema al conteo físico de todos los productos con discrepancias">
+                                <i class="bi bi-check-all me-1"></i>
+                                Validar Todas
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm"
+                                    onclick="crearAjusteParaTodasLasDiscrepancias()"
+                                    data-bs-toggle="tooltip"
+                                    title="Crear ajustes personalizados: Permite seleccionar tipo y motivo para aplicar a todas las discrepancias">
+                                <i class="bi bi-pencil-square me-1"></i>
+                                Ajustar Todas
+                            </button>
+                        </div>
+
+                        <!-- Botones de vista -->
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-secondary btn-sm" id="btnVistaTarjetas">
+                                <i class="bi bi-grid me-1"></i>
+                                Tarjetas
+                            </button>
+                            <button class="btn btn-primary btn-sm" id="btnVistaLista">
+                                <i class="bi bi-list me-1"></i>
+                                Lista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ NOTAS EXPLICATIVAS PARA LOS BOTONES MASIVOS -->
+                <div class="alert alert-info mt-3 mb-0" style="font-size: 0.85rem;">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-check-all me-1"></i>Validar Todas:</strong>
+                            <span class="text-muted">Ajusta automáticamente el stock del sistema al conteo físico para todos los productos con discrepancias (rápido, 1 clic)</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-pencil-square me-1"></i>Ajustar Todas:</strong>
+                            <span class="text-muted">Te permite escribir un motivo personalizado y seleccionar el tipo de ajuste para aplicar masivamente</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -518,12 +680,19 @@
                                 <tr>
                                     <th width="5%" class="text-center">#</th>
                                     @* <th width="8%" class="text-center">Imagen</th> *@
-                                    <th width="25%">Producto</th>
-                                    <th width="8%" class="text-center">Sistema</th>
-                                    <th width="8%" class="text-center">Físico</th>
-                                    <th width="8%" class="text-center">Diferencia</th>
-                                    <th width="15%" class="text-center">Estado</th>
-                                    <th width="20%" class="text-center">Acciones</th>
+                                    <th width="20%">Producto</th>
+                                    <th width="10%">Medidas</th>
+                                    <th width="8%">Tipo Terreno</th>
+                                    <th width="5%" class="text-center">Capas</th>
+                                    <th width="7%" class="text-center">
+                                        <i class="bi bi-arrow-left-right text-warning" data-bs-toggle="tooltip" title="Movimientos después del corte"></i>
+                                        Mov.
+                                    </th>
+                                    <th width="7%" class="text-center">Sistema</th>
+                                    <th width="7%" class="text-center">Físico</th>
+                                    <th width="7%" class="text-center">Diferencia</th>
+                                    <th width="10%" class="text-center">Estado</th>
+                                    <th width="15%" class="text-center">Acciones</th>
                                     <th width="3%" class="text-center">
                                         <i class="bi bi-gear" data-bs-toggle="tooltip" title="Ajustes pendientes"></i>
                                     </th>
@@ -736,11 +905,14 @@
                             <select class="form-select" id="tipoAjustePendiente" required>
                                 <option value="">Seleccione el tipo</option>
                                 <option value="sistema_a_fisico">📦 Ajustar Sistema al Físico</option>
-                                <option value="validado">✅ Marcar como Validado</option>
-                            </select>                            <div class="form-text">
-                                <small>
-                                    <strong>Ajustar Sistema al Físico:</strong> Cambiar el stock del sistema al valor contado físicamente<br>
-                                    <strong>Marcar como Validado:</strong> Aceptar la discrepancia como válida sin cambios
+                                <option value="validado">✅ Validar (Ajustar al Físico)</option>
+                            </select>
+                            <div class="form-text">
+                                <small class="text-muted">
+                                    <strong>ℹ️ Nota importante:</strong> Ambas opciones actualizan el stock del sistema al conteo físico.<br>
+                                    <strong>Ajustar Sistema al Físico:</strong> Para ajustes manuales con motivo detallado<br>
+                                    <strong>Validar:</strong> Para confirmar que el conteo físico es correcto (atajo rápido)<br>
+                                    <em>La diferencia es solo para el registro histórico del ajuste.</em>
                                 </small>
                             </div>
                         </div>
@@ -985,6 +1157,7 @@
         window.inventarioConfig = {
             inventarioId: @Model.InventarioProgramadoId,
             usuarioId: @ViewBag.UsuarioId,
+            tipoInventario: '@Model.TipoInventario',
             permisos: {
                 puedeContar: @(ViewBag.PuedeContar.ToString().ToLower()),
                 puedeAjustar: @(ViewBag.PuedeAjustar.ToString().ToLower()),

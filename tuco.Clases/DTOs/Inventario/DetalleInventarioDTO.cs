@@ -29,10 +29,19 @@ namespace Tuco.Clases.DTOs.Inventario
         public string? MedidasLlanta { get; set; }
         public string? MarcaLlanta { get; set; }
         public string? ModeloLlanta { get; set; }
+        public string? TipoTerrenoLlanta { get; set; }
+        public int? CapasLlanta { get; set; }
 
         // Estados calculados
         public string EstadoConteo { get; set; } = "Pendiente";
         public bool TieneDiscrepancia { get; set; }
+
+        // Información de movimientos post-corte
+        public int? MovimientosPostCorte { get; set; } // Total de movimientos pendientes
+        public DateTime? UltimaActualizacion { get; set; }
+        public int? UsuarioActualizacionId { get; set; }
+        public string? NombreUsuarioActualizacion { get; set; }
+        public bool TieneMovimientosPostCorte => (MovimientosPostCorte ?? 0) != 0;
     }
 
 

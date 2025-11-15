@@ -304,6 +304,15 @@ $(document).ready(function () {
         $('#btnAplicarFiltros').addClass('btn-warning').removeClass('btn-primary');
         $('#btnAplicarFiltros').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
     });
+
+    $('#filtroCapas').on('change', function () {
+        const valorSeleccionado = $(this).val();
+        console.log('🔄 Capas cambiado:', valorSeleccionado);
+
+        // Indicador visual
+        $('#btnAplicarFiltros').addClass('btn-warning').removeClass('btn-primary');
+        $('#btnAplicarFiltros').html('<i class="bi bi-funnel-fill me-1"></i>Aplicar Filtros *');
+    });
 });
 //// ===== INICIALIZACIÓN =====
 //$(document).ready(function () {
@@ -339,7 +348,8 @@ function extraerValoresUnicos(productos) {
         anchos: new Set(),
         perfiles: new Set(),
         diametros: new Set(),
-        tiposTerreno: new Set()
+        tiposTerreno: new Set(),
+        capas: new Set()
     };
 
     productos.forEach(producto => {
@@ -376,6 +386,12 @@ function extraerValoresUnicos(productos) {
             const tipoTerreno = producto.tipoTerreno || llantaInfo.tipoterreno || llantaInfo.tipoTerreno;
             if (tipoTerreno && tipoTerreno !== 'N/A') {
                 valores.tiposTerreno.add(tipoTerreno);
+            }
+
+            // Extraer capas
+            const capas = llantaInfo.capas || producto.Capas;
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== null) {
+                valores.capas.add(String(capas));
             }
         }
     });
@@ -443,11 +459,19 @@ function poblarFiltros(productos) {
     $('#filtroTipoTerreno').html('<option value="">Todos</option>' +
         tiposTerreno.map(tipo => `<option value="${tipo}">${tipo}</option>`).join(''));
 
+    // Poblar Capas
+    const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+    if (capas.length > 0) {
+        $('#filtroCapas').html('<option value="">Todas</option>' +
+            capas.map(capa => `<option value="${capa}">${capa} capas</option>`).join(''));
+    }
+
     console.log('✅ Filtros poblados:', {
         anchos: anchos.length,
         perfiles: perfiles.length,
         diametros: diametros.length,
-        tiposTerreno: tiposTerreno.length
+        tiposTerreno: tiposTerreno.length,
+        capas: capas.length
     });
 }
 
@@ -458,12 +482,14 @@ function aplicarFiltros() {
     filtrosActivos.perfil = $('#filtroPerfil').val() || [];
     filtrosActivos.diametro = $('#filtroDiametro').val() || [];
     filtrosActivos.tipoTerreno = $('#filtroTipoTerreno').val() || [];
+    filtrosActivos.capas = $('#filtroCapas').val() || [];
 
     // Remover valores vacíos
     filtrosActivos.ancho = filtrosActivos.ancho.filter(v => v !== '');
     filtrosActivos.perfil = filtrosActivos.perfil.filter(v => v !== '');
     filtrosActivos.diametro = filtrosActivos.diametro.filter(v => v !== '');
     filtrosActivos.tipoTerreno = filtrosActivos.tipoTerreno.filter(v => v !== '');
+    filtrosActivos.capas = filtrosActivos.capas.filter(v => v !== '');
 
     console.log('🔧 Aplicando filtros:', filtrosActivos);
 
@@ -510,6 +536,15 @@ function aplicarFiltros() {
             const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
             const tipoTerreno = producto.tipoTerreno || llantaInfo.tipoterreno || llantaInfo.tipoTerreno;
             return filtrosActivos.tipoTerreno.includes(tipoTerreno);
+        });
+    }
+
+    // Aplicar filtro de capas
+    if (filtrosActivos.capas.length > 0) {
+        productosFiltrados = productosFiltrados.filter(producto => {
+            const llantaInfo = producto.llanta || (producto.Llanta && producto.Llanta[0]) || producto;
+            const capas = String(llantaInfo.capas || producto.Capas || '');
+            return filtrosActivos.capas.includes(capas);
         });
     }
 
@@ -560,12 +595,13 @@ function aplicarFiltros() {
 
 // ===== FUNCIÓN PARA LIMPIAR FILTROS =====
 function limpiarFiltros() {
-    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno').val('');
+    $('#filtroAncho, #filtroPerfil, #filtroDiametro, #filtroTipoTerreno, #filtroCapas').val('');
     filtrosActivos = {
         ancho: [],
         perfil: [],
         diametro: [],
-        tipoTerreno: []
+        tipoTerreno: [],
+        capas: []
     };
     
     // ✅ RESTABLECER TODOS LOS FILTROS A SU ESTADO INICIAL
@@ -706,7 +742,8 @@ function actualizarFiltrosCascada() {
     const valores = {
         perfiles: new Set(),
         diametros: new Set(),
-        tiposTerreno: new Set()
+        tiposTerreno: new Set(),
+        capas: new Set()
     };
 
     productosFiltrados.forEach(producto => {
@@ -736,6 +773,12 @@ function actualizarFiltrosCascada() {
             if (tipoTerreno && tipoTerreno !== 'N/A' && tipoTerreno !== '-') {
                 const tipoNormalizado = String(tipoTerreno).trim().toUpperCase();
                 valores.tiposTerreno.add(tipoNormalizado);
+            }
+
+            // Extraer capas
+            const capas = llantaInfo.capas;
+            if (capas && capas !== 'N/A' && capas !== '-' && capas !== null) {
+                valores.capas.add(String(capas));
             }
         }
     });
@@ -772,6 +815,24 @@ function actualizarFiltrosCascada() {
         $('#filtroTipoTerreno').html('<option value="">Todos</option>' + opcionesTipoTerreno);
 
         console.log(`✅ Tipo Terreno actualizado: ${tiposTerreno.length} opciones disponibles`);
+    }
+
+    // Actualizar Capas
+    if (anchoSeleccionado.length > 0 || perfilSeleccionado.length > 0 || diametroSeleccionado.length > 0) {
+        const capas = Array.from(valores.capas).sort((a, b) => parseInt(a) - parseInt(b));
+        const capasSeleccionado = $('#filtroCapas').val() || [];
+
+        if (capas.length > 0) {
+            const opcionesCapas = capas.map(capa =>
+                `<option value="${capa}" ${capasSeleccionado.includes(capa) ? 'selected' : ''}>${capa} capas</option>`
+            ).join('');
+            $('#filtroCapas').html('<option value="">Todas</option>' + opcionesCapas);
+
+            console.log(`✅ Capas actualizado: ${capas.length} opciones disponibles`);
+        } else {
+            $('#filtroCapas').html('<option value="">Todas</option>');
+            console.log(`✅ Capas actualizado: sin opciones disponibles`);
+        }
     }
 }
 

@@ -109,16 +109,26 @@ function renderizarNotificaciones() {
 
     let html = '';
 
-    if (conteoNoLeidas > 0) {
-        html += `
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <small class="text-muted">Tienes ${conteoNoLeidas} notificaciones no leídas</small>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="marcarTodasComoLeidas()">
-                    Marcar todas como leídas
+    console.log(`Renderizando notificaciones. Total: ${notificacionesCache.length}, No leídas: ${conteoNoLeidas}`);
+
+    // Botones de acción superior
+    html += `
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+            <small class="text-muted">
+                ${conteoNoLeidas > 0 ? `${conteoNoLeidas} no leída${conteoNoLeidas > 1 ? 's' : ''}` : 'Todas leídas'}
+            </small>
+            <div class="d-flex gap-2">
+                ${conteoNoLeidas > 0 ? `
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-action="marcar-todas">
+                        <i class="bi bi-check-all me-1"></i>Marcar todas
+                    </button>
+                ` : ''}
+                <button type="button" class="btn btn-sm btn-outline-danger" data-action="eliminar-todas">
+                    <i class="bi bi-trash3 me-1"></i>Eliminar todas
                 </button>
             </div>
-        `;
-    }
+        </div>
+    `;
 
     html += '<div class="notifications-list">';
 
@@ -233,7 +243,7 @@ function getCSRFToken() {
 // Función para marcar como leída
 async function marcarNotificacionComoLeida(notificacionId) {
     try {
-        const response = await fetch('/Notificaciones/MarcarComoLeida', {
+        const response = await fetch('/Notificaciones/marcar-leida', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -297,8 +307,9 @@ async function ocultarNotificacion(notificacionId) {
 
 // Función para marcar todas como leídas
 async function marcarTodasComoLeidas() {
+    console.log('Marcando todas las notificaciones como leídas...');
     try {
-        const response = await fetch('/Notificaciones/MarcarTodasComoLeidas', {
+        const response = await fetch('/Notificaciones/marcar-todas-leidas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -306,18 +317,123 @@ async function marcarTodasComoLeidas() {
             }
         });
 
+        console.log('Respuesta recibida:', response.status);
+
         if (response.ok) {
             const result = await response.json();
+            console.log('Resultado:', result);
             if (result.success) {
                 // Actualizar cache local
                 notificacionesCache.forEach(n => n.leida = true);
                 conteoNoLeidas = 0;
                 actualizarBadges();
                 renderizarNotificaciones();
+
+                // Mostrar mensaje de éxito
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Todas las notificaciones marcadas como leídas');
+                }
+            } else {
+                console.error('La operación no fue exitosa:', result);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Error al marcar las notificaciones');
+                }
+            }
+        } else {
+            console.error('Error en la respuesta:', response.status);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Error al marcar las notificaciones');
             }
         }
     } catch (error) {
         console.error('Error al marcar todas como leídas:', error);
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Error al marcar las notificaciones');
+        }
+    }
+}
+
+// Función para eliminar todas las notificaciones
+async function eliminarTodasLasNotificaciones() {
+    console.log('Intentando eliminar todas las notificaciones...');
+
+    // Mostrar confirmación
+    if (typeof Swal !== 'undefined') {
+        const result = await Swal.fire({
+            title: '¿Eliminar todas las notificaciones?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, eliminar todas',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (!result.isConfirmed) {
+            console.log('Usuario canceló la eliminación');
+            return;
+        }
+    } else {
+        if (!confirm('¿Estás seguro de que deseas eliminar todas las notificaciones?')) {
+            console.log('Usuario canceló la eliminación');
+            return;
+        }
+    }
+
+    console.log('Enviando petición para eliminar todas...');
+
+    try {
+        const response = await fetch('/Notificaciones/OcultarTodasNotificaciones', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': getCSRFToken()
+            }
+        });
+
+        console.log('Respuesta recibida:', response.status);
+
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Resultado:', result);
+
+            if (result.success) {
+                // Limpiar cache local
+                notificacionesCache = [];
+                conteoNoLeidas = 0;
+                actualizarBadges();
+                renderizarNotificaciones();
+
+                // Mostrar mensaje de éxito
+                if (typeof toastr !== 'undefined') {
+                    toastr.success('Todas las notificaciones han sido eliminadas');
+                } else {
+                    alert('Todas las notificaciones han sido eliminadas');
+                }
+            } else {
+                console.error('La operación no fue exitosa:', result);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Error al eliminar las notificaciones');
+                } else {
+                    alert('Error al eliminar las notificaciones');
+                }
+            }
+        } else {
+            console.error('Error en la respuesta del servidor:', response.status);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Error al eliminar las notificaciones');
+            } else {
+                alert('Error al eliminar las notificaciones');
+            }
+        }
+    } catch (error) {
+        console.error('Error al eliminar todas las notificaciones:', error);
+        if (typeof toastr !== 'undefined') {
+            toastr.error('Error al eliminar las notificaciones');
+        } else {
+            alert('Error al eliminar las notificaciones');
+        }
     }
 }
 
@@ -350,6 +466,26 @@ function inicializarNotificaciones() {
     if (notificationsPanel) {
         notificationsPanel.addEventListener('show.bs.offcanvas', function () {
             cargarNotificaciones();
+        });
+    }
+
+    // Event delegation para botones de acción en el panel de notificaciones
+    const contenedorNotificaciones = document.getElementById('notificaciones-contenido');
+    if (contenedorNotificaciones) {
+        contenedorNotificaciones.addEventListener('click', function(event) {
+            const button = event.target.closest('[data-action]');
+            if (!button) return;
+
+            const action = button.getAttribute('data-action');
+            console.log('Botón clickeado:', action);
+
+            if (action === 'marcar-todas') {
+                event.preventDefault();
+                marcarTodasComoLeidas();
+            } else if (action === 'eliminar-todas') {
+                event.preventDefault();
+                eliminarTodasLasNotificaciones();
+            }
         });
     }
 

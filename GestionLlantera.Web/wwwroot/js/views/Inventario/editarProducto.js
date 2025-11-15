@@ -74,6 +74,54 @@ document.addEventListener('DOMContentLoaded', function () {
     let imagenesAEliminar = [];
 
     // ========================================
+    // ACTUALIZACIÓN AUTOMÁTICA DEL NOMBRE PARA LLANTAS
+    // ========================================
+
+    const nombreProductoInput = document.getElementById('nombreProductoInput');
+    const esMotoCheckbox = document.getElementById('esMotoCheckbox');
+    const marcaInput = document.querySelector('[name="Llanta.Marca"]');
+    const modeloInput = document.querySelector('[name="Llanta.Modelo"]');
+
+    // Inicializar checkbox según el nombre actual
+    if (nombreProductoInput && esMotoCheckbox) {
+        const nombreActual = nombreProductoInput.value || '';
+        // Si el nombre contiene "MOTO", marcar el checkbox
+        if (nombreActual.includes('MOTO')) {
+            esMotoCheckbox.checked = true;
+        }
+    }
+
+    // Función para actualizar el nombre automáticamente
+    function actualizarNombreProducto() {
+        if (!nombreProductoInput || !esMotoCheckbox || !marcaInput || !modeloInput) {
+            return;
+        }
+
+        const marca = marcaInput.value || '';
+        const modelo = modeloInput.value || '';
+        const esMoto = esMotoCheckbox.checked;
+
+        let nombreGenerado = 'Llanta';
+        if (esMoto) {
+            nombreGenerado += ' MOTO';
+        }
+        if (marca) nombreGenerado += ` ${marca}`;
+        if (modelo) nombreGenerado += ` ${modelo}`;
+
+        nombreProductoInput.value = nombreGenerado;
+        console.log(`✅ Nombre actualizado: "${nombreGenerado}"`);
+    }
+
+    // Agregar event listeners para actualizar el nombre automáticamente
+    if (esMotoCheckbox && marcaInput && modeloInput && nombreProductoInput) {
+        esMotoCheckbox.addEventListener('change', actualizarNombreProducto);
+        marcaInput.addEventListener('blur', actualizarNombreProducto);
+        modeloInput.addEventListener('blur', actualizarNombreProducto);
+
+        console.log('✅ Event listeners para actualización de nombre configurados');
+    }
+
+    // ========================================
     // GESTIÓN DE PRECIO Y UTILIDAD
     // ========================================
 
