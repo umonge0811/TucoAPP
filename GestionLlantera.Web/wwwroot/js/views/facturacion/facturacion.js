@@ -248,6 +248,49 @@ $(document).ready(function () {
     inicializarFacturacion();
     inicializarModalInventario();
 
+    // ===== EVENTOS PARA COMPARTIR PRODUCTOS =====
+
+    // Event delegation para botones de compartir (ya que el modal se genera dinámicamente)
+    $(document).on('click', '#btnCompartirWhatsAppFacturacion', function (e) {
+        e.preventDefault();
+        console.log('📱 Click en compartir WhatsApp');
+
+        // Obtener el producto actual del modal
+        const productoActual = window.productoActualModal || null;
+        compartirPorWhatsAppFacturacion(productoActual);
+    });
+
+    $(document).on('click', '#btnCompartirEmailFacturacion', function (e) {
+        e.preventDefault();
+        console.log('📧 Click en compartir Email');
+
+        // Obtener el producto actual del modal
+        const productoActual = window.productoActualModal || null;
+        compartirPorEmailFacturacion(productoActual);
+    });
+
+    // Evento para enviar WhatsApp desde el modal
+    $('#btnEnviarWhatsAppFacturacion').on('click', function () {
+        enviarWhatsAppFacturacion();
+    });
+
+    // Validación en tiempo real del número de WhatsApp
+    $('#numeroWhatsAppFacturacion').on('input', function () {
+        const numero = $(this).val();
+        const $btnEnviar = $('#btnEnviarWhatsAppFacturacion');
+
+        if (numero.length === 8 && /^\d{8}$/.test(numero)) {
+            $btnEnviar.prop('disabled', false);
+            $(this).removeClass('is-invalid').addClass('is-valid');
+        } else {
+            $btnEnviar.prop('disabled', true);
+            $(this).removeClass('is-valid');
+            if (numero.length > 0) {
+                $(this).addClass('is-invalid');
+            }
+        }
+    });
+
     // Toggle de filtros avanzados
     $('#btnToggleFiltros').on('click', function () {
         $('#filtrosAvanzados').collapse('toggle');
@@ -6035,6 +6078,9 @@ function cerrarToastModerno(toastId) {
 function verDetalleProducto(producto) {
     console.log('Ver detalle del producto:', producto);
 
+    // ✅ GUARDAR PRODUCTO EN VARIABLE GLOBAL PARA COMPARTIR
+    window.productoActualModal = producto;
+
     // ✅ OBTENER DATOS CON LOS NOMBRES EXACTOS DE LAS PROPIEDADES
     const esLlanta = producto.esLlanta || false;
 
@@ -9379,12 +9425,194 @@ function compartirProducto(productoId) {
     }
 }
 
+// ========================================
+// ✅ FUNCIONES DE COMPARTIR PRODUCTO (WhatsApp y Email)
+// ========================================
+
+// Variable global para almacenar el producto a compartir
+let productoParaCompartirFacturacion = null;
+
+/**
+ * Función para compartir producto por WhatsApp desde facturación
+ */
+function compartirPorWhatsAppFacturacion(producto) {
+    try {
+        console.log('📱 Preparando compartir por WhatsApp:', producto);
+
+        // Obtener datos del producto desde el modal actual
+        const nombreProducto = $('#productoNombre').text() || producto?.nombreProducto || '';
+        const precioProducto = $('#productoPrecio').text() || formatearMoneda(producto?.precio || 0);
+        const stockProducto = $('#productoStock').text() || (producto?.cantidadEnInventario || 0);
+        const productoId = producto?.productoId || 0;
+
+        // Obtener imagen del producto
+        let urlImagen = '/images/no-image.png';
+        const imgElement = $('#productoImagen');
+        if (imgElement.length && imgElement.attr('src')) {
+            urlImagen = imgElement.attr('src');
+        }
+
+        // Obtener datos de llanta si están disponibles
+        const medida = $('#llantaMedida').text()?.trim() || '';
+        const marca = $('#llantaMarca').text()?.trim() || '';
+
+        // Guardar información del producto
+        productoParaCompartirFacturacion = {
+            nombre: nombreProducto,
+            precio: precioProducto,
+            stock: stockProducto,
+            urlImagen: urlImagen,
+            urlProducto: `${window.location.origin}/Public/DetalleProducto/${productoId}`,
+            medida: medida,
+            marca: marca,
+            productoId: productoId
+        };
+
+        // Mostrar preview del producto en el modal
+        $('#productoPreviewFacturacion').html(`
+            <div class="d-flex align-items-center">
+                <img src="${productoParaCompartirFacturacion.urlImagen}"
+                     alt="${productoParaCompartirFacturacion.nombre}"
+                     class="me-3"
+                     style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                <div>
+                    <h6 class="mb-1">${productoParaCompartirFacturacion.nombre}</h6>
+                    <p class="mb-0 text-muted">${productoParaCompartirFacturacion.precio} - ${productoParaCompartirFacturacion.stock} unidades disponibles</p>
+                </div>
+            </div>
+        `);
+
+        // Limpiar el campo de número
+        $('#numeroWhatsAppFacturacion').val('');
+
+        // Mostrar el modal del número de WhatsApp
+        const modalWhatsApp = new bootstrap.Modal(document.getElementById('modalWhatsAppNumeroFacturacion'));
+        modalWhatsApp.show();
+
+        console.log('✅ Modal de WhatsApp abierto con producto:', productoParaCompartirFacturacion);
+
+    } catch (error) {
+        console.error('❌ Error al compartir por WhatsApp:', error);
+        mostrarToast('Error', 'No se pudo preparar el producto para compartir', 'danger');
+    }
+}
+
+/**
+ * Función para enviar por WhatsApp (ejecutada desde el modal)
+ */
+function enviarWhatsAppFacturacion() {
+    try {
+        const numeroWhatsApp = $('#numeroWhatsAppFacturacion').val().trim();
+        const incluirImagen = $('#incluirImagenFacturacion').is(':checked');
+
+        // Validar número
+        if (!numeroWhatsApp || numeroWhatsApp.length !== 8) {
+            mostrarToast('Validación', 'Por favor ingrese un número válido de 8 dígitos', 'warning');
+            return;
+        }
+
+        if (!productoParaCompartirFacturacion) {
+            mostrarToast('Error', 'No hay producto para compartir', 'danger');
+            return;
+        }
+
+        // Deshabilitar botón mientras se procesa
+        const $btnEnviar = $('#btnEnviarWhatsAppFacturacion');
+        $btnEnviar.find('.normal-state').hide();
+        $btnEnviar.find('.loading-state').show();
+        $btnEnviar.prop('disabled', true);
+
+        // Construir mensaje
+        let mensaje = `¡Hola! Te comparto información sobre este producto:\n\n`;
+        mensaje += `*${productoParaCompartirFacturacion.nombre}*\n\n`;
+
+        // Agregar información de llanta si está disponible
+        if (productoParaCompartirFacturacion.medida && productoParaCompartirFacturacion.medida !== '-' && productoParaCompartirFacturacion.medida !== '') {
+            mensaje += `📏 Medida: ${productoParaCompartirFacturacion.medida}\n`;
+        }
+        if (productoParaCompartirFacturacion.marca && productoParaCompartirFacturacion.marca !== '-' && productoParaCompartirFacturacion.marca !== '') {
+            mensaje += `🏷️ Marca: ${productoParaCompartirFacturacion.marca}\n`;
+        }
+
+        mensaje += `💰 Precio: ${productoParaCompartirFacturacion.precio}\n`;
+        mensaje += `📦 Stock: ${productoParaCompartirFacturacion.stock}\n`;
+        mensaje += `🔗 Más detalles: ${productoParaCompartirFacturacion.urlProducto}\n\n`;
+
+        if (incluirImagen && productoParaCompartirFacturacion.urlImagen && !productoParaCompartirFacturacion.urlImagen.includes('no-image.png')) {
+            mensaje += `📷 Imagen: ${productoParaCompartirFacturacion.urlImagen}`;
+        }
+
+        // Construir la URL de WhatsApp con el número específico
+        const urlWhatsApp = `https://wa.me/506${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        // Abrir WhatsApp
+        window.open(urlWhatsApp, '_blank');
+
+        // Ocultar modal y mostrar notificación
+        bootstrap.Modal.getInstance(document.getElementById('modalWhatsAppNumeroFacturacion')).hide();
+        mostrarToast('Éxito', 'Mensaje enviado a WhatsApp correctamente', 'success');
+
+        // Restablecer estado del botón
+        $btnEnviar.find('.normal-state').show();
+        $btnEnviar.find('.loading-state').hide();
+        $btnEnviar.prop('disabled', false);
+
+    } catch (error) {
+        console.error('❌ Error al enviar por WhatsApp:', error);
+        mostrarToast('Error', 'No se pudo enviar el mensaje por WhatsApp', 'danger');
+    }
+}
+
+/**
+ * Función para compartir producto por Email desde facturación
+ */
+function compartirPorEmailFacturacion(producto) {
+    try {
+        console.log('📧 Preparando compartir por Email:', producto);
+
+        // Obtener datos del producto desde el modal actual
+        const nombreProducto = $('#productoNombre').text() || producto?.nombreProducto || '';
+        const precioProducto = $('#productoPrecio').text() || formatearMoneda(producto?.precio || 0);
+        const stockProducto = $('#productoStock').text() || (producto?.cantidadEnInventario || 0);
+        const descripcionProducto = $('#productoDescripcion').text() || producto?.descripcion || 'Sin descripción disponible';
+        const productoId = producto?.productoId || 0;
+
+        const urlProducto = `${window.location.origin}/Public/DetalleProducto/${productoId}`;
+        const asunto = `Producto: ${nombreProducto}`;
+        const cuerpo = `Hola,
+
+Te comparto información sobre este producto:
+
+PRODUCTO: ${nombreProducto}
+PRECIO: ${precioProducto}
+STOCK DISPONIBLE: ${stockProducto} unidades
+DESCRIPCIÓN: ${descripcionProducto}
+
+Ver detalles completos:
+${urlProducto}
+
+Saludos.`;
+
+        const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+        window.location.href = emailUrl;
+
+        mostrarToast('Éxito', 'Cliente de email abierto correctamente', 'info');
+
+    } catch (error) {
+        console.error('❌ Error al compartir por Email:', error);
+        mostrarToast('Error', 'No se pudo abrir el cliente de email', 'danger');
+    }
+}
+
 // Exportar funciones globalmente
 window.cargarImagenesDetallesProducto = cargarImagenesDetallesProducto;
 window.abrirZoomImagenMejorado = abrirZoomImagenMejorado;
 window.construirUrlImagen = construirUrlImagen;
 window.descargarImagen = descargarImagen;
 window.compartirProducto = compartirProducto;
+window.compartirPorWhatsAppFacturacion = compartirPorWhatsAppFacturacion;
+window.enviarWhatsAppFacturacion = enviarWhatsAppFacturacion;
+window.compartirPorEmailFacturacion = compartirPorEmailFacturacion;
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
