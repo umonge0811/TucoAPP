@@ -150,7 +150,8 @@ namespace API.Controllers
                 var userId = ObtenerUsuarioIdDelToken();
                 if (userId == null)
                 {
-                    return Unauthorized();
+                    _logger.LogWarning("No se pudo obtener userId para marcar todas como leídas");
+                    return Unauthorized(new { success = false, message = "No autorizado" });
                 }
 
                 var notificacionesNoLeidas = await _context.Notificaciones
@@ -175,7 +176,7 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al marcar todas las notificaciones como leídas");
-                return StatusCode(500, new { message = "Error al actualizar notificaciones" });
+                return StatusCode(500, new { success = false, message = "Error al actualizar notificaciones" });
             }
         }
 

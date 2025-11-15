@@ -106,8 +106,8 @@ namespace GestionLlantera.Web.Controllers
             try
             {
                 var resultado = await _notificacionService.MarcarTodasComoLeidasAsync();
-                // Returning success status of the operation.
-                return Json(new { success = resultado });
+                // Returning the complete result object from the API service
+                return Json(resultado);
             }
             catch (Exception ex)
             {
