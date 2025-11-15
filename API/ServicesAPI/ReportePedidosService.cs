@@ -77,6 +77,11 @@ namespace API.ServicesAPI
                     document.Add(new Paragraph($"Contacto: {pedido.Proveedor?.Contacto ?? "N/A"}").SetFont(fontNormal).SetFontSize(10));
                     document.Add(new Paragraph($"Teléfono: {pedido.Proveedor?.Telefono ?? "N/A"}").SetFont(fontNormal).SetFontSize(10));
 
+                    // Agregar tabla de detalles del pedido
+                    document.Add(new Paragraph(" "));
+                    AgregarTablaDetallesPedido(document, pedido, fontBold, fontNormal);
+
+                    // Resumen del pedido
                     document.Add(new Paragraph(" "));
                     document.Add(new Paragraph("RESUMEN DEL PEDIDO").SetFont(fontBold).SetFontSize(14).SetFontColor(ColorPrincipal));
                     document.Add(new Paragraph($"Total de productos: {pedido.DetallePedidos?.Count ?? 0}").SetFont(fontNormal).SetFontSize(10));
@@ -200,6 +205,144 @@ namespace API.ServicesAPI
 
             document.Add(table);
             document.Add(new Paragraph(" ").SetMarginBottom(15));
+        }
+
+        private void AgregarTablaDetallesPedido(iText.Layout.Document document, PedidosProveedor pedido, PdfFont fontBold, PdfFont fontNormal)
+        {
+            // Título de sección
+            var tituloSeccion = new Paragraph("Detalle de Productos").SetFont(fontBold).SetFontSize(14).SetFontColor(ColorPrincipal);
+            tituloSeccion.SetMarginBottom(10);
+            document.Add(tituloSeccion);
+
+            var table = new Table(new float[] { 1f, 2.5f, 1f, 1.2f, 1.2f });
+            table.SetWidth(UnitValue.CreatePercentValue(100));
+
+            // Headers
+            var headers = new[] { "#", "Producto", "Cantidad", "Precio Unit.", "Subtotal" };
+            foreach (var header in headers)
+            {
+                var headerCell = new Cell();
+                headerCell.Add(new Paragraph(header).SetFont(fontBold).SetFontSize(10).SetFontColor(Blanco));
+                headerCell.SetBackgroundColor(ColorPrincipal);
+                headerCell.SetPadding(8);
+                headerCell.SetTextAlignment(TextAlignment.CENTER);
+                headerCell.SetBorder(Border.NO_BORDER);
+                table.AddCell(headerCell);
+            }
+
+            // Agregar filas de productos
+            int contador = 1;
+            if (pedido.DetallePedidos != null && pedido.DetallePedidos.Any())
+            {
+                foreach (var detalle in pedido.DetallePedidos)
+                {
+                    var isEven = contador % 2 == 0;
+                    var bgColor = isEven ? ColorFondoSutil : Blanco;
+
+                    // Columna #
+                    AddProductCell(table, contador.ToString(), fontNormal, bgColor, TextAlignment.CENTER);
+
+                    // Columna Producto (con medidas de llanta si aplica)
+                    var nombreProducto = detalle.Producto?.NombreProducto ?? "Sin nombre";
+                    var llanta = detalle.Producto?.Llanta?.FirstOrDefault();
+
+                    if (llanta != null)
+                    {
+                        var medidas = FormatearMedidasLlanta(llanta);
+                        if (!string.IsNullOrEmpty(medidas))
+                        {
+                            nombreProducto += $"\n{medidas}";
+                        }
+                    }
+
+                    AddProductCell(table, nombreProducto, fontNormal, bgColor, TextAlignment.LEFT);
+
+                    // Columna Cantidad
+                    AddProductCell(table, detalle.Cantidad.ToString(), fontNormal, bgColor, TextAlignment.CENTER);
+
+                    // Columna Precio Unitario
+                    var precioUnit = detalle.PrecioUnitario ?? 0;
+                    AddProductCell(table, $"₡{precioUnit:N2}", fontNormal, bgColor, TextAlignment.RIGHT);
+
+                    // Columna Subtotal
+                    var subtotal = detalle.Cantidad * precioUnit;
+                    AddProductCell(table, $"₡{subtotal:N2}", fontNormal, bgColor, TextAlignment.RIGHT);
+
+                    contador++;
+                }
+            }
+            else
+            {
+                // Fila vacía si no hay productos
+                var emptyCell = new Cell(1, 5);
+                emptyCell.Add(new Paragraph("No hay productos en este pedido").SetFont(fontNormal).SetFontSize(9).SetFontColor(ColorTextoSuave));
+                emptyCell.SetTextAlignment(TextAlignment.CENTER);
+                emptyCell.SetPadding(20);
+                emptyCell.SetBorder(Border.NO_BORDER);
+                table.AddCell(emptyCell);
+            }
+
+            document.Add(table);
+            document.Add(new Paragraph(" ").SetMarginBottom(10));
+        }
+
+        private void AddProductCell(Table table, string text, PdfFont font, DeviceRgb backgroundColor, TextAlignment? alignment)
+        {
+            var cell = new Cell();
+            cell.Add(new Paragraph(text).SetFont(font).SetFontSize(9).SetFontColor(ColorPrincipal));
+            cell.SetBackgroundColor(backgroundColor);
+            cell.SetPadding(8);
+            if (alignment.HasValue)
+            {
+                cell.SetTextAlignment(alignment.Value);
+            }
+            cell.SetBorderBottom(new SolidBorder(ColorLinea, 0.5f));
+            cell.SetBorderTop(Border.NO_BORDER);
+            cell.SetBorderLeft(Border.NO_BORDER);
+            cell.SetBorderRight(Border.NO_BORDER);
+            table.AddCell(cell);
+        }
+
+        private string FormatearMedidasLlanta(Llanta llanta)
+        {
+            if (llanta == null)
+                return null;
+
+            // Formatear medidas según estándar de neumáticos
+            // Formato: {Ancho}/{Perfil}/R{Diametro} o {Ancho}/R{Diametro} (sin perfil)
+            if (llanta.Ancho.HasValue && !string.IsNullOrEmpty(llanta.Diametro))
+            {
+                var anchoStr = FormatearMedida(llanta.Ancho.Value);
+
+                // Verificar si tiene perfil (y si es mayor que 0)
+                if (llanta.Perfil.HasValue && llanta.Perfil.Value > 0)
+                {
+                    var perfilStr = FormatearMedida(llanta.Perfil.Value);
+                    return $"{anchoStr}/{perfilStr}/R{llanta.Diametro}";
+                }
+                else
+                {
+                    // Sin perfil, solo ancho y diámetro
+                    return $"{anchoStr}/R{llanta.Diametro}";
+                }
+            }
+            else if (llanta.Ancho.HasValue)
+            {
+                // Solo tiene ancho, sin diámetro
+                return FormatearMedida(llanta.Ancho.Value);
+            }
+
+            return null;
+        }
+
+        private string FormatearMedida(decimal valor)
+        {
+            // Si el valor es un número entero (sin decimales), mostrarlo sin .00
+            if (valor == Math.Floor(valor))
+                return valor.ToString("0");
+
+            // Si tiene decimales, mostrarlos (elimina ceros finales)
+            return valor.ToString("0.##");
         }
     }
 }
