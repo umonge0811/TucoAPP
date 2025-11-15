@@ -375,15 +375,23 @@ function mostrarFacturasPendientesEnTabla(facturas) {
                 <td>${estadoBadge}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                        <button type="button" class="btn btn-outline-info" title="Vista previa de impresión" data-factura-id="${factura.facturaId || factura.id}">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir directamente" data-factura-id="${factura.facturaId || factura.id}">
                             <i class="bi bi-printer"></i>
                         </button>
                         ${factura.estado === 'Pendiente' ? `
                         <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                             <i class="bi bi-check-circle"></i>
+                        </button>
+                        ` : ''}
+                        ${(factura.estado === 'Pagada' || factura.estado === 'Anulada') ? `
+                        <button type="button" class="btn btn-outline-warning" title="Editar con PIN"
+                                data-factura-id="${factura.facturaId || factura.id}"
+                                data-numero-factura="${factura.numeroFactura}"
+                                onclick="solicitarPinParaEditar(${factura.facturaId || factura.id}, '${factura.numeroFactura}')">
+                            <i class="bi bi-pencil-square"></i>
                         </button>
                         ` : ''}
                     </div>
@@ -763,12 +771,20 @@ function crearFilaFacturaPendiente(factura) {
                 </div>
                 <!-- Botones horizontales en tablet/desktop -->
                 <div class="btn-group btn-group-sm d-none d-sm-inline-block">
-                    <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                    <button type="button" class="btn btn-outline-info btn-sm" title="Vista previa de impresión" data-factura-id="${factura.facturaId || factura.id}">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" title="Imprimir directamente" data-factura-id="${factura.facturaId || factura.id}">
                         <i class="bi bi-printer"></i>
                     </button>
+                    ${(factura.estado === 'Pagada' || factura.estado === 'Anulada') ? `
+                    <button type="button" class="btn btn-outline-warning btn-sm" title="Editar con PIN"
+                            data-factura-id="${factura.facturaId || factura.id}"
+                            data-numero-factura="${factura.numeroFactura}"
+                            onclick="solicitarPinParaEditar(${factura.facturaId || factura.id}, '${factura.numeroFactura}')">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    ` : ''}
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>

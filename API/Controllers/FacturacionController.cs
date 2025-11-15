@@ -40,6 +40,15 @@ namespace API.Controllers
             _movimientosPostCorteService = movimientosPostCorteService;
         }
 
+        /// <summary>
+        /// Obtiene la fecha y hora actual de Costa Rica (UTC-6)
+        /// </summary>
+        private DateTime ObtenerFechaHoraCostaRica()
+        {
+            var costaRicaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, costaRicaTimeZone);
+        }
+
         // =====================================
         // PRODUCTOS PARA VENTA
         // =====================================
@@ -263,8 +272,8 @@ namespace API.Controllers
                     EmailCliente = facturaDto.EmailCliente,
                     DireccionCliente = facturaDto.DireccionCliente,
                     FechaFactura = facturaDto.FechaFactura,
-                    FechaVencimiento = facturaDto.TipoDocumento == "Proforma" ? 
-                        DateTime.Now.AddDays(30) : facturaDto.FechaVencimiento,
+                    FechaVencimiento = facturaDto.TipoDocumento == "Proforma" ?
+                        ObtenerFechaHoraCostaRica().AddDays(30) : facturaDto.FechaVencimiento,
                     Subtotal = facturaDto.SubtotalConDescuento,
                     DescuentoGeneral = facturaDto.DescuentoGeneral,
                     PorcentajeImpuesto = facturaDto.PorcentajeImpuesto,
@@ -275,7 +284,7 @@ namespace API.Controllers
                     MetodoPago = metodoPagoFactura,
                     Observaciones = facturaDto.Observaciones,
                     UsuarioCreadorId = facturaDto.UsuarioCreadorId,
-                    FechaCreacion = DateTime.Now
+                    FechaCreacion = ObtenerFechaHoraCostaRica()
                 };
 
                 _context.Facturas.Add(factura);
@@ -312,7 +321,7 @@ namespace API.Controllers
                         Monto = facturaDto.TotalCalculado,
                         Referencia = null,
                         Observaciones = null,
-                        FechaPago = DateTime.Now
+                        FechaPago = ObtenerFechaHoraCostaRica()
                     };
 
                     _context.DetallesPago.Add(pagoUnico);
@@ -709,7 +718,7 @@ namespace API.Controllers
 
                     // Marcar proforma como facturada
                     factura.Estado = "Facturada";
-                    factura.FechaActualizacion = DateTime.Now;
+                    factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
 
                     // Agregar información de conversión en observaciones
                     if (request != null)
@@ -898,7 +907,7 @@ namespace API.Controllers
                                 FacturaId = factura.FacturaId,
                                 MetodoPago = request.MetodoPago,
                                 Monto = factura.Total,
-                                FechaPago = DateTime.Now
+                                FechaPago = ObtenerFechaHoraCostaRica()
                             };
                             _context.DetallesPago.Add(pagoUnico);
                         }
@@ -907,7 +916,7 @@ namespace API.Controllers
 
                 // Completar factura
                 factura.Estado = "Pagada";
-                factura.FechaActualizacion = DateTime.Now;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
 
                 if (request != null && !string.IsNullOrEmpty(request.Observaciones))
                 {
@@ -1178,7 +1187,7 @@ namespace API.Controllers
 
                 var estadoAnterior = factura.Estado;
                 factura.Estado = nuevoEstado;
-                factura.FechaActualizacion = DateTime.Now;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
 
                 await _context.SaveChangesAsync();
 
@@ -2216,6 +2225,96 @@ namespace API.Controllers
         }
 
         // =====================================
+        // EDICIÓN DE FACTURAS TRAMITADAS CON PIN
+        // =====================================
+
+        [HttpPost("validar-pin-edicion")]
+        [Authorize]
+        public IActionResult ValidarPinEdicion([FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 Validando PIN de edición de facturas");
+
+                var pinCorrecto = _configuration["FacturacionSettings:PinEdicionFacturas"];
+
+                if (string.IsNullOrEmpty(pinCorrecto))
+                {
+                    _logger.LogError("❌ PIN de edición no configurado en appsettings");
+                    return StatusCode(500, new { success = false, message = "PIN de edición no configurado" });
+                }
+
+                if (request.Pin == pinCorrecto)
+                {
+                    _logger.LogInformation("✅ PIN de edición validado correctamente");
+                    return Ok(new { success = true, message = "PIN correcto" });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ PIN de edición incorrecto");
+                    return Ok(new { success = false, message = "PIN incorrecto" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut("facturas/{facturaId}/desbloquear-edicion")]
+        [Authorize]
+        public async Task<IActionResult> DesbloquearFacturaParaEdicion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔓 Intentando desbloquear factura {FacturaId} para edición", facturaId);
+
+                // Validar PIN
+                var pinCorrecto = _configuration["FacturacionSettings:PinEdicionFacturas"];
+                if (request.Pin != pinCorrecto)
+                {
+                    return BadRequest(new { success = false, message = "PIN incorrecto" });
+                }
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .Include(f => f.DetallesPago)
+                    .FirstOrDefaultAsync(f => f.FacturaId == facturaId);
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Cambiar estado a Pendiente para permitir edición
+                var estadoAnterior = factura.Estado;
+                factura.Estado = "Pendiente";
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+                factura.Observaciones = (factura.Observaciones ?? "") +
+                    $" | DESBLOQUEADA PARA EDICIÓN (Estado anterior: {estadoAnterior}) - {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}";
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} desbloqueada para edición (Estado anterior: {EstadoAnterior})",
+                    factura.NumeroFactura, estadoAnterior);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Factura desbloqueada para edición",
+                    facturaId = factura.FacturaId,
+                    numeroFactura = factura.NumeroFactura,
+                    estadoAnterior = estadoAnterior,
+                    estadoActual = factura.Estado
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error desbloqueando factura {FacturaId} para edición", facturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
         // =====================================
 
@@ -2350,5 +2449,10 @@ namespace API.Controllers
     {
         public int? FacturaGeneradaId { get; set; }
         public string? NumeroFacturaGenerada { get; set; }
+    }
+
+    public class ValidarPinRequest
+    {
+        public string Pin { get; set; } = string.Empty;
     }
 }
