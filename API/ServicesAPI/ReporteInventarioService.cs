@@ -681,19 +681,44 @@ namespace API.ServicesAPI
                 detalleTitulo.SetMarginBottom(10f);
                 document.Add(detalleTitulo);
 
-                var productosTable = new Table(new float[] { 3f, 1f, 1f, 1f, 1.2f, 1.5f, 1f, 1.5f });
+                // ✅ TABLA CON TODAS LAS COLUMNAS (18 columnas como el Excel)
+                var productosTable = new Table(new float[] {
+                    0.5f,  // ID
+                    2f,    // Producto
+                    1.5f,  // Descripción
+                    1.2f,  // Medidas
+                    1f,    // Tipo Terreno
+                    0.6f,  // Capas
+                    1f,    // Marca
+                    1f,    // Modelo
+                    0.7f,  // Índice Vel.
+                    0.7f,  // Stock Mín.
+                    0.8f,  // Cant. Sistema
+                    0.8f,  // Cant. Física
+                    0.8f,  // Diferencia
+                    1f,    // Costo
+                    0.7f,  // % Utilidad
+                    1f,    // Precio Venta
+                    1f,    // Impacto $
+                    1f     // Usuario Conteo
+                });
                 productosTable.SetWidth(UnitValue.CreatePercentValue(100));
 
-                // Headers de productos con colores
-                string[] productHeaders = { "Producto", "Sistema", "Físico", "Diferencia", "Precio Unit.", "Impacto", "Estado", "Usuario" };
+                // ✅ HEADERS COMPLETOS (18 columnas)
+                string[] productHeaders = {
+                    "ID", "Producto", "Descripción", "Medidas", "Tipo Terreno", "Capas",
+                    "Marca", "Modelo", "Índice Vel.", "Stock Mín.", "Cant. Sistema", "Cant. Física",
+                    "Diferencia", "Costo", "% Utilidad", "Precio Venta", "Impacto $", "Usuario Conteo"
+                };
                 foreach (var header in productHeaders)
                 {
                     var headerCell = new Cell();
-                    headerCell.Add(new Paragraph(header).SetFont(boldFont).SetFontSize(8).SetFontColor(blanco));
+                    headerCell.Add(new Paragraph(header).SetFont(boldFont).SetFontSize(6).SetFontColor(blanco));
                     headerCell.SetBackgroundColor(azulEmpresa);
-                    headerCell.SetPadding(6f);
+                    headerCell.SetPadding(4f);
                     headerCell.SetBorder(new SolidBorder(1));
                     headerCell.SetTextAlignment(TextAlignment.CENTER);
+                    headerCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
                     productosTable.AddCell(headerCell);
                 }
 
@@ -718,28 +743,38 @@ namespace API.ServicesAPI
                         if (producto.Diferencia >= 10) backgroundColor = new DeviceRgb(200, 230, 201); // Verde más fuerte
                     }
 
-                    void AddProductCell(string text, bool isNumber = false, bool isCurrency = false)
+                    void AddProductCell(string text, bool isNumber = false, bool isCurrency = false, int fontSize = 6)
                     {
                         var font = producto.Categoria != "Correcto" ? boldFont : normalFont;
 
                         var cell = new Cell();
-                        cell.Add(new Paragraph(text).SetFont(font).SetFontSize(7).SetFontColor(textColor));
+                        cell.Add(new Paragraph(text).SetFont(font).SetFontSize(fontSize).SetFontColor(textColor));
                         cell.SetBackgroundColor(backgroundColor);
-                        cell.SetPadding(4f);
+                        cell.SetPadding(3f);
                         cell.SetBorder(new SolidBorder(1));
                         cell.SetTextAlignment(isNumber || isCurrency ? TextAlignment.RIGHT : TextAlignment.LEFT);
                         productosTable.AddCell(cell);
                     }
 
-                    // Datos del producto
-                    AddProductCell(producto.NombreProducto.Length > 30 ? producto.NombreProducto.Substring(0, 30) + "..." : producto.NombreProducto);
-                    AddProductCell(producto.CantidadSistema.ToString(), true);
-                    AddProductCell(producto.CantidadFisica.ToString(), true);
-                    AddProductCell(producto.Diferencia.ToString(), true);
-                    AddProductCell($"₡{producto.PrecioUnitario:N0}", true, true);
-                    AddProductCell($"₡{producto.ImpactoEconomico:N0}", true, true);
-                    AddProductCell(producto.Categoria);
-                    AddProductCell(producto.UsuarioConteo?.Length > 12 ? producto.UsuarioConteo.Substring(0, 12) + "..." : producto.UsuarioConteo ?? "N/A");
+                    // ✅ DATOS DEL PRODUCTO (18 columnas)
+                    AddProductCell(producto.ProductoId.ToString(), true);                                          // 1. ID
+                    AddProductCell(producto.NombreProducto.Length > 25 ? producto.NombreProducto.Substring(0, 25) + "..." : producto.NombreProducto); // 2. Producto
+                    AddProductCell(producto.Descripcion?.Length > 20 ? producto.Descripcion.Substring(0, 20) + "..." : producto.Descripcion ?? "-"); // 3. Descripción
+                    AddProductCell(producto.Medidas ?? "-");                                                       // 4. Medidas
+                    AddProductCell(producto.TipoTerreno ?? "-");                                                   // 5. Tipo Terreno
+                    AddProductCell(producto.Capas?.ToString() ?? "-", true);                                       // 6. Capas
+                    AddProductCell(producto.Marca ?? "-");                                                         // 7. Marca
+                    AddProductCell(producto.Modelo ?? "-");                                                        // 8. Modelo
+                    AddProductCell(producto.IndiceVelocidad ?? "-");                                               // 9. Índice Vel.
+                    AddProductCell(producto.StockMinimo?.ToString() ?? "-", true);                                 // 10. Stock Mín.
+                    AddProductCell(producto.CantidadSistema.ToString(), true);                                     // 11. Cant. Sistema
+                    AddProductCell(producto.CantidadFisica.ToString(), true);                                      // 12. Cant. Física
+                    AddProductCell(producto.Diferencia.ToString(), true);                                          // 13. Diferencia
+                    AddProductCell(producto.Costo.HasValue ? $"₡{producto.Costo.Value:N0}" : "-", true, true);   // 14. Costo
+                    AddProductCell(producto.PorcentajeUtilidad.HasValue ? $"{producto.PorcentajeUtilidad.Value:N1}%" : "-", true); // 15. % Utilidad
+                    AddProductCell($"₡{producto.PrecioUnitario:N0}", true, true);                                 // 16. Precio Venta
+                    AddProductCell($"₡{producto.ImpactoEconomico:N0}", true, true);                               // 17. Impacto $
+                    AddProductCell(producto.UsuarioConteo ?? "N/A");                                               // 18. Usuario Conteo
                 }
 
                 _logger.LogInformation("✅ Productos procesados: {Count}/{Total}", productosProcesados, reporte.Productos.Count);
