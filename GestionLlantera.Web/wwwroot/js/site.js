@@ -243,7 +243,7 @@ function getCSRFToken() {
 // Función para marcar como leída
 async function marcarNotificacionComoLeida(notificacionId) {
     try {
-        const response = await fetch('/Notificaciones/marcar-leida', {
+        const response = await fetch('/Notificaciones/MarcarComoLeida', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -309,7 +309,7 @@ async function ocultarNotificacion(notificacionId) {
 async function marcarTodasComoLeidas() {
     console.log('Marcando todas las notificaciones como leídas...');
     try {
-        const response = await fetch('/Notificaciones/marcar-todas-leidas', {
+        const response = await fetch('/Notificaciones/MarcarTodasComoLeidas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
