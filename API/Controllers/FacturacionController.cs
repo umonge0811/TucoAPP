@@ -25,19 +25,22 @@ namespace API.Controllers
         private readonly IPermisosService _permisosService;
         private readonly INotificacionService _notificacionService;
         private readonly IMovimientosPostCorteService _movimientosPostCorteService;
+        private readonly IConfiguration _configuration;
 
         public FacturacionController(
             TucoContext context,
             ILogger<FacturacionController> logger,
             IPermisosService permisosService,
             INotificacionService notificacionService,
-            IMovimientosPostCorteService movimientosPostCorteService)
+            IMovimientosPostCorteService movimientosPostCorteService,
+            IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
             _permisosService = permisosService;
             _notificacionService = notificacionService;
             _movimientosPostCorteService = movimientosPostCorteService;
+            _configuration = configuration;
         }
 
         /// <summary>
