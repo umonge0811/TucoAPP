@@ -859,6 +859,10 @@ function inicializarFacturacion() {
         // ✅ ESTABLECER ESTADO INICIAL DEL BOTÓN FINALIZAR
         actualizarEstadoBotonFinalizar();
 
+        // ✅ CARGAR CLIENTE GENERAL POR DEFECTO
+        console.log('🚀 Cargando cliente general por defecto...');
+        cargarClienteGeneralPorDefecto();
+
         // Cargar productos iniciales
         console.log('🚀 Iniciando carga de productos iniciales...');
         cargarProductosIniciales();
@@ -1684,6 +1688,40 @@ function seleccionarCliente(cliente) {
 
     // Debug: verificar que tenemos todos los datos del cliente
     console.log('Cliente seleccionado:', cliente);
+}
+
+// ===== CARGAR CLIENTE GENERAL POR DEFECTO =====
+async function cargarClienteGeneralPorDefecto() {
+    try {
+        console.log('👥 Buscando cliente "Cliente General"...');
+
+        // Buscar el cliente con el término "Cliente General"
+        const response = await fetch(`/Clientes/BuscarClientes?termino=Cliente General`);
+
+        if (!response.ok) {
+            console.warn('⚠️ No se pudo buscar el cliente general');
+            return;
+        }
+
+        const resultado = await response.json();
+
+        if (resultado.success && resultado.data && resultado.data.length > 0) {
+            // Buscar el cliente exacto (en caso de que haya varios con nombre similar)
+            const clienteGeneral = resultado.data.find(c =>
+                c.nombre.toLowerCase().trim() === 'cliente general'
+            ) || resultado.data[0];
+
+            // Seleccionar el cliente automáticamente
+            seleccionarCliente(clienteGeneral);
+
+            console.log('✅ Cliente General cargado por defecto:', clienteGeneral);
+        } else {
+            console.log('ℹ️ No se encontró el cliente "Cliente General" en la base de datos');
+        }
+
+    } catch (error) {
+        console.error('❌ Error cargando cliente general:', error);
+    }
 }
 
 // ===== MODAL DE SELECCIÓN DE PRODUCTO =====
@@ -6240,11 +6278,16 @@ function verDetalleProducto(producto) {
                     <!-- FOOTER COMPACTO -->
                     <div class="modal-footer bg-light py-2">
                         <div class="d-flex w-100 justify-content-between align-items-center">
-                            <small class="text-muted">
-                                ${producto.fechaUltimaActualizacion ?
-            `<i class="bi bi-clock-history me-1"></i>Actualizado: ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}`
-            : ''}
-                            </small>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="compartirProducto(${producto.productoId})" title="Copiar link público del producto">
+                                    <i class="bi bi-share me-1"></i>Compartir Link
+                                </button>
+                                <small class="text-muted ms-2">
+                                    ${producto.fechaUltimaActualizacion ?
+                `<i class="bi bi-clock-history me-1"></i>Actualizado: ${new Date(producto.fechaUltimaActualizacion).toLocaleDateString()}`
+                : ''}
+                                </small>
+                            </div>
                             <div>
                                 <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
                                     <i class="bi bi-x-circle me-1"></i>Cerrar
@@ -9306,11 +9349,42 @@ function descargarImagen(urlImagen, nombreProducto) {
     }
 }
 
+/**
+ * ✅ FUNCIÓN: Compartir producto - Copiar link público al portapapeles
+ */
+function compartirProducto(productoId) {
+    try {
+        // Obtener el dominio actual
+        const dominio = window.location.origin;
+
+        // Construir el link público del producto
+        const linkPublico = `${dominio}/Public/DetalleProducto/${productoId}`;
+
+        // Copiar al portapapeles
+        navigator.clipboard.writeText(linkPublico).then(() => {
+            // Mostrar mensaje de éxito
+            mostrarToast('Link Copiado', 'El link público del producto ha sido copiado al portapapeles. Ahora puedes enviarlo a tu cliente.', 'success');
+
+            console.log('✅ Link público copiado:', linkPublico);
+        }).catch(err => {
+            console.error('❌ Error al copiar al portapapeles:', err);
+
+            // Fallback: Mostrar el link en un alert para copiar manualmente
+            const mensaje = `Link público del producto:\n\n${linkPublico}\n\nCopia este link y envíalo a tu cliente.`;
+            alert(mensaje);
+        });
+    } catch (error) {
+        console.error('❌ Error al compartir producto:', error);
+        mostrarToast('Error', 'No se pudo generar el link del producto', 'danger');
+    }
+}
+
 // Exportar funciones globalmente
 window.cargarImagenesDetallesProducto = cargarImagenesDetallesProducto;
 window.abrirZoomImagenMejorado = abrirZoomImagenMejorado;
 window.construirUrlImagen = construirUrlImagen;
 window.descargarImagen = descargarImagen;
+window.compartirProducto = compartirProducto;
 
 /**
  * ✅ FUNCIÓN AUXILIAR: Construir URL de imagen correcta
