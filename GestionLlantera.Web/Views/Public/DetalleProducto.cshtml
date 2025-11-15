@@ -53,21 +53,20 @@
                     }
                     else
                     {
-                        @{
-                            // Determinar qué placeholder usar según el tipo de producto
-                            var placeholderUrl = "/images/no-image.png";
-                            if (Model.EsLlanta)
+                        // Determinar qué placeholder usar según el tipo de producto
+                        var placeholderUrl = "/images/no-image.png";
+                        if (Model.EsLlanta)
+                        {
+                            if (Model.NombreProducto?.ToUpper().StartsWith("LLANTA MOTO") == true)
                             {
-                                if (Model.NombreProducto?.ToUpper().StartsWith("LLANTA MOTO") == true)
-                                {
-                                    placeholderUrl = "/images/llanta-moto-placeholder.jpg";
-                                }
-                                else
-                                {
-                                    placeholderUrl = "/images/llanta-placeholder.jpg";
-                                }
+                                placeholderUrl = "/images/llanta-moto-placeholder.jpg";
+                            }
+                            else
+                            {
+                                placeholderUrl = "/images/llanta-placeholder.jpg";
                             }
                         }
+
                         <div class="imagen-principal-container">
                             <img id="imagenPrincipal"
                                  src="@placeholderUrl"
