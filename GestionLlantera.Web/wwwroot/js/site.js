@@ -507,12 +507,12 @@ function obtenerImagenPlaceholder(producto) {
 
     // Determinar placeholder según tipo de llanta
     if (producto.esLlanta || producto.llanta) {
-        // Si tiene información de tipo de llanta
-        if (producto.tipoLlanta) {
-            const tipoLlanta = producto.tipoLlanta.toUpperCase();
-            if (tipoLlanta === 'MOTO' || tipoLlanta === 'MOTOCICLETA') {
-                return '/images/llanta-moto-placeholder.jpg';
-            }
+        // Obtener el nombre del producto
+        const nombreProducto = producto.nombreProducto || producto.nombre || '';
+
+        // Si el nombre empieza con "Llanta MOTO", usar placeholder de moto
+        if (nombreProducto.toUpperCase().startsWith('LLANTA MOTO')) {
+            return '/images/llanta-moto-placeholder.jpg';
         }
 
         // Para cualquier otro tipo de llanta (auto, camión, etc.)
