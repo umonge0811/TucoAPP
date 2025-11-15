@@ -2387,6 +2387,8 @@ namespace API.Controllers
                 }
 
                 // ===== ACTUALIZAR ESTADO FINAL DE LA FACTURA =====
+                _logger.LogInformation("🔍 Valor de EsAnulada recibido: {EsAnulada}", request.EsAnulada);
+
                 if (request.EsAnulada)
                 {
                     factura.Estado = "Anulada";
@@ -2455,6 +2457,35 @@ namespace API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut("facturas/{facturaId}/restaurar-estado")]
+        [Authorize]
+        public async Task<IActionResult> RestaurarEstadoFactura(int facturaId, [FromBody] RestaurarEstadoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Restaurando estado de factura {FacturaId} a {EstadoAnterior}", facturaId, request.EstadoAnterior);
+
+                var factura = await _context.Facturas.FindAsync(facturaId);
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Restaurar al estado anterior
+                factura.Estado = request.EstadoAnterior;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Estado restaurado exitosamente a: {Estado}", factura.Estado);
+
+                return Ok(new { success = true, message = "Estado restaurado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error restaurando estado de factura {FacturaId}", facturaId);
                 return StatusCode(500, new { success = false, message = "Error interno del servidor" });
             }
         }
@@ -2651,6 +2682,11 @@ namespace API.Controllers
     public class ValidarPinRequest
     {
         public string Pin { get; set; } = string.Empty;
+    }
+
+    public class RestaurarEstadoRequest
+    {
+        public string EstadoAnterior { get; set; } = string.Empty;
     }
 
     public class ActualizarFacturaRequest

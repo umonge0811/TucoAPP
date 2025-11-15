@@ -122,8 +122,8 @@ async function desbloquearFactura(facturaId, pin) {
                 timer: 2000,
                 timerProgressBar: true
             }).then(() => {
-                // Redirigir a la pantalla de edición
-                window.location.href = `/Facturacion/Editar?facturaId=${facturaId}`;
+                // Redirigir a la pantalla de edición con el estado anterior
+                window.location.href = `/Facturacion/Editar?facturaId=${facturaId}&estadoAnterior=${encodeURIComponent(resultado.estadoAnterior)}`;
             });
 
         } else {

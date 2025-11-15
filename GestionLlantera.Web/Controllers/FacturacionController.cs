@@ -1754,6 +1754,30 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpPut]
+        public async Task<IActionResult> RestaurarEstadoFactura(int facturaId, [FromBody] RestaurarEstadoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Restaurando estado de factura {FacturaId} desde controlador Web", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.RestaurarEstadoFacturaAsync(facturaId, request.EstadoAnterior, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error restaurando estado de factura {FacturaId}", facturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         // ===== EDICIÓN DE FACTURAS =====
         [HttpGet]
         public async Task<IActionResult> Editar(int facturaId)
@@ -1885,6 +1909,11 @@ namespace GestionLlantera.Web.Controllers
     public class ValidarPinRequest
     {
         public string Pin { get; set; } = string.Empty;
+    }
+
+    public class RestaurarEstadoRequest
+    {
+        public string EstadoAnterior { get; set; } = string.Empty;
     }
 
     public class ActualizarFacturaRequest

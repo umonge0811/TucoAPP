@@ -5,10 +5,19 @@ let facturaActual = null;
 let productosEditar = [];
 let clienteEditar = null;
 let cambiosRealizados = [];
+let estadoOriginal = null; // Para restaurar el estado si se cancela sin cambios
 
 $(document).ready(function() {
     console.log('📝 === INICIANDO MODO EDICIÓN DE FACTURA ===');
     console.log('📝 Factura ID:', window.facturaIdEditar);
+
+    // Obtener estado anterior de la URL (si viene desde desbloqueo con PIN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const estadoAnteriorParam = urlParams.get('estadoAnterior');
+    if (estadoAnteriorParam) {
+        estadoOriginal = estadoAnteriorParam;
+        console.log('📌 Estado original guardado:', estadoOriginal);
+    }
 
     if (!window.facturaIdEditar) {
         Swal.fire({
@@ -44,6 +53,15 @@ async function cargarFacturaParaEditar() {
             facturaActual = result.factura;
 
             console.log('✅ Factura cargada:', facturaActual);
+
+            // Si no tenemos el estado original de la URL, intentar extraerlo de las observaciones
+            if (!estadoOriginal && facturaActual.observaciones) {
+                const match = facturaActual.observaciones.match(/Estado anterior:\s*([^)]+)\)/);
+                if (match && match[1]) {
+                    estadoOriginal = match[1].trim();
+                    console.log('📌 Estado original extraído de observaciones:', estadoOriginal);
+                }
+            }
 
             mostrarInformacionFactura();
             cargarDatosCliente();
@@ -274,7 +292,7 @@ function eliminarProducto(index) {
     });
 }
 
-// ===== CALCULAR TOTALES =====
+// ===== CALCULAR TOTALES (SIN IVA) =====
 function calcularTotales() {
     // Calcular subtotal de productos
     let subtotal = productosEditar.reduce((sum, p) => sum + p.subtotal, 0);
@@ -284,16 +302,13 @@ function calcularTotales() {
     const montoDescuento = subtotal * (descuentoGeneral / 100);
     const subtotalConDescuento = subtotal - montoDescuento;
 
-    // Calcular IVA
-    const iva = subtotalConDescuento * 0.13;
-
-    // Total
-    const total = subtotalConDescuento + iva;
+    // Total SIN IVA (la factura ya tiene IVA incluido en los precios)
+    const total = subtotalConDescuento;
 
     // Actualizar vista
     $('#subtotalEditar').text('₡' + subtotal.toLocaleString('es-CR', {minimumFractionDigits: 2}));
     $('#montoDescuentoEditar').text('-₡' + montoDescuento.toLocaleString('es-CR', {minimumFractionDigits: 2}));
-    $('#ivaEditar').text('₡' + iva.toLocaleString('es-CR', {minimumFractionDigits: 2}));
+    $('#ivaEditar').text('₡0.00'); // Sin IVA adicional
     $('#totalEditar').text('₡' + total.toLocaleString('es-CR', {minimumFractionDigits: 2}));
 }
 
@@ -552,6 +567,7 @@ async function guardarCambiosFactura() {
         const datosActualizacion = prepararDatosActualizacion();
 
         console.log('💾 Guardando cambios:', datosActualizacion);
+        console.log('🔍 EsAnulada:', datosActualizacion.esAnulada, '| Tipo:', typeof datosActualizacion.esAnulada);
 
         const response = await fetch(`/Facturacion/ActualizarFactura`, {
             method: 'PUT',
@@ -682,13 +698,12 @@ function calcularAjustesStock(esAnulada) {
 }
 
 function prepararDatosActualizacion() {
-    // Calcular totales finales
+    // Calcular totales finales SIN IVA
     const subtotal = productosEditar.reduce((sum, p) => sum + p.subtotal, 0);
     const descuentoGeneral = parseFloat($('#descuentoGeneralEditar').val()) || 0;
     const montoDescuento = subtotal * (descuentoGeneral / 100);
     const subtotalConDescuento = subtotal - montoDescuento;
-    const iva = subtotalConDescuento * 0.13;
-    const total = subtotalConDescuento + iva;
+    const total = subtotalConDescuento; // Sin IVA adicional
 
     // Verificar si la factura está marcada para anulación
     const esAnulada = $('#facturaAnuladaFlag').val() === 'true';
@@ -715,7 +730,7 @@ function prepararDatosActualizacion() {
         })),
         descuentoGeneral: descuentoGeneral,
         subtotal: subtotal,
-        montoImpuesto: iva,
+        montoImpuesto: 0, // Sin IVA
         total: total,
         metodoPago: $('#metodoPagoEditar').val(),
         observaciones: $('#observacionesEditar').val(),
@@ -726,8 +741,9 @@ function prepararDatosActualizacion() {
 }
 
 // ===== CANCELAR EDICIÓN =====
-function cancelarEdicion() {
+async function cancelarEdicion() {
     if (cambiosRealizados.length > 0) {
+        // Si hay cambios sin guardar, advertir al usuario
         Swal.fire({
             title: '¿Cancelar Edición?',
             html: `Tienes <strong>${cambiosRealizados.length}</strong> cambio(s) sin guardar.<br>¿Estás seguro de salir?`,
@@ -737,13 +753,45 @@ function cancelarEdicion() {
             cancelButtonColor: '#6c757d',
             confirmButtonText: 'Sí, salir sin guardar',
             cancelButtonText: 'Continuar editando'
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
+                // Restaurar estado antes de salir
+                await restaurarEstadoOriginal();
                 window.location.href = '/Facturacion';
             }
         });
     } else {
+        // Si NO hay cambios, restaurar el estado automáticamente
+        await restaurarEstadoOriginal();
         window.location.href = '/Facturacion';
+    }
+}
+
+// ===== RESTAURAR ESTADO ORIGINAL =====
+async function restaurarEstadoOriginal() {
+    if (!estadoOriginal) {
+        console.log('ℹ️ No hay estado original para restaurar');
+        return;
+    }
+
+    try {
+        console.log('🔄 Restaurando estado original:', estadoOriginal);
+
+        const response = await fetch(`/Facturacion/RestaurarEstadoFactura?facturaId=${window.facturaIdEditar}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ estadoAnterior: estadoOriginal })
+        });
+
+        const resultado = await response.json();
+
+        if (resultado.success) {
+            console.log('✅ Estado restaurado exitosamente a:', estadoOriginal);
+        } else {
+            console.error('❌ Error restaurando estado:', resultado.message);
+        }
+    } catch (error) {
+        console.error('❌ Error en restauración de estado:', error);
     }
 }
 
