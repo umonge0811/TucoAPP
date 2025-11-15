@@ -1984,7 +1984,7 @@ function configurarEventListeners() {
 
     // Event listeners para panel de finalización
     $('#btnVerResumenCompleto').on('click', verResumenCompleto);
-    $('#btnExportarInventario').on('click', exportarInventario);
+    $('#btnExportarInventario').on('click', () => exportarInventario(window.inventarioConfig.inventarioId));
     $('#btnFinalizarInventario').on('click', finalizarInventarioCompleto);
 
     configurarEventListenersFiltrado();
@@ -7635,8 +7635,196 @@ function generarHtmlReporte(datos) {
 /**
  * ✅ FUNCIÓN: Exportar inventario (usando utilidades globales)
  */
+/**
+ * ✅ FUNCIÓN: Mostrar opciones de descarga de reporte
+ */
+async function mostrarOpcionesDescarga(inventarioId, tituloInventario) {
+    try {
+        const resultado = await Swal.fire({
+            title: '📥 Descargar Reporte de Inventario',
+            html: `
+                <div class="text-start">
+                    <p class="mb-3"><strong>Inventario:</strong> ${tituloInventario || `ID: ${inventarioId}`}</p>
+                    <p class="text-muted">Selecciona el formato de descarga:</p>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonText: '<i class="bi bi-file-earmark-excel me-2"></i>Descargar Excel',
+            denyButtonText: '<i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#28a745',
+            denyButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d'
+        });
+
+        if (resultado.isConfirmed) {
+            // Descargar Excel
+            await descargarReporteExcel(inventarioId);
+        } else if (resultado.isDenied) {
+            // Descargar PDF
+            await descargarReportePdf(inventarioId);
+        }
+
+    } catch (error) {
+        console.error('❌ Error mostrando opciones de descarga:', error);
+        mostrarError('Error al mostrar opciones de descarga');
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Descargar reporte en formato Excel
+ */
+async function descargarReporteExcel(inventarioId) {
+    try {
+        console.log('📥 Descargando reporte Excel para inventario:', inventarioId);
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando reporte...',
+            text: 'Por favor espera mientras se genera el archivo Excel',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Construir URL del endpoint
+        const url = `/api/Reportes/inventario/${inventarioId}/excel`;
+
+        // Realizar petición con autenticación
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener blob del archivo
+        const blob = await response.blob();
+
+        // Crear nombre de archivo
+        const fileName = `Reporte_Inventario_${inventarioId}_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Crear link de descarga y hacer clic automático
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+
+        // Cerrar loading y mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            text: `El archivo ${fileName} se ha descargado correctamente`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('❌ Error descargando Excel:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar',
+            text: error.message || 'No se pudo descargar el reporte Excel. Verifica tus permisos.',
+            confirmButtonColor: '#d33'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Descargar reporte en formato PDF
+ */
+async function descargarReportePdf(inventarioId) {
+    try {
+        console.log('📄 Descargando reporte PDF para inventario:', inventarioId);
+
+        // Mostrar loading
+        Swal.fire({
+            title: 'Generando reporte...',
+            text: 'Por favor espera mientras se genera el archivo PDF',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        // Construir URL del endpoint
+        const url = `/api/Reportes/inventario/${inventarioId}/pdf`;
+
+        // Realizar petición con autenticación
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+
+        // Obtener blob del archivo
+        const blob = await response.blob();
+
+        // Crear nombre de archivo
+        const fileName = `Reporte_Inventario_${inventarioId}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+        // Crear link de descarga y hacer clic automático
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(link.href);
+
+        // Cerrar loading y mostrar éxito
+        Swal.fire({
+            icon: 'success',
+            title: '¡Descarga exitosa!',
+            text: `El archivo ${fileName} se ha descargado correctamente`,
+            timer: 3000,
+            showConfirmButton: false
+        });
+
+    } catch (error) {
+        console.error('❌ Error descargando PDF:', error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error al descargar',
+            text: error.message || 'No se pudo descargar el reporte PDF. Verifica tus permisos.',
+            confirmButtonColor: '#d33'
+        });
+    }
+}
+
+/**
+ * ✅ FUNCIÓN: Exportar inventario (wrapper que muestra opciones)
+ */
 async function exportarInventario(inventarioId) {
     try {
+        // ✅ Si no se pasa inventarioId, obtenerlo de la configuración
+        if (!inventarioId) {
+            inventarioId = window.inventarioConfig?.inventarioId || getInventarioIdFromUrl();
+        }
+
+        if (!inventarioId) {
+            throw new Error('No se pudo obtener el ID del inventario');
+        }
+
         console.log('📤 Exportando inventario:', inventarioId);
 
         // ✅ OBTENER TÍTULO DEL INVENTARIO
@@ -7645,8 +7833,8 @@ async function exportarInventario(inventarioId) {
             window.inventarioConfig?.titulo ||
             'Inventario';
 
-        // ✅ LLAMAR A LA FUNCIÓN GLOBAL DE REPORTES
-        mostrarOpcionesDescarga(inventarioId, tituloInventario);
+        // ✅ LLAMAR A LA FUNCIÓN DE OPCIONES DE DESCARGA
+        await mostrarOpcionesDescarga(inventarioId, tituloInventario);
 
     } catch (error) {
         console.error('❌ Error al exportar inventario:', error);
@@ -7654,7 +7842,7 @@ async function exportarInventario(inventarioId) {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'No se pudo abrir las opciones de descarga',
+            text: error.message || 'No se pudo abrir las opciones de descarga',
             confirmButtonColor: '#d33'
         });
     }
