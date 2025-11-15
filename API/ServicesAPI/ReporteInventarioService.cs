@@ -4,7 +4,7 @@ using iText.Kernel.Pdf;
 using iText.Kernel.Colors;
 using iText.Kernel.Geom;
 using iText.Kernel.Font;
-using iText.Kernel.Font.Constants;
+using iText.IO.Font.Constants;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
