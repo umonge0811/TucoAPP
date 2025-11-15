@@ -167,6 +167,7 @@ namespace API.Controllers
 
                 return Ok(new
                 {
+                    success = true,
                     message = "Todas las notificaciones marcadas como leídas",
                     cantidad = notificacionesNoLeidas.Count
                 });
@@ -325,6 +326,7 @@ namespace API.Controllers
 
                 return Ok(new
                 {
+                    success = true,
                     message = "Todas las notificaciones fueron ocultadas",
                     cantidad = notificacionesVisibles.Count
                 });
