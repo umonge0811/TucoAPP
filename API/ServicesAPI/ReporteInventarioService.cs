@@ -1,13 +1,17 @@
 ﻿using API.Data;
 using API.ServicesAPI.Interfaces;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using iText.Kernel.Pdf;
+using iText.Kernel.Colors;
+using iText.Kernel.Geom;
+using iText.Kernel.Font;
+using iText.Kernel.Font.Constants;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Layout.Borders;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
-using OfficeOpenXml;
 using OfficeOpenXml.Style;
-using OfficeOpenXml.Style;
-using System.Drawing;
 using System.Drawing;
 using Tuco.Clases.DTOs.Inventario;
 
@@ -63,7 +67,12 @@ namespace API.ServicesAPI
                     {
                         var partes = new List<string>();
                         if (llanta.Ancho.HasValue && llanta.Perfil.HasValue)
-                            partes.Add($"{llanta.Ancho}/{llanta.Perfil}");
+                        {
+                            // Formatear sin decimales innecesarios (.00)
+                            var anchoStr = FormatearMedida(llanta.Ancho.Value);
+                            var perfilStr = FormatearMedida(llanta.Perfil.Value);
+                            partes.Add($"{anchoStr}/{perfilStr}");
+                        }
                         if (!string.IsNullOrEmpty(llanta.Diametro))
                             partes.Add(llanta.Diametro);
                         medidas = partes.Any() ? string.Join(" ", partes) : null;
@@ -450,62 +459,66 @@ namespace API.ServicesAPI
 
             using var memoryStream = new MemoryStream();
             // ✅ CAMBIAR A ORIENTACIÓN HORIZONTAL
-            var document = new Document(PageSize.A4.Rotate(), 25, 25, 30, 30);
-            var writer = PdfWriter.GetInstance(document, memoryStream);
-
-            document.Open();
+            var writer = new PdfWriter(memoryStream);
+            var pdfDoc = new PdfDocument(writer);
+            var document = new iText.Layout.Document(pdfDoc, PageSize.A4.Rotate());
+            document.SetMargins(30, 25, 30, 25);
 
             try
             {
                 // ======================
                 // DEFINIR COLORES Y FUENTES
                 // ======================
-                var azulEmpresa = new BaseColor(25, 118, 210);  // Azul corporativo
-                var grisClaro = new BaseColor(245, 245, 245);
-                var rojoAlerta = new BaseColor(244, 67, 54);    // Rojo para faltantes
-                var verdeOk = new BaseColor(76, 175, 80);       // Verde para excesos
-                var naranjaAdvertencia = new BaseColor(255, 152, 0); // Naranja para alertas
+                var azulEmpresa = new DeviceRgb(25, 118, 210);  // Azul corporativo
+                var grisClaro = new DeviceRgb(245, 245, 245);
+                var rojoAlerta = new DeviceRgb(244, 67, 54);    // Rojo para faltantes
+                var verdeOk = new DeviceRgb(76, 175, 80);       // Verde para excesos
+                var naranjaAdvertencia = new DeviceRgb(255, 152, 0); // Naranja para alertas
+                var blanco = new DeviceRgb(255, 255, 255);
+                var negro = new DeviceRgb(0, 0, 0);
+                var gris = new DeviceRgb(128, 128, 128);
 
-                var titleFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 20, azulEmpresa);
-                var subtitleFont = FontFactory.GetFont(FontFactory.HELVETICA, 12, BaseColor.GRAY);
-                var headerFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, BaseColor.BLACK);
-                var normalFont = FontFactory.GetFont(FontFactory.HELVETICA, 9, BaseColor.BLACK);
-                var boldFont = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.BLACK);
-                var smallFont = FontFactory.GetFont(FontFactory.HELVETICA, 8, BaseColor.BLACK);
+                var titleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                var subtitleFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                var headerFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                var normalFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                var boldFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                var smallFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                var italicFont = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_OBLIQUE);
 
                 // ======================
                 // ENCABEZADO DE EMPRESA
                 // ======================
-                var headerTable = new PdfPTable(3);
-                headerTable.WidthPercentage = 100;
-                headerTable.SetWidths(new float[] { 1f, 2f, 1f });
+                var headerTable = new Table(new float[] { 1f, 2f, 1f });
+                headerTable.SetWidth(UnitValue.CreatePercentValue(100));
 
                 // Logo placeholder
-                var logoCell = new PdfPCell(new Phrase("LOGO\nTUCO", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.WHITE)));
-                logoCell.BackgroundColor = azulEmpresa;
-                logoCell.Padding = 10f;
-                logoCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                logoCell.VerticalAlignment = Element.ALIGN_MIDDLE;
-                logoCell.Border = iTextSharp.text.Rectangle.BOX;
+                var logoCell = new Cell();
+                logoCell.Add(new Paragraph("LOGO\nTUCO").SetFont(boldFont).SetFontSize(12).SetFontColor(blanco));
+                logoCell.SetBackgroundColor(azulEmpresa);
+                logoCell.SetPadding(10f);
+                logoCell.SetTextAlignment(TextAlignment.CENTER);
+                logoCell.SetVerticalAlignment(VerticalAlignment.MIDDLE);
+                logoCell.SetBorder(new SolidBorder(1));
                 headerTable.AddCell(logoCell);
 
                 // Información de empresa
-                var empresaInfo = new PdfPCell();
-                empresaInfo.Border = iTextSharp.text.Rectangle.BOX;
-                empresaInfo.Padding = 10f;
-                empresaInfo.AddElement(new Paragraph("MULTISERVICIOS TUCO", titleFont));
-                empresaInfo.AddElement(new Paragraph("Sistema de Gestión de Inventarios", subtitleFont));
-                empresaInfo.AddElement(new Paragraph($"Reporte generado: {DateTime.Now:dd/MM/yyyy HH:mm}", smallFont));
+                var empresaInfo = new Cell();
+                empresaInfo.SetBorder(new SolidBorder(1));
+                empresaInfo.SetPadding(10f);
+                empresaInfo.Add(new Paragraph("MULTISERVICIOS TUCO").SetFont(titleFont).SetFontSize(20).SetFontColor(azulEmpresa));
+                empresaInfo.Add(new Paragraph("Sistema de Gestión de Inventarios").SetFont(subtitleFont).SetFontSize(12).SetFontColor(gris));
+                empresaInfo.Add(new Paragraph($"Reporte generado: {DateTime.Now:dd/MM/yyyy HH:mm}").SetFont(smallFont).SetFontSize(8).SetFontColor(negro));
                 headerTable.AddCell(empresaInfo);
 
                 // Información del reporte
-                var reporteInfo = new PdfPCell();
-                reporteInfo.Border = iTextSharp.text.Rectangle.BOX;
-                reporteInfo.Padding = 10f;
-                reporteInfo.BackgroundColor = grisClaro;
-                reporteInfo.AddElement(new Paragraph("REPORTE DE INVENTARIO", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 12)));
-                reporteInfo.AddElement(new Paragraph($"ID: {reporte.InventarioProgramadoId}", normalFont));
-                reporteInfo.AddElement(new Paragraph($"Estado: COMPLETADO", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, verdeOk)));
+                var reporteInfo = new Cell();
+                reporteInfo.SetBorder(new SolidBorder(1));
+                reporteInfo.SetPadding(10f);
+                reporteInfo.SetBackgroundColor(grisClaro);
+                reporteInfo.Add(new Paragraph("REPORTE DE INVENTARIO").SetFont(headerFont).SetFontSize(12));
+                reporteInfo.Add(new Paragraph($"ID: {reporte.InventarioProgramadoId}").SetFont(normalFont).SetFontSize(9));
+                reporteInfo.Add(new Paragraph($"Estado: COMPLETADO").SetFont(boldFont).SetFontSize(9).SetFontColor(verdeOk));
                 headerTable.AddCell(reporteInfo);
 
                 document.Add(headerTable);
@@ -514,36 +527,39 @@ namespace API.ServicesAPI
                 // ======================
                 // INFORMACIÓN DETALLADA DEL INVENTARIO
                 // ======================
-                var infoInventarioTable = new PdfPTable(4);
-                infoInventarioTable.WidthPercentage = 100;
-                infoInventarioTable.SetWidths(new float[] { 1f, 1f, 1f, 1f });
+                var infoInventarioTable = new Table(new float[] { 1f, 1f, 1f, 1f });
+                infoInventarioTable.SetWidth(UnitValue.CreatePercentValue(100));
 
                 void AddInfoInventarioRow(string label1, string value1, string label2, string value2)
                 {
                     // Columna 1 - Label
-                    var labelCell1 = new PdfPCell(new Phrase(label1, boldFont));
-                    labelCell1.BackgroundColor = grisClaro;
-                    labelCell1.Padding = 6f;
-                    labelCell1.Border = iTextSharp.text.Rectangle.BOX;
+                    var labelCell1 = new Cell();
+                    labelCell1.Add(new Paragraph(label1).SetFont(boldFont).SetFontSize(9));
+                    labelCell1.SetBackgroundColor(grisClaro);
+                    labelCell1.SetPadding(6f);
+                    labelCell1.SetBorder(new SolidBorder(1));
                     infoInventarioTable.AddCell(labelCell1);
 
                     // Columna 2 - Value
-                    var valueCell1 = new PdfPCell(new Phrase(value1, normalFont));
-                    valueCell1.Padding = 6f;
-                    valueCell1.Border = iTextSharp.text.Rectangle.BOX;
+                    var valueCell1 = new Cell();
+                    valueCell1.Add(new Paragraph(value1).SetFont(normalFont).SetFontSize(9));
+                    valueCell1.SetPadding(6f);
+                    valueCell1.SetBorder(new SolidBorder(1));
                     infoInventarioTable.AddCell(valueCell1);
 
                     // Columna 3 - Label
-                    var labelCell2 = new PdfPCell(new Phrase(label2, boldFont));
-                    labelCell2.BackgroundColor = grisClaro;
-                    labelCell2.Padding = 6f;
-                    labelCell2.Border = iTextSharp.text.Rectangle.BOX;
+                    var labelCell2 = new Cell();
+                    labelCell2.Add(new Paragraph(label2).SetFont(boldFont).SetFontSize(9));
+                    labelCell2.SetBackgroundColor(grisClaro);
+                    labelCell2.SetPadding(6f);
+                    labelCell2.SetBorder(new SolidBorder(1));
                     infoInventarioTable.AddCell(labelCell2);
 
                     // Columna 4 - Value
-                    var valueCell2 = new PdfPCell(new Phrase(value2, normalFont));
-                    valueCell2.Padding = 6f;
-                    valueCell2.Border = iTextSharp.text.Rectangle.BOX;
+                    var valueCell2 = new Cell();
+                    valueCell2.Add(new Paragraph(value2).SetFont(normalFont).SetFontSize(9));
+                    valueCell2.SetPadding(6f);
+                    valueCell2.SetBorder(new SolidBorder(1));
                     infoInventarioTable.AddCell(valueCell2);
                 }
 
@@ -567,32 +583,33 @@ namespace API.ServicesAPI
                 // ======================
                 // RESUMEN EJECUTIVO CON ALERTAS
                 // ======================
-                var resumenTitulo = new Paragraph("RESUMEN EJECUTIVO", headerFont);
-                resumenTitulo.SpacingAfter = 10f;
+                var resumenTitulo = new Paragraph("RESUMEN EJECUTIVO").SetFont(headerFont).SetFontSize(14);
+                resumenTitulo.SetMarginBottom(10f);
                 document.Add(resumenTitulo);
 
-                var resumenTable = new PdfPTable(6);
-                resumenTable.WidthPercentage = 100;
-                resumenTable.SetWidths(new float[] { 1f, 1f, 1f, 1f, 1f, 1f });
+                var resumenTable = new Table(new float[] { 1f, 1f, 1f, 1f, 1f, 1f });
+                resumenTable.SetWidth(UnitValue.CreatePercentValue(100));
 
                 // Headers del resumen con colores
-                void AddResumenHeader(string text, BaseColor color)
+                void AddResumenHeader(string text, DeviceRgb color)
                 {
-                    var cell = new PdfPCell(new Phrase(text, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 9, BaseColor.WHITE)));
-                    cell.BackgroundColor = color;
-                    cell.Padding = 8f;
-                    cell.Border = iTextSharp.text.Rectangle.BOX;
-                    cell.HorizontalAlignment = Element.ALIGN_CENTER;
+                    var cell = new Cell();
+                    cell.Add(new Paragraph(text).SetFont(boldFont).SetFontSize(9).SetFontColor(blanco));
+                    cell.SetBackgroundColor(color);
+                    cell.SetPadding(8f);
+                    cell.SetBorder(new SolidBorder(1));
+                    cell.SetTextAlignment(TextAlignment.CENTER);
                     resumenTable.AddCell(cell);
                 }
 
-                void AddResumenValue(string text, BaseColor? bgColor = null)
+                void AddResumenValue(string text, DeviceRgb? bgColor = null)
                 {
-                    var cell = new PdfPCell(new Phrase(text, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10)));
-                    cell.BackgroundColor = bgColor ?? BaseColor.WHITE;
-                    cell.Padding = 8f;
-                    cell.Border = iTextSharp.text.Rectangle.BOX;
-                    cell.HorizontalAlignment = Element.ALIGN_CENTER;
+                    var cell = new Cell();
+                    cell.Add(new Paragraph(text).SetFont(boldFont).SetFontSize(10));
+                    cell.SetBackgroundColor(bgColor ?? blanco);
+                    cell.SetPadding(8f);
+                    cell.SetBorder(new SolidBorder(1));
+                    cell.SetTextAlignment(TextAlignment.CENTER);
                     resumenTable.AddCell(cell);
                 }
 
@@ -607,15 +624,15 @@ namespace API.ServicesAPI
                 // Valores con colores de alerta
                 AddResumenValue(reporte.TotalProductosContados.ToString());
                 AddResumenValue(reporte.ProductosConDiscrepancia.ToString(),
-                    reporte.ProductosConDiscrepancia > 0 ? new BaseColor(255, 235, 238) : BaseColor.WHITE);
+                    reporte.ProductosConDiscrepancia > 0 ? new DeviceRgb(255, 235, 238) : blanco);
                 AddResumenValue($"{reporte.PorcentajeDiscrepancia}%",
-                    reporte.PorcentajeDiscrepancia > 10 ? new BaseColor(255, 235, 238) : BaseColor.WHITE);
+                    reporte.PorcentajeDiscrepancia > 10 ? new DeviceRgb(255, 235, 238) : blanco);
                 AddResumenValue(reporte.ProductosConExceso.ToString(),
-                    reporte.ProductosConExceso > 0 ? new BaseColor(232, 245, 233) : BaseColor.WHITE);
+                    reporte.ProductosConExceso > 0 ? new DeviceRgb(232, 245, 233) : blanco);
                 AddResumenValue(reporte.ProductosConFaltante.ToString(),
-                    reporte.ProductosConFaltante > 0 ? new BaseColor(255, 235, 238) : BaseColor.WHITE);
+                    reporte.ProductosConFaltante > 0 ? new DeviceRgb(255, 235, 238) : blanco);
                 AddResumenValue($"₡{reporte.ValorTotalDiscrepancia:N0}",
-                    reporte.ValorTotalDiscrepancia > 50000 ? new BaseColor(255, 243, 224) : BaseColor.WHITE);
+                    reporte.ValorTotalDiscrepancia > 50000 ? new DeviceRgb(255, 243, 224) : blanco);
 
                 document.Add(resumenTable);
                 document.Add(new Paragraph(" ")); // Espacio
@@ -623,23 +640,23 @@ namespace API.ServicesAPI
                 // ======================
                 // DETALLE DE PRODUCTOS CON COLORES
                 // ======================
-                var detalleTitulo = new Paragraph("DETALLE POR PRODUCTO (Top 25 por Impacto)", headerFont);
-                detalleTitulo.SpacingAfter = 10f;
+                var detalleTitulo = new Paragraph("DETALLE POR PRODUCTO (Top 25 por Impacto)").SetFont(headerFont).SetFontSize(14);
+                detalleTitulo.SetMarginBottom(10f);
                 document.Add(detalleTitulo);
 
-                var productosTable = new PdfPTable(8);
-                productosTable.WidthPercentage = 100;
-                productosTable.SetWidths(new float[] { 3f, 1f, 1f, 1f, 1.2f, 1.5f, 1f, 1.5f });
+                var productosTable = new Table(new float[] { 3f, 1f, 1f, 1f, 1.2f, 1.5f, 1f, 1.5f });
+                productosTable.SetWidth(UnitValue.CreatePercentValue(100));
 
                 // Headers de productos con colores
                 string[] productHeaders = { "Producto", "Sistema", "Físico", "Diferencia", "Precio Unit.", "Impacto", "Estado", "Usuario" };
                 foreach (var header in productHeaders)
                 {
-                    var headerCell = new PdfPCell(new Phrase(header, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 8, BaseColor.WHITE)));
-                    headerCell.BackgroundColor = azulEmpresa;
-                    headerCell.Padding = 6f;
-                    headerCell.Border = iTextSharp.text.Rectangle.BOX;
-                    headerCell.HorizontalAlignment = Element.ALIGN_CENTER;
+                    var headerCell = new Cell();
+                    headerCell.Add(new Paragraph(header).SetFont(boldFont).SetFontSize(8).SetFontColor(blanco));
+                    headerCell.SetBackgroundColor(azulEmpresa);
+                    headerCell.SetPadding(6f);
+                    headerCell.SetBorder(new SolidBorder(1));
+                    headerCell.SetTextAlignment(TextAlignment.CENTER);
                     productosTable.AddCell(headerCell);
                 }
 
@@ -649,30 +666,30 @@ namespace API.ServicesAPI
                 foreach (var producto in productosParaPdf)
                 {
                     // ✅ COLOR DE FONDO SEGÚN CATEGORÍA Y SEVERIDAD
-                    BaseColor backgroundColor = BaseColor.WHITE;
-                    BaseColor textColor = BaseColor.BLACK;
+                    DeviceRgb backgroundColor = blanco;
+                    DeviceRgb textColor = negro;
 
                     if (producto.Categoria == "Faltante")
                     {
-                        backgroundColor = new BaseColor(255, 235, 238); // Rosa claro
-                        if (Math.Abs(producto.Diferencia) >= 5) backgroundColor = new BaseColor(255, 205, 210); // Rosa más fuerte
+                        backgroundColor = new DeviceRgb(255, 235, 238); // Rosa claro
+                        if (Math.Abs(producto.Diferencia) >= 5) backgroundColor = new DeviceRgb(255, 205, 210); // Rosa más fuerte
                     }
                     else if (producto.Categoria == "Exceso")
                     {
-                        backgroundColor = new BaseColor(232, 245, 233); // Verde claro
-                        if (producto.Diferencia >= 10) backgroundColor = new BaseColor(200, 230, 201); // Verde más fuerte
+                        backgroundColor = new DeviceRgb(232, 245, 233); // Verde claro
+                        if (producto.Diferencia >= 10) backgroundColor = new DeviceRgb(200, 230, 201); // Verde más fuerte
                     }
 
                     void AddProductCell(string text, bool isNumber = false, bool isCurrency = false)
                     {
-                        var font = FontFactory.GetFont(FontFactory.HELVETICA, 7, textColor);
-                        if (producto.Categoria != "Correcto") font = FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 7, textColor);
+                        var font = producto.Categoria != "Correcto" ? boldFont : normalFont;
 
-                        var cell = new PdfPCell(new Phrase(text, font));
-                        cell.BackgroundColor = backgroundColor;
-                        cell.Padding = 4f;
-                        cell.Border = iTextSharp.text.Rectangle.BOX;
-                        cell.HorizontalAlignment = isNumber || isCurrency ? Element.ALIGN_RIGHT : Element.ALIGN_LEFT;
+                        var cell = new Cell();
+                        cell.Add(new Paragraph(text).SetFont(font).SetFontSize(7).SetFontColor(textColor));
+                        cell.SetBackgroundColor(backgroundColor);
+                        cell.SetPadding(4f);
+                        cell.SetBorder(new SolidBorder(1));
+                        cell.SetTextAlignment(isNumber || isCurrency ? TextAlignment.RIGHT : TextAlignment.LEFT);
                         productosTable.AddCell(cell);
                     }
 
@@ -694,43 +711,45 @@ namespace API.ServicesAPI
                 // ======================
                 document.Add(new Paragraph(" ")); // Espacio
 
-                var leyendaTable = new PdfPTable(3);
-                leyendaTable.WidthPercentage = 60;
-                leyendaTable.HorizontalAlignment = Element.ALIGN_LEFT;
+                var leyendaTable = new Table(new float[] { 1f, 2f });
+                leyendaTable.SetWidth(UnitValue.CreatePercentValue(60));
+                leyendaTable.SetHorizontalAlignment(HorizontalAlignment.LEFT);
 
-                var leyendaTitulo = new PdfPCell(new Phrase("LEYENDA DE COLORES:", boldFont));
-                leyendaTitulo.Colspan = 3;
-                leyendaTitulo.BackgroundColor = grisClaro;
-                leyendaTitulo.Padding = 5f;
-                leyendaTitulo.HorizontalAlignment = Element.ALIGN_CENTER;
+                var leyendaTitulo = new Cell(1, 2);
+                leyendaTitulo.Add(new Paragraph("LEYENDA DE COLORES:").SetFont(boldFont).SetFontSize(9));
+                leyendaTitulo.SetBackgroundColor(grisClaro);
+                leyendaTitulo.SetPadding(5f);
+                leyendaTitulo.SetTextAlignment(TextAlignment.CENTER);
                 leyendaTable.AddCell(leyendaTitulo);
 
-                void AddLeyendaItem(string texto, BaseColor color)
+                void AddLeyendaItem(string texto, DeviceRgb color)
                 {
-                    var colorCell = new PdfPCell();
-                    colorCell.BackgroundColor = color;
-                    colorCell.Padding = 8f;
-                    colorCell.Border = iTextSharp.text.Rectangle.BOX;
+                    var colorCell = new Cell();
+                    colorCell.SetBackgroundColor(color);
+                    colorCell.SetPadding(8f);
+                    colorCell.SetBorder(new SolidBorder(1));
                     leyendaTable.AddCell(colorCell);
 
-                    var textoCell = new PdfPCell(new Phrase(texto, normalFont));
-                    textoCell.Padding = 8f;
-                    textoCell.Border = iTextSharp.text.Rectangle.BOX;
-                    textoCell.Colspan = 2;
+                    var textoCell = new Cell();
+                    textoCell.Add(new Paragraph(texto).SetFont(normalFont).SetFontSize(9));
+                    textoCell.SetPadding(8f);
+                    textoCell.SetBorder(new SolidBorder(1));
                     leyendaTable.AddCell(textoCell);
                 }
 
-                AddLeyendaItem("Productos con faltantes", new BaseColor(255, 235, 238));
-                AddLeyendaItem("Productos con excesos", new BaseColor(232, 245, 233));
-                AddLeyendaItem("Productos correctos", BaseColor.WHITE);
+                AddLeyendaItem("Productos con faltantes", new DeviceRgb(255, 235, 238));
+                AddLeyendaItem("Productos con excesos", new DeviceRgb(232, 245, 233));
+                AddLeyendaItem("Productos correctos", blanco);
 
                 document.Add(leyendaTable);
 
                 // Nota final
                 if (reporte.Productos.Count > 25)
                 {
-                    var nota = new Paragraph($"\n📋 Nota: Se muestran los 25 productos con mayor impacto económico de {reporte.Productos.Count} total.\n📊 Para ver el reporte completo, descargue la versión en Excel.",
-                        FontFactory.GetFont(FontFactory.HELVETICA_OBLIQUE, 8, BaseColor.GRAY));
+                    var nota = new Paragraph($"\n📋 Nota: Se muestran los 25 productos con mayor impacto económico de {reporte.Productos.Count} total.\n📊 Para ver el reporte completo, descargue la versión en Excel.")
+                        .SetFont(italicFont)
+                        .SetFontSize(8)
+                        .SetFontColor(gris);
                     document.Add(nota);
                 }
 
@@ -754,6 +773,18 @@ namespace API.ServicesAPI
                 return $"{duracion.Hours} horas, {duracion.Minutes} minutos";
             else
                 return $"{duracion.Minutes} minutos";
+        }
+
+        // ✅ MÉTODO AUXILIAR PARA FORMATEAR MEDIDAS DE NEUMÁTICOS
+        // Elimina decimales innecesarios (.00) pero conserva decimales significativos (.5, .50)
+        private string FormatearMedida(decimal valor)
+        {
+            // Si el valor es un número entero (sin decimales), mostrarlo sin .00
+            if (valor == Math.Floor(valor))
+                return valor.ToString("0");
+
+            // Si tiene decimales, mostrarlos (elimina ceros finales)
+            return valor.ToString("0.##");
         }
     }
 }

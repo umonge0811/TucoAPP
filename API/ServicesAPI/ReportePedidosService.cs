@@ -1,6 +1,13 @@
 using API.ServicesAPI.Interfaces;
-using iTextSharp.text;
-using iTextSharp.text.pdf;
+using iText.Kernel.Pdf;
+using iText.Kernel.Colors;
+using iText.Kernel.Geom;
+using iText.Kernel.Font;
+using iText.Kernel.Font.Constants;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
+using iText.Layout.Borders;
 using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using Tuco.Clases.Models;
@@ -15,12 +22,13 @@ namespace API.ServicesAPI
         private readonly ILogger<ReportePedidosService> _logger;
 
         // 🎨 PALETA DE COLORES MINIMALISTA Y PROFESIONAL
-        private readonly BaseColor ColorPrincipal = new BaseColor(52, 58, 64);        // Gris oscuro elegante
-        private readonly BaseColor ColorSecundario = new BaseColor(108, 117, 125);    // Gris medio
-        private readonly BaseColor ColorAcento = new BaseColor(33, 37, 41);           // Negro suave
-        private readonly BaseColor ColorFondoSutil = new BaseColor(248, 249, 250);    // Gris muy claro
-        private readonly BaseColor ColorLinea = new BaseColor(206, 212, 218);         // Gris claro para líneas
-        private readonly BaseColor ColorTextoSuave = new BaseColor(73, 80, 87);       // Gris para texto secundario
+        private readonly DeviceRgb ColorPrincipal = new DeviceRgb(52, 58, 64);        // Gris oscuro elegante
+        private readonly DeviceRgb ColorSecundario = new DeviceRgb(108, 117, 125);    // Gris medio
+        private readonly DeviceRgb ColorAcento = new DeviceRgb(33, 37, 41);           // Negro suave
+        private readonly DeviceRgb ColorFondoSutil = new DeviceRgb(248, 249, 250);    // Gris muy claro
+        private readonly DeviceRgb ColorLinea = new DeviceRgb(206, 212, 218);         // Gris claro para líneas
+        private readonly DeviceRgb ColorTextoSuave = new DeviceRgb(73, 80, 87);       // Gris para texto secundario
+        private readonly DeviceRgb Blanco = new DeviceRgb(255, 255, 255);
 
         public ReportePedidosService(TucoContext context, ILogger<ReportePedidosService> logger)
         {
@@ -49,19 +57,29 @@ namespace API.ServicesAPI
 
                 using (var memoryStream = new MemoryStream())
                 {
-                    var document = new Document(PageSize.LETTER, 40, 40, 50, 40);
-                    var writer = PdfWriter.GetInstance(document, memoryStream);
-                    document.Open();
+                    var writer = new PdfWriter(memoryStream);
+                    var pdfDoc = new PdfDocument(writer);
+                    var document = new iText.Layout.Document(pdfDoc, PageSize.LETTER);
+                    document.SetMargins(50, 40, 40, 40);
 
                     // 🎨 AGREGAR CONTENIDO CON DISEÑO MINIMALISTA
                     AgregarEncabezadoMinimalista(document);
                     AgregarSeparadorElegante(document);
                     AgregarTituloPrincipal(document, "ORDEN DE PEDIDO");
                     AgregarInformacionPedido(document, pedido);
-                    AgregarInformacionProveedor(document, pedido.Proveedor);
-                    AgregarDetallesProductos(document, pedido.DetallePedidos.ToList());
-                    AgregarResumenTotales(document, pedido);
-                    AgregarPieProfesional(document);
+
+                    // TODO: Migrar completamente a iText7 - temporalmente deshabilitado
+                    // AgregarInformacionProveedor(document, pedido.Proveedor);
+                    // AgregarDetallesProductos(document, pedido.DetallePedidos.ToList());
+                    // AgregarResumenTotales(document, pedido);
+                    // AgregarPieProfesional(document);
+
+                    // Versión básica temporal
+                    var fontNormal = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+                    document.Add(new Paragraph($"\nProveedor: {pedido.Proveedor?.NombreProveedor ?? "N/A"}").SetFont(fontNormal));
+                    document.Add(new Paragraph($"Total Items: {pedido.DetallePedidos?.Count ?? 0}").SetFont(fontNormal));
+                    var total = pedido.DetallePedidos?.Sum(d => d.Cantidad * (d.PrecioUnitario ?? 0)) ?? 0;
+                    document.Add(new Paragraph($"Total: ₡{total:N2}").SetFont(fontNormal).SetFontSize(16));
 
                     document.Close();
                     _logger.LogInformation("✅ PDF minimalista generado exitosamente para pedido ID: {PedidoId}", pedidoId);
@@ -76,83 +94,88 @@ namespace API.ServicesAPI
             }
         }
 
-        private void AgregarEncabezadoMinimalista(Document document)
+        private void AgregarEncabezadoMinimalista(iText.Layout.Document document)
         {
             // 🏢 ENCABEZADO LIMPIO Y PROFESIONAL
-            var headerTable = new PdfPTable(2) { WidthPercentage = 100 };
-            headerTable.SetWidths(new float[] { 2f, 1f });
+            var headerTable = new Table(new float[] { 2f, 1f });
+            headerTable.SetWidth(UnitValue.CreatePercentValue(100));
+
+            var fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var fontNormal = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
 
             // Logo/Empresa con tipografía elegante
-            var empresaCell = new PdfPCell();
-            empresaCell.Border = Rectangle.NO_BORDER;
-            empresaCell.Padding = 0;
-            empresaCell.PaddingBottom = 20;
+            var empresaCell = new Cell();
+            empresaCell.SetBorder(Border.NO_BORDER);
+            empresaCell.SetPadding(0);
+            empresaCell.SetPaddingBottom(20);
 
-            var empresaPhrase = new Phrase();
-            empresaPhrase.Add(new Chunk("MULTISERVICIOS TUCO\n", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 24, ColorPrincipal)));
-            empresaPhrase.Add(new Chunk("Sistema de Gestión Integral\n", FontFactory.GetFont(FontFactory.HELVETICA, 11, ColorSecundario)));
-            empresaPhrase.Add(new Chunk("Tel: (506) 2XXX-XXXX | info@gestionllantera.com", FontFactory.GetFont(FontFactory.HELVETICA, 9, ColorTextoSuave)));
-
-            empresaCell.AddElement(new Paragraph(empresaPhrase) { Alignment = Element.ALIGN_LEFT });
+            empresaCell.Add(new Paragraph("MULTISERVICIOS TUCO").SetFont(fontBold).SetFontSize(24).SetFontColor(ColorPrincipal));
+            empresaCell.Add(new Paragraph("Sistema de Gestión Integral").SetFont(fontNormal).SetFontSize(11).SetFontColor(ColorSecundario));
+            empresaCell.Add(new Paragraph("Tel: (506) 2XXX-XXXX | info@gestionllantera.com").SetFont(fontNormal).SetFontSize(9).SetFontColor(ColorTextoSuave));
             headerTable.AddCell(empresaCell);
 
             // Información del documento - limpia y ordenada
-            var infoCell = new PdfPCell();
-            infoCell.Border = Rectangle.NO_BORDER;
-            infoCell.Padding = 0;
-            infoCell.PaddingBottom = 20;
+            var infoCell = new Cell();
+            infoCell.SetBorder(Border.NO_BORDER);
+            infoCell.SetPadding(0);
+            infoCell.SetPaddingBottom(20);
 
-            var infoPhrase = new Phrase();
-            infoPhrase.Add(new Chunk("DOCUMENTO\n", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, ColorSecundario)));
-            infoPhrase.Add(new Chunk($"Fecha: {DateTime.Now:dd/MM/yyyy}\n", FontFactory.GetFont(FontFactory.HELVETICA, 9, ColorTextoSuave)));
-            infoPhrase.Add(new Chunk($"Hora: {DateTime.Now:HH:mm}\n", FontFactory.GetFont(FontFactory.HELVETICA, 9, ColorTextoSuave)));
-            infoPhrase.Add(new Chunk("Estado: Activo", FontFactory.GetFont(FontFactory.HELVETICA, 9, ColorTextoSuave)));
-
-            infoCell.AddElement(new Paragraph(infoPhrase) { Alignment = Element.ALIGN_RIGHT });
+            infoCell.Add(new Paragraph("DOCUMENTO").SetFont(fontBold).SetFontSize(10).SetFontColor(ColorSecundario).SetTextAlignment(TextAlignment.RIGHT));
+            infoCell.Add(new Paragraph($"Fecha: {DateTime.Now:dd/MM/yyyy}").SetFont(fontNormal).SetFontSize(9).SetFontColor(ColorTextoSuave).SetTextAlignment(TextAlignment.RIGHT));
+            infoCell.Add(new Paragraph($"Hora: {DateTime.Now:HH:mm}").SetFont(fontNormal).SetFontSize(9).SetFontColor(ColorTextoSuave).SetTextAlignment(TextAlignment.RIGHT));
+            infoCell.Add(new Paragraph("Estado: Activo").SetFont(fontNormal).SetFontSize(9).SetFontColor(ColorTextoSuave).SetTextAlignment(TextAlignment.RIGHT));
             headerTable.AddCell(infoCell);
 
             document.Add(headerTable);
         }
 
-        private void AgregarSeparadorElegante(Document document)
+        private void AgregarSeparadorElegante(iText.Layout.Document document)
         {
             // Línea sutil y elegante
-            var separador = new PdfPTable(1) { WidthPercentage = 100, SpacingBefore = 10, SpacingAfter = 20 };
-            var lineCell = new PdfPCell();
-            lineCell.Border = Rectangle.NO_BORDER;
-            lineCell.BackgroundColor = ColorLinea;
-            lineCell.FixedHeight = 1f;
+            var separador = new Table(1);
+            separador.SetWidth(UnitValue.CreatePercentValue(100));
+            separador.SetMarginTop(10);
+            separador.SetMarginBottom(20);
+            var lineCell = new Cell();
+            lineCell.SetBorder(Border.NO_BORDER);
+            lineCell.SetBackgroundColor(ColorLinea);
+            lineCell.SetHeight(1f);
             separador.AddCell(lineCell);
             document.Add(separador);
         }
 
-        private void AgregarTituloPrincipal(Document document, string titulo)
+        private void AgregarTituloPrincipal(iText.Layout.Document document, string titulo)
         {
-            var tituloParrafo = new Paragraph(titulo, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 20, ColorPrincipal));
-            tituloParrafo.Alignment = Element.ALIGN_CENTER;
-            tituloParrafo.SpacingAfter = 25;
+            var fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var tituloParrafo = new Paragraph(titulo).SetFont(fontBold).SetFontSize(20).SetFontColor(ColorPrincipal);
+            tituloParrafo.SetTextAlignment(TextAlignment.CENTER);
+            tituloParrafo.SetMarginBottom(25);
             document.Add(tituloParrafo);
         }
 
-        private void AgregarInformacionPedido(Document document, PedidosProveedor pedido)
+        private void AgregarInformacionPedido(iText.Layout.Document document, PedidosProveedor pedido)
         {
+            var fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            var fontNormal = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
             // Título de sección
-            var tituloSeccion = new Paragraph("Información del Pedido", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, ColorPrincipal));
-            tituloSeccion.SpacingAfter = 10;
+            var tituloSeccion = new Paragraph("Información del Pedido").SetFont(fontBold).SetFontSize(14).SetFontColor(ColorPrincipal);
+            tituloSeccion.SetMarginBottom(10);
             document.Add(tituloSeccion);
 
-            var table = new PdfPTable(4) { WidthPercentage = 100 };
-            table.SetWidths(new float[] { 1f, 1f, 1f, 1f });
+            var table = new Table(new float[] { 1f, 1f, 1f, 1f });
+            table.SetWidth(UnitValue.CreatePercentValue(100));
 
             // Headers con estilo minimalista
             var headers = new[] { "Pedido #", "Fecha", "Estado", "Usuario" };
             foreach (var header in headers)
             {
-                var headerCell = new PdfPCell(new Phrase(header, FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 10, BaseColor.WHITE)));
-                headerCell.BackgroundColor = ColorPrincipal;
-                headerCell.Padding = 8;
-                headerCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                headerCell.Border = Rectangle.NO_BORDER;
+                var headerCell = new Cell();
+                headerCell.Add(new Paragraph(header).SetFont(fontBold).SetFontSize(10).SetFontColor(Blanco));
+                headerCell.SetBackgroundColor(ColorPrincipal);
+                headerCell.SetPadding(8);
+                headerCell.SetTextAlignment(TextAlignment.CENTER);
+                headerCell.SetBorder(Border.NO_BORDER);
                 table.AddCell(headerCell);
             }
 
@@ -167,20 +190,23 @@ namespace API.ServicesAPI
 
             foreach (var data in dataCells)
             {
-                var dataCell = new PdfPCell(new Phrase(data, FontFactory.GetFont(FontFactory.HELVETICA, 9, ColorPrincipal)));
-                dataCell.BackgroundColor = BaseColor.WHITE;
-                dataCell.Padding = 8;
-                dataCell.HorizontalAlignment = Element.ALIGN_CENTER;
-                dataCell.Border = Rectangle.BOTTOM_BORDER;
-                dataCell.BorderColor = ColorLinea;
+                var dataCell = new Cell();
+                dataCell.Add(new Paragraph(data).SetFont(fontNormal).SetFontSize(9).SetFontColor(ColorPrincipal));
+                dataCell.SetBackgroundColor(Blanco);
+                dataCell.SetPadding(8);
+                dataCell.SetTextAlignment(TextAlignment.CENTER);
+                dataCell.SetBorderBottom(new SolidBorder(ColorLinea, 1));
+                dataCell.SetBorderTop(Border.NO_BORDER);
+                dataCell.SetBorderLeft(Border.NO_BORDER);
+                dataCell.SetBorderRight(Border.NO_BORDER);
                 table.AddCell(dataCell);
             }
 
             document.Add(table);
-            document.Add(new Paragraph(" ") { SpacingAfter = 15 });
+            document.Add(new Paragraph(" ").SetMarginBottom(15));
         }
 
-        private void AgregarInformacionProveedor(Document document, Proveedore proveedor)
+        private void AgregarInformacionProveedor(iText.Layout.Document document, Proveedore proveedor)
         {
             // Título de sección
             var tituloSeccion = new Paragraph("Información del Proveedor", FontFactory.GetFont(FontFactory.HELVETICA_BOLD, 14, ColorPrincipal));
