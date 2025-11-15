@@ -109,6 +109,8 @@ function renderizarNotificaciones() {
 
     let html = '';
 
+    console.log(`Renderizando notificaciones. Total: ${notificacionesCache.length}, No leídas: ${conteoNoLeidas}`);
+
     // Botones de acción superior
     html += `
         <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
@@ -241,7 +243,7 @@ function getCSRFToken() {
 // Función para marcar como leída
 async function marcarNotificacionComoLeida(notificacionId) {
     try {
-        const response = await fetch('/Notificaciones/MarcarComoLeida', {
+        const response = await fetch('/Notificaciones/marcar-leida', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -305,8 +307,9 @@ async function ocultarNotificacion(notificacionId) {
 
 // Función para marcar todas como leídas
 async function marcarTodasComoLeidas() {
+    console.log('Marcando todas las notificaciones como leídas...');
     try {
-        const response = await fetch('/Notificaciones/MarcarTodasComoLeidas', {
+        const response = await fetch('/Notificaciones/marcar-todas-leidas', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -314,8 +317,11 @@ async function marcarTodasComoLeidas() {
             }
         });
 
+        console.log('Respuesta recibida:', response.status);
+
         if (response.ok) {
             const result = await response.json();
+            console.log('Resultado:', result);
             if (result.success) {
                 // Actualizar cache local
                 notificacionesCache.forEach(n => n.leida = true);
@@ -327,6 +333,16 @@ async function marcarTodasComoLeidas() {
                 if (typeof toastr !== 'undefined') {
                     toastr.success('Todas las notificaciones marcadas como leídas');
                 }
+            } else {
+                console.error('La operación no fue exitosa:', result);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Error al marcar las notificaciones');
+                }
+            }
+        } else {
+            console.error('Error en la respuesta:', response.status);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Error al marcar las notificaciones');
             }
         }
     } catch (error) {
@@ -339,6 +355,8 @@ async function marcarTodasComoLeidas() {
 
 // Función para eliminar todas las notificaciones
 async function eliminarTodasLasNotificaciones() {
+    console.log('Intentando eliminar todas las notificaciones...');
+
     // Mostrar confirmación
     if (typeof Swal !== 'undefined') {
         const result = await Swal.fire({
@@ -353,13 +371,17 @@ async function eliminarTodasLasNotificaciones() {
         });
 
         if (!result.isConfirmed) {
+            console.log('Usuario canceló la eliminación');
             return;
         }
     } else {
         if (!confirm('¿Estás seguro de que deseas eliminar todas las notificaciones?')) {
+            console.log('Usuario canceló la eliminación');
             return;
         }
     }
+
+    console.log('Enviando petición para eliminar todas...');
 
     try {
         const response = await fetch('/Notificaciones/OcultarTodasNotificaciones', {
@@ -370,8 +392,12 @@ async function eliminarTodasLasNotificaciones() {
             }
         });
 
+        console.log('Respuesta recibida:', response.status);
+
         if (response.ok) {
             const result = await response.json();
+            console.log('Resultado:', result);
+
             if (result.success) {
                 // Limpiar cache local
                 notificacionesCache = [];
@@ -382,12 +408,24 @@ async function eliminarTodasLasNotificaciones() {
                 // Mostrar mensaje de éxito
                 if (typeof toastr !== 'undefined') {
                     toastr.success('Todas las notificaciones han sido eliminadas');
+                } else {
+                    alert('Todas las notificaciones han sido eliminadas');
                 }
             } else {
-                throw new Error('Error al eliminar las notificaciones');
+                console.error('La operación no fue exitosa:', result);
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Error al eliminar las notificaciones');
+                } else {
+                    alert('Error al eliminar las notificaciones');
+                }
             }
         } else {
-            throw new Error('Error en la respuesta del servidor');
+            console.error('Error en la respuesta del servidor:', response.status);
+            if (typeof toastr !== 'undefined') {
+                toastr.error('Error al eliminar las notificaciones');
+            } else {
+                alert('Error al eliminar las notificaciones');
+            }
         }
     } catch (error) {
         console.error('Error al eliminar todas las notificaciones:', error);
