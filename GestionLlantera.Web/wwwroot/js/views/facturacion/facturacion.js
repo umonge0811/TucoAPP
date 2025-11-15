@@ -6109,7 +6109,7 @@ function verDetalleProducto(producto) {
         producto.cantidadEnInventario <= producto.stockMinimo ? 'warning' : 'success';
 
     const modalHtml = `
-        <div class="modal fade" id="modalDetalleProducto" tabindex="-1">
+        <div class="modal fade" id="modalDetalleProducto" tabindex="-1" style="z-index: 1055 !important;">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
                 <div class="modal-content">
                     <!-- HEADER COMPACTO -->
@@ -6373,14 +6373,14 @@ function verDetalleProducto(producto) {
     // Remover modal anterior si existe
     $('#modalDetalleProducto').remove();
 
-    // Limpiar cualquier backdrop residual que pueda estar causando problemas
+    // Limpiar TODOS los backdrops residuales
     $('.modal-backdrop').remove();
-    $('body').removeClass('modal-open');
+    $('body').removeClass('modal-open').css('padding-right', '');
 
     // Agregar el nuevo modal al body
     $('body').append(modalHtml);
 
-    // Crear y mostrar el modal con configuración específica
+    // Crear el modal
     const modalElement = document.getElementById('modalDetalleProducto');
     const modal = new bootstrap.Modal(modalElement, {
         backdrop: true,
@@ -6388,13 +6388,27 @@ function verDetalleProducto(producto) {
         focus: true
     });
 
-    modal.show();
+    // Escuchar el evento cuando el modal se muestra completamente
+    $(modalElement).on('shown.bs.modal', function () {
+        // Asegurar z-index correcto del backdrop
+        $('.modal-backdrop').css({
+            'z-index': '1050',
+            'opacity': '0.5'
+        });
 
-    // Asegurar que el z-index sea correcto después de mostrar
-    setTimeout(() => {
+        // Asegurar que el modal esté encima
         $('#modalDetalleProducto').css('z-index', '1055');
-        $('.modal-backdrop').last().css('z-index', '1050');
-    }, 50);
+
+        console.log('Modal mostrado - z-index ajustado');
+    });
+
+    // Limpiar backdrops al cerrar
+    $(modalElement).on('hidden.bs.modal', function () {
+        $('.modal-backdrop').remove();
+        $('body').removeClass('modal-open').css('padding-right', '');
+    });
+
+    modal.show();
 
     // Cargar imágenes después de mostrar el modal
     setTimeout(() => {
