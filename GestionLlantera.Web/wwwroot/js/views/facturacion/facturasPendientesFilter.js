@@ -589,19 +589,19 @@ function configurarEventosBotonesFacturas() {
     $('.btn-outline-secondary[data-factura-id]').off('click.facturaImprimir'); // Evento para imprimir
     $('.btn-outline-success[data-factura-escapada]').off('click.facturaProcesar'); // Evento para procesar
 
-    // Ver detalles de factura
+    // Vista previa de factura (exactamente igual que la impresión)
     $('.btn-outline-info[data-factura-id]').on('click.facturaVer', function() {
-        const facturaId = $(this).data('factura-id'); // Obtener el ID de la factura desde el atributo data-
-        console.log('👁️ Ver detalles de factura:', facturaId);
+        const facturaId = $(this).data('factura-id');
+        console.log('👁️ Vista previa de impresión:', facturaId);
 
-        // Llamar a la función de detalle si está disponible
-        if (typeof verDetalleFactura === 'function') {
-            verDetalleFactura(facturaId);
+        // Usar la misma función de impresión para mostrar vista previa
+        // La ventana de impresión sirve como vista previa ya que permite ver antes de confirmar
+        if (typeof imprimirFactura === 'function') {
+            imprimirFactura(facturaId);
         } else {
-            console.error('❌ Función verDetalleFactura no está disponible');
-            // Opcionalmente, mostrar un toast de error si la función no existe
+            console.error('❌ Función imprimirFactura no está disponible');
             if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', 'La función para ver detalles no está disponible', 'danger');
+                mostrarToast('Error', 'La función de vista previa no está disponible', 'danger');
             }
         }
     });

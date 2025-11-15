@@ -1639,6 +1639,55 @@ namespace GestionLlantera.Web.Controllers
 
             return new { usuarioId = 1, nombre = "Sistema" };
         }
+
+        // ===== VALIDACIÓN DE PIN PARA EDICIÓN DE FACTURAS =====
+        [HttpPost]
+        public async Task<IActionResult> ValidarPinEdicion([FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 Validando PIN de edición desde controlador Web");
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ValidarPinEdicionAsync(request.Pin, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> DesbloquearFacturaParaEdicion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔓 Desbloqueando factura {FacturaId} desde controlador Web", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.DesbloquearFacturaParaEdicionAsync(facturaId, request.Pin, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error desbloqueando factura {FacturaId}", facturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
     }
 
     // Clases de request para el controlador
@@ -1705,5 +1754,10 @@ namespace GestionLlantera.Web.Controllers
         public int CantidadAEntregar { get; set; }
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }
+    }
+
+    public class ValidarPinRequest
+    {
+        public string Pin { get; set; } = string.Empty;
     }
 }

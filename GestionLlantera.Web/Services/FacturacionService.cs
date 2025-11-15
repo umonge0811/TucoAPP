@@ -1572,6 +1572,87 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        // ===== VALIDACIÓN DE PIN PARA EDICIÓN =====
+        public async Task<object> ValidarPinEdicionAsync(string pin, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 === VALIDANDO PIN DE EDICIÓN ===");
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { Pin = pin };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl("Facturacion/validar-pin-edicion");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error validando PIN: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al validar PIN" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
+        public async Task<object> DesbloquearFacturaParaEdicionAsync(int facturaId, string pin, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔓 === DESBLOQUEANDO FACTURA {FacturaId} ===", facturaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { Pin = pin };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/desbloquear-edicion");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error desbloqueando factura: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al desbloquear factura" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error desbloqueando factura {FacturaId}", facturaId);
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
         public async Task<(bool success, object? data, string? message, string? details)> MarcarProductosEntregadosAsync(object request, string jwtToken = null)
         {
             try

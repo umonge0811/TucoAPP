@@ -43,7 +43,7 @@ async function validarPinYDesbloquear() {
 
         console.log('🔐 Validando PIN...');
 
-        const response = await fetch('/api/Facturacion/validar-pin-edicion', {
+        const response = await fetch('/Facturacion/ValidarPinEdicion', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -98,7 +98,7 @@ async function validarPinYDesbloquear() {
  */
 async function desbloquearFactura(facturaId, pin) {
     try {
-        const response = await fetch(`/api/Facturacion/facturas/${facturaId}/desbloquear-edicion`, {
+        const response = await fetch(`/Facturacion/DesbloquearFacturaParaEdicion?facturaId=${facturaId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
