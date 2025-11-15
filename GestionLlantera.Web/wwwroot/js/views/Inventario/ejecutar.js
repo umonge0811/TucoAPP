@@ -3922,10 +3922,10 @@ function crearNuevosBotonesAccion(producto) {
                 console.log(`🟡 Producto ${producto.productoId}: Mostrando botón CREAR AJUSTE`);
 
                 botones += `
-                    <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente" 
+                    <button class="btn btn-sm btn-warning mb-1 btn-ajuste-pendiente"
                             onclick="abrirModalAjustePendiente(${producto.productoId})"
                             data-bs-toggle="tooltip"
-                            title="Crear ajuste pendiente para esta discrepancia">
+                            title="📦 Crear ajuste personalizado: Te permite escribir un motivo detallado y seleccionar el tipo de ajuste">
                         <i class="bi bi-clock-history me-1"></i>
                         Crear Ajuste
                     </button>
@@ -3940,10 +3940,10 @@ function crearNuevosBotonesAccion(producto) {
             inventarioEnProgreso) {
 
             botones += `
-                <button class="btn btn-sm btn-success mb-1 btn-validacion" 
+                <button class="btn btn-sm btn-success mb-1 btn-validacion"
                         onclick="validarDiscrepancia(${producto.productoId})"
                         data-bs-toggle="tooltip"
-                        title="Validar y aprobar discrepancia">
+                        title="✅ Validar conteo: Ajusta automáticamente el stock del sistema (${producto.cantidadSistema}) al físico contado (${producto.cantidadFisica})">
                     <i class="bi bi-check-double me-1"></i>
                     Validar
                 </button>
@@ -3994,26 +3994,31 @@ async function validarDiscrepancia(productoId) {
         }
 
         const confirmacion = await Swal.fire({
-            title: '✅ ¿Validar discrepancia?',
+            title: '✅ ¿Validar y ajustar al conteo físico?',
             html: `
                 <div class="text-start">
                     <p><strong>Producto:</strong> ${producto.nombreProducto}</p>
-                    <p><strong>Stock Sistema:</strong> ${producto.cantidadSistema}</p>
-                    <p><strong>Stock Físico:</strong> ${producto.cantidadFisica}</p>
-                    <p><strong>Diferencia:</strong> <span class="fw-bold text-warning">${producto.diferencia}</span></p>
+                    <p><strong>Stock Sistema Actual:</strong> <span class="badge bg-secondary">${producto.cantidadSistema}</span></p>
+                    <p><strong>Stock Físico Contado:</strong> <span class="badge bg-info">${producto.cantidadFisica}</span></p>
+                    <p><strong>Diferencia:</strong> <span class="fw-bold text-warning">${producto.diferencia > 0 ? '+' : ''}${producto.diferencia}</span></p>
                     <hr>
-                    <p class="text-muted">Al validar esta discrepancia, se acepta como correcta y no requerirá ajuste.</p>
+                    <div class="alert alert-info mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>¿Qué hace este botón?</strong><br>
+                        Al validar, el stock del sistema se actualizará automáticamente a <strong>${producto.cantidadFisica}</strong> unidades (el conteo físico).
+                    </div>
                 </div>
             `,
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, validar',
+            confirmButtonText: 'Sí, validar y ajustar',
             cancelButtonText: 'Cancelar'
         });
 
         if (confirmacion.isConfirmed) {
+            // ✅ CAMBIO: Ahora "validar" SÍ actualiza el stock al físico contado
             // Crear ajuste de tipo "validado"
             const solicitudValidacion = {
                 inventarioProgramadoId: window.inventarioConfig.inventarioId,
@@ -4021,8 +4026,8 @@ async function validarDiscrepancia(productoId) {
                 tipoAjuste: 'validado',
                 cantidadSistemaOriginal: producto.cantidadSistema,
                 cantidadFisicaContada: producto.cantidadFisica,
-                cantidadFinalPropuesta: producto.cantidadSistema, // Mantener sistema
-                motivoAjuste: 'Discrepancia validada y aceptada por supervisor',
+                cantidadFinalPropuesta: producto.cantidadFisica, // ✅ Ajustar al físico contado
+                motivoAjuste: 'Discrepancia validada - ajuste automático al conteo físico',
                 usuarioId: permisosInventarioActual.usuarioId
             };
 
@@ -4048,6 +4053,314 @@ async function validarDiscrepancia(productoId) {
     } catch (error) {
         console.error('❌ Error validando discrepancia:', error);
         mostrarError('Error al validar la discrepancia');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Validar TODAS las discrepancias de una vez
+ */
+async function validarTodasLasDiscrepancias() {
+    try {
+        const verificacion = verificarPermisoEspecifico('validacion', 'validar todas las discrepancias');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
+            return;
+        }
+
+        // Filtrar productos con discrepancias que NO tienen ajuste pendiente
+        const productosSinAjuste = productosInventario.filter(p =>
+            p.tieneDiscrepancia && !verificarAjustePendiente(p.productoId)
+        );
+
+        if (productosSinAjuste.length === 0) {
+            mostrarInfo('No hay discrepancias pendientes para validar');
+            return;
+        }
+
+        const confirmacion = await Swal.fire({
+            title: '✅ ¿Validar TODAS las discrepancias?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Productos a validar:</strong> ${productosSinAjuste.length}</p>
+                    <hr>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>¿Qué hace esta acción?</strong><br>
+                        Se validarán <strong>${productosSinAjuste.length} productos</strong> automáticamente.<br>
+                        El stock del sistema se ajustará al conteo físico de cada producto.
+                    </div>
+                    <div class="mt-2">
+                        <small class="text-muted">Esta acción creará ${productosSinAjuste.length} ajustes pendientes que se aplicarán al finalizar el inventario.</small>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, validar ${productosSinAjuste.length} productos`,
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+            let procesados = 0;
+            let errores = 0;
+
+            // Mostrar progreso
+            Swal.fire({
+                title: 'Procesando...',
+                html: `Validando productos: <strong>0</strong> / ${productosSinAjuste.length}`,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Procesar cada producto
+            for (const producto of productosSinAjuste) {
+                try {
+                    const solicitudValidacion = {
+                        inventarioProgramadoId: window.inventarioConfig.inventarioId,
+                        productoId: producto.productoId,
+                        tipoAjuste: 'validado',
+                        cantidadSistemaOriginal: producto.cantidadSistema,
+                        cantidadFisicaContada: producto.cantidadFisica,
+                        cantidadFinalPropuesta: producto.cantidadFisica,
+                        motivoAjuste: 'Validación masiva - ajuste automático al conteo físico',
+                        usuarioId: permisosInventarioActual.usuarioId
+                    };
+
+                    const response = await fetch('/TomaInventario/CrearAjustePendiente', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(solicitudValidacion)
+                    });
+
+                    if (response.ok) {
+                        const resultado = await response.json();
+                        if (resultado.success) {
+                            procesados++;
+                        } else {
+                            errores++;
+                        }
+                    } else {
+                        errores++;
+                    }
+                } catch (error) {
+                    console.error(`❌ Error validando producto ${producto.productoId}:`, error);
+                    errores++;
+                }
+
+                // Actualizar progreso
+                Swal.update({
+                    html: `Validando productos: <strong>${procesados + errores}</strong> / ${productosSinAjuste.length}`
+                });
+            }
+
+            // Recargar datos
+            await cargarAjustesPendientes(window.inventarioConfig.inventarioId);
+            await cargarProductosInventario(window.inventarioConfig.inventarioId);
+
+            // Mostrar resultado
+            Swal.fire({
+                icon: errores === 0 ? 'success' : 'warning',
+                title: errores === 0 ? '¡Validación completada!' : 'Validación completada con errores',
+                html: `
+                    <p><strong>Procesados exitosamente:</strong> ${procesados}</p>
+                    ${errores > 0 ? `<p class="text-danger"><strong>Errores:</strong> ${errores}</p>` : ''}
+                `,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error en validación masiva:', error);
+        mostrarError('Error al validar las discrepancias');
+    }
+}
+
+/**
+ * ✅ NUEVA FUNCIÓN: Crear ajuste para TODAS las discrepancias con tipo personalizado
+ */
+async function crearAjusteParaTodasLasDiscrepancias() {
+    try {
+        const verificacion = verificarPermisoEspecifico('ajuste', 'crear ajuste masivo');
+        if (!verificacion.tienePermiso) {
+            mostrarError(verificacion.mensaje);
+            return;
+        }
+
+        // Filtrar productos con discrepancias que NO tienen ajuste pendiente
+        const productosSinAjuste = productosInventario.filter(p =>
+            p.tieneDiscrepancia && !verificarAjustePendiente(p.productoId)
+        );
+
+        if (productosSinAjuste.length === 0) {
+            mostrarInfo('No hay discrepancias pendientes para ajustar');
+            return;
+        }
+
+        // Mostrar modal de selección de tipo
+        const { value: formValues } = await Swal.fire({
+            title: '📦 Crear Ajuste Masivo',
+            html: `
+                <div class="text-start">
+                    <p><strong>Productos a ajustar:</strong> ${productosSinAjuste.length}</p>
+                    <hr>
+
+                    <div class="mb-3">
+                        <label for="swal-tipoAjuste" class="form-label fw-bold">
+                            <i class="bi bi-gear me-1"></i>
+                            Tipo de Ajuste
+                        </label>
+                        <select id="swal-tipoAjuste" class="form-select">
+                            <option value="sistema_a_fisico">📦 Ajustar Sistema al Físico</option>
+                            <option value="validado">✅ Validar (Ajustar al Físico)</option>
+                        </select>
+                        <div class="form-text">
+                            <small>
+                                <strong>Ambas opciones actualizan el stock al conteo físico.</strong><br>
+                                La diferencia es solo para registro histórico.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="swal-motivo" class="form-label fw-bold">
+                            <i class="bi bi-card-text me-1"></i>
+                            Motivo del Ajuste
+                        </label>
+                        <textarea id="swal-motivo" class="form-control" rows="3"
+                                  placeholder="Describe el motivo del ajuste masivo (mínimo 10 caracteres)"></textarea>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        <strong>¿Qué hace esta acción?</strong><br>
+                        Se crearán <strong>${productosSinAjuste.length} ajustes pendientes</strong>.<br>
+                        El stock de cada producto se ajustará a su conteo físico.
+                    </div>
+                </div>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Crear ajustes',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const tipoAjuste = document.getElementById('swal-tipoAjuste').value;
+                const motivo = document.getElementById('swal-motivo').value.trim();
+
+                if (motivo.length < 10) {
+                    Swal.showValidationMessage('El motivo debe tener al menos 10 caracteres');
+                    return false;
+                }
+
+                return { tipoAjuste, motivo };
+            }
+        });
+
+        if (!formValues) return;
+
+        const { tipoAjuste, motivo } = formValues;
+
+        // Confirmar acción
+        const confirmacion = await Swal.fire({
+            title: '⚠️ ¿Confirmar ajuste masivo?',
+            html: `
+                <div class="text-start">
+                    <p><strong>Productos:</strong> ${productosSinAjuste.length}</p>
+                    <p><strong>Tipo:</strong> ${tipoAjuste === 'sistema_a_fisico' ? '📦 Ajustar al Físico' : '✅ Validado'}</p>
+                    <p><strong>Motivo:</strong> ${motivo}</p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, crear ajustes',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (confirmacion.isConfirmed) {
+            let procesados = 0;
+            let errores = 0;
+
+            // Mostrar progreso
+            Swal.fire({
+                title: 'Procesando...',
+                html: `Creando ajustes: <strong>0</strong> / ${productosSinAjuste.length}`,
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Procesar cada producto
+            for (const producto of productosSinAjuste) {
+                try {
+                    const solicitudAjuste = {
+                        inventarioProgramadoId: window.inventarioConfig.inventarioId,
+                        productoId: producto.productoId,
+                        tipoAjuste: tipoAjuste,
+                        cantidadSistemaOriginal: producto.cantidadSistema,
+                        cantidadFisicaContada: producto.cantidadFisica,
+                        cantidadFinalPropuesta: producto.cantidadFisica,
+                        motivoAjuste: `[Ajuste Masivo] ${motivo}`,
+                        usuarioId: permisosInventarioActual.usuarioId
+                    };
+
+                    const response = await fetch('/TomaInventario/CrearAjustePendiente', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(solicitudAjuste)
+                    });
+
+                    if (response.ok) {
+                        const resultado = await response.json();
+                        if (resultado.success) {
+                            procesados++;
+                        } else {
+                            errores++;
+                        }
+                    } else {
+                        errores++;
+                    }
+                } catch (error) {
+                    console.error(`❌ Error creando ajuste para producto ${producto.productoId}:`, error);
+                    errores++;
+                }
+
+                // Actualizar progreso
+                Swal.update({
+                    html: `Creando ajustes: <strong>${procesados + errores}</strong> / ${productosSinAjuste.length}`
+                });
+            }
+
+            // Recargar datos
+            await cargarAjustesPendientes(window.inventarioConfig.inventarioId);
+            await cargarProductosInventario(window.inventarioConfig.inventarioId);
+
+            // Mostrar resultado
+            Swal.fire({
+                icon: errores === 0 ? 'success' : 'warning',
+                title: errores === 0 ? '¡Ajustes creados!' : 'Ajustes creados con errores',
+                html: `
+                    <p><strong>Procesados exitosamente:</strong> ${procesados}</p>
+                    ${errores > 0 ? `<p class="text-danger"><strong>Errores:</strong> ${errores}</p>` : ''}
+                `,
+                confirmButtonText: 'Aceptar'
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error en ajuste masivo:', error);
+        mostrarError('Error al crear los ajustes');
     }
 }
 

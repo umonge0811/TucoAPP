@@ -423,10 +423,10 @@ namespace API.ServicesAPI
                     switch (ajuste.TipoAjuste)
                     {
                         case "sistema_a_fisico":
-                            producto.CantidadEnInventario = ajuste.CantidadFinalPropuesta;
-                            break;
                         case "validado":
-                            // No cambiar el stock, solo marcar como validado
+                            // ✅ CAMBIO: Ahora "validado" SÍ actualiza el stock al físico contado
+                            // "Validar" significa confirmar que el conteo físico es correcto
+                            producto.CantidadEnInventario = ajuste.CantidadFinalPropuesta;
                             break;
                         default:
                             _logger.LogWarning("⚠️ Tipo de ajuste {Tipo} no manejado", ajuste.TipoAjuste);

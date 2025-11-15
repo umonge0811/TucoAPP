@@ -610,21 +610,56 @@
     <div class="productos-panel">
         <div class="dashboard-card">
             <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <h3 class="mb-0">
                         <i class="bi bi-list-check me-2"></i>
                         Productos para Contar
                         <span class="badge bg-primary ms-2" id="contadorProductosMostrados">0</span>
                     </h3>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-secondary btn-sm" id="btnVistaTarjetas">
-                            <i class="bi bi-grid me-1"></i>
-                            Tarjetas
-                        </button>
-                        <button class="btn btn-primary btn-sm" id="btnVistaLista">
-                            <i class="bi bi-list me-1"></i>
-                            Lista
-                        </button>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <!-- ✅ NUEVOS BOTONES DE ACCIONES MASIVAS -->
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-success btn-sm"
+                                    onclick="validarTodasLasDiscrepancias()"
+                                    data-bs-toggle="tooltip"
+                                    title="Validar todas las discrepancias: Ajusta el stock del sistema al conteo físico de todos los productos con discrepancias">
+                                <i class="bi bi-check-all me-1"></i>
+                                Validar Todas
+                            </button>
+                            <button type="button" class="btn btn-warning btn-sm"
+                                    onclick="crearAjusteParaTodasLasDiscrepancias()"
+                                    data-bs-toggle="tooltip"
+                                    title="Crear ajustes personalizados: Permite seleccionar tipo y motivo para aplicar a todas las discrepancias">
+                                <i class="bi bi-pencil-square me-1"></i>
+                                Ajustar Todas
+                            </button>
+                        </div>
+
+                        <!-- Botones de vista -->
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-secondary btn-sm" id="btnVistaTarjetas">
+                                <i class="bi bi-grid me-1"></i>
+                                Tarjetas
+                            </button>
+                            <button class="btn btn-primary btn-sm" id="btnVistaLista">
+                                <i class="bi bi-list me-1"></i>
+                                Lista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ✅ NOTAS EXPLICATIVAS PARA LOS BOTONES MASIVOS -->
+                <div class="alert alert-info mt-3 mb-0" style="font-size: 0.85rem;">
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-check-all me-1"></i>Validar Todas:</strong>
+                            <span class="text-muted">Ajusta automáticamente el stock del sistema al conteo físico para todos los productos con discrepancias (rápido, 1 clic)</span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="bi bi-pencil-square me-1"></i>Ajustar Todas:</strong>
+                            <span class="text-muted">Te permite escribir un motivo personalizado y seleccionar el tipo de ajuste para aplicar masivamente</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -870,11 +905,14 @@
                             <select class="form-select" id="tipoAjustePendiente" required>
                                 <option value="">Seleccione el tipo</option>
                                 <option value="sistema_a_fisico">📦 Ajustar Sistema al Físico</option>
-                                <option value="validado">✅ Marcar como Validado</option>
-                            </select>                            <div class="form-text">
-                                <small>
-                                    <strong>Ajustar Sistema al Físico:</strong> Cambiar el stock del sistema al valor contado físicamente<br>
-                                    <strong>Marcar como Validado:</strong> Aceptar la discrepancia como válida sin cambios
+                                <option value="validado">✅ Validar (Ajustar al Físico)</option>
+                            </select>
+                            <div class="form-text">
+                                <small class="text-muted">
+                                    <strong>ℹ️ Nota importante:</strong> Ambas opciones actualizan el stock del sistema al conteo físico.<br>
+                                    <strong>Ajustar Sistema al Físico:</strong> Para ajustes manuales con motivo detallado<br>
+                                    <strong>Validar:</strong> Para confirmar que el conteo físico es correcto (atajo rápido)<br>
+                                    <em>La diferencia es solo para el registro histórico del ajuste.</em>
                                 </small>
                             </div>
                         </div>
