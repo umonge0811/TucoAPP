@@ -9451,10 +9451,10 @@ function compartirPorWhatsAppFacturacion(producto) {
     try {
         console.log('📱 Preparando compartir por WhatsApp:', producto);
 
-        // Obtener datos del producto desde el modal actual
-        const nombreProducto = $('#productoNombre').text() || producto?.nombreProducto || '';
-        const precioProducto = $('#productoPrecio').text() || formatearMoneda(producto?.precio || 0);
-        const stockProducto = $('#productoStock').text() || (producto?.cantidadEnInventario || 0);
+        // Obtener datos del producto desde el modal actual o del objeto producto
+        const nombreProducto = producto?.nombreProducto || '';
+        const precioProducto = producto?.precio || 0;
+        const stockProducto = producto?.cantidadEnInventario || 0;
         const productoId = producto?.productoId || 0;
 
         // Obtener imagen del producto
@@ -9464,19 +9464,37 @@ function compartirPorWhatsAppFacturacion(producto) {
             urlImagen = imgElement.attr('src');
         }
 
-        // Obtener datos de llanta si están disponibles
-        const medida = $('#llantaMedida').text()?.trim() || '';
-        const marca = $('#llantaMarca').text()?.trim() || '';
+        // Obtener datos de llanta completos
+        const marca = producto?.marca || '';
+        const modelo = producto?.modelo || '';
+        const tipoTerreno = producto?.tipoTerreno || '';
+        const capas = producto?.capas || '';
+
+        // Construir medida completa
+        let medidaCompleta = producto?.medidaCompleta || '';
+        if (!medidaCompleta && producto?.ancho && producto?.diametro) {
+            const ancho = producto.ancho;
+            const perfil = producto.perfil ? parseFloat(producto.perfil) : '';
+            const perfilFormateado = perfil ? (perfil % 1 === 0 ? perfil.toString() : perfil.toFixed(2)) : '';
+            const diametro = producto.diametro;
+            medidaCompleta = `${ancho}/${perfilFormateado}/R${diametro}`;
+        }
+
+        // Formatear precio con símbolo de colones
+        const precioFormateado = `₡${precioProducto.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
         // Guardar información del producto
         productoParaCompartirFacturacion = {
             nombre: nombreProducto,
-            precio: precioProducto,
+            precio: precioFormateado,
             stock: stockProducto,
             urlImagen: urlImagen,
             urlProducto: `https://www.llantasymastc.com/Public/DetalleProducto/${productoId}`,
-            medida: medida,
+            medidaCompleta: medidaCompleta,
             marca: marca,
+            modelo: modelo,
+            tipoTerreno: tipoTerreno,
+            capas: capas,
             productoId: productoId
         };
 
@@ -9542,19 +9560,32 @@ function enviarWhatsAppFacturacion() {
         mensaje += `*${productoParaCompartirFacturacion.nombre}*\n\n`;
 
         // Agregar información de llanta si está disponible
-        if (productoParaCompartirFacturacion.medida && productoParaCompartirFacturacion.medida !== '-' && productoParaCompartirFacturacion.medida !== '') {
-            mensaje += `Medida: ${productoParaCompartirFacturacion.medida}\n`;
+        if (productoParaCompartirFacturacion.medidaCompleta && productoParaCompartirFacturacion.medidaCompleta !== 'N/A' && productoParaCompartirFacturacion.medidaCompleta !== '') {
+            mensaje += `Medida: ${productoParaCompartirFacturacion.medidaCompleta}\n`;
         }
-        if (productoParaCompartirFacturacion.marca && productoParaCompartirFacturacion.marca !== '-' && productoParaCompartirFacturacion.marca !== '') {
+
+        if (productoParaCompartirFacturacion.marca && productoParaCompartirFacturacion.marca !== 'N/A' && productoParaCompartirFacturacion.marca !== '') {
             mensaje += `Marca: ${productoParaCompartirFacturacion.marca}\n`;
         }
 
-        mensaje += `Precio: ${productoParaCompartirFacturacion.precio}\n`;
-        mensaje += `Stock: ${productoParaCompartirFacturacion.stock}\n`;
-        mensaje += `Mas detalles: ${productoParaCompartirFacturacion.urlProducto}\n\n`;
+        if (productoParaCompartirFacturacion.modelo && productoParaCompartirFacturacion.modelo !== 'N/A' && productoParaCompartirFacturacion.modelo !== '') {
+            mensaje += `Modelo: ${productoParaCompartirFacturacion.modelo}\n`;
+        }
+
+        if (productoParaCompartirFacturacion.tipoTerreno && productoParaCompartirFacturacion.tipoTerreno !== 'N/A' && productoParaCompartirFacturacion.tipoTerreno !== '') {
+            mensaje += `Tipo de Terreno: ${productoParaCompartirFacturacion.tipoTerreno}\n`;
+        }
+
+        if (productoParaCompartirFacturacion.capas && productoParaCompartirFacturacion.capas !== 'N/A' && productoParaCompartirFacturacion.capas !== '') {
+            mensaje += `Capas: ${productoParaCompartirFacturacion.capas}\n`;
+        }
+
+        mensaje += `\nPrecio: ${productoParaCompartirFacturacion.precio}\n`;
+        mensaje += `Stock disponible: ${productoParaCompartirFacturacion.stock} unidades\n`;
+        mensaje += `\nMas detalles: ${productoParaCompartirFacturacion.urlProducto}\n`;
 
         if (incluirImagen && productoParaCompartirFacturacion.urlImagen && !productoParaCompartirFacturacion.urlImagen.includes('no-image.png')) {
-            mensaje += `Imagen: ${productoParaCompartirFacturacion.urlImagen}`;
+            mensaje += `\nImagen: ${productoParaCompartirFacturacion.urlImagen}`;
         }
 
         // Construir la URL de WhatsApp con el número específico
