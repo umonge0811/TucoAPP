@@ -1688,6 +1688,67 @@ namespace GestionLlantera.Web.Controllers
                 return Json(new { success = false, message = "Error interno del servidor" });
             }
         }
+
+        // ===== EDICIÓN DE FACTURAS =====
+        [HttpGet]
+        public async Task<IActionResult> Editar(int facturaId)
+        {
+            try
+            {
+                _logger.LogInformation("📝 Abriendo vista de edición para factura {FacturaId}", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    TempData["Error"] = "No se pudo obtener el token de autenticación";
+                    return RedirectToAction("Index");
+                }
+
+                // Verificar que la factura existe y está en estado Pendiente (desbloqueada)
+                var facturaResult = await _facturacionService.ObtenerFacturaPorIdAsync(facturaId, jwtToken);
+
+                if (!facturaResult.success)
+                {
+                    TempData["Error"] = "No se pudo cargar la factura";
+                    return RedirectToAction("Index");
+                }
+
+                ViewBag.FacturaId = facturaId;
+                ViewBag.ConfiguracionFacturacion = ObtenerConfiguracionFacturacion();
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error abriendo vista de edición para factura {FacturaId}", facturaId);
+                TempData["Error"] = "Error al abrir la vista de edición";
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> ActualizarFactura([FromBody] ActualizarFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("💾 Actualizando factura {FacturaId}", request.FacturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ActualizarFacturaAsync(request, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando factura {FacturaId}", request.FacturaId);
+                return Json(new { success = false, message = "Error interno del servidor: " + ex.Message });
+            }
+        }
     }
 
     // Clases de request para el controlador
@@ -1759,5 +1820,43 @@ namespace GestionLlantera.Web.Controllers
     public class ValidarPinRequest
     {
         public string Pin { get; set; } = string.Empty;
+    }
+
+    public class ActualizarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public int? ClienteId { get; set; }
+        public string NombreCliente { get; set; } = string.Empty;
+        public string? IdentificacionCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+        public string? EmailCliente { get; set; }
+        public string? DireccionCliente { get; set; }
+        public List<DetalleFacturaActualizacion> DetallesFactura { get; set; } = new List<DetalleFacturaActualizacion>();
+        public decimal? DescuentoGeneral { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal MontoImpuesto { get; set; }
+        public decimal Total { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Observaciones { get; set; }
+        public List<CambioFactura> CambiosRealizados { get; set; } = new List<CambioFactura>();
+    }
+
+    public class DetalleFacturaActualizacion
+    {
+        public int? DetalleFacturaId { get; set; }
+        public int ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal? PorcentajeDescuento { get; set; }
+        public decimal? MontoDescuento { get; set; }
+        public decimal Subtotal { get; set; }
+    }
+
+    public class CambioFactura
+    {
+        public string Tipo { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public object? Detalles { get; set; }
+        public DateTime Fecha { get; set; }
     }
 }

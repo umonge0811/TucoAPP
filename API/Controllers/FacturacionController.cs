@@ -2231,6 +2231,134 @@ namespace API.Controllers
         // EDICIÓN DE FACTURAS TRAMITADAS CON PIN
         // =====================================
 
+        [HttpPut("actualizar-factura")]
+        [Authorize]
+        public async Task<IActionResult> ActualizarFactura([FromBody] ActualizarFacturaRequest request)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("💾 === ACTUALIZANDO FACTURA {FacturaId} ===", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .Include(f => f.DetallesPago)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Guardar datos originales para auditoría
+                var datosOriginales = new
+                {
+                    Cliente = factura.NombreCliente,
+                    Total = factura.Total,
+                    CantidadProductos = factura.DetallesFactura.Count
+                };
+
+                // Actualizar datos del cliente
+                factura.ClienteId = request.ClienteId;
+                factura.NombreCliente = request.NombreCliente;
+                factura.IdentificacionCliente = request.IdentificacionCliente;
+                factura.TelefonoCliente = request.TelefonoCliente;
+                factura.EmailCliente = request.EmailCliente;
+                factura.DireccionCliente = request.DireccionCliente;
+
+                // Actualizar totales
+                factura.Subtotal = request.Subtotal;
+                factura.DescuentoGeneral = request.DescuentoGeneral;
+                factura.MontoImpuesto = request.MontoImpuesto;
+                factura.Total = request.Total;
+                factura.MetodoPago = request.MetodoPago;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                // Actualizar observaciones con historial de cambios
+                var historialCambios = string.Join("; ", request.CambiosRealizados.Select(c => $"{c.Descripcion} ({c.Fecha:dd/MM/yyyy HH:mm})"));
+                factura.Observaciones = (factura.Observaciones ?? "") + $"\n\n[EDITADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]\nCambios: {historialCambios}";
+
+                if (!string.IsNullOrEmpty(request.Observaciones))
+                {
+                    factura.Observaciones = request.Observaciones;
+                }
+
+                // Actualizar detalles de factura
+                // 1. Eliminar detalles que ya no están
+                var detallesActualesIds = request.DetallesFactura
+                    .Where(d => d.DetalleFacturaId.HasValue)
+                    .Select(d => d.DetalleFacturaId.Value)
+                    .ToList();
+
+                var detallesAEliminar = factura.DetallesFactura
+                    .Where(d => !detallesActualesIds.Contains(d.DetalleFacturaId))
+                    .ToList();
+
+                foreach (var detalle in detallesAEliminar)
+                {
+                    _logger.LogInformation("🗑️ Eliminando detalle de factura: {ProductoId}", detalle.ProductoId);
+                    _context.DetallesFactura.Remove(detalle);
+                }
+
+                // 2. Actualizar detalles existentes
+                foreach (var detalleRequest in request.DetallesFactura.Where(d => d.DetalleFacturaId.HasValue))
+                {
+                    var detalleExistente = factura.DetallesFactura
+                        .FirstOrDefault(d => d.DetalleFacturaId == detalleRequest.DetalleFacturaId.Value);
+
+                    if (detalleExistente != null)
+                    {
+                        detalleExistente.Cantidad = detalleRequest.Cantidad;
+                        detalleExistente.PrecioUnitario = detalleRequest.PrecioUnitario;
+                        detalleExistente.PorcentajeDescuento = detalleRequest.PorcentajeDescuento;
+                        detalleExistente.MontoDescuento = detalleRequest.MontoDescuento;
+                        detalleExistente.Subtotal = detalleRequest.Subtotal;
+                    }
+                }
+
+                // 3. Agregar nuevos detalles
+                foreach (var detalleRequest in request.DetallesFactura.Where(d => !d.DetalleFacturaId.HasValue))
+                {
+                    var producto = await _context.Productos.FindAsync(detalleRequest.ProductoId);
+                    if (producto == null) continue;
+
+                    var nuevoDetalle = new DetalleFactura
+                    {
+                        FacturaId = factura.FacturaId,
+                        ProductoId = detalleRequest.ProductoId,
+                        NombreProducto = producto.NombreProducto,
+                        DescripcionProducto = producto.Descripcion,
+                        Cantidad = detalleRequest.Cantidad,
+                        PrecioUnitario = detalleRequest.PrecioUnitario,
+                        PorcentajeDescuento = detalleRequest.PorcentajeDescuento,
+                        MontoDescuento = detalleRequest.MontoDescuento,
+                        Subtotal = detalleRequest.Subtotal
+                    };
+
+                    _context.DetallesFactura.Add(nuevoDetalle);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} actualizada exitosamente", factura.NumeroFactura);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Factura actualizada exitosamente",
+                    facturaId = factura.FacturaId,
+                    numeroFactura = factura.NumeroFactura,
+                    total = factura.Total,
+                    cambiosRealizados = request.CambiosRealizados.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error actualizando factura {FacturaId}", request.FacturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor: " + ex.Message });
+            }
+        }
+
         [HttpPost("validar-pin-edicion")]
         [Authorize]
         public IActionResult ValidarPinEdicion([FromBody] ValidarPinRequest request)
@@ -2457,5 +2585,43 @@ namespace API.Controllers
     public class ValidarPinRequest
     {
         public string Pin { get; set; } = string.Empty;
+    }
+
+    public class ActualizarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public int? ClienteId { get; set; }
+        public string NombreCliente { get; set; } = string.Empty;
+        public string? IdentificacionCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+        public string? EmailCliente { get; set; }
+        public string? DireccionCliente { get; set; }
+        public List<DetalleFacturaActualizacion> DetallesFactura { get; set; } = new List<DetalleFacturaActualizacion>();
+        public decimal? DescuentoGeneral { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal MontoImpuesto { get; set; }
+        public decimal Total { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Observaciones { get; set; }
+        public List<CambioFactura> CambiosRealizados { get; set; } = new List<CambioFactura>();
+    }
+
+    public class DetalleFacturaActualizacion
+    {
+        public int? DetalleFacturaId { get; set; }
+        public int ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal? PorcentajeDescuento { get; set; }
+        public decimal? MontoDescuento { get; set; }
+        public decimal Subtotal { get; set; }
+    }
+
+    public class CambioFactura
+    {
+        public string Tipo { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public object? Detalles { get; set; }
+        public DateTime Fecha { get; set; }
     }
 }

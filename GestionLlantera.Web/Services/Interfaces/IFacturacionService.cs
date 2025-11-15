@@ -80,6 +80,11 @@ namespace GestionLlantera.Web.Services.Interfaces
         /// Desbloquea una factura para edición usando PIN
         /// </summary>
         Task<object> DesbloquearFacturaParaEdicionAsync(int facturaId, string pin, string jwtToken = null);
+
+        /// <summary>
+        /// Actualiza una factura existente
+        /// </summary>
+        Task<object> ActualizarFacturaAsync(object request, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API

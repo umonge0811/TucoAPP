@@ -118,15 +118,12 @@ async function desbloquearFactura(facturaId, pin) {
                     <p>La factura <strong>${resultado.numeroFactura}</strong> ha sido desbloqueada para edición.</p>
                     <p class="small text-muted">Estado anterior: ${resultado.estadoAnterior} → Actual: ${resultado.estadoActual}</p>
                 `,
-                confirmButtonColor: '#28a745'
+                confirmButtonColor: '#28a745',
+                timer: 2000,
+                timerProgressBar: true
             }).then(() => {
-                // Recargar la lista de facturas
-                if (typeof cargarFacturasPendientes === 'function') {
-                    cargarFacturasPendientes();
-                }
-
-                // Redirigir a la pantalla de edición si existe
-                // window.location.href = `/Facturacion/Editar/${facturaId}`;
+                // Redirigir a la pantalla de edición
+                window.location.href = `/Facturacion/Editar?facturaId=${facturaId}`;
             });
 
         } else {
