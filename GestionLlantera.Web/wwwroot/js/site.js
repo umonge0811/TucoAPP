@@ -119,11 +119,11 @@ function renderizarNotificaciones() {
             </small>
             <div class="d-flex gap-2">
                 ${conteoNoLeidas > 0 ? `
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="marcarTodasComoLeidas()">
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-action="marcar-todas">
                         <i class="bi bi-check-all me-1"></i>Marcar todas
                     </button>
                 ` : ''}
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarTodasLasNotificaciones()">
+                <button type="button" class="btn btn-sm btn-outline-danger" data-action="eliminar-todas">
                     <i class="bi bi-trash3 me-1"></i>Eliminar todas
                 </button>
             </div>
@@ -466,6 +466,26 @@ function inicializarNotificaciones() {
     if (notificationsPanel) {
         notificationsPanel.addEventListener('show.bs.offcanvas', function () {
             cargarNotificaciones();
+        });
+    }
+
+    // Event delegation para botones de acción en el panel de notificaciones
+    const contenedorNotificaciones = document.getElementById('notificaciones-contenido');
+    if (contenedorNotificaciones) {
+        contenedorNotificaciones.addEventListener('click', function(event) {
+            const button = event.target.closest('[data-action]');
+            if (!button) return;
+
+            const action = button.getAttribute('data-action');
+            console.log('Botón clickeado:', action);
+
+            if (action === 'marcar-todas') {
+                event.preventDefault();
+                marcarTodasComoLeidas();
+            } else if (action === 'eliminar-todas') {
+                event.preventDefault();
+                eliminarTodasLasNotificaciones();
+            }
         });
     }
 
