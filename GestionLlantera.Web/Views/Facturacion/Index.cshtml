@@ -189,7 +189,7 @@
 
             <!-- Panel derecho - Carrito de venta -->
             <div class="col-lg-5">
-                <div class="card shadow-sm">
+                <div class="card shadow-sm" id="carritoVenta">
                     <div class="card-header">
                         <h5 class="mb-0">
                             <i class="bi bi-cart me-2"></i>Venta Actual
@@ -802,6 +802,35 @@
 
     #modalWhatsAppNumeroFacturacion.show {
         z-index: 1060 !important;
+    }
+
+    /* Carrito sticky en pantallas grandes */
+    @media (min-width: 992px) {
+        #carritoVenta {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+    }
+
+    /* Mejorar scroll del carrito */
+    #carritoVenta::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    #carritoVenta::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    #carritoVenta::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 10px;
+    }
+
+    #carritoVenta::-webkit-scrollbar-thumb:hover {
+        background: #555;
     }
 </style>
 

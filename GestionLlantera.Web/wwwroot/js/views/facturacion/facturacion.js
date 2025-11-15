@@ -6372,10 +6372,29 @@ function verDetalleProducto(producto) {
 
     // Remover modal anterior si existe
     $('#modalDetalleProducto').remove();
+
+    // Limpiar cualquier backdrop residual que pueda estar causando problemas
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open');
+
+    // Agregar el nuevo modal al body
     $('body').append(modalHtml);
 
-    const modal = new bootstrap.Modal(document.getElementById('modalDetalleProducto'));
+    // Crear y mostrar el modal con configuración específica
+    const modalElement = document.getElementById('modalDetalleProducto');
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: true,
+        keyboard: true,
+        focus: true
+    });
+
     modal.show();
+
+    // Asegurar que el z-index sea correcto después de mostrar
+    setTimeout(() => {
+        $('#modalDetalleProducto').css('z-index', '1055');
+        $('.modal-backdrop').last().css('z-index', '1050');
+    }, 50);
 
     // Cargar imágenes después de mostrar el modal
     setTimeout(() => {
