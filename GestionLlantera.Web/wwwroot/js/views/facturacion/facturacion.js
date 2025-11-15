@@ -9497,10 +9497,14 @@ function compartirPorWhatsAppFacturacion(producto) {
         // Limpiar el campo de número
         $('#numeroWhatsAppFacturacion').val('');
 
-        // Mostrar el modal del número de WhatsApp (como en inventario)
-        $('#modalWhatsAppNumeroFacturacion').modal('show');
+        // Cerrar el modal de detalles primero
+        $('#modalDetalleProducto').modal('hide');
 
-        console.log('✅ Modal de WhatsApp abierto con producto:', productoParaCompartirFacturacion);
+        // Esperar a que el modal de detalles se cierre completamente antes de abrir el de WhatsApp
+        setTimeout(() => {
+            $('#modalWhatsAppNumeroFacturacion').modal('show');
+            console.log('✅ Modal de WhatsApp abierto con producto:', productoParaCompartirFacturacion);
+        }, 300);
 
     } catch (error) {
         console.error('❌ Error al compartir por WhatsApp:', error);
@@ -9605,6 +9609,11 @@ ${urlProducto}
 Saludos.`;
 
         const emailUrl = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+
+        // Cerrar el modal de detalles primero
+        $('#modalDetalleProducto').modal('hide');
+
+        // Abrir cliente de email
         window.location.href = emailUrl;
 
         mostrarToast('Éxito', 'Cliente de email abierto correctamente', 'info');
