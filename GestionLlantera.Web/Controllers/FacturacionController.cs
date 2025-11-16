@@ -1957,6 +1957,17 @@ namespace GestionLlantera.Web.Controllers
         public string? MetodoPago { get; set; }
         public string? Observaciones { get; set; }
         public List<CambioFactura> CambiosRealizados { get; set; } = new List<CambioFactura>();
+        public bool EsAnulada { get; set; } = false;
+        public List<AjusteStockFactura> AjustesStock { get; set; } = new List<AjusteStockFactura>();
+    }
+
+    public class AjusteStockFactura
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public string TipoAjuste { get; set; } = string.Empty; // "entrada" o "salida"
+        public int Cantidad { get; set; }
+        public string Comentario { get; set; } = string.Empty;
     }
 
     public class DetalleFacturaActualizacion
