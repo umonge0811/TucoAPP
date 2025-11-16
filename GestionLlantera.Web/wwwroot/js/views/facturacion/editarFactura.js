@@ -587,19 +587,26 @@ async function guardarCambiosFactura() {
             body: JSON.stringify(datosActualizacion)
         });
 
+        console.log('📡 Respuesta del servidor:');
+        console.log('  - Status:', response.status);
+        console.log('  - StatusText:', response.statusText);
+        console.log('  - OK:', response.ok);
+
         const resultado = await response.json();
+        console.log('📄 Resultado parseado:', resultado);
 
         if (resultado.success) {
             await Swal.fire({
                 icon: 'success',
                 title: '¡Cambios Guardados!',
-                text: 'Los cambios han sido guardados exitosamente',
+                text: resultado.message || 'Los cambios han sido guardados exitosamente',
                 confirmButtonColor: '#28a745',
                 timer: 2000
             });
 
             window.location.href = '/Facturacion';
         } else {
+            console.error('❌ Backend devolvió error:', resultado);
             throw new Error(resultado.message || 'Error al guardar cambios');
         }
 
