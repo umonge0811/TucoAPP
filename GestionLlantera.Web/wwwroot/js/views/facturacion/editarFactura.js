@@ -815,10 +815,14 @@ function prepararDatosActualizacion() {
     console.log('📊 === DEBUG AJUSTES DE STOCK ===');
     console.log('📊 Ajustes calculados:', ajustesStock);
     console.log('📊 Número de ajustes:', ajustesStock.length);
+    console.log('📊 Tipo de ajustesStock:', typeof ajustesStock);
+    console.log('📊 Es array:', Array.isArray(ajustesStock));
+    console.log('📊 Ajustes serializados:', JSON.stringify(ajustesStock));
     console.log('📊 Factura original:', facturaOriginal);
     console.log('📊 Productos editados:', productosEditar);
 
-    return {
+    // Crear objeto de datos
+    const datos = {
         facturaId: window.facturaIdEditar,
         clienteId: clienteEditar.clienteId,
         nombreCliente: $('#nombreClienteEditar').val(),
@@ -843,8 +847,14 @@ function prepararDatosActualizacion() {
         observaciones: $('#observacionesEditar').val(),
         cambiosRealizados: cambiosRealizados,
         esAnulada: esAnulada, // Enviar como booleano
-        ajustesStock: ajustesStock
+        ajustesStock: ajustesStock  // ✅ CRÍTICO: Array de ajustes de stock
     };
+
+    console.log('📦 Objeto datos completo antes de retornar:', datos);
+    console.log('📦 Campo ajustesStock en datos:', datos.ajustesStock);
+    console.log('📦 Datos serializados test:', JSON.stringify(datos));
+
+    return datos;
 }
 
 // ===== CANCELAR EDICIÓN =====
