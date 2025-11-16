@@ -1693,6 +1693,48 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        public async Task<object> MarcarFacturaParaAnulacionAsync(int facturaId, string pin, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("❌ === MARCANDO FACTURA {FacturaId} PARA ANULACIÓN ===", facturaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { Pin = pin };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/marcar-anulacion");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error marcando factura para anulación: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al anular factura" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando factura {FacturaId} para anulación", facturaId);
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
         public async Task<object> ActualizarFacturaAsync(object request, string jwtToken = null)
         {
             try

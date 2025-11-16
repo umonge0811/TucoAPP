@@ -935,25 +935,64 @@ async function manejarToggleAnulacion(activado) {
             const resultado = await response.json();
 
             if (resultado.success) {
-                // PIN correcto - marcar factura para anulación
-                $('#facturaAnuladaFlag').val('true');
-                $('#pinAnulacionValidado').val('true');
-                $('#labelAnularFactura').html('<span class="badge bg-danger">Anulada</span>');
+                // PIN correcto - AHORA ANULAR LA FACTURA INMEDIATAMENTE
+                console.log('✅ PIN validado, anulando factura...');
 
-                console.log('✅ Factura marcada para anulación');
-                console.log('   - Campo facturaAnuladaFlag ahora vale:', $('#facturaAnuladaFlag').val());
+                try {
+                    const responseAnulacion = await fetch(`/Facturacion/MarcarFacturaParaAnulacion?facturaId=${window.facturaIdEditar}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ pin: pin })
+                    });
 
-                registrarCambio('factura_anulada', 'Factura marcada para anulación', {
-                    observacion: 'Al guardar, todos los productos se devolverán al inventario'
-                });
+                    const resultadoAnulacion = await responseAnulacion.json();
 
-                Swal.fire({
-                    icon: 'success',
-                    title: 'PIN Validado',
-                    text: 'La factura será anulada al guardar los cambios',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+                    if (resultadoAnulacion.success) {
+                        // Factura anulada exitosamente en la base de datos
+                        $('#facturaAnuladaFlag').val('true');
+                        $('#pinAnulacionValidado').val('true');
+                        $('#labelAnularFactura').html('<span class="badge bg-danger">ANULADA</span>');
+
+                        console.log('✅ Factura ANULADA exitosamente en la base de datos');
+                        console.log('   - Estado cambiado a: Anulada');
+                        console.log('   - Productos devueltos:', resultadoAnulacion.productosDevueltos);
+
+                        registrarCambio('factura_anulada', 'Factura ANULADA - Stock devuelto al inventario', {
+                            productosDevueltos: resultadoAnulacion.productosDevueltos
+                        });
+
+                        await Swal.fire({
+                            icon: 'success',
+                            title: 'Factura Anulada',
+                            html: `
+                                <p>La factura ha sido <strong>ANULADA</strong> exitosamente.</p>
+                                <p class="text-muted mb-0">Productos devueltos al inventario: ${resultadoAnulacion.productosDevueltos}</p>
+                            `,
+                            confirmButtonColor: '#28a745',
+                            confirmButtonText: 'Entendido'
+                        });
+
+                        // Redirigir automáticamente a la lista de facturas
+                        window.location.href = '/Facturacion';
+
+                    } else {
+                        throw new Error(resultadoAnulacion.message || 'Error al anular la factura');
+                    }
+                } catch (errorAnulacion) {
+                    console.error('❌ Error anulando factura:', errorAnulacion);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error al Anular',
+                        text: errorAnulacion.message || 'No se pudo anular la factura',
+                        confirmButtonColor: '#dc3545'
+                    });
+
+                    // Revertir el toggle
+                    $('#toggleAnularFactura').prop('checked', false);
+                    $('#facturaAnuladaFlag').val('false');
+                    $('#pinAnulacionValidado').val('false');
+                }
 
             } else {
                 // PIN incorrecto

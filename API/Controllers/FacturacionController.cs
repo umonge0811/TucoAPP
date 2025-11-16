@@ -2562,6 +2562,102 @@ namespace API.Controllers
             }
         }
 
+        [HttpPut("facturas/{facturaId}/marcar-anulacion")]
+        [Authorize]
+        public async Task<IActionResult> MarcarFacturaParaAnulacion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("❌ Intentando marcar factura {FacturaId} para ANULACIÓN", facturaId);
+
+                // Validar PIN
+                var pinCorrecto = _configuration["FacturacionSettings:PinEdicionFacturas"];
+                if (request.Pin != pinCorrecto)
+                {
+                    _logger.LogWarning("⚠️ PIN incorrecto al intentar anular factura {FacturaId}", facturaId);
+                    return BadRequest(new { success = false, message = "PIN incorrecto" });
+                }
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .ThenInclude(d => d.Producto)
+                    .FirstOrDefaultAsync(f => f.FacturaId == facturaId);
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Verificar que la factura esté en estado "En Edición"
+                if (factura.Estado != "En Edición")
+                {
+                    _logger.LogWarning("⚠️ Intento de anular factura {FacturaId} que no está en edición. Estado actual: {Estado}",
+                        facturaId, factura.Estado);
+                    return BadRequest(new { success = false, message = $"La factura debe estar en edición para anularla. Estado actual: {factura.Estado}" });
+                }
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // ===== CAMBIAR ESTADO A ANULADA =====
+                    var estadoAnterior = factura.Estado;
+                    factura.Estado = "Anulada";
+                    factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                    // Agregar observación de anulación
+                    var textoAnulacion = $"\n\n[ANULADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]";
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, textoAnulacion);
+
+                    _logger.LogInformation("📝 Factura {NumeroFactura} marcada como ANULADA", factura.NumeroFactura);
+
+                    // ===== DEVOLVER TODOS LOS PRODUCTOS AL INVENTARIO =====
+                    _logger.LogInformation("📦 Devolviendo {CantidadProductos} productos al inventario", factura.DetallesFactura.Count);
+
+                    foreach (var detalle in factura.DetallesFactura)
+                    {
+                        var producto = detalle.Producto;
+                        if (producto != null)
+                        {
+                            var stockAnterior = producto.CantidadEnInventario;
+                            producto.CantidadEnInventario += detalle.Cantidad;
+
+                            _logger.LogInformation("  ↗️ {NombreProducto}: Stock {StockAnterior} → {StockNuevo} (+{Cantidad})",
+                                producto.NombreProducto,
+                                stockAnterior,
+                                producto.CantidadEnInventario,
+                                detalle.Cantidad);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("✅ Factura {NumeroFactura} ANULADA exitosamente. Stock devuelto.", factura.NumeroFactura);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Factura anulada exitosamente. Todos los productos han sido devueltos al inventario.",
+                        facturaId = factura.FacturaId,
+                        numeroFactura = factura.NumeroFactura,
+                        estadoAnterior = estadoAnterior,
+                        estadoActual = factura.Estado,
+                        productosDevueltos = factura.DetallesFactura.Count
+                    });
+                }
+                catch (Exception exTransaction)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(exTransaction, "❌ Error en transacción al anular factura {FacturaId}", facturaId);
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando factura {FacturaId} para anulación", facturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor: " + ex.Message });
+            }
+        }
+
         // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
         // =====================================

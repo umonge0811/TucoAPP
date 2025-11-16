@@ -87,6 +87,11 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<object> RestaurarEstadoFacturaAsync(int facturaId, string estadoAnterior, string jwtToken = null);
 
         /// <summary>
+        /// Marca una factura para anulación, cambiando su estado inmediatamente y devolviendo el stock
+        /// </summary>
+        Task<object> MarcarFacturaParaAnulacionAsync(int facturaId, string pin, string jwtToken = null);
+
+        /// <summary>
         /// Actualiza una factura existente
         /// </summary>
         Task<object> ActualizarFacturaAsync(object request, string jwtToken = null);

@@ -1778,6 +1778,30 @@ namespace GestionLlantera.Web.Controllers
             }
         }
 
+        [HttpPut]
+        public async Task<IActionResult> MarcarFacturaParaAnulacion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("❌ Marcando factura {FacturaId} para anulación desde controlador Web", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarFacturaParaAnulacionAsync(facturaId, request.Pin, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando factura {FacturaId} para anulación", facturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
         // ===== EDICIÓN DE FACTURAS =====
         [HttpGet]
         public async Task<IActionResult> Editar(int facturaId)
