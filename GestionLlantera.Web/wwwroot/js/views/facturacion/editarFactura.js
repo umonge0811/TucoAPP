@@ -321,7 +321,7 @@ function configurarEventosEdicion() {
 
     // Agregar producto
     $('#btnAgregarProducto').on('click', function() {
-        abrirModalAgregarProducto();
+        abrirModalInventarioEdicion();
     });
 
     // Descuento general
@@ -368,11 +368,6 @@ function configurarEventosEdicion() {
     // Buscar cliente
     $('#buscarClienteInput').on('input', debounce(function() {
         buscarClientes($(this).val());
-    }, 300));
-
-    // Buscar producto
-    $('#buscarProductoInput').on('input', debounce(function() {
-        buscarProductos($(this).val());
     }, 300));
 }
 
@@ -450,70 +445,99 @@ function abrirModalBuscarCliente() {
     new bootstrap.Modal(document.getElementById('modalBuscarCliente')).show();
 }
 
-// ===== BUSCAR PRODUCTOS =====
-async function buscarProductos(termino) {
-    if (!termino || termino.length < 2) {
-        $('#resultadosBusquedaProducto').html('<p class="text-muted text-center py-3">Ingrese al menos 2 caracteres para buscar</p>');
+// ===== MODAL DE INVENTARIO (Usar el mismo que Index de Facturación) =====
+
+/**
+ * Abrir modal de inventario para agregar productos a la factura en edición
+ */
+function abrirModalInventarioEdicion() {
+    console.log('📦 === ABRIENDO MODAL INVENTARIO EN EDICIÓN ===');
+
+    // Verificar si la función de InventarioFacturacion.js está disponible
+    if (typeof window.consultarInventario === 'function') {
+        // Establecer flag para saber que estamos en modo edición
+        window.modoEdicionFactura = true;
+
+        // Abrir modal usando la función del módulo de inventario
+        window.consultarInventario();
+    } else {
+        console.error('❌ La función consultarInventario no está disponible');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo abrir el modal de inventario. Recarga la página e intenta nuevamente.',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+/**
+ * Función global para agregar producto desde el modal de inventario
+ * Esta función será llamada desde InventarioFacturacion.js cuando se agrega un producto
+ */
+window.agregarProductoDesdeInventarioEdicion = function(producto) {
+    console.log('📦 Agregando producto a factura en edición:', producto);
+
+    // Verificar si el producto ya existe en la factura
+    const productoExistente = productosEditar.find(p => p.productoId === producto.productoId);
+
+    if (productoExistente) {
+        // Si ya existe, aumentar la cantidad
+        Swal.fire({
+            title: 'Producto ya en factura',
+            html: `El producto <strong>${producto.nombreProducto}</strong> ya está en la factura.<br>¿Deseas aumentar la cantidad?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, aumentar cantidad',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Encontrar el índice del producto
+                const index = productosEditar.findIndex(p => p.productoId === producto.productoId);
+
+                // Aumentar cantidad
+                const nuevaCantidad = productoExistente.cantidad + 1;
+
+                // Actualizar valores
+                productoExistente.cantidad = nuevaCantidad;
+
+                // Recalcular subtotal
+                const subtotalSinDesc = nuevaCantidad * productoExistente.precioUnitario;
+                const montoDesc = subtotalSinDesc * (productoExistente.porcentajeDescuento / 100);
+                productoExistente.subtotal = subtotalSinDesc - montoDesc;
+
+                actualizarTablaProductos();
+                calcularTotales();
+
+                registrarCambio('producto_cantidad_aumentada', `Cantidad de "${producto.nombreProducto}" aumentada a ${nuevaCantidad}`, {
+                    productoId: producto.productoId,
+                    cantidadAnterior: nuevaCantidad - 1,
+                    cantidadNueva: nuevaCantidad
+                });
+
+                mostrarToast('Cantidad actualizada', `Cantidad de ${producto.nombreProducto} aumentada`, 'success');
+            }
+        });
+
         return;
     }
 
-    try {
-        const response = await fetch(`/api/Facturacion/productos-venta?busqueda=${encodeURIComponent(termino)}&soloConStock=false&tamano=20`);
-        const resultado = await response.json();
-
-        if (resultado.productos && resultado.productos.length > 0) {
-            let html = '';
-            resultado.productos.forEach(producto => {
-                html += crearCardProducto(producto);
-            });
-            $('#resultadosBusquedaProducto').html(html);
-
-            $('.agregar-producto-btn').on('click', function() {
-                const producto = JSON.parse($(this).attr('data-producto'));
-                agregarProductoAFactura(producto);
-            });
-        } else {
-            $('#resultadosBusquedaProducto').html('<p class="text-muted text-center py-3">No se encontraron productos</p>');
-        }
-    } catch (error) {
-        console.error('❌ Error buscando productos:', error);
-        $('#resultadosBusquedaProducto').html('<p class="text-danger text-center py-3">Error al buscar productos</p>');
-    }
-}
-
-function crearCardProducto(producto) {
-    return `
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h6 class="card-title">${producto.nombreProducto}</h6>
-                    <p class="card-text">
-                        <strong class="text-success">₡${Number(producto.precio || 0).toLocaleString('es-CR', {minimumFractionDigits: 2})}</strong><br>
-                        <small class="text-muted">Stock: ${producto.cantidadEnInventario}</small>
-                    </p>
-                    <button type="button" class="btn btn-sm btn-primary w-100 agregar-producto-btn" data-producto='${JSON.stringify(producto)}'>
-                        <i class="bi bi-plus-circle me-1"></i>Agregar
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function agregarProductoAFactura(producto) {
+    // Crear nuevo producto
     const nuevoProducto = {
         detalleFacturaId: null, // Nuevo producto
         productoId: producto.productoId,
         nombreProducto: producto.nombreProducto,
-        descripcion: producto.descripcion,
+        descripcion: producto.descripcion || '',
         cantidad: 1,
         precioUnitario: producto.precio || 0,
         porcentajeDescuento: 0,
         montoDescuento: 0,
         subtotal: producto.precio || 0,
         esLlanta: producto.esLlanta || false,
-        medidaLlanta: producto.medidaCompleta,
-        marcaLlanta: producto.marca
+        medidaLlanta: producto.medidaCompleta || null,
+        marcaLlanta: producto.marca || null
     };
 
     productosEditar.push(nuevoProducto);
@@ -526,15 +550,8 @@ function agregarProductoAFactura(producto) {
         precioUnitario: producto.precio
     });
 
-    bootstrap.Modal.getInstance(document.getElementById('modalAgregarProducto')).hide();
     mostrarToast('Producto agregado', `${producto.nombreProducto} agregado a la factura`, 'success');
-}
-
-function abrirModalAgregarProducto() {
-    $('#buscarProductoInput').val('');
-    $('#resultadosBusquedaProducto').html('<p class="text-muted text-center py-3">Ingrese un término de búsqueda</p>');
-    new bootstrap.Modal(document.getElementById('modalAgregarProducto')).show();
-}
+};
 
 // ===== GUARDAR CAMBIOS =====
 async function guardarCambiosFactura() {
@@ -554,14 +571,55 @@ async function guardarCambiosFactura() {
 
         // Confirmar guardado
         const esAnulacion = datosActualizacion.esAnulada;
-        const tituloConfirmacion = esAnulacion ? '⚠️ ¿ANULAR FACTURA?' : '¿Guardar Cambios?';
-        const mensajeConfirmacion = esAnulacion
-            ? `<div class="alert alert-danger">
-                <strong>ATENCIÓN:</strong> Está a punto de <strong>ANULAR</strong> esta factura.
-                <br>Todos los productos se devolverán al inventario.
-                <br><br>¿Está seguro de continuar?
-               </div>`
-            : `Se guardarán <strong>${cambiosRealizados.length}</strong> cambio(s) en la factura.<br>Esta acción quedará registrada en el historial.`;
+        const ajustesStock = datosActualizacion.ajustesStock || [];
+
+        // ✅ CONSTRUIR MENSAJE DE CONFIRMACIÓN CON DETALLES DE AJUSTES DE STOCK
+        let tituloConfirmacion = esAnulacion ? '⚠️ ¿ANULAR FACTURA?' : '¿Guardar Cambios?';
+        let mensajeConfirmacion = '';
+
+        if (esAnulacion) {
+            mensajeConfirmacion = `
+                <div class="alert alert-danger">
+                    <strong>ATENCIÓN:</strong> Está a punto de <strong>ANULAR</strong> esta factura.
+                    <br>Todos los productos se devolverán al inventario.
+                    <br><br>¿Está seguro de continuar?
+                </div>`;
+        } else {
+            // Construir resumen de cambios de inventario
+            let resumenAjustes = '';
+
+            if (ajustesStock.length > 0) {
+                resumenAjustes = '<div class="alert alert-info mt-3"><strong>📦 Ajustes de Inventario:</strong><ul class="mt-2 mb-0 text-start">';
+
+                const productosAgregados = ajustesStock.filter(a => a.tipoAjuste === 'salida');
+                const productosEliminados = ajustesStock.filter(a => a.tipoAjuste === 'entrada');
+
+                if (productosAgregados.length > 0) {
+                    resumenAjustes += '<li><strong>Se descontarán del inventario:</strong><ul>';
+                    productosAgregados.forEach(ajuste => {
+                        resumenAjustes += `<li>${ajuste.nombreProducto}: <strong>${ajuste.cantidad}</strong> unidad(es)</li>`;
+                    });
+                    resumenAjustes += '</ul></li>';
+                }
+
+                if (productosEliminados.length > 0) {
+                    resumenAjustes += '<li><strong>Se devolverán al inventario:</strong><ul>';
+                    productosEliminados.forEach(ajuste => {
+                        resumenAjustes += `<li>${ajuste.nombreProducto}: <strong>${ajuste.cantidad}</strong> unidad(es)</li>`;
+                    });
+                    resumenAjustes += '</ul></li>';
+                }
+
+                resumenAjustes += '</ul></div>';
+            }
+
+            mensajeConfirmacion = `
+                <p>Se guardarán <strong>${cambiosRealizados.length}</strong> cambio(s) en la factura.</p>
+                <p class="text-muted">Esta acción quedará registrada en el historial.</p>
+                ${resumenAjustes}
+                <p class="mt-3"><strong>¿Deseas continuar?</strong></p>
+            `;
+        }
 
         const confirmacion = await Swal.fire({
             title: tituloConfirmacion,
@@ -570,8 +628,9 @@ async function guardarCambiosFactura() {
             showCancelButton: true,
             confirmButtonColor: esAnulacion ? '#dc3545' : '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: esAnulacion ? 'Sí, ANULAR factura' : 'Sí, guardar',
-            cancelButtonText: 'Cancelar'
+            confirmButtonText: esAnulacion ? 'Sí, ANULAR factura' : 'Sí, guardar cambios',
+            cancelButtonText: 'Cancelar',
+            width: '600px'
         });
 
         if (!confirmacion.isConfirmed) return;

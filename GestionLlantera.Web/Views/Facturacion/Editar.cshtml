@@ -295,27 +295,8 @@
     </div>
 </div>
 
-<!-- Modal Agregar Producto -->
-<div class="modal fade" id="modalAgregarProducto" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle me-2"></i>Agregar Producto a la Factura
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <input type="text" id="buscarProductoInput" class="form-control" placeholder="Buscar producto...">
-                </div>
-                <div id="resultadosBusquedaProducto" class="row" style="max-height: 500px; overflow-y: auto;">
-                    <!-- Se llenará dinámicamente -->
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Modal de Inventario (igual al de Index de Facturación) -->
+@await Html.PartialAsync("_ModalInventario")
 
 <!-- Modal Historial de Cambios -->
 <div class="modal fade" id="modalHistorialCambios" tabindex="-1">
@@ -341,6 +322,10 @@
 </div>
 
 @section Scripts {
+    <!-- Script de inventario para facturación (necesario para el modal de inventario) -->
+    <script src="~/js/views/facturacion/InventarioFacturacion.js"></script>
+
+    <!-- Script de edición de factura -->
     <script src="~/js/views/facturacion/editarFactura.js"></script>
 
     <script>
