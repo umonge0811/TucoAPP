@@ -1731,8 +1731,19 @@ namespace GestionLlantera.Web.Services
                 }
                 else
                 {
-                    _logger.LogError("❌ Error actualizando factura: {StatusCode}", response.StatusCode);
-                    return new { success = false, message = "Error al actualizar factura" };
+                    _logger.LogError("❌ Error actualizando factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Intentar deserializar el error del API para obtener el mensaje
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message ?? "Error al actualizar factura";
+                        return new { success = false, message = errorMessage.ToString() };
+                    }
+                    catch
+                    {
+                        return new { success = false, message = $"Error al actualizar factura (HTTP {response.StatusCode})" };
+                    }
                 }
             }
             catch (Exception ex)
