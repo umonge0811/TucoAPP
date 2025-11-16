@@ -549,22 +549,32 @@ async function guardarCambiosFactura() {
             return;
         }
 
+        // Preparar datos primero para verificar si se va a anular
+        const datosActualizacion = prepararDatosActualizacion();
+
         // Confirmar guardado
+        const esAnulacion = datosActualizacion.esAnulada;
+        const tituloConfirmacion = esAnulacion ? '⚠️ ¿ANULAR FACTURA?' : '¿Guardar Cambios?';
+        const mensajeConfirmacion = esAnulacion
+            ? `<div class="alert alert-danger">
+                <strong>ATENCIÓN:</strong> Está a punto de <strong>ANULAR</strong> esta factura.
+                <br>Todos los productos se devolverán al inventario.
+                <br><br>¿Está seguro de continuar?
+               </div>`
+            : `Se guardarán <strong>${cambiosRealizados.length}</strong> cambio(s) en la factura.<br>Esta acción quedará registrada en el historial.`;
+
         const confirmacion = await Swal.fire({
-            title: '¿Guardar Cambios?',
-            html: `Se guardarán <strong>${cambiosRealizados.length}</strong> cambio(s) en la factura.<br>Esta acción quedará registrada en el historial.`,
-            icon: 'question',
+            title: tituloConfirmacion,
+            html: mensajeConfirmacion,
+            icon: esAnulacion ? 'warning' : 'question',
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
+            confirmButtonColor: esAnulacion ? '#dc3545' : '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Sí, guardar',
+            confirmButtonText: esAnulacion ? 'Sí, ANULAR factura' : 'Sí, guardar',
             cancelButtonText: 'Cancelar'
         });
 
         if (!confirmacion.isConfirmed) return;
-
-        // Preparar datos
-        const datosActualizacion = prepararDatosActualizacion();
 
         console.log('💾 Guardando cambios:', datosActualizacion);
         console.log('🔍 EsAnulada:', datosActualizacion.esAnulada, '| Tipo:', typeof datosActualizacion.esAnulada);
@@ -706,7 +716,14 @@ function prepararDatosActualizacion() {
     const total = subtotalConDescuento; // Sin IVA adicional
 
     // Verificar si la factura está marcada para anulación
-    const esAnulada = $('#facturaAnuladaFlag').val() === 'true';
+    const facturaAnuladaFlagValue = $('#facturaAnuladaFlag').val();
+    const esAnulada = facturaAnuladaFlagValue === 'true';
+
+    console.log('🔍 DEBUG ANULACIÓN:');
+    console.log('  - Valor del campo oculto:', facturaAnuladaFlagValue);
+    console.log('  - Tipo del campo:', typeof facturaAnuladaFlagValue);
+    console.log('  - esAnulada calculado:', esAnulada);
+    console.log('  - Tipo de esAnulada:', typeof esAnulada);
 
     // Calcular ajustes de stock necesarios
     const ajustesStock = calcularAjustesStock(esAnulada);
@@ -735,7 +752,7 @@ function prepararDatosActualizacion() {
         metodoPago: $('#metodoPagoEditar').val(),
         observaciones: $('#observacionesEditar').val(),
         cambiosRealizados: cambiosRealizados,
-        esAnulada: esAnulada,
+        esAnulada: esAnulada, // Enviar como booleano
         ajustesStock: ajustesStock
     };
 }
@@ -916,6 +933,9 @@ async function manejarToggleAnulacion(activado) {
                 $('#pinAnulacionValidado').val('true');
                 $('#labelAnularFactura').html('<span class="badge bg-danger">Anulada</span>');
 
+                console.log('✅ Factura marcada para anulación');
+                console.log('   - Campo facturaAnuladaFlag ahora vale:', $('#facturaAnuladaFlag').val());
+
                 registrarCambio('factura_anulada', 'Factura marcada para anulación', {
                     observacion: 'Al guardar, todos los productos se devolverán al inventario'
                 });
@@ -928,7 +948,6 @@ async function manejarToggleAnulacion(activado) {
                     showConfirmButton: false
                 });
 
-                console.log('✅ Factura marcada para anulación');
             } else {
                 // PIN incorrecto
                 Swal.fire({
