@@ -635,16 +635,24 @@ async function guardarCambiosFactura() {
 
         if (!confirmacion.isConfirmed) return;
 
-        console.log('💾 === GUARDANDO CAMBIOS ===');
-        console.log('💾 Datos completos a enviar:', datosActualizacion);
-        console.log('💾 Ajustes de stock a enviar:', datosActualizacion.ajustesStock);
-        console.log('💾 Número de ajustes:', datosActualizacion.ajustesStock?.length || 0);
-        console.log('🔍 EsAnulada:', datosActualizacion.esAnulada, '| Tipo:', typeof datosActualizacion.esAnulada);
+        console.log('💾 === ANTES DE SERIALIZAR ===');
+        console.log('💾 datosActualizacion:', datosActualizacion);
+        console.log('💾 datosActualizacion.ajustesStock:', datosActualizacion.ajustesStock);
+        console.log('💾 Tipo:', typeof datosActualizacion.ajustesStock);
+        console.log('💾 Longitud:', datosActualizacion.ajustesStock?.length);
 
-        // Verificar el JSON antes de enviar
+        // ✅ SERIALIZAR EXPLÍCITAMENTE
         const jsonBody = JSON.stringify(datosActualizacion);
-        console.log('📤 JSON a enviar (string):', jsonBody);
-        console.log('📤 Parseando de nuevo para verificar:', JSON.parse(jsonBody));
+
+        console.log('📤 === JSON SERIALIZADO ===');
+        console.log('📤 Longitud del JSON:', jsonBody.length);
+        console.log('📤 Contiene "ajustesStock":', jsonBody.includes('ajustesStock'));
+        console.log('📤 JSON completo:', jsonBody);
+
+        // Verificar deserialización
+        const verificacion = JSON.parse(jsonBody);
+        console.log('✅ Verificación - ajustesStock después de parse:', verificacion.ajustesStock);
+        console.log('✅ Verificación - Longitud:', verificacion.ajustesStock?.length);
 
         const response = await fetch(`/Facturacion/ActualizarFactura`, {
             method: 'PUT',
@@ -792,6 +800,8 @@ function calcularAjustesStock(esAnulada) {
 }
 
 function prepararDatosActualizacion() {
+    console.log('🔧 === INICIANDO prepararDatosActualizacion ===');
+
     // Calcular totales finales SIN IVA
     const subtotal = productosEditar.reduce((sum, p) => sum + p.subtotal, 0);
     const descuentoGeneral = parseFloat($('#descuentoGeneralEditar').val()) || 0;
@@ -805,23 +815,18 @@ function prepararDatosActualizacion() {
 
     console.log('🔍 DEBUG ANULACIÓN:');
     console.log('  - Valor del campo oculto:', facturaAnuladaFlagValue);
-    console.log('  - Tipo del campo:', typeof facturaAnuladaFlagValue);
     console.log('  - esAnulada calculado:', esAnulada);
-    console.log('  - Tipo de esAnulada:', typeof esAnulada);
 
-    // Calcular ajustes de stock necesarios
+    // ✅ CALCULAR AJUSTES DE STOCK **ANTES** DE CREAR EL OBJETO
     const ajustesStock = calcularAjustesStock(esAnulada);
 
-    console.log('📊 === DEBUG AJUSTES DE STOCK ===');
-    console.log('📊 Ajustes calculados:', ajustesStock);
-    console.log('📊 Número de ajustes:', ajustesStock.length);
-    console.log('📊 Tipo de ajustesStock:', typeof ajustesStock);
+    console.log('📊 === AJUSTES CALCULADOS ===');
+    console.log('📊 Ajustes:', ajustesStock);
+    console.log('📊 Número:', ajustesStock ? ajustesStock.length : 'null/undefined');
+    console.log('📊 Tipo:', typeof ajustesStock);
     console.log('📊 Es array:', Array.isArray(ajustesStock));
-    console.log('📊 Ajustes serializados:', JSON.stringify(ajustesStock));
-    console.log('📊 Factura original:', facturaOriginal);
-    console.log('📊 Productos editados:', productosEditar);
 
-    // Crear objeto de datos
+    // ✅ CREAR OBJETO CON TODOS LOS CAMPOS EXPLÍCITAMENTE
     const datos = {
         facturaId: window.facturaIdEditar,
         clienteId: clienteEditar.clienteId,
@@ -841,18 +846,24 @@ function prepararDatosActualizacion() {
         })),
         descuentoGeneral: descuentoGeneral,
         subtotal: subtotal,
-        montoImpuesto: 0, // Sin IVA
+        montoImpuesto: 0,
         total: total,
         metodoPago: $('#metodoPagoEditar').val(),
         observaciones: $('#observacionesEditar').val(),
-        cambiosRealizados: cambiosRealizados,
-        esAnulada: esAnulada, // Enviar como booleano
-        ajustesStock: ajustesStock  // ✅ CRÍTICO: Array de ajustes de stock
+        cambiosRealizados: cambiosRealizados.map(c => ({
+            tipo: c.tipo,
+            descripcion: c.descripcion,
+            detalles: c.detalles || {},
+            fecha: c.fecha
+        })),
+        esAnulada: esAnulada,
+        ajustesStock: ajustesStock || []  // ✅ Garantizar que siempre sea un array
     };
 
-    console.log('📦 Objeto datos completo antes de retornar:', datos);
-    console.log('📦 Campo ajustesStock en datos:', datos.ajustesStock);
-    console.log('📦 Datos serializados test:', JSON.stringify(datos));
+    console.log('📦 === OBJETO FINAL ===');
+    console.log('📦 datos.ajustesStock:', datos.ajustesStock);
+    console.log('📦 Longitud ajustesStock:', datos.ajustesStock.length);
+    console.log('📦 Objeto completo:', JSON.stringify(datos, null, 2));
 
     return datos;
 }
