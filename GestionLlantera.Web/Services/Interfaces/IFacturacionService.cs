@@ -70,6 +70,31 @@ namespace GestionLlantera.Web.Services.Interfaces
         Task<(bool success, object data, string message, string details)> ObtenerFacturasAsync(string jwtToken, int tamano = 1000);
 
         Task<(bool success, object? data, string? message, string? details)> ObtenerFacturaPorIdAsync(int facturaId, string jwtToken = null);
+
+        /// <summary>
+        /// Valida el PIN de edición de facturas
+        /// </summary>
+        Task<object> ValidarPinEdicionAsync(string pin, string jwtToken = null);
+
+        /// <summary>
+        /// Desbloquea una factura para edición usando PIN
+        /// </summary>
+        Task<object> DesbloquearFacturaParaEdicionAsync(int facturaId, string pin, string jwtToken = null);
+
+        /// <summary>
+        /// Restaura el estado anterior de una factura
+        /// </summary>
+        Task<object> RestaurarEstadoFacturaAsync(int facturaId, string estadoAnterior, string jwtToken = null);
+
+        /// <summary>
+        /// Marca una factura para anulación, cambiando su estado inmediatamente y devolviendo el stock
+        /// </summary>
+        Task<object> MarcarFacturaParaAnulacionAsync(int facturaId, string pin, string jwtToken = null);
+
+        /// <summary>
+        /// Actualiza una factura existente
+        /// </summary>
+        Task<object> ActualizarFacturaAsync(object request, string jwtToken = null);
     }
 
     // Clase ApiResponse para manejar respuestas de la API

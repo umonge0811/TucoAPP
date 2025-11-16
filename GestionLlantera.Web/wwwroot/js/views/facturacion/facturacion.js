@@ -2487,6 +2487,12 @@ async function limpiarVenta() {
         actualizarEstadoBotonFinalizar();
         $('#btnGuardarProforma').show();
 
+        // ✅ RECARGAR CLIENTE GENERAL POR DEFECTO
+        console.log('🔄 Recargando cliente general después de limpiar...');
+        setTimeout(() => {
+            cargarClienteGeneralPorDefecto();
+        }, 300);
+
         // ✅ MENSAJE DINÁMICO
         let mensajeLimpieza = 'Carrito limpiado exitosamente';
         mostrarToast('Venta limpiada', mensajeLimpieza, 'info');
@@ -3772,6 +3778,12 @@ async function crearNuevaFactura(tipoDocumento = 'Factura') {
             actualizarVistaCarrito();
             actualizarTotales();
             actualizarEstadoBotonFinalizar();
+
+            // ✅ RECARGAR CLIENTE GENERAL POR DEFECTO
+            console.log('🔄 Recargando cliente general después de facturar...');
+            setTimeout(() => {
+                cargarClienteGeneralPorDefecto();
+            }, 500);
 
             // ✅ LIMPIAR VARIABLES DE PRODUCTOS PENDIENTES Y CÓDIGOS DE SEGUIMIENTO
             if (window.productosPendientesEntrega) {

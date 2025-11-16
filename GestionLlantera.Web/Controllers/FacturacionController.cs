@@ -1639,6 +1639,229 @@ namespace GestionLlantera.Web.Controllers
 
             return new { usuarioId = 1, nombre = "Sistema" };
         }
+
+        // ===== FUNCIÓN PARA OBTENER CONFIGURACIÓN DE FACTURACIÓN =====
+        private object ObtenerConfiguracionFacturacion()
+        {
+            try
+            {
+                var (usuarioId, nombreUsuario, emailUsuario) = ObtenerInfoUsuario();
+                var tokenJWT = this.ObtenerTokenJWT();
+
+                // Verificar permisos desde token JWT
+                var puedeCrearFacturas = this.TienePermisoEnToken("Crear Facturas");
+                var puedeCompletarFacturas = this.TienePermisoEnToken("Completar Facturas");
+                var puedeEditarFacturas = this.TienePermisoEnToken("Editar Facturas");
+                var puedeAnularFacturas = this.TienePermisoEnToken("Anular Facturas");
+                var esAdmin = this.EsAdministradorAsync().GetAwaiter().GetResult();
+
+                var permisos = new
+                {
+                    puedeCrearFacturas = puedeCrearFacturas,
+                    puedeCompletarFacturas = puedeCompletarFacturas,
+                    puedeEditarFacturas = puedeEditarFacturas,
+                    puedeAnularFacturas = puedeAnularFacturas,
+                    esAdmin = esAdmin
+                };
+
+                var configuracionCompleta = new
+                {
+                    Usuario = new
+                    {
+                        usuarioId = usuarioId,
+                        id = usuarioId,
+                        nombre = nombreUsuario,
+                        nombreUsuario = nombreUsuario,
+                        email = emailUsuario
+                    },
+                    Permisos = permisos,
+                    FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+                    HoraActual = DateTime.Now.ToString("HH:mm"),
+                    TokenDisponible = !string.IsNullOrEmpty(tokenJWT)
+                };
+
+                return configuracionCompleta;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error obteniendo configuración de facturación");
+
+                // Retornar configuración mínima en caso de error
+                return new
+                {
+                    Usuario = new { usuarioId = 0, nombre = "Sistema" },
+                    Permisos = new
+                    {
+                        puedeCrearFacturas = false,
+                        puedeCompletarFacturas = false,
+                        puedeEditarFacturas = false,
+                        puedeAnularFacturas = false,
+                        esAdmin = false
+                    },
+                    FechaActual = DateTime.Now.ToString("yyyy-MM-dd"),
+                    HoraActual = DateTime.Now.ToString("HH:mm"),
+                    TokenDisponible = false
+                };
+            }
+        }
+
+        // ===== VALIDACIÓN DE PIN PARA EDICIÓN DE FACTURAS =====
+        [HttpPost]
+        public async Task<IActionResult> ValidarPinEdicion([FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 Validando PIN de edición desde controlador Web");
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ValidarPinEdicionAsync(request.Pin, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> DesbloquearFacturaParaEdicion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔓 Desbloqueando factura {FacturaId} desde controlador Web", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.DesbloquearFacturaParaEdicionAsync(facturaId, request.Pin, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error desbloqueando factura {FacturaId}", facturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> RestaurarEstadoFactura(int facturaId, [FromBody] RestaurarEstadoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Restaurando estado de factura {FacturaId} desde controlador Web", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.RestaurarEstadoFacturaAsync(facturaId, request.EstadoAnterior, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error restaurando estado de factura {FacturaId}", facturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> MarcarFacturaParaAnulacion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("❌ Marcando factura {FacturaId} para anulación desde controlador Web", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.MarcarFacturaParaAnulacionAsync(facturaId, request.Pin, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando factura {FacturaId} para anulación", facturaId);
+                return Json(new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        // ===== EDICIÓN DE FACTURAS =====
+        [HttpGet]
+        public async Task<IActionResult> Editar(int facturaId)
+        {
+            try
+            {
+                _logger.LogInformation("📝 Abriendo vista de edición para factura {FacturaId}", facturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    TempData["Error"] = "No se pudo obtener el token de autenticación";
+                    return RedirectToAction("Index");
+                }
+
+                // Verificar que la factura existe y está en estado Pendiente (desbloqueada)
+                var facturaResult = await _facturacionService.ObtenerFacturaPorIdAsync(facturaId, jwtToken);
+
+                if (!facturaResult.success)
+                {
+                    TempData["Error"] = "No se pudo cargar la factura";
+                    return RedirectToAction("Index");
+                }
+
+                ViewBag.FacturaId = facturaId;
+                ViewBag.ConfiguracionFacturacion = ObtenerConfiguracionFacturacion();
+
+                return View();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error abriendo vista de edición para factura {FacturaId}", facturaId);
+                TempData["Error"] = "Error al abrir la vista de edición";
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> ActualizarFactura([FromBody] ActualizarFacturaRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("💾 Actualizando factura {FacturaId}", request.FacturaId);
+
+                var jwtToken = this.ObtenerTokenJWT();
+                if (string.IsNullOrEmpty(jwtToken))
+                {
+                    return Json(new { success = false, message = "Token de autenticación no disponible" });
+                }
+
+                var resultado = await _facturacionService.ActualizarFacturaAsync(request, jwtToken);
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando factura {FacturaId}", request.FacturaId);
+                return Json(new { success = false, message = "Error interno del servidor: " + ex.Message });
+            }
+        }
     }
 
     // Clases de request para el controlador
@@ -1705,5 +1928,53 @@ namespace GestionLlantera.Web.Controllers
         public int CantidadAEntregar { get; set; }
         public int UsuarioEntrega { get; set; }
         public string? ObservacionesEntrega { get; set; }
+    }
+
+    public class ValidarPinRequest
+    {
+        public string Pin { get; set; } = string.Empty;
+    }
+
+    public class RestaurarEstadoRequest
+    {
+        public string EstadoAnterior { get; set; } = string.Empty;
+    }
+
+    public class ActualizarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public int? ClienteId { get; set; }
+        public string NombreCliente { get; set; } = string.Empty;
+        public string? IdentificacionCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+        public string? EmailCliente { get; set; }
+        public string? DireccionCliente { get; set; }
+        public List<DetalleFacturaActualizacion> DetallesFactura { get; set; } = new List<DetalleFacturaActualizacion>();
+        public decimal? DescuentoGeneral { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal MontoImpuesto { get; set; }
+        public decimal Total { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Observaciones { get; set; }
+        public List<CambioFactura> CambiosRealizados { get; set; } = new List<CambioFactura>();
+    }
+
+    public class DetalleFacturaActualizacion
+    {
+        public int? DetalleFacturaId { get; set; }
+        public int ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal? PorcentajeDescuento { get; set; }
+        public decimal? MontoDescuento { get; set; }
+        public decimal Subtotal { get; set; }
+    }
+
+    public class CambioFactura
+    {
+        public string Tipo { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public object? Detalles { get; set; }
+        public DateTime Fecha { get; set; }
     }
 }

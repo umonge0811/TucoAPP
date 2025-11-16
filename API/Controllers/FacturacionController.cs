@@ -25,19 +25,31 @@ namespace API.Controllers
         private readonly IPermisosService _permisosService;
         private readonly INotificacionService _notificacionService;
         private readonly IMovimientosPostCorteService _movimientosPostCorteService;
+        private readonly IConfiguration _configuration;
 
         public FacturacionController(
             TucoContext context,
             ILogger<FacturacionController> logger,
             IPermisosService permisosService,
             INotificacionService notificacionService,
-            IMovimientosPostCorteService movimientosPostCorteService)
+            IMovimientosPostCorteService movimientosPostCorteService,
+            IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
             _permisosService = permisosService;
             _notificacionService = notificacionService;
             _movimientosPostCorteService = movimientosPostCorteService;
+            _configuration = configuration;
+        }
+
+        /// <summary>
+        /// Obtiene la fecha y hora actual de Costa Rica (UTC-6)
+        /// </summary>
+        private DateTime ObtenerFechaHoraCostaRica()
+        {
+            var costaRicaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Central America Standard Time");
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, costaRicaTimeZone);
         }
 
         // =====================================
@@ -263,8 +275,8 @@ namespace API.Controllers
                     EmailCliente = facturaDto.EmailCliente,
                     DireccionCliente = facturaDto.DireccionCliente,
                     FechaFactura = facturaDto.FechaFactura,
-                    FechaVencimiento = facturaDto.TipoDocumento == "Proforma" ? 
-                        DateTime.Now.AddDays(30) : facturaDto.FechaVencimiento,
+                    FechaVencimiento = facturaDto.TipoDocumento == "Proforma" ?
+                        ObtenerFechaHoraCostaRica().AddDays(30) : facturaDto.FechaVencimiento,
                     Subtotal = facturaDto.SubtotalConDescuento,
                     DescuentoGeneral = facturaDto.DescuentoGeneral,
                     PorcentajeImpuesto = facturaDto.PorcentajeImpuesto,
@@ -275,7 +287,7 @@ namespace API.Controllers
                     MetodoPago = metodoPagoFactura,
                     Observaciones = facturaDto.Observaciones,
                     UsuarioCreadorId = facturaDto.UsuarioCreadorId,
-                    FechaCreacion = DateTime.Now
+                    FechaCreacion = ObtenerFechaHoraCostaRica()
                 };
 
                 _context.Facturas.Add(factura);
@@ -312,7 +324,7 @@ namespace API.Controllers
                         Monto = facturaDto.TotalCalculado,
                         Referencia = null,
                         Observaciones = null,
-                        FechaPago = DateTime.Now
+                        FechaPago = ObtenerFechaHoraCostaRica()
                     };
 
                     _context.DetallesPago.Add(pagoUnico);
@@ -709,7 +721,7 @@ namespace API.Controllers
 
                     // Marcar proforma como facturada
                     factura.Estado = "Facturada";
-                    factura.FechaActualizacion = DateTime.Now;
+                    factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
 
                     // Agregar información de conversión en observaciones
                     if (request != null)
@@ -898,7 +910,7 @@ namespace API.Controllers
                                 FacturaId = factura.FacturaId,
                                 MetodoPago = request.MetodoPago,
                                 Monto = factura.Total,
-                                FechaPago = DateTime.Now
+                                FechaPago = ObtenerFechaHoraCostaRica()
                             };
                             _context.DetallesPago.Add(pagoUnico);
                         }
@@ -907,7 +919,7 @@ namespace API.Controllers
 
                 // Completar factura
                 factura.Estado = "Pagada";
-                factura.FechaActualizacion = DateTime.Now;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
 
                 if (request != null && !string.IsNullOrEmpty(request.Observaciones))
                 {
@@ -1178,7 +1190,7 @@ namespace API.Controllers
 
                 var estadoAnterior = factura.Estado;
                 factura.Estado = nuevoEstado;
-                factura.FechaActualizacion = DateTime.Now;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
 
                 await _context.SaveChangesAsync();
 
@@ -2216,8 +2228,475 @@ namespace API.Controllers
         }
 
         // =====================================
+        // EDICIÓN DE FACTURAS TRAMITADAS CON PIN
+        // =====================================
+
+        [HttpPut("actualizar-factura")]
+        [Authorize]
+        public async Task<IActionResult> ActualizarFactura([FromBody] ActualizarFacturaRequest request)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                _logger.LogInformation("💾 === ACTUALIZANDO FACTURA {FacturaId} ===", request.FacturaId);
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .Include(f => f.DetallesPago)
+                    .FirstOrDefaultAsync(f => f.FacturaId == request.FacturaId);
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Guardar datos originales para auditoría
+                var datosOriginales = new
+                {
+                    Cliente = factura.NombreCliente,
+                    Total = factura.Total,
+                    CantidadProductos = factura.DetallesFactura.Count
+                };
+
+                // Actualizar datos del cliente
+                factura.ClienteId = request.ClienteId;
+                factura.NombreCliente = request.NombreCliente;
+                factura.IdentificacionCliente = request.IdentificacionCliente;
+                factura.TelefonoCliente = request.TelefonoCliente;
+                factura.EmailCliente = request.EmailCliente;
+                factura.DireccionCliente = request.DireccionCliente;
+
+                // Actualizar totales
+                factura.Subtotal = request.Subtotal;
+                factura.DescuentoGeneral = request.DescuentoGeneral;
+                factura.MontoImpuesto = request.MontoImpuesto;
+                factura.Total = request.Total;
+                factura.MetodoPago = request.MetodoPago;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                // Actualizar observaciones con historial de cambios
+                var historialCambios = string.Join("; ", request.CambiosRealizados.Select(c => $"{c.Descripcion} ({c.Fecha:dd/MM/yyyy HH:mm})"));
+                var textoEdicion = $"\n\n[EDITADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]\nCambios: {historialCambios}";
+
+                // Si el usuario agregó observaciones nuevas, combinarlas con el historial
+                if (!string.IsNullOrEmpty(request.Observaciones))
+                {
+                    // Agregar las observaciones del usuario y el historial de forma segura
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, $"\n{request.Observaciones}{textoEdicion}");
+                }
+                else
+                {
+                    // Solo agregar el historial de edición
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, textoEdicion);
+                }
+
+                // ===== SI NO SE VA A ANULAR, ACTUALIZAR DETALLES DE FACTURA =====
+                if (!request.EsAnulada)
+                {
+                    _logger.LogInformation("📝 Actualizando detalles de factura (edición normal)");
+
+                    // 1. Eliminar detalles que ya no están
+                    var detallesActualesIds = request.DetallesFactura
+                        .Where(d => d.DetalleFacturaId.HasValue)
+                        .Select(d => d.DetalleFacturaId.Value)
+                        .ToList();
+
+                    var detallesAEliminar = factura.DetallesFactura
+                        .Where(d => !detallesActualesIds.Contains(d.DetalleFacturaId))
+                        .ToList();
+
+                    foreach (var detalle in detallesAEliminar)
+                    {
+                        _logger.LogInformation("🗑️ Eliminando detalle de factura: {ProductoId}", detalle.ProductoId);
+                        _context.DetallesFactura.Remove(detalle);
+                    }
+
+                    // 2. Actualizar detalles existentes
+                    foreach (var detalleRequest in request.DetallesFactura.Where(d => d.DetalleFacturaId.HasValue))
+                    {
+                        var detalleExistente = factura.DetallesFactura
+                            .FirstOrDefault(d => d.DetalleFacturaId == detalleRequest.DetalleFacturaId.Value);
+
+                        if (detalleExistente != null)
+                        {
+                            detalleExistente.Cantidad = detalleRequest.Cantidad;
+                            detalleExistente.PrecioUnitario = detalleRequest.PrecioUnitario;
+                            detalleExistente.PorcentajeDescuento = detalleRequest.PorcentajeDescuento;
+                            detalleExistente.MontoDescuento = detalleRequest.MontoDescuento;
+                            detalleExistente.Subtotal = detalleRequest.Subtotal;
+                        }
+                    }
+
+                    // 3. Agregar nuevos detalles
+                    foreach (var detalleRequest in request.DetallesFactura.Where(d => !d.DetalleFacturaId.HasValue))
+                    {
+                        var producto = await _context.Productos.FindAsync(detalleRequest.ProductoId);
+                        if (producto == null) continue;
+
+                        var nuevoDetalle = new DetalleFactura
+                        {
+                            FacturaId = factura.FacturaId,
+                            ProductoId = detalleRequest.ProductoId,
+                            NombreProducto = producto.NombreProducto,
+                            DescripcionProducto = producto.Descripcion,
+                            Cantidad = detalleRequest.Cantidad,
+                            PrecioUnitario = detalleRequest.PrecioUnitario,
+                            PorcentajeDescuento = detalleRequest.PorcentajeDescuento,
+                            MontoDescuento = detalleRequest.MontoDescuento,
+                            Subtotal = detalleRequest.Subtotal
+                        };
+
+                        _context.DetallesFactura.Add(nuevoDetalle);
+                    }
+                }
+                else
+                {
+                    _logger.LogInformation("⚠️ Factura marcada para anulación - NO se modifican los detalles (se mantienen para historial)");
+                }
+
+                // ===== PROCESAR AJUSTES DE STOCK =====
+                if (request.AjustesStock != null && request.AjustesStock.Any())
+                {
+                    _logger.LogInformation("📦 Procesando {Count} ajustes de stock", request.AjustesStock.Count);
+
+                    foreach (var ajuste in request.AjustesStock)
+                    {
+                        try
+                        {
+                            var producto = await _context.Productos.FindAsync(ajuste.ProductoId);
+                            if (producto == null)
+                            {
+                                _logger.LogWarning("⚠️ Producto {ProductoId} no encontrado para ajuste", ajuste.ProductoId);
+                                continue;
+                            }
+
+                            int stockAnterior = (int)producto.CantidadEnInventario;
+                            int nuevoStock = stockAnterior;
+
+                            switch (ajuste.TipoAjuste.ToLower())
+                            {
+                                case "entrada":
+                                    nuevoStock = stockAnterior + ajuste.Cantidad;
+                                    _logger.LogInformation("  ➕ ENTRADA: {Producto} - Stock: {StockAnterior} + {Cantidad} = {StockNuevo}",
+                                        ajuste.NombreProducto, stockAnterior, ajuste.Cantidad, nuevoStock);
+                                    break;
+                                case "salida":
+                                    nuevoStock = Math.Max(0, stockAnterior - ajuste.Cantidad);
+                                    _logger.LogInformation("  ➖ SALIDA: {Producto} - Stock: {StockAnterior} - {Cantidad} = {StockNuevo}",
+                                        ajuste.NombreProducto, stockAnterior, ajuste.Cantidad, nuevoStock);
+                                    break;
+                                default:
+                                    _logger.LogWarning("⚠️ Tipo de ajuste no válido: {TipoAjuste}", ajuste.TipoAjuste);
+                                    continue;
+                            }
+
+                            producto.CantidadEnInventario = nuevoStock;
+                            producto.FechaUltimaActualizacion = ObtenerFechaHoraCostaRica();
+
+                            _logger.LogInformation("✅ Stock actualizado para {Producto}: {StockAnterior} → {StockNuevo}",
+                                producto.NombreProducto, stockAnterior, nuevoStock);
+                        }
+                        catch (Exception exAjuste)
+                        {
+                            _logger.LogError(exAjuste, "❌ Error ajustando stock del producto {ProductoId}", ajuste.ProductoId);
+                            throw; // Esto hará rollback de toda la transacción
+                        }
+                    }
+                }
+
+                // ===== ACTUALIZAR ESTADO FINAL DE LA FACTURA =====
+                _logger.LogInformation("🔍 Valor de EsAnulada recibido: {EsAnulada}", request.EsAnulada);
+
+                if (request.EsAnulada)
+                {
+                    factura.Estado = "Anulada";
+                    // Agregar observación de anulación de forma segura
+                    var textoAnulacion = $"\n\n[ANULADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]";
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, textoAnulacion);
+                    _logger.LogInformation("❌ Factura {NumeroFactura} marcada como ANULADA", factura.NumeroFactura);
+                }
+                else
+                {
+                    factura.Estado = "Pagada";
+                    _logger.LogInformation("✅ Factura {NumeroFactura} regresa a estado PAGADA", factura.NumeroFactura);
+                }
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} actualizada exitosamente. Estado final: {Estado}",
+                    factura.NumeroFactura, factura.Estado);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = request.EsAnulada ? "Factura anulada exitosamente" : "Factura actualizada exitosamente",
+                    facturaId = factura.FacturaId,
+                    numeroFactura = factura.NumeroFactura,
+                    total = factura.Total,
+                    cambiosRealizados = request.CambiosRealizados.Count,
+                    ajustesStock = request.AjustesStock?.Count ?? 0,
+                    estadoFinal = factura.Estado
+                });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogError(ex, "❌ Error actualizando factura {FacturaId}", request.FacturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor: " + ex.Message });
+            }
+        }
+
+        [HttpPost("validar-pin-edicion")]
+        [Authorize]
+        public IActionResult ValidarPinEdicion([FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 Validando PIN de edición de facturas");
+
+                var pinCorrecto = _configuration["FacturacionSettings:PinEdicionFacturas"];
+
+                if (string.IsNullOrEmpty(pinCorrecto))
+                {
+                    _logger.LogError("❌ PIN de edición no configurado en appsettings");
+                    return StatusCode(500, new { success = false, message = "PIN de edición no configurado" });
+                }
+
+                if (request.Pin == pinCorrecto)
+                {
+                    _logger.LogInformation("✅ PIN de edición validado correctamente");
+                    return Ok(new { success = true, message = "PIN correcto" });
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ PIN de edición incorrecto");
+                    return Ok(new { success = false, message = "PIN incorrecto" });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut("facturas/{facturaId}/restaurar-estado")]
+        [Authorize]
+        public async Task<IActionResult> RestaurarEstadoFactura(int facturaId, [FromBody] RestaurarEstadoRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Restaurando estado de factura {FacturaId} a {EstadoAnterior}", facturaId, request.EstadoAnterior);
+
+                var factura = await _context.Facturas.FindAsync(facturaId);
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Restaurar al estado anterior
+                factura.Estado = request.EstadoAnterior;
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Estado restaurado exitosamente a: {Estado}", factura.Estado);
+
+                return Ok(new { success = true, message = "Estado restaurado exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error restaurando estado de factura {FacturaId}", facturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut("facturas/{facturaId}/desbloquear-edicion")]
+        [Authorize]
+        public async Task<IActionResult> DesbloquearFacturaParaEdicion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔓 Intentando desbloquear factura {FacturaId} para edición", facturaId);
+
+                // Validar PIN
+                var pinCorrecto = _configuration["FacturacionSettings:PinEdicionFacturas"];
+                if (request.Pin != pinCorrecto)
+                {
+                    return BadRequest(new { success = false, message = "PIN incorrecto" });
+                }
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .Include(f => f.DetallesPago)
+                    .FirstOrDefaultAsync(f => f.FacturaId == facturaId);
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Cambiar estado a "En Edición" para permitir edición
+                var estadoAnterior = factura.Estado;
+                factura.Estado = "En Edición";
+                factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                // Agregar observación de forma segura (maneja límite de caracteres)
+                var nuevoTextoObservacion = $" | DESBLOQUEADA PARA EDICIÓN (Estado anterior: {estadoAnterior}) - {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}";
+                factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, nuevoTextoObservacion);
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Factura {NumeroFactura} desbloqueada para edición (Estado anterior: {EstadoAnterior})",
+                    factura.NumeroFactura, estadoAnterior);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Factura desbloqueada para edición",
+                    facturaId = factura.FacturaId,
+                    numeroFactura = factura.NumeroFactura,
+                    estadoAnterior = estadoAnterior,
+                    estadoActual = factura.Estado
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error desbloqueando factura {FacturaId} para edición", facturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor" });
+            }
+        }
+
+        [HttpPut("facturas/{facturaId}/marcar-anulacion")]
+        [Authorize]
+        public async Task<IActionResult> MarcarFacturaParaAnulacion(int facturaId, [FromBody] ValidarPinRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("❌ Intentando marcar factura {FacturaId} para ANULACIÓN", facturaId);
+
+                // Validar PIN
+                var pinCorrecto = _configuration["FacturacionSettings:PinEdicionFacturas"];
+                if (request.Pin != pinCorrecto)
+                {
+                    _logger.LogWarning("⚠️ PIN incorrecto al intentar anular factura {FacturaId}", facturaId);
+                    return BadRequest(new { success = false, message = "PIN incorrecto" });
+                }
+
+                var factura = await _context.Facturas
+                    .Include(f => f.DetallesFactura)
+                    .ThenInclude(d => d.Producto)
+                    .FirstOrDefaultAsync(f => f.FacturaId == facturaId);
+
+                if (factura == null)
+                    return NotFound(new { success = false, message = "Factura no encontrada" });
+
+                // Verificar que la factura esté en estado "En Edición"
+                if (factura.Estado != "En Edición")
+                {
+                    _logger.LogWarning("⚠️ Intento de anular factura {FacturaId} que no está en edición. Estado actual: {Estado}",
+                        facturaId, factura.Estado);
+                    return BadRequest(new { success = false, message = $"La factura debe estar en edición para anularla. Estado actual: {factura.Estado}" });
+                }
+
+                using var transaction = await _context.Database.BeginTransactionAsync();
+
+                try
+                {
+                    // ===== CAMBIAR ESTADO A ANULADA =====
+                    var estadoAnterior = factura.Estado;
+                    factura.Estado = "Anulada";
+                    factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
+
+                    // Agregar observación de anulación
+                    var textoAnulacion = $"\n\n[ANULADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]";
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, textoAnulacion);
+
+                    _logger.LogInformation("📝 Factura {NumeroFactura} marcada como ANULADA", factura.NumeroFactura);
+
+                    // ===== DEVOLVER TODOS LOS PRODUCTOS AL INVENTARIO =====
+                    _logger.LogInformation("📦 Devolviendo {CantidadProductos} productos al inventario", factura.DetallesFactura.Count);
+
+                    foreach (var detalle in factura.DetallesFactura)
+                    {
+                        var producto = detalle.Producto;
+                        if (producto != null)
+                        {
+                            var stockAnterior = producto.CantidadEnInventario;
+                            producto.CantidadEnInventario += detalle.Cantidad;
+
+                            _logger.LogInformation("  ↗️ {NombreProducto}: Stock {StockAnterior} → {StockNuevo} (+{Cantidad})",
+                                producto.NombreProducto,
+                                stockAnterior,
+                                producto.CantidadEnInventario,
+                                detalle.Cantidad);
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("✅ Factura {NumeroFactura} ANULADA exitosamente. Stock devuelto.", factura.NumeroFactura);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "Factura anulada exitosamente. Todos los productos han sido devueltos al inventario.",
+                        facturaId = factura.FacturaId,
+                        numeroFactura = factura.NumeroFactura,
+                        estadoAnterior = estadoAnterior,
+                        estadoActual = factura.Estado,
+                        productosDevueltos = factura.DetallesFactura.Count
+                    });
+                }
+                catch (Exception exTransaction)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(exTransaction, "❌ Error en transacción al anular factura {FacturaId}", facturaId);
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando factura {FacturaId} para anulación", facturaId);
+                return StatusCode(500, new { success = false, message = "Error interno del servidor: " + ex.Message });
+            }
+        }
+
+        // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
         // =====================================
+
+        /// <summary>
+        /// Agrega texto a las observaciones de forma segura, manejando el límite de caracteres de la columna
+        /// </summary>
+        /// <param name="observacionesActuales">Observaciones actuales (puede ser null)</param>
+        /// <param name="nuevoTexto">Nuevo texto a agregar</param>
+        /// <param name="limiteMaximo">Límite máximo de caracteres (default: 450 para dejar margen)</param>
+        /// <returns>Observaciones con el nuevo texto agregado, truncadas si es necesario</returns>
+        private string AgregarObservacionSegura(string? observacionesActuales, string nuevoTexto, int limiteMaximo = 450)
+        {
+            var observaciones = observacionesActuales ?? "";
+            var textoCompleto = observaciones + nuevoTexto;
+
+            // Si cabe todo, retornar tal cual
+            if (textoCompleto.Length <= limiteMaximo)
+            {
+                return textoCompleto;
+            }
+
+            // Si no cabe, truncar las observaciones viejas para que quepa el nuevo texto
+            var espacioDisponible = limiteMaximo - nuevoTexto.Length;
+
+            if (espacioDisponible <= 0)
+            {
+                // Si el nuevo texto solo ya excede el límite, truncarlo
+                _logger.LogWarning("⚠️ Nuevo texto de observación excede límite. Se truncará.");
+                return nuevoTexto.Substring(0, limiteMaximo);
+            }
+
+            // Truncar observaciones viejas y agregar el nuevo texto
+            var observacionesTruncadas = observaciones.Length > espacioDisponible
+                ? "..." + observaciones.Substring(observaciones.Length - (espacioDisponible - 3))
+                : observaciones;
+
+            return observacionesTruncadas + nuevoTexto;
+        }
 
         /// <summary>
         /// Crea alertas de movimiento post-corte para todos los usuarios asignados al inventario
@@ -2350,5 +2829,64 @@ namespace API.Controllers
     {
         public int? FacturaGeneradaId { get; set; }
         public string? NumeroFacturaGenerada { get; set; }
+    }
+
+    public class ValidarPinRequest
+    {
+        public string Pin { get; set; } = string.Empty;
+    }
+
+    public class RestaurarEstadoRequest
+    {
+        public string EstadoAnterior { get; set; } = string.Empty;
+    }
+
+    public class ActualizarFacturaRequest
+    {
+        public int FacturaId { get; set; }
+        public int? ClienteId { get; set; }
+        public string NombreCliente { get; set; } = string.Empty;
+        public string? IdentificacionCliente { get; set; }
+        public string? TelefonoCliente { get; set; }
+        public string? EmailCliente { get; set; }
+        public string? DireccionCliente { get; set; }
+        public List<DetalleFacturaActualizacion> DetallesFactura { get; set; } = new List<DetalleFacturaActualizacion>();
+        public decimal? DescuentoGeneral { get; set; }
+        public decimal Subtotal { get; set; }
+        public decimal MontoImpuesto { get; set; }
+        public decimal Total { get; set; }
+        public string? MetodoPago { get; set; }
+        public string? Observaciones { get; set; }
+        public List<CambioFactura> CambiosRealizados { get; set; } = new List<CambioFactura>();
+        public bool EsAnulada { get; set; } = false;
+        public List<AjusteStockFactura> AjustesStock { get; set; } = new List<AjusteStockFactura>();
+    }
+
+    public class AjusteStockFactura
+    {
+        public int ProductoId { get; set; }
+        public string NombreProducto { get; set; } = string.Empty;
+        public string TipoAjuste { get; set; } = string.Empty; // "entrada" o "salida"
+        public int Cantidad { get; set; }
+        public string Comentario { get; set; } = string.Empty;
+    }
+
+    public class DetalleFacturaActualizacion
+    {
+        public int? DetalleFacturaId { get; set; }
+        public int ProductoId { get; set; }
+        public int Cantidad { get; set; }
+        public decimal PrecioUnitario { get; set; }
+        public decimal? PorcentajeDescuento { get; set; }
+        public decimal? MontoDescuento { get; set; }
+        public decimal Subtotal { get; set; }
+    }
+
+    public class CambioFactura
+    {
+        public string Tipo { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+        public object? Detalles { get; set; }
+        public DateTime Fecha { get; set; }
     }
 }

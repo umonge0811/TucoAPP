@@ -346,6 +346,9 @@ function mostrarFacturasPendientesEnTabla(facturas) {
             case 'Anulada':
                 estadoBadge = '<span class="badge bg-danger">Anulada</span>';
                 break;
+            case 'En Edición':
+                estadoBadge = '<span class="badge bg-info text-dark"><i class="bi bi-pencil-square me-1"></i>En Edición</span>';
+                break;
             default:
                 estadoBadge = `<span class="badge bg-secondary">${factura.estado || 'Sin Estado'}</span>`;
         }
@@ -375,15 +378,29 @@ function mostrarFacturasPendientesEnTabla(facturas) {
                 <td>${estadoBadge}</td>
                 <td class="text-center">
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                        <button type="button" class="btn btn-outline-info" title="Vista previa de impresión" data-factura-id="${factura.facturaId || factura.id}">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                        <button type="button" class="btn btn-outline-secondary" title="Imprimir directamente" data-factura-id="${factura.facturaId || factura.id}">
                             <i class="bi bi-printer"></i>
                         </button>
                         ${factura.estado === 'Pendiente' ? `
                         <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                             <i class="bi bi-check-circle"></i>
+                        </button>
+                        ` : ''}
+                        ${(factura.estado === 'Pagada' || factura.estado === 'Anulada') ? `
+                        <button type="button" class="btn btn-outline-warning" title="Editar con PIN"
+                                data-factura-id="${factura.facturaId || factura.id}"
+                                data-numero-factura="${factura.numeroFactura}"
+                                onclick="solicitarPinParaEditar(${factura.facturaId || factura.id}, '${factura.numeroFactura}')">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        ` : ''}
+                        ${factura.estado === 'En Edición' ? `
+                        <button type="button" class="btn btn-info" title="Continuar Edición"
+                                onclick="continuarEdicion(${factura.facturaId || factura.id})">
+                            <i class="bi bi-pencil-fill"></i> Continuar
                         </button>
                         ` : ''}
                     </div>
@@ -581,19 +598,19 @@ function configurarEventosBotonesFacturas() {
     $('.btn-outline-secondary[data-factura-id]').off('click.facturaImprimir'); // Evento para imprimir
     $('.btn-outline-success[data-factura-escapada]').off('click.facturaProcesar'); // Evento para procesar
 
-    // Ver detalles de factura
+    // Vista previa de factura (exactamente igual que la impresión)
     $('.btn-outline-info[data-factura-id]').on('click.facturaVer', function() {
-        const facturaId = $(this).data('factura-id'); // Obtener el ID de la factura desde el atributo data-
-        console.log('👁️ Ver detalles de factura:', facturaId);
+        const facturaId = $(this).data('factura-id');
+        console.log('👁️ Vista previa de impresión:', facturaId);
 
-        // Llamar a la función de detalle si está disponible
-        if (typeof verDetalleFactura === 'function') {
-            verDetalleFactura(facturaId);
+        // Usar la misma función de impresión para mostrar vista previa
+        // La ventana de impresión sirve como vista previa ya que permite ver antes de confirmar
+        if (typeof imprimirFactura === 'function') {
+            imprimirFactura(facturaId);
         } else {
-            console.error('❌ Función verDetalleFactura no está disponible');
-            // Opcionalmente, mostrar un toast de error si la función no existe
+            console.error('❌ Función imprimirFactura no está disponible');
             if (typeof mostrarToast === 'function') {
-                mostrarToast('Error', 'La función para ver detalles no está disponible', 'danger');
+                mostrarToast('Error', 'La función de vista previa no está disponible', 'danger');
             }
         }
     });
@@ -763,12 +780,20 @@ function crearFilaFacturaPendiente(factura) {
                 </div>
                 <!-- Botones horizontales en tablet/desktop -->
                 <div class="btn-group btn-group-sm d-none d-sm-inline-block">
-                    <button type="button" class="btn btn-outline-info" title="Ver detalles" data-factura-id="${factura.facturaId || factura.id}">
+                    <button type="button" class="btn btn-outline-info btn-sm" title="Vista previa de impresión" data-factura-id="${factura.facturaId || factura.id}">
                         <i class="bi bi-eye"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" title="Imprimir" data-factura-id="${factura.facturaId || factura.id}">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" title="Imprimir directamente" data-factura-id="${factura.facturaId || factura.id}">
                         <i class="bi bi-printer"></i>
                     </button>
+                    ${(factura.estado === 'Pagada' || factura.estado === 'Anulada') ? `
+                    <button type="button" class="btn btn-outline-warning btn-sm" title="Editar con PIN"
+                            data-factura-id="${factura.facturaId || factura.id}"
+                            data-numero-factura="${factura.numeroFactura}"
+                            onclick="solicitarPinParaEditar(${factura.facturaId || factura.id}, '${factura.numeroFactura}')">
+                        <i class="bi bi-pencil-square"></i>
+                    </button>
+                    ` : ''}
                     ${factura.estado === 'Pendiente' ? `
                     <button type="button" class="btn btn-outline-success" title="Procesar Factura" data-factura-escapada="${facturaEscapada}">
                         <i class="bi bi-check-circle"></i>
@@ -1231,6 +1256,12 @@ async function imprimirFactura(facturaId) {
     }
 }
 
+// ===== FUNCIÓN PARA CONTINUAR EDICIÓN DE FACTURA =====
+function continuarEdicion(facturaId) {
+    console.log('📝 Continuando edición de factura:', facturaId);
+    // Redirigir directamente - el estado original se extraerá de las observaciones en la vista de edición
+    window.location.href = `/Facturacion/Editar?facturaId=${facturaId}`;
+}
 
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 if (typeof window !== 'undefined') {
@@ -1245,6 +1276,7 @@ if (typeof window !== 'undefined') {
     window.verDetalleFactura = verDetalleFactura;
     window.imprimirFactura = imprimirFactura;
     window.mostrarDetalleFacturaModal = mostrarDetalleFacturaModal;
+    window.continuarEdicion = continuarEdicion;
 
     console.log('📋 Funciones de facturas pendientes exportadas globalmente');
 } else {
