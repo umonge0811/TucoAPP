@@ -399,7 +399,7 @@ function mostrarFacturasPendientesEnTabla(facturas) {
                         ` : ''}
                         ${factura.estado === 'En Edición' ? `
                         <button type="button" class="btn btn-info" title="Continuar Edición"
-                                onclick="window.location.href='/Facturacion/Editar?facturaId=${factura.facturaId || factura.id}'">
+                                onclick="continuarEdicion(${factura.facturaId || factura.id})">
                             <i class="bi bi-pencil-fill"></i> Continuar
                         </button>
                         ` : ''}
@@ -1256,6 +1256,12 @@ async function imprimirFactura(facturaId) {
     }
 }
 
+// ===== FUNCIÓN PARA CONTINUAR EDICIÓN DE FACTURA =====
+function continuarEdicion(facturaId) {
+    console.log('📝 Continuando edición de factura:', facturaId);
+    // Redirigir directamente - el estado original se extraerá de las observaciones en la vista de edición
+    window.location.href = `/Facturacion/Editar?facturaId=${facturaId}`;
+}
 
 // ===== EXPORTAR FUNCIONES GLOBALMENTE =====
 if (typeof window !== 'undefined') {
@@ -1270,6 +1276,7 @@ if (typeof window !== 'undefined') {
     window.verDetalleFactura = verDetalleFactura;
     window.imprimirFactura = imprimirFactura;
     window.mostrarDetalleFacturaModal = mostrarDetalleFacturaModal;
+    window.continuarEdicion = continuarEdicion;
 
     console.log('📋 Funciones de facturas pendientes exportadas globalmente');
 } else {

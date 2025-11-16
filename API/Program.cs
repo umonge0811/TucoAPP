@@ -86,6 +86,9 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        // ✅ CONFIGURAR PARA ACEPTAR CAMELCASE (compatibilidad con Newtonsoft.Json del Web)
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
 // ? SERVICIOS NECESARIOS PARA EL SISTEMA DINÁMICO
