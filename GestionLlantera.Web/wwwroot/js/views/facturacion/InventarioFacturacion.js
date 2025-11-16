@@ -1140,15 +1140,26 @@ function configurarEventosProductosInventario() {
                 modalInventarioFacturacion.hide();
             }
 
-            // Mostrar modal de selección de producto
-            setTimeout(() => {
-                if (typeof mostrarModalSeleccionProducto === 'function') {
-                    mostrarModalSeleccionProducto(producto);
-                } else {
-                    console.error('❌ Función mostrarModalSeleccionProducto no disponible');
-                    mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
-                }
-            }, 300);
+            // ✅ VERIFICAR SI ESTAMOS EN MODO EDICIÓN DE FACTURA
+            if (window.modoEdicionFactura && typeof window.agregarProductoDesdeInventarioEdicion === 'function') {
+                console.log('📝 Modo edición detectado - usando función de edición');
+
+                setTimeout(() => {
+                    window.agregarProductoDesdeInventarioEdicion(producto);
+                    // Resetear flag
+                    window.modoEdicionFactura = false;
+                }, 300);
+            } else {
+                // Modo normal (Index de facturación) - Mostrar modal de selección de producto
+                setTimeout(() => {
+                    if (typeof mostrarModalSeleccionProducto === 'function') {
+                        mostrarModalSeleccionProducto(producto);
+                    } else {
+                        console.error('❌ Función mostrarModalSeleccionProducto no disponible');
+                        mostrarToast('Error', 'No se pudo procesar el producto', 'danger');
+                    }
+                }, 300);
+            }
 
         } catch (error) {
             console.error('❌ Error agregando producto desde inventario:', error);
