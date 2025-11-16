@@ -2281,59 +2281,68 @@ namespace API.Controllers
                     factura.Observaciones = request.Observaciones;
                 }
 
-                // Actualizar detalles de factura
-                // 1. Eliminar detalles que ya no están
-                var detallesActualesIds = request.DetallesFactura
-                    .Where(d => d.DetalleFacturaId.HasValue)
-                    .Select(d => d.DetalleFacturaId.Value)
-                    .ToList();
-
-                var detallesAEliminar = factura.DetallesFactura
-                    .Where(d => !detallesActualesIds.Contains(d.DetalleFacturaId))
-                    .ToList();
-
-                foreach (var detalle in detallesAEliminar)
+                // ===== SI NO SE VA A ANULAR, ACTUALIZAR DETALLES DE FACTURA =====
+                if (!request.EsAnulada)
                 {
-                    _logger.LogInformation("🗑️ Eliminando detalle de factura: {ProductoId}", detalle.ProductoId);
-                    _context.DetallesFactura.Remove(detalle);
-                }
+                    _logger.LogInformation("📝 Actualizando detalles de factura (edición normal)");
 
-                // 2. Actualizar detalles existentes
-                foreach (var detalleRequest in request.DetallesFactura.Where(d => d.DetalleFacturaId.HasValue))
-                {
-                    var detalleExistente = factura.DetallesFactura
-                        .FirstOrDefault(d => d.DetalleFacturaId == detalleRequest.DetalleFacturaId.Value);
+                    // 1. Eliminar detalles que ya no están
+                    var detallesActualesIds = request.DetallesFactura
+                        .Where(d => d.DetalleFacturaId.HasValue)
+                        .Select(d => d.DetalleFacturaId.Value)
+                        .ToList();
 
-                    if (detalleExistente != null)
+                    var detallesAEliminar = factura.DetallesFactura
+                        .Where(d => !detallesActualesIds.Contains(d.DetalleFacturaId))
+                        .ToList();
+
+                    foreach (var detalle in detallesAEliminar)
                     {
-                        detalleExistente.Cantidad = detalleRequest.Cantidad;
-                        detalleExistente.PrecioUnitario = detalleRequest.PrecioUnitario;
-                        detalleExistente.PorcentajeDescuento = detalleRequest.PorcentajeDescuento;
-                        detalleExistente.MontoDescuento = detalleRequest.MontoDescuento;
-                        detalleExistente.Subtotal = detalleRequest.Subtotal;
+                        _logger.LogInformation("🗑️ Eliminando detalle de factura: {ProductoId}", detalle.ProductoId);
+                        _context.DetallesFactura.Remove(detalle);
+                    }
+
+                    // 2. Actualizar detalles existentes
+                    foreach (var detalleRequest in request.DetallesFactura.Where(d => d.DetalleFacturaId.HasValue))
+                    {
+                        var detalleExistente = factura.DetallesFactura
+                            .FirstOrDefault(d => d.DetalleFacturaId == detalleRequest.DetalleFacturaId.Value);
+
+                        if (detalleExistente != null)
+                        {
+                            detalleExistente.Cantidad = detalleRequest.Cantidad;
+                            detalleExistente.PrecioUnitario = detalleRequest.PrecioUnitario;
+                            detalleExistente.PorcentajeDescuento = detalleRequest.PorcentajeDescuento;
+                            detalleExistente.MontoDescuento = detalleRequest.MontoDescuento;
+                            detalleExistente.Subtotal = detalleRequest.Subtotal;
+                        }
+                    }
+
+                    // 3. Agregar nuevos detalles
+                    foreach (var detalleRequest in request.DetallesFactura.Where(d => !d.DetalleFacturaId.HasValue))
+                    {
+                        var producto = await _context.Productos.FindAsync(detalleRequest.ProductoId);
+                        if (producto == null) continue;
+
+                        var nuevoDetalle = new DetalleFactura
+                        {
+                            FacturaId = factura.FacturaId,
+                            ProductoId = detalleRequest.ProductoId,
+                            NombreProducto = producto.NombreProducto,
+                            DescripcionProducto = producto.Descripcion,
+                            Cantidad = detalleRequest.Cantidad,
+                            PrecioUnitario = detalleRequest.PrecioUnitario,
+                            PorcentajeDescuento = detalleRequest.PorcentajeDescuento,
+                            MontoDescuento = detalleRequest.MontoDescuento,
+                            Subtotal = detalleRequest.Subtotal
+                        };
+
+                        _context.DetallesFactura.Add(nuevoDetalle);
                     }
                 }
-
-                // 3. Agregar nuevos detalles
-                foreach (var detalleRequest in request.DetallesFactura.Where(d => !d.DetalleFacturaId.HasValue))
+                else
                 {
-                    var producto = await _context.Productos.FindAsync(detalleRequest.ProductoId);
-                    if (producto == null) continue;
-
-                    var nuevoDetalle = new DetalleFactura
-                    {
-                        FacturaId = factura.FacturaId,
-                        ProductoId = detalleRequest.ProductoId,
-                        NombreProducto = producto.NombreProducto,
-                        DescripcionProducto = producto.Descripcion,
-                        Cantidad = detalleRequest.Cantidad,
-                        PrecioUnitario = detalleRequest.PrecioUnitario,
-                        PorcentajeDescuento = detalleRequest.PorcentajeDescuento,
-                        MontoDescuento = detalleRequest.MontoDescuento,
-                        Subtotal = detalleRequest.Subtotal
-                    };
-
-                    _context.DetallesFactura.Add(nuevoDetalle);
+                    _logger.LogInformation("⚠️ Factura marcada para anulación - NO se modifican los detalles (se mantienen para historial)");
                 }
 
                 // ===== PROCESAR AJUSTES DE STOCK =====
