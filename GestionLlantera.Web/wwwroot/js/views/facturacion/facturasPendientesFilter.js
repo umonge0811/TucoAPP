@@ -703,8 +703,8 @@ function actualizarContadorResultadosFacturas(conteoActual, conteoTotal) {
  */
 function crearFilaFacturaPendiente(factura) {
     // Formatear fecha y hora para visualización
-    const fecha = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleDateString('es-CR');
-    const hora = new Date(factura.fechaFactura || factura.fechaCreacion).toLocaleTimeString('es-CR', {
+    const fecha = new Date(factura.fechaCreacion).toLocaleDateString('es-CR');
+    const hora = new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', {
         hour: '2-digit',
         minute: '2-digit'
     });

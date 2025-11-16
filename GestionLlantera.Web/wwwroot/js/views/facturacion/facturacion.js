@@ -8614,7 +8614,7 @@ function mostrarFacturasPendientes(facturas) {
 
     let html = '';
     facturas.forEach(factura => {
-        const fecha = new Date(factura.fechaFactura).toLocaleDateString('es-CR');
+        const fecha = new Date(factura.fechaCreacion).toLocaleDateString('es-CR');
         const hora = factura.fechaCreacion ? new Date(factura.fechaCreacion).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' }) : '';
         const total = factura.total || 0;
         const cantidadItems = factura.cantidadItems || factura.detallesFactura?.length || 0;
