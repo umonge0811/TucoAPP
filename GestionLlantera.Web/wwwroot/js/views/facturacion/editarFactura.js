@@ -641,12 +641,17 @@ async function guardarCambiosFactura() {
         console.log('💾 Número de ajustes:', datosActualizacion.ajustesStock?.length || 0);
         console.log('🔍 EsAnulada:', datosActualizacion.esAnulada, '| Tipo:', typeof datosActualizacion.esAnulada);
 
+        // Verificar el JSON antes de enviar
+        const jsonBody = JSON.stringify(datosActualizacion);
+        console.log('📤 JSON a enviar (string):', jsonBody);
+        console.log('📤 Parseando de nuevo para verificar:', JSON.parse(jsonBody));
+
         const response = await fetch(`/Facturacion/ActualizarFactura`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(datosActualizacion)
+            body: jsonBody
         });
 
         console.log('📡 Respuesta del servidor:');
@@ -687,6 +692,16 @@ async function guardarCambiosFactura() {
 // ===== CALCULAR AJUSTES DE STOCK =====
 function calcularAjustesStock(esAnulada) {
     const ajustes = [];
+
+    console.log('📦 === CALCULANDO AJUSTES DE STOCK ===');
+    console.log('📦 Es anulada:', esAnulada);
+    console.log('📦 Factura original completa:', JSON.parse(JSON.stringify(facturaOriginal)));
+    console.log('📦 Productos editados completos:', JSON.parse(JSON.stringify(productosEditar)));
+
+    if (!facturaOriginal || !facturaOriginal.detallesFactura) {
+        console.error('❌ facturaOriginal o detallesFactura no está disponible');
+        return ajustes;
+    }
 
     if (esAnulada) {
         // Si la factura se anula, devolver TODOS los productos al inventario
