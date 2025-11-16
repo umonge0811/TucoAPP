@@ -1572,6 +1572,229 @@ namespace GestionLlantera.Web.Services
             }
         }
 
+        // ===== VALIDACIÓN DE PIN PARA EDICIÓN =====
+        public async Task<object> ValidarPinEdicionAsync(string pin, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 === VALIDANDO PIN DE EDICIÓN ===");
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { Pin = pin };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl("Facturacion/validar-pin-edicion");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error validando PIN: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al validar PIN" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error validando PIN de edición");
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
+        public async Task<object> DesbloquearFacturaParaEdicionAsync(int facturaId, string pin, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔓 === DESBLOQUEANDO FACTURA {FacturaId} ===", facturaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { Pin = pin };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/desbloquear-edicion");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error desbloqueando factura: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al desbloquear factura" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error desbloqueando factura {FacturaId}", facturaId);
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
+        public async Task<object> RestaurarEstadoFacturaAsync(int facturaId, string estadoAnterior, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 === RESTAURANDO ESTADO DE FACTURA {FacturaId} ===", facturaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { EstadoAnterior = estadoAnterior };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/restaurar-estado");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error restaurando estado: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al restaurar estado" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error restaurando estado de factura {FacturaId}", facturaId);
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
+        public async Task<object> MarcarFacturaParaAnulacionAsync(int facturaId, string pin, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("❌ === MARCANDO FACTURA {FacturaId} PARA ANULACIÓN ===", facturaId);
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var requestData = new { Pin = pin };
+                var jsonContent = JsonConvert.SerializeObject(requestData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl($"Facturacion/facturas/{facturaId}/marcar-anulacion");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error marcando factura para anulación: {StatusCode}", response.StatusCode);
+                    return new { success = false, message = "Error al anular factura" };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error marcando factura {FacturaId} para anulación", facturaId);
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
+        public async Task<object> ActualizarFacturaAsync(object request, string jwtToken = null)
+        {
+            try
+            {
+                _logger.LogInformation("💾 === ACTUALIZANDO FACTURA ===");
+
+                if (!string.IsNullOrEmpty(jwtToken))
+                {
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", jwtToken);
+                }
+
+                var jsonContent = JsonConvert.SerializeObject(request, new JsonSerializerSettings
+                {
+                    ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+                    DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+                    NullValueHandling = NullValueHandling.Include
+                });
+
+                _logger.LogInformation("📤 JSON enviado: {Json}", jsonContent);
+
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                var url = _apiConfig.GetApiUrl("Facturacion/actualizar-factura");
+                _logger.LogInformation("🌐 URL construida: {url}", url);
+
+                var response = await _httpClient.PutAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("📥 Respuesta del API: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultado = JsonConvert.DeserializeObject<object>(responseContent);
+                    return resultado ?? new { success = false, message = "Respuesta inválida" };
+                }
+                else
+                {
+                    _logger.LogError("❌ Error actualizando factura: {StatusCode} - {Content}", response.StatusCode, responseContent);
+
+                    // Intentar deserializar el error del API para obtener el mensaje
+                    try
+                    {
+                        var errorResponse = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                        var errorMessage = errorResponse?.message ?? "Error al actualizar factura";
+                        return new { success = false, message = errorMessage.ToString() };
+                    }
+                    catch
+                    {
+                        return new { success = false, message = $"Error al actualizar factura (HTTP {response.StatusCode})" };
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error actualizando factura");
+                return new { success = false, message = "Error interno: " + ex.Message };
+            }
+        }
+
         public async Task<(bool success, object? data, string? message, string? details)> MarcarProductosEntregadosAsync(object request, string jwtToken = null)
         {
             try

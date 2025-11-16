@@ -791,18 +791,71 @@
     </div>
 </div>
 
+<!-- Modal PIN para Editar Facturas Tramitadas -->
+<div class="modal fade" id="modalPinEdicion" tabindex="-1" aria-labelledby="modalPinEdicionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="modalPinEdicionLabel">
+                    <i class="bi bi-shield-lock me-2"></i>PIN de Seguridad
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Atención:</strong> Ingrese el PIN de seguridad para desbloquear y editar esta factura tramitada.
+                </div>
+                <div class="mb-3">
+                    <label for="pinEdicionFactura" class="form-label fw-bold">
+                        <i class="bi bi-key me-1"></i>PIN de Edición:
+                    </label>
+                    <input type="password"
+                           class="form-control form-control-lg text-center"
+                           id="pinEdicionFactura"
+                           placeholder="****"
+                           maxlength="10"
+                           autocomplete="off">
+                    <div class="invalid-feedback">
+                        PIN incorrecto. Intente nuevamente.
+                    </div>
+                </div>
+                <div class="text-muted small">
+                    <i class="bi bi-shield-check me-1"></i>
+                    Solo usuarios autorizados tienen acceso al PIN de edición.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-warning" id="btnValidarPin">
+                    <span class="normal-state">
+                        <i class="bi bi-unlock me-1"></i>Desbloquear
+                    </span>
+                    <span class="loading-state" style="display: none;">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        Validando...
+                    </span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 11"></div>
 
 @section Scripts {
         <!-- Scripts específicos para facturación -->
         <script src="~/js/utils/impresionTermica.js"></script>
-        <script src="~/js/views/facturacion/zoomImagenes.js"></script>    
+        <script src="~/js/views/facturacion/zoomImagenes.js"></script>
         <script src="~/js/views/facturacion/facturacion.js"></script>
         <script src="~/js/views/facturacion/serviciosFacturacion.js"></script>
         <script src="~/js/views/facturacion/facturasPendientesFilter.js"></script>
         <script src="~/js/views/facturacion/proformasFilter.js"></script>
         <script src="~/js/views/facturacion/InventarioFacturacion.js"></script>
+        <script src="~/js/views/facturacion/edicionConPin.js"></script>
 
     <script>
         // ===== CONFIGURACIÓN GLOBAL PARA FACTURACIÓN =====

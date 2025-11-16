@@ -1,0 +1,353 @@
+@{
+    ViewData["Title"] = "Editar Factura";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/views/facturacion/facturacion.css" />
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Dashboard")" class="text-decoration-none">
+                <i class="bi bi-house-door me-1"></i>Dashboard
+            </a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="@Url.Action("Index", "Facturacion")" class="text-decoration-none">
+                <i class="bi bi-cash-register me-1"></i>Facturación
+            </a>
+        </li>
+        <li class="breadcrumb-item active" aria-current="page">
+            <i class="bi bi-pencil-square me-1"></i>Editar Factura
+        </li>
+    </ol>
+</nav>
+
+<!-- Alerta de advertencia -->
+<div class="alert alert-warning alert-dismissible fade show" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-3 fs-3"></i>
+        <div>
+            <h5 class="alert-heading mb-1">
+                <i class="bi bi-shield-exclamation me-1"></i>Modo de Edición de Factura Tramitada
+            </h5>
+            <p class="mb-0">
+                Esta factura ha sido desbloqueada para edición. Los cambios realizados quedarán registrados en el historial de auditoría.
+                <strong>Guarda los cambios cuando termines o cancela para descartar las modificaciones.</strong>
+            </p>
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<!-- Toggle de Anulación -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-x-octagon me-2"></i>Anulación de Factura
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1"><i class="bi bi-shield-lock me-2"></i>¿Anular esta factura?</h6>
+                        <p class="text-muted mb-0 small">
+                            Al activar esta opción, la factura será marcada como anulada y <strong>todos los productos se devolverán al inventario</strong>. Esta acción requiere PIN de seguridad.
+                        </p>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggleAnularFactura" style="width: 60px; height: 30px; cursor: pointer;">
+                        <label class="form-check-label ms-2 fw-bold" for="toggleAnularFactura" id="labelAnularFactura">
+                            <span class="badge bg-secondary">No Anulada</span>
+                        </label>
+                    </div>
+                </div>
+                <input type="hidden" id="facturaAnuladaFlag" value="false">
+                <input type="hidden" id="pinAnulacionValidado" value="false">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Información de la factura -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-receipt me-2"></i>
+                    <span id="infoNumeroFactura">Cargando...</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row" id="infoFacturaContent">
+                    <div class="col-12 text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando factura...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Cargando información de la factura...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edición de Cliente -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-person me-2"></i>Información del Cliente
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Cliente</label>
+                        <div class="input-group">
+                            <input type="text" id="nombreClienteEditar" class="form-control" readonly>
+                            <button type="button" id="btnCambiarCliente" class="btn btn-outline-primary">
+                                <i class="bi bi-search me-1"></i>Cambiar
+                            </button>
+                        </div>
+                        <input type="hidden" id="clienteIdEditar">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Identificación</label>
+                        <input type="text" id="identificacionClienteEditar" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <input type="tel" id="telefonoClienteEditar" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Email</label>
+                        <input type="email" id="emailClienteEditar" class="form-control">
+                    </div>
+                    <div class="col-12 mb-3">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <textarea id="direccionClienteEditar" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Productos de la factura -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-box-seam me-2"></i>Productos/Servicios
+                </h5>
+                <button type="button" id="btnAgregarProducto" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus-circle me-1"></i>Agregar Producto
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="tablaProductosEditar">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40%">Producto</th>
+                                <th style="width: 10%" class="text-center">Cantidad</th>
+                                <th style="width: 15%" class="text-end">Precio Unit.</th>
+                                <th style="width: 10%" class="text-center">Desc. %</th>
+                                <th style="width: 15%" class="text-end">Subtotal</th>
+                                <th style="width: 10%" class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productosFacturaEditar">
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando productos...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Totales y Pago -->
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-credit-card me-2"></i>Método de Pago
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Método de Pago</label>
+                    <select id="metodoPagoEditar" class="form-select">
+                        <option value="">Seleccione...</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Tarjeta">Tarjeta (Datafonos +9%)</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="SINPE">SINPE Móvil</option>
+                        <option value="Múltiple">Múltiple</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Observaciones</label>
+                    <textarea id="observacionesEditar" class="form-control" rows="3" placeholder="Notas adicionales sobre la factura..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-calculator me-2"></i>Totales
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold">Subtotal:</span>
+                    <span id="subtotalEditar" class="text-muted">₡0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold">Descuento General:</span>
+                    <div class="input-group input-group-sm" style="width: 150px;">
+                        <input type="number" id="descuentoGeneralEditar" class="form-control" min="0" max="100" step="0.01" value="0">
+                        <span class="input-group-text">%</span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold">Monto Descuento:</span>
+                    <span id="montoDescuentoEditar" class="text-danger">-₡0.00</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="fw-bold">IVA (13%):</span>
+                    <span id="ivaEditar" class="text-muted">₡0.00</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <h4 class="mb-0"><strong>Total:</strong></h4>
+                    <h4 class="mb-0 text-success">
+                        <strong id="totalEditar">₡0.00</strong>
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Botones de acción -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <button type="button" id="btnCancelarEdicion" class="btn btn-secondary me-2">
+                            <i class="bi bi-x-circle me-1"></i>Cancelar
+                        </button>
+                        <button type="button" id="btnVerHistorial" class="btn btn-outline-info">
+                            <i class="bi bi-clock-history me-1"></i>Ver Historial
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" id="btnGuardarCambios" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle me-1"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Buscar Cliente -->
+<div class="modal fade" id="modalBuscarCliente" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-search me-2"></i>Buscar Cliente
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="buscarClienteInput" class="form-control" placeholder="Buscar por nombre, cédula o teléfono...">
+                </div>
+                <div id="resultadosBusquedaCliente" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agregar Producto -->
+<div class="modal fade" id="modalAgregarProducto" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Agregar Producto a la Factura
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="buscarProductoInput" class="form-control" placeholder="Buscar producto...">
+                </div>
+                <div id="resultadosBusquedaProducto" class="row" style="max-height: 500px; overflow-y: auto;">
+                    <!-- Se llenará dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Historial de Cambios -->
+<div class="modal fade" id="modalHistorialCambios" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock-history me-2"></i>Historial de Cambios
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="historialCambiosContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Cargando historial...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/views/facturacion/editarFactura.js"></script>
+
+    <script>
+        // Pasar ID de factura desde el ViewBag
+        window.facturaIdEditar = @ViewBag.FacturaId;
+        window.facturaConfig = @Html.Raw(Json.Serialize(ViewBag.ConfiguracionFacturacion));
+
+        console.log('📋 Modo edición de factura:', window.facturaIdEditar);
+    </script>
+}
