@@ -2274,11 +2274,18 @@ namespace API.Controllers
 
                 // Actualizar observaciones con historial de cambios
                 var historialCambios = string.Join("; ", request.CambiosRealizados.Select(c => $"{c.Descripcion} ({c.Fecha:dd/MM/yyyy HH:mm})"));
-                factura.Observaciones = (factura.Observaciones ?? "") + $"\n\n[EDITADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]\nCambios: {historialCambios}";
+                var textoEdicion = $"\n\n[EDITADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]\nCambios: {historialCambios}";
 
+                // Si el usuario agregó observaciones nuevas, combinarlas con el historial
                 if (!string.IsNullOrEmpty(request.Observaciones))
                 {
-                    factura.Observaciones = request.Observaciones;
+                    // Agregar las observaciones del usuario y el historial de forma segura
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, $"\n{request.Observaciones}{textoEdicion}");
+                }
+                else
+                {
+                    // Solo agregar el historial de edición
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, textoEdicion);
                 }
 
                 // ===== SI NO SE VA A ANULAR, ACTUALIZAR DETALLES DE FACTURA =====
@@ -2401,7 +2408,9 @@ namespace API.Controllers
                 if (request.EsAnulada)
                 {
                     factura.Estado = "Anulada";
-                    factura.Observaciones += $"\n\n[ANULADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]";
+                    // Agregar observación de anulación de forma segura
+                    var textoAnulacion = $"\n\n[ANULADA el {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}]";
+                    factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, textoAnulacion);
                     _logger.LogInformation("❌ Factura {NumeroFactura} marcada como ANULADA", factura.NumeroFactura);
                 }
                 else
@@ -2526,8 +2535,10 @@ namespace API.Controllers
                 var estadoAnterior = factura.Estado;
                 factura.Estado = "En Edición";
                 factura.FechaActualizacion = ObtenerFechaHoraCostaRica();
-                factura.Observaciones = (factura.Observaciones ?? "") +
-                    $" | DESBLOQUEADA PARA EDICIÓN (Estado anterior: {estadoAnterior}) - {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}";
+
+                // Agregar observación de forma segura (maneja límite de caracteres)
+                var nuevoTextoObservacion = $" | DESBLOQUEADA PARA EDICIÓN (Estado anterior: {estadoAnterior}) - {ObtenerFechaHoraCostaRica():dd/MM/yyyy HH:mm}";
+                factura.Observaciones = AgregarObservacionSegura(factura.Observaciones, nuevoTextoObservacion);
 
                 await _context.SaveChangesAsync();
 
@@ -2554,6 +2565,42 @@ namespace API.Controllers
         // =====================================
         // MÉTODOS AUXILIARES PRIVADOS
         // =====================================
+
+        /// <summary>
+        /// Agrega texto a las observaciones de forma segura, manejando el límite de caracteres de la columna
+        /// </summary>
+        /// <param name="observacionesActuales">Observaciones actuales (puede ser null)</param>
+        /// <param name="nuevoTexto">Nuevo texto a agregar</param>
+        /// <param name="limiteMaximo">Límite máximo de caracteres (default: 450 para dejar margen)</param>
+        /// <returns>Observaciones con el nuevo texto agregado, truncadas si es necesario</returns>
+        private string AgregarObservacionSegura(string? observacionesActuales, string nuevoTexto, int limiteMaximo = 450)
+        {
+            var observaciones = observacionesActuales ?? "";
+            var textoCompleto = observaciones + nuevoTexto;
+
+            // Si cabe todo, retornar tal cual
+            if (textoCompleto.Length <= limiteMaximo)
+            {
+                return textoCompleto;
+            }
+
+            // Si no cabe, truncar las observaciones viejas para que quepa el nuevo texto
+            var espacioDisponible = limiteMaximo - nuevoTexto.Length;
+
+            if (espacioDisponible <= 0)
+            {
+                // Si el nuevo texto solo ya excede el límite, truncarlo
+                _logger.LogWarning("⚠️ Nuevo texto de observación excede límite. Se truncará.");
+                return nuevoTexto.Substring(0, limiteMaximo);
+            }
+
+            // Truncar observaciones viejas y agregar el nuevo texto
+            var observacionesTruncadas = observaciones.Length > espacioDisponible
+                ? "..." + observaciones.Substring(observaciones.Length - (espacioDisponible - 3))
+                : observaciones;
+
+            return observacionesTruncadas + nuevoTexto;
+        }
 
         /// <summary>
         /// Crea alertas de movimiento post-corte para todos los usuarios asignados al inventario
