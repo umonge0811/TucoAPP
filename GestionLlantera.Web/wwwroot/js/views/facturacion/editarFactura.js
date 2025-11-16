@@ -635,7 +635,10 @@ async function guardarCambiosFactura() {
 
         if (!confirmacion.isConfirmed) return;
 
-        console.log('💾 Guardando cambios:', datosActualizacion);
+        console.log('💾 === GUARDANDO CAMBIOS ===');
+        console.log('💾 Datos completos a enviar:', datosActualizacion);
+        console.log('💾 Ajustes de stock a enviar:', datosActualizacion.ajustesStock);
+        console.log('💾 Número de ajustes:', datosActualizacion.ajustesStock?.length || 0);
         console.log('🔍 EsAnulada:', datosActualizacion.esAnulada, '| Tipo:', typeof datosActualizacion.esAnulada);
 
         const response = await fetch(`/Facturacion/ActualizarFactura`, {
@@ -793,6 +796,12 @@ function prepararDatosActualizacion() {
 
     // Calcular ajustes de stock necesarios
     const ajustesStock = calcularAjustesStock(esAnulada);
+
+    console.log('📊 === DEBUG AJUSTES DE STOCK ===');
+    console.log('📊 Ajustes calculados:', ajustesStock);
+    console.log('📊 Número de ajustes:', ajustesStock.length);
+    console.log('📊 Factura original:', facturaOriginal);
+    console.log('📊 Productos editados:', productosEditar);
 
     return {
         facturaId: window.facturaIdEditar,
